@@ -14,6 +14,17 @@ final class CaskCatalogViewModel {
     private(set) var casks: [Cask] = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
+    var searchText = ""
+
+    var filteredCasks: [Cask] {
+        guard !searchText.isEmpty else { return casks }
+        let query = searchText.lowercased()
+        return casks.filter { cask in
+            cask.displayName.lowercased().contains(query)
+            || cask.token.lowercased().contains(query)
+            || (cask.desc?.lowercased().contains(query) ?? false)
+        }
+    }
 
     private let apiClient: BrewAPIClientProtocol
 

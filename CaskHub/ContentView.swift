@@ -27,7 +27,7 @@ struct ContentView: View {
                         }
                     }
                 } else {
-                    List(viewModel.casks) { cask in
+                    List(viewModel.filteredCasks) { cask in
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(cask.displayName)
@@ -47,7 +47,8 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("CaskHub (\(viewModel.casks.count) casks)")
+            .navigationTitle("CaskHub (\(viewModel.filteredCasks.count) casks)")
+            .searchable(text: $viewModel.searchText, prompt: "Search apps...")
         }
         .task {
             await viewModel.fetchCasks()
