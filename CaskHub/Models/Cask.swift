@@ -25,6 +25,15 @@ struct Cask: Codable, Identifiable, Hashable {
         name.first ?? token
     }
 
+    var displayVersion: String {
+        let base = version.split(separator: ",", maxSplits: 1).first.map(String.init) ?? version
+
+        let numeric = String(base.prefix(while: { $0.isNumber || $0 == "." }))
+            .trimmingCharacters(in: CharacterSet(charactersIn: "."))
+
+        return numeric.isEmpty ? base : numeric
+    }
+
     var homepageDomain: String? {
         URL(string: homepage)?.host
     }
