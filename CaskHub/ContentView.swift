@@ -40,15 +40,52 @@ struct ContentView: View {
                                 }
                             }
                             Spacer()
-                            Text("v\(cask.version)")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("v\(cask.version)")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                                if let downloads = viewModel.formattedDownloads(for: cask.token) {
+                                    HStack(spacing: 2) {
+                                        Image(systemName: "arrow.down.circle")
+                                        Text(downloads)
+                                    }
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                }
+                            }
                         }
                     }
                 }
             }
             .navigationTitle("CaskHub (\(viewModel.filteredCasks.count) casks)")
             .searchable(text: $viewModel.searchText, prompt: "Search apps...")
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Menu {
+                        ForEach(SortOption.allCases) { option in
+                            Button {
+                                viewModel.sortOption = option
+                            } label: {
+                                HStack {
+                                    Text(option.rawValue)
+                                    if viewModel.sortOption == option {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.arrow.down")
+                            Text("Sort by: \(viewModel.sortOption.rawValue)")
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+                    }
+                    .menuIndicator(.hidden)
+                }
+            }
         }
         .task {
             await viewModel.fetchCasks()
