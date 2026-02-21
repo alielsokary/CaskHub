@@ -26,7 +26,13 @@ final class CaskCatalogViewModel {
         errorMessage = nil
 
         do {
-            casks = try await apiClient.fetchAllCasks()
+            let allCasks = try await apiClient.fetchAllCasks()
+            casks = allCasks.filter { cask in
+                !cask.deprecated
+                && !cask.disabled
+                && !cask.token.contains("@")
+                && !cask.token.hasPrefix("font-")
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
