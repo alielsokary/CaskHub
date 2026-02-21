@@ -19,7 +19,9 @@ struct CaskHubApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(colorScheme)
+                .frame(minWidth: 900, minHeight: 500)
         }
+        .defaultSize(width: 1200, height: 700)
 
         Settings {
             SettingsView()

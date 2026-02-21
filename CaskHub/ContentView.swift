@@ -9,50 +9,53 @@ import SwiftUI
 
 enum ViewMode: String {
     case grid, list
-
-    var icon: String {
-        switch self {
-        case .grid: return "square.grid.2x2"
-        case .list: return "list.bullet"
-        }
-    }
-
-    mutating func toggle() {
-        self = self == .grid ? .list : .grid
-    }
 }
 
 struct ContentView: View {
     @State private var viewModel = CaskCatalogViewModel()
+    @State private var selectedItem: SidebarItem = .browse
     @State private var viewMode: ViewMode = .grid
 
     private let columns = [
-        GridItem(.adaptive(minimum: 200, maximum: 280))
+        GridItem(.adaptive(minimum: 250, maximum: 300), spacing: 14)
     ]
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView("Loading casks...")
-                } else if let error = viewModel.errorMessage {
-                    errorView(error)
-                } else {
-                    switch viewMode {
-                    case .grid:
-                        gridView
-                    case .list:
-                        listView
-                    }
-                }
-            }
-            .navigationTitle("CaskHub (\(viewModel.filteredCasks.count) casks)")
-            .searchable(text: $viewModel.searchText, prompt: "Search apps...")
-            .toolbar { toolbarItems }
+        NavigationSplitView {
+            SidebarView(selection: $selectedItem)
+                .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 260)
+        } detail: {
+            detailContent
+                .navigationTitle(navigationTitle)
+                .searchable(text: $viewModel.searchText, prompt: "Search apps...")
+                .toolbar { toolbarItems }
         }
         .task {
             await viewModel.fetchCasks()
         }
+    }
+
+    // MARK: - Detail Content
+
+    @ViewBuilder
+    private var detailContent: some View {
+        if viewModel.isLoading {
+            ProgressView("Loading casks...")
+        } else if let error = viewModel.errorMessage {
+            errorView(error)
+        } else {
+            switch viewMode {
+            case .grid:
+                gridView
+            case .list:
+                listView
+            }
+        }
+    }
+
+    private var navigationTitle: String {
+        let count = viewModel.filteredCasks.count
+        return "\(selectedItem.rawValue) (\(count) casks)"
     }
 
     // MARK: - Grid View
@@ -137,7 +140,6 @@ struct ContentView: View {
         }
         .menuIndicator(.hidden)
     }
-
 }
 
 #Preview {
