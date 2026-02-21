@@ -47,7 +47,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("CaskHub")
+            .navigationTitle("CaskHub (\(viewModel.casks.count) casks)")
         }
         .task {
             await viewModel.fetchCasks()
