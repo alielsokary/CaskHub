@@ -12,17 +12,25 @@ enum ViewMode: String {
 }
 
 struct ContentView: View {
-    @State private var viewModel = CaskCatalogViewModel()
-    @State private var selectedItem: SidebarItem = .browse
+    @State private var categoryService: CategoryService
+    @State private var viewModel: CaskCatalogViewModel
+    @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @State private var viewMode: ViewMode = .grid
 
     private let columns = [
         GridItem(.adaptive(minimum: 250, maximum: 300), spacing: 14)
     ]
 
+    init() {
+        let service = CategoryService()
+        service.loadCategories()
+        _categoryService = State(initialValue: service)
+        _viewModel = State(initialValue: CaskCatalogViewModel(categoryService: service))
+    }
+
     var body: some View {
         NavigationSplitView {
-            SidebarView(selection: $selectedItem)
+            SidebarView(selection: $selectedSidebar, categoryService: categoryService)
                 .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 260)
         } detail: {
             detailContent
@@ -32,6 +40,9 @@ struct ContentView: View {
         }
         .task {
             await viewModel.fetchCasks()
+        }
+        .onChange(of: selectedSidebar) { _, newValue in
+            viewModel.selectedSidebar = newValue
         }
     }
 
@@ -55,7 +66,16 @@ struct ContentView: View {
 
     private var navigationTitle: String {
         let count = viewModel.filteredCasks.count
-        return "\(selectedItem.rawValue) (\(count) casks)"
+        let name: String
+        switch selectedSidebar {
+        case .discover(let item):
+            name = item.rawValue
+        case .library(let item):
+            name = item.rawValue
+        case .category(let categoryID):
+            name = categoryService.displayName(for: categoryID)
+        }
+        return "\(name) (\(count) casks)"
     }
 
     // MARK: - Grid View
