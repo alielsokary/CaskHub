@@ -7,55 +7,58 @@
 
 import Foundation
 
-enum SidebarSection: String, CaseIterable {
-    case discover = "DISCOVER"
-    case library = "LIBRARY"
-    case categories = "CATEGORIES"
-}
+// MARK: - Fixed Sidebar Items
 
-enum SidebarItem: String, Hashable, Identifiable, CaseIterable {
-    // Discover
+enum DiscoverItem: String, CaseIterable, Identifiable {
     case browse = "Browse"
     case featured = "Featured"
     case topCharts = "Top Charts"
-
-    // Library
-    case installed = "Installed"
-    case updates = "Updates"
-
-    // Categories
-    case development = "Development"
-    case design = "Design"
-    case productivity = "Productivity"
-    case finance = "Finance"
-    case tools = "Tools"
 
     var id: String { rawValue }
 
     var icon: String {
         switch self {
-        case .browse: return "globe"
+        case .browse: return "square.grid.2x2"
         case .featured: return "star"
         case .topCharts: return "chart.line.uptrend.xyaxis"
+        }
+    }
+}
+
+enum LibraryItem: String, CaseIterable, Identifiable {
+    case installed = "Installed"
+    case updates = "Updates"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
         case .installed: return "arrow.down.to.line"
         case .updates: return "arrow.triangle.2.circlepath"
-        case .development: return "chevron.left.forwardslash.chevron.right"
-        case .design: return "paintbrush"
-        case .productivity: return "briefcase"
-        case .finance: return "dollarsign"
-        case .tools: return "wrench"
         }
     }
+}
 
-    var section: SidebarSection {
+// MARK: - Sidebar Selection
+
+enum SidebarSelection: Hashable, Identifiable {
+    case discover(DiscoverItem)
+    case library(LibraryItem)
+    case category(String)
+
+    var id: String {
         switch self {
-        case .browse, .featured, .topCharts: return .discover
-        case .installed, .updates: return .library
-        case .development, .design, .productivity, .finance, .tools: return .categories
+        case .discover(let item): return "discover.\(item.rawValue)"
+        case .library(let item): return "library.\(item.rawValue)"
+        case .category(let categoryID): return "category.\(categoryID)"
         }
     }
 
-    static func items(for section: SidebarSection) -> [SidebarItem] {
-        allCases.filter { $0.section == section }
+    var displayName: String {
+        switch self {
+        case .discover(let item): return item.rawValue
+        case .library(let item): return item.rawValue
+        case .category: return ""
+        }
     }
 }

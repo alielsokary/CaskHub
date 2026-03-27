@@ -25,35 +25,72 @@ final class CaskCatalogViewModel {
     private(set) var downloadCounts: [String: Int] = [:]
     var searchText = ""
     var sortOption: SortOption = .mostPopular
-
-    var filteredCasks: [Cask] {
-        let searched: [Cask]
-        if searchText.isEmpty {
-            searched = casks
-        } else {
-            let query = searchText.lowercased()
-            searched = casks.filter { cask in
-                cask.displayName.lowercased().contains(query)
-                || cask.token.lowercased().contains(query)
-                || (cask.desc?.lowercased().contains(query) ?? false)
-            }
-        }
-
-        switch sortOption {
-        case .mostPopular:
-            return searched.sorted { (downloadCounts[$0.token] ?? 0) > (downloadCounts[$1.token] ?? 0) }
-        case .nameAZ:
-            return searched.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
-        case .nameZA:
-            return searched.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending }
-        }
-    }
+    var selectedSidebar: SidebarSelection = .discover(.browse)
 
     private let apiClient: BrewAPIClientProtocol
+    private let categoryService: CategoryService
 
-    init(apiClient: BrewAPIClientProtocol = BrewAPIClient()) {
+    init(apiClient: BrewAPIClientProtocol = BrewAPIClient(), categoryService: CategoryService) {
         self.apiClient = apiClient
+        self.categoryService = categoryService
     }
+
+    // MARK: - Filtered Casks (3-stage pipeline)
+
+    var filteredCasks: [Cask] {
+        let sidebarFiltered = applySidebarFilter(to: casks)
+        let searched = applySearch(to: sidebarFiltered)
+        return applySort(to: searched)
+    }
+
+    private func applySidebarFilter(to casks: [Cask]) -> [Cask] {
+        switch selectedSidebar {
+        case .discover(.browse):
+            return casks
+
+        case .discover(.featured):
+            return casks
+                .sorted { (downloadCounts[$0.token] ?? 0) > (downloadCounts[$1.token] ?? 0) }
+                .prefix(100)
+                .map { $0 }
+
+        case .discover(.topCharts):
+            return casks
+
+        case .library(.installed):
+            return casks.filter { $0.installed != nil }
+
+        case .library(.updates):
+            return casks.filter { $0.outdated }
+
+        case .category(let categoryID):
+            let tokens = categoryService.tokens(in: categoryID)
+            return casks.filter { tokens.contains($0.token) }
+        }
+    }
+
+    private func applySearch(to casks: [Cask]) -> [Cask] {
+        guard !searchText.isEmpty else { return casks }
+        let query = searchText.lowercased()
+        return casks.filter { cask in
+            cask.displayName.lowercased().contains(query)
+            || cask.token.lowercased().contains(query)
+            || (cask.desc?.lowercased().contains(query) ?? false)
+        }
+    }
+
+    private func applySort(to casks: [Cask]) -> [Cask] {
+        switch sortOption {
+        case .mostPopular:
+            return casks.sorted { (downloadCounts[$0.token] ?? 0) > (downloadCounts[$1.token] ?? 0) }
+        case .nameAZ:
+            return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+        case .nameZA:
+            return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending }
+        }
+    }
+
+    // MARK: - Data Fetching
 
     func fetchCasks() async {
         isLoading = true
