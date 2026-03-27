@@ -8,16 +8,29 @@
 import SwiftUI
 
 struct SidebarView: View {
-    @Binding var selection: SidebarItem
+    @Binding var selection: SidebarSelection
+    var categoryService: CategoryService
 
     var body: some View {
         List(selection: $selection) {
-            ForEach(SidebarSection.allCases, id: \.self) { section in
-                Section(section.rawValue) {
-                    ForEach(SidebarItem.items(for: section)) { item in
-                        Label(item.rawValue, systemImage: item.icon)
-                            .tag(item)
-                    }
+            Section("DISCOVER") {
+                ForEach(DiscoverItem.allCases) { item in
+                    Label(item.rawValue, systemImage: item.icon)
+                        .tag(SidebarSelection.discover(item))
+                }
+            }
+
+            Section("LIBRARY") {
+                ForEach(LibraryItem.allCases) { item in
+                    Label(item.rawValue, systemImage: item.icon)
+                        .tag(SidebarSelection.library(item))
+                }
+            }
+
+            Section("CATEGORIES") {
+                ForEach(categoryService.orderedCategories, id: \.id) { entry in
+                    Label(entry.definition.displayName, systemImage: entry.definition.icon)
+                        .tag(SidebarSelection.category(entry.id))
                 }
             }
         }
@@ -26,6 +39,13 @@ struct SidebarView: View {
 }
 
 #Preview {
-    SidebarView(selection: .constant(.browse))
-        .frame(width: 200)
+    SidebarView(
+        selection: .constant(.discover(.browse)),
+        categoryService: {
+            let service = CategoryService()
+            service.loadCategories()
+            return service
+        }()
+    )
+    .frame(width: 200)
 }
