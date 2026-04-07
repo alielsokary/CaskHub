@@ -12,6 +12,7 @@ struct Cask: Codable, Identifiable, Hashable {
     let name: [String]
     let desc: String?
     let homepage: String
+    let url: String?
     let version: String
     let installed: String?
     let outdated: Bool

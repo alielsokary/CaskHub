@@ -41,7 +41,7 @@ struct CaskCardView: View {
     }
 
     private var iconPlaceholder: some View {
-        CaskIconView(size: 44)
+        CaskIconView(cask: cask, size: 44)
     }
 
     private func pricingBadge(_ type: CaskPricingType) -> some View {
@@ -124,6 +124,7 @@ struct CaskCardView: View {
                 name: ["Firefox"],
                 desc: "Web browser developed by Mozilla Foundation",
                 homepage: "https://www.mozilla.org/firefox/",
+                url: nil,
                 version: "125.0",
                 installed: nil,
                 outdated: false,
@@ -141,6 +142,7 @@ struct CaskCardView: View {
                 name: ["Ledger Live"],
                 desc: "Manage your crypto assets and hardware wallet securely.",
                 homepage: "https://www.ledger.com",
+                url: nil,
                 version: "2.80.0",
                 installed: nil,
                 outdated: false,
