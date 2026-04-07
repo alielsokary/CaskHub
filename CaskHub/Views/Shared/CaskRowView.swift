@@ -13,7 +13,7 @@ struct CaskRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            CaskIconView(size: 40)
+            CaskIconView(cask: cask, size: 40)
             appInfo
             Spacer()
             metadata
@@ -88,6 +88,7 @@ struct CaskRowView: View {
                 name: ["Firefox"],
                 desc: "Web browser developed by Mozilla Foundation",
                 homepage: "https://www.mozilla.org/firefox/",
+                url: nil,
                 version: "125.0",
                 installed: nil,
                 outdated: false,

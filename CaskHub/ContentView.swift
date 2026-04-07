@@ -14,6 +14,7 @@ enum ViewMode: String {
 struct ContentView: View {
     @State private var categoryService: CategoryService
     @State private var viewModel: CaskCatalogViewModel
+    @State private var imageCache = ImageCacheService()
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @State private var viewMode: ViewMode = .grid
 
@@ -38,6 +39,7 @@ struct ContentView: View {
                 .searchable(text: $viewModel.searchText, prompt: "Search apps...")
                 .toolbar { toolbarItems }
         }
+        .environment(imageCache)
         .task {
             await viewModel.fetchCasks()
         }
