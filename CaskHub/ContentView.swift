@@ -13,6 +13,7 @@ enum ViewMode: String {
 
 struct ContentView: View {
     @State private var categoryService: CategoryService
+    @State private var recentlyAddedTracker = RecentlyAddedTracker()
     @State private var viewModel: CaskCatalogViewModel
     @State private var imageCache = ImageCacheService()
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
@@ -25,8 +26,10 @@ struct ContentView: View {
     init() {
         let service = CategoryService()
         service.loadCategories()
+        let tracker = RecentlyAddedTracker()
         _categoryService = State(initialValue: service)
-        _viewModel = State(initialValue: CaskCatalogViewModel(categoryService: service))
+        _recentlyAddedTracker = State(initialValue: tracker)
+        _viewModel = State(initialValue: CaskCatalogViewModel(categoryService: service, recentlyAddedTracker: tracker))
     }
 
     var body: some View {
