@@ -12,6 +12,8 @@ struct CaskCardView: View {
     var downloads: String?
     var pricingType: CaskPricingType?
 
+    @State private var showingInfo = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             headerRow
@@ -31,12 +33,27 @@ struct CaskCardView: View {
     // MARK: - Header (Icon + Pricing Badge)
 
     private var headerRow: some View {
-        HStack {
+        HStack(alignment: .top) {
             iconPlaceholder
             Spacer()
             if let pricingType {
                 pricingBadge(pricingType)
             }
+            infoButton
+        }
+    }
+
+    private var infoButton: some View {
+        Button {
+            showingInfo.toggle()
+        } label: {
+            Image(systemName: "info.circle")
+                .font(.body)
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $showingInfo) {
+            CaskInfoPopover(cask: cask)
         }
     }
 
@@ -121,12 +138,16 @@ struct CaskCardView: View {
         CaskCardView(
             cask: Cask(
                 token: "firefox",
+                fullToken: "firefox",
+                tap: "homebrew/cask",
                 name: ["Firefox"],
                 desc: "Web browser developed by Mozilla Foundation",
                 homepage: "https://www.mozilla.org/firefox/",
-                url: nil,
+                url: "https://download.mozilla.org/firefox.dmg",
                 version: "125.0",
                 installed: nil,
+                bundleVersion: nil,
+                bundleShortVersion: nil,
                 outdated: false,
                 deprecated: false,
                 disabled: false,
@@ -139,12 +160,16 @@ struct CaskCardView: View {
         CaskCardView(
             cask: Cask(
                 token: "ledger-live",
+                fullToken: "ledger-live",
+                tap: "homebrew/cask",
                 name: ["Ledger Live"],
                 desc: "Manage your crypto assets and hardware wallet securely.",
                 homepage: "https://www.ledger.com",
                 url: nil,
                 version: "2.80.0",
                 installed: nil,
+                bundleVersion: nil,
+                bundleShortVersion: nil,
                 outdated: false,
                 deprecated: false,
                 disabled: false,
