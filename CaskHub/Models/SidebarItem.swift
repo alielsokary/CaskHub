@@ -13,6 +13,7 @@ enum DiscoverItem: String, CaseIterable, Identifiable {
     case browse = "Browse"
     case featured = "Featured"
     case topCharts = "Top Charts"
+    case recentlyAdded = "Recently Added"
 
     var id: String { rawValue }
 
@@ -21,6 +22,7 @@ enum DiscoverItem: String, CaseIterable, Identifiable {
         case .browse: return "square.grid.2x2"
         case .featured: return "star"
         case .topCharts: return "chart.line.uptrend.xyaxis"
+        case .recentlyAdded: return "clock.badge.checkmark"
         }
     }
 }

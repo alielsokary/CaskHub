@@ -29,10 +29,12 @@ final class CaskCatalogViewModel {
 
     private let apiClient: BrewAPIClientProtocol
     private let categoryService: CategoryService
+    private let recentlyAddedTracker: RecentlyAddedTracker
 
-    init(apiClient: BrewAPIClientProtocol = BrewAPIClient(), categoryService: CategoryService) {
+    init(apiClient: BrewAPIClientProtocol = BrewAPIClient(), categoryService: CategoryService, recentlyAddedTracker: RecentlyAddedTracker) {
         self.apiClient = apiClient
         self.categoryService = categoryService
+        self.recentlyAddedTracker = recentlyAddedTracker
     }
 
     // MARK: - Filtered Casks (3-stage pipeline)
@@ -56,6 +58,16 @@ final class CaskCatalogViewModel {
 
         case .discover(.topCharts):
             return casks
+
+        case .discover(.recentlyAdded):
+            let recentTokens = recentlyAddedTracker.recentTokens()
+            return casks
+                .filter { recentTokens.contains($0.token) }
+                .sorted { lhs, rhs in
+                    let lhsDate = recentlyAddedTracker.firstSeenDate(for: lhs.token) ?? .distantPast
+                    let rhsDate = recentlyAddedTracker.firstSeenDate(for: rhs.token) ?? .distantPast
+                    return lhsDate > rhsDate
+                }
 
         case .library(.installed):
             return casks.filter { $0.installed != nil }
@@ -107,6 +119,8 @@ final class CaskCatalogViewModel {
                 && !cask.token.contains("@")
                 && !cask.token.hasPrefix("font-")
             }
+
+            recentlyAddedTracker.updateWithCurrentTokens(Set(casks.map(\.token)))
 
             if let analytics = try? await analyticsRequest {
                 downloadCounts = Dictionary(
