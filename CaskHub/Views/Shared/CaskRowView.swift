@@ -85,12 +85,16 @@ struct CaskRowView: View {
         CaskRowView(
             cask: Cask(
                 token: "firefox",
+                fullToken: nil,
+                tap: nil,
                 name: ["Firefox"],
                 desc: "Web browser developed by Mozilla Foundation",
                 homepage: "https://www.mozilla.org/firefox/",
                 url: nil,
                 version: "125.0",
                 installed: nil,
+                bundleVersion: nil,
+                bundleShortVersion: nil,
                 outdated: false,
                 deprecated: false,
                 disabled: false,

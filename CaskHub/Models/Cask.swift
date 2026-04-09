@@ -9,12 +9,16 @@ import Foundation
 
 struct Cask: Codable, Identifiable, Hashable {
     let token: String
+    let fullToken: String?
+    let tap: String?
     let name: [String]
     let desc: String?
     let homepage: String
     let url: String?
     let version: String
     let installed: String?
+    let bundleVersion: String?
+    let bundleShortVersion: String?
     let outdated: Bool
     let deprecated: Bool
     let disabled: Bool
