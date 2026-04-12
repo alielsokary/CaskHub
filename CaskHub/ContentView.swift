@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var recentlyAddedTracker = RecentlyAddedTracker()
     @State private var viewModel: CaskCatalogViewModel
     @State private var imageCache = ImageCacheService()
+    @State private var localHomebrew = LocalHomebrewService()
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @State private var viewMode: ViewMode = .grid
 
@@ -27,15 +28,25 @@ struct ContentView: View {
         let service = CategoryService()
         service.loadCategories()
         let tracker = RecentlyAddedTracker()
+        let localHomebrewService = LocalHomebrewService()
         _categoryService = State(initialValue: service)
         _recentlyAddedTracker = State(initialValue: tracker)
-        _viewModel = State(initialValue: CaskCatalogViewModel(categoryService: service, recentlyAddedTracker: tracker))
+        _localHomebrew = State(initialValue: localHomebrewService)
+        _viewModel = State(initialValue: CaskCatalogViewModel(
+            categoryService: service,
+            recentlyAddedTracker: tracker,
+            localHomebrew: localHomebrewService
+        ))
     }
 
     var body: some View {
         NavigationSplitView {
-            SidebarView(selection: $selectedSidebar, categoryService: categoryService)
-                .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 260)
+            SidebarView(
+                selection: $selectedSidebar,
+                categoryService: categoryService,
+                updatesCount: viewModel.updatesCount
+            )
+            .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 260)
         } detail: {
             detailContent
                 .navigationTitle(navigationTitle)
@@ -43,8 +54,11 @@ struct ContentView: View {
                 .toolbar { toolbarItems }
         }
         .environment(imageCache)
+        .environment(localHomebrew)
         .task {
-            await viewModel.fetchCasks()
+            async let catalog: Void = viewModel.fetchCasks()
+            async let local: Void = localHomebrew.refresh()
+            _ = await (catalog, local)
         }
         .onChange(of: selectedSidebar) { _, newValue in
             viewModel.selectedSidebar = newValue
