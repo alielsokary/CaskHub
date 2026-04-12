@@ -12,13 +12,15 @@ struct CaskCardView: View {
     var downloads: String?
     var pricingType: CaskPricingType?
 
+    @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var showingInfo = false
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             headerRow
             appInfo
-            installButton
+            actionsView
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -27,6 +29,26 @@ struct CaskCardView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(.separator, lineWidth: 0.5)
+        )
+        .alert("Uninstall \(cask.displayName)?", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Uninstall", role: .destructive) {
+                Task { try? await localHomebrew.uninstall(token: cask.token) }
+            }
+        } message: {
+            Text("This will run `brew uninstall --cask \(cask.token)`.")
+        }
+        .alert("Error", isPresented: hasActionError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(localHomebrew.actionErrors[cask.token] ?? "")
+        }
+    }
+
+    private var hasActionError: Binding<Bool> {
+        Binding(
+            get: { localHomebrew.actionErrors[cask.token] != nil },
+            set: { if !$0 { localHomebrew.clearError(for: cask.token) } }
         )
     }
 
@@ -111,11 +133,99 @@ struct CaskCardView: View {
         .foregroundStyle(.tertiary)
     }
 
-    // MARK: - Install Button
+    // MARK: - Actions
+
+    @ViewBuilder
+    private var actionsView: some View {
+        if let inFlight = localHomebrew.inFlightActions[cask.token] {
+            inFlightRow(label: inFlight.inProgressLabel)
+        } else if let installation = localHomebrew.installedCasks[cask.token] {
+            installedButtons(for: installation)
+        } else {
+            installButton
+        }
+    }
+
+    @ViewBuilder
+    private func installedButtons(for installation: LocalCaskInstallation) -> some View {
+        let showUpdate = localHomebrew.hasAvailableUpdate(
+            token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates
+        )
+        let canOpen = !installation.appBundleNames.isEmpty
+
+        HStack(spacing: 8) {
+            if canOpen {
+                actionButton(systemImage: "play.fill", title: "Open", prominent: false) {
+                    localHomebrew.openApp(token: cask.token)
+                }
+            }
+            if showUpdate {
+                actionButton(systemImage: "arrow.up.circle.fill", title: "Update", prominent: false) {
+                    Task { try? await localHomebrew.upgrade(token: cask.token) }
+                }
+            }
+            Spacer()
+            actionButton(systemImage: "trash", title: nil, role: .destructive) {
+                showDeleteConfirmation = true
+            }
+        }
+    }
+
+    private func inFlightRow(label: String) -> some View {
+        HStack(spacing: 6) {
+            ProgressView().controlSize(.small)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(.quaternary)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func actionButton(
+        systemImage: String,
+        title: String?,
+        prominent: Bool = false,
+        role: ButtonRole? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(role: role, action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: systemImage).font(.caption)
+                if let title {
+                    Text(title)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+            }
+            .frame(maxWidth: title == nil ? nil : .infinity)
+            .padding(.vertical, 6)
+            .padding(.horizontal, title == nil ? 10 : 0)
+            .background(background(prominent: prominent, role: role))
+            .foregroundStyle(foreground(prominent: prominent, role: role))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func background(prominent: Bool, role: ButtonRole?) -> AnyShapeStyle {
+        if prominent { return AnyShapeStyle(Color.accentColor) }
+        return AnyShapeStyle(.quaternary)
+    }
+
+    private func foreground(prominent: Bool, role: ButtonRole?) -> AnyShapeStyle {
+        if prominent { return AnyShapeStyle(.white) }
+        if role == .destructive { return AnyShapeStyle(.red) }
+        return AnyShapeStyle(.primary)
+    }
+
+    // MARK: - Install Button (for not-installed casks)
 
     private var installButton: some View {
         Button {
-            // Install action — wired up in Phase 5
+            Task { try? await localHomebrew.install(token: cask.token) }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.down.to.line")
@@ -180,4 +290,5 @@ struct CaskCardView: View {
         .frame(width: 220)
     }
     .padding()
+    .environment(LocalHomebrewService())
 }
