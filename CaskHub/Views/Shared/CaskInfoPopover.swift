@@ -10,6 +10,8 @@ import SwiftUI
 struct CaskInfoPopover: View {
     let cask: Cask
 
+    @Environment(LocalHomebrewService.self) private var localHomebrew
+
     var body: some View {
         Grid(alignment: .leadingFirstTextBaseline, verticalSpacing: 8) {
             headerRow
@@ -73,13 +75,22 @@ struct CaskInfoPopover: View {
             ))
         }
 
+        let localInstallation = localHomebrew.installedCasks[cask.token]
+
         result.append(InfoRow(
             property: "Installed Version",
-            value: cask.installed ?? "Not installed"
+            value: localInstallation?.installedVersion ?? "Not installed"
         ))
 
         if let bundleVersion = cask.bundleVersion {
             result.append(InfoRow(property: "Bundle Version", value: bundleVersion))
+        }
+
+        if let installedAt = localInstallation?.installedAt {
+            result.append(InfoRow(
+                property: "Installation Date",
+                value: installedAt.formatted(date: .abbreviated, time: .shortened)
+            ))
         }
 
         if let bundleShortVersion = cask.bundleShortVersion {
@@ -125,4 +136,5 @@ private struct InfoRow {
             autoUpdates: true
         )
     )
+    .environment(LocalHomebrewService())
 }

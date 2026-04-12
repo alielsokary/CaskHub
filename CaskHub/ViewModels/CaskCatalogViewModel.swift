@@ -30,11 +30,30 @@ final class CaskCatalogViewModel {
     private let apiClient: BrewAPIClientProtocol
     private let categoryService: CategoryService
     private let recentlyAddedTracker: RecentlyAddedTracker
+    private let localHomebrew: LocalHomebrewService
 
-    init(apiClient: BrewAPIClientProtocol = BrewAPIClient(), categoryService: CategoryService, recentlyAddedTracker: RecentlyAddedTracker) {
+    init(
+        apiClient: BrewAPIClientProtocol = BrewAPIClient(),
+        categoryService: CategoryService,
+        recentlyAddedTracker: RecentlyAddedTracker,
+        localHomebrew: LocalHomebrewService
+    ) {
         self.apiClient = apiClient
         self.categoryService = categoryService
         self.recentlyAddedTracker = recentlyAddedTracker
+        self.localHomebrew = localHomebrew
+    }
+
+    // MARK: - Sidebar Counts
+
+    /// Number of locally-installed, non-auto-updating casks whose installed
+    /// version differs from the latest available version in the catalog.
+    var updatesCount: Int {
+        casks.lazy
+            .filter { [localHomebrew] in
+                localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
+            }
+            .count
     }
 
     // MARK: - Filtered Casks (3-stage pipeline)
@@ -70,10 +89,12 @@ final class CaskCatalogViewModel {
                 }
 
         case .library(.installed):
-            return casks.filter { $0.installed != nil }
+            return casks.filter { localHomebrew.isInstalled(token: $0.token) }
 
         case .library(.updates):
-            return casks.filter { $0.outdated }
+            return casks.filter {
+                localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
+            }
 
         case .category(let categoryID):
             let tokens = categoryService.tokens(in: categoryID)
