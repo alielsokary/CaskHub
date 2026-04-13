@@ -66,6 +66,10 @@
     "officeTools": {
       "displayName": "Office Tools",
       "icon": "doc.richtext"
+    },
+    "screensaverWallpaper": {
+      "displayName": "Screensaver & Wallpaper",
+      "icon": "sparkles.rectangle.stack"
     }
   },
   "tokenToCategory": {
@@ -340,7 +344,7 @@
       "secondary": []
     },
     "after-dark-classic": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "agent-tars": {
@@ -406,11 +410,11 @@
       "secondary": []
     },
     "airmedia": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "airparrot": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "airpass": {
@@ -422,7 +426,7 @@
       "secondary": []
     },
     "airserver": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "airtable": {
@@ -1136,7 +1140,7 @@
       "secondary": []
     },
     "backdrop": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "background-music": {
@@ -1184,7 +1188,7 @@
       "secondary": []
     },
     "bambu-connect": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "bambu-studio": {
@@ -1288,7 +1292,7 @@
       "secondary": []
     },
     "beardie": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "beast2": {
@@ -1332,7 +1336,7 @@
       "secondary": []
     },
     "berrycast": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "bespoke": {
@@ -1420,7 +1424,7 @@
       "secondary": []
     },
     "bing-wallpaper": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "birdfont": {
@@ -1716,7 +1720,7 @@
       "secondary": []
     },
     "brooklyn": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "browser-actions": {
@@ -1792,7 +1796,7 @@
       "secondary": []
     },
     "butt": {
-      "primary": "videoMedia",
+      "primary": "audioMusic",
       "secondary": []
     },
     "butterkit": {
@@ -1880,7 +1884,7 @@
       "secondary": []
     },
     "camtasia": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "camunda-modeler": {
@@ -1908,7 +1912,7 @@
       "secondary": []
     },
     "cap": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "capacities": {
@@ -1932,7 +1936,7 @@
       "secondary": []
     },
     "capto": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "carbide-create": {
@@ -1972,7 +1976,7 @@
       "secondary": []
     },
     "catch": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "catlight": {
@@ -2124,7 +2128,7 @@
       "secondary": []
     },
     "chrysalis": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "cinder": {
@@ -2148,7 +2152,7 @@
       "secondary": []
     },
     "cisco-proximity": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "cisdem-data-recovery": {
@@ -2318,7 +2322,7 @@
       "secondary": []
     },
     "clocksaver": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "clone-hero": {
@@ -2326,7 +2330,7 @@
       "secondary": []
     },
     "clop": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "cloud-pbx": {
@@ -2897,7 +2901,9 @@
     },
     "datadog-security-cli": {
       "primary": "securityPrivacy",
-      "secondary": []
+      "secondary": [
+        "developerTools"
+      ]
     },
     "dataflare": {
       "primary": "developerTools",
@@ -3216,7 +3222,7 @@
       "secondary": []
     },
     "displaylink": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "displays": {
@@ -3224,7 +3230,7 @@
       "secondary": []
     },
     "ditto": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "divvy": {
@@ -3418,7 +3424,7 @@
       "secondary": []
     },
     "droplr": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "dropshare": {
@@ -3660,7 +3666,7 @@
       "secondary": []
     },
     "elektron-overbridge": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "element": {
@@ -3680,15 +3686,15 @@
       "secondary": []
     },
     "elgato-camera-hub": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "elgato-capture-device-utility": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "elgato-control-center": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "elgato-game-capture-hd": {
@@ -3696,11 +3702,11 @@
       "secondary": []
     },
     "elgato-stream-deck": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "elgato-studio": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "elgato-video-capture": {
@@ -3708,7 +3714,7 @@
       "secondary": []
     },
     "elgato-wave-link": {
-      "primary": "videoMedia",
+      "primary": "audioMusic",
       "secondary": []
     },
     "elmedia-player": {
@@ -3772,7 +3778,7 @@
       "secondary": []
     },
     "enfusegui": {
-      "primary": "videoMedia",
+      "primary": "designGraphics",
       "secondary": [
         "designGraphics"
       ]
@@ -3832,7 +3838,7 @@
       "secondary": []
     },
     "epoch-flip-clock": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "epson-print-layout": {
@@ -3892,7 +3898,7 @@
       "secondary": []
     },
     "ev3-classroom": {
-      "primary": "scienceEducation",
+      "primary": "other",
       "secondary": []
     },
     "eve-launcher": {
@@ -4050,7 +4056,7 @@
       ]
     },
     "fathom": {
-      "primary": "videoMedia",
+      "primary": "productivity",
       "secondary": []
     },
     "favro": {
@@ -4102,7 +4108,7 @@
       "secondary": []
     },
     "fido2-manage": {
-      "primary": "securityPrivacy",
+      "primary": "other",
       "secondary": []
     },
     "fightcade": {
@@ -4290,7 +4296,7 @@
       ]
     },
     "fliqlo": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "flirc": {
@@ -4408,7 +4414,7 @@
       "secondary": []
     },
     "focusrite-control": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "focusrite-control-2": {
@@ -4640,7 +4646,7 @@
       "secondary": []
     },
     "fruit-screensaver": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "fs-uae-emulator": {
@@ -4772,7 +4778,7 @@
       "secondary": []
     },
     "gather": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "gb-studio": {
@@ -4918,7 +4924,7 @@
       "secondary": []
     },
     "gifox": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "gimp": {
@@ -5126,7 +5132,7 @@
       "secondary": []
     },
     "google-trends": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "google-web-designer": {
@@ -5148,7 +5154,7 @@
       "secondary": []
     },
     "gotomeeting": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "goxel": {
@@ -5248,7 +5254,7 @@
       "secondary": []
     },
     "grid-clock": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "gridea": {
@@ -5300,7 +5306,7 @@
       "secondary": []
     },
     "gyazo": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "gyroflow": {
@@ -5758,7 +5764,7 @@
       "secondary": []
     },
     "ik-product-manager": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "iloader": {
@@ -5818,7 +5824,7 @@
       "secondary": []
     },
     "infinidesk": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "infinity": {
@@ -5866,7 +5872,7 @@
       "secondary": []
     },
     "insta360-link-controller": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "insta360-studio": {
@@ -5996,7 +6002,7 @@
       "secondary": []
     },
     "ishowu-instant": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "isimulator": {
@@ -6070,7 +6076,7 @@
       "secondary": []
     },
     "ivideonserver": {
-      "primary": "videoMedia",
+      "primary": "securityPrivacy",
       "secondary": []
     },
     "ivolume": {
@@ -6250,11 +6256,11 @@
       "secondary": []
     },
     "jitsi": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "jitsi-meet": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "jollysfastvnc": {
@@ -6332,7 +6338,7 @@
       "secondary": []
     },
     "jumpshare": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "jupyter-notebook-viewer": {
@@ -6378,7 +6384,7 @@
       "secondary": []
     },
     "kap": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "karabiner-elements": {
@@ -6434,7 +6440,7 @@
       "secondary": []
     },
     "keet": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "keeweb": {
@@ -6602,7 +6608,7 @@
       "secondary": []
     },
     "kmeet": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "knime": {
@@ -6644,7 +6650,7 @@
       "secondary": []
     },
     "kontur-talk": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "kopiaui": {
@@ -6874,7 +6880,7 @@
       "secondary": []
     },
     "licecap": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "licensed-app": {
@@ -6890,11 +6896,11 @@
       "secondary": []
     },
     "lifesize": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "lightburn": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "lightkey": {
@@ -7044,7 +7050,7 @@
       "secondary": []
     },
     "logitune": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "logmein-client": {
@@ -7088,7 +7094,7 @@
       "secondary": []
     },
     "loom": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "loop": {
@@ -7180,7 +7186,7 @@
       "secondary": []
     },
     "lyn": {
-      "primary": "videoMedia",
+      "primary": "designGraphics",
       "secondary": []
     },
     "lynx-whiteboard": {
@@ -7447,7 +7453,9 @@
     },
     "mailtrackerblocker": {
       "primary": "securityPrivacy",
-      "secondary": []
+      "secondary": [
+        "communication"
+      ]
     },
     "maintenance": {
       "primary": "utilities",
@@ -7650,11 +7658,11 @@
       "secondary": []
     },
     "mediainfoex": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "mediamate": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "mediathekview": {
@@ -8026,7 +8034,7 @@
       ]
     },
     "minstaller": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "mints": {
@@ -8270,7 +8278,7 @@
       "secondary": []
     },
     "motionik": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "motrix": {
@@ -8278,7 +8286,7 @@
       "secondary": []
     },
     "motu-m-series": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "mountain-duck": {
@@ -8486,7 +8494,7 @@
       "secondary": []
     },
     "mutedeck": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "muteme": {
@@ -8928,7 +8936,7 @@
       "secondary": []
     },
     "novation-components": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "novation-play": {
@@ -8986,7 +8994,7 @@
       "secondary": []
     },
     "nugget": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "nulloy": {
@@ -9015,7 +9023,9 @@
     },
     "nx-studio": {
       "primary": "videoMedia",
-      "secondary": []
+      "secondary": [
+        "designGraphics"
+      ]
     },
     "objectivesharpie": {
       "primary": "developerTools",
@@ -9026,7 +9036,7 @@
       "secondary": []
     },
     "obs": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "obscura-vpn": {
@@ -9166,7 +9176,7 @@
       "secondary": []
     },
     "ontime": {
-      "primary": "videoMedia",
+      "primary": "productivity",
       "secondary": []
     },
     "onyx": {
@@ -9178,7 +9188,7 @@
       "secondary": []
     },
     "opal-composer": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "opcode": {
@@ -9204,7 +9214,7 @@
       "secondary": []
     },
     "openbci": {
-      "primary": "scienceEducation",
+      "primary": "other",
       "secondary": []
     },
     "openboard": {
@@ -9468,7 +9478,7 @@
       "secondary": []
     },
     "osp-tracker": {
-      "primary": "videoMedia",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "osquery": {
@@ -9648,7 +9658,7 @@
       "secondary": []
     },
     "paper": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "papercut-mobility-print-client": {
@@ -9748,7 +9758,7 @@
       "secondary": []
     },
     "pd": {
-      "primary": "videoMedia",
+      "primary": "audioMusic",
       "secondary": []
     },
     "pdf-converter-master": {
@@ -9796,7 +9806,7 @@
       "secondary": []
     },
     "pdfkey-pro": {
-      "primary": "securityPrivacy",
+      "primary": "officeTools",
       "secondary": []
     },
     "pdfsam-basic": {
@@ -9880,7 +9890,7 @@
       "secondary": []
     },
     "photosync": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "photozoom-pro": {
@@ -10182,7 +10192,7 @@
       "secondary": []
     },
     "portalbox": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "portfolioperformance": {
@@ -10310,7 +10320,7 @@
       "secondary": []
     },
     "prezi-video": {
-      "primary": "videoMedia",
+      "primary": "productivity",
       "secondary": []
     },
     "prince": {
@@ -10590,7 +10600,7 @@
       "secondary": []
     },
     "qlvideo": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "qobuz": {
@@ -10692,7 +10702,8 @@
     "quiet": {
       "primary": "communication",
       "secondary": [
-        "securityPrivacy"
+        "securityPrivacy",
+        "communication"
       ]
     },
     "quip": {
@@ -10928,7 +10939,7 @@
       "secondary": []
     },
     "reflector": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "reflex-app": {
@@ -11063,14 +11074,16 @@
     },
     "restream-chat": {
       "primary": "videoMedia",
-      "secondary": []
+      "secondary": [
+        "communication"
+      ]
     },
     "retcon": {
       "primary": "developerTools",
       "secondary": []
     },
     "retrace": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "retro-virtual-machine": {
@@ -11132,7 +11145,7 @@
       "secondary": []
     },
     "ricoh-theta": {
-      "primary": "videoMedia",
+      "primary": "other",
       "secondary": []
     },
     "rider": {
@@ -11148,7 +11161,7 @@
       "secondary": []
     },
     "ringcentral": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "ringcentral-classic": {
@@ -11168,7 +11181,7 @@
       "secondary": []
     },
     "ripme": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "rippling": {
@@ -11256,7 +11269,7 @@
       "secondary": []
     },
     "rode-central": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "rode-connect": {
@@ -11272,7 +11285,7 @@
       "secondary": []
     },
     "rodecaster": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "roku-remote-tool": {
@@ -11428,7 +11441,7 @@
       "secondary": []
     },
     "satellite-eyes": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "satyrn": {
@@ -11506,15 +11519,15 @@
       "secondary": []
     },
     "screen-studio": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "screenflick": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "screenflow": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "screenfocus": {
@@ -11708,7 +11721,7 @@
       "secondary": []
     },
     "shadow": {
-      "primary": "videoMedia",
+      "primary": "games",
       "secondary": [
         "games"
       ]
@@ -11812,7 +11825,7 @@
       "secondary": []
     },
     "shureplus-motiv": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "shutter-encoder": {
@@ -11854,7 +11867,7 @@
       "secondary": []
     },
     "silhouette-studio": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "silicon-app": {
@@ -11878,7 +11891,7 @@
       "secondary": []
     },
     "sim-daltonism": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "sim-genie": {
@@ -11898,7 +11911,7 @@
       "secondary": []
     },
     "simpleclock": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "simpledemviewer": {
@@ -11960,7 +11973,7 @@
       "secondary": []
     },
     "sirimote": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "sitala": {
@@ -12155,7 +12168,9 @@
     },
     "socialstream": {
       "primary": "videoMedia",
-      "secondary": []
+      "secondary": [
+        "communication"
+      ]
     },
     "sococo": {
       "primary": "communication",
@@ -12242,7 +12257,7 @@
       "secondary": []
     },
     "sonos-s1-controller": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "sony-ps-remote-play": {
@@ -12610,7 +12625,7 @@
       "secondary": []
     },
     "steinberg-mediabay": {
-      "primary": "videoMedia",
+      "primary": "audioMusic",
       "secondary": []
     },
     "stella-app": {
@@ -12656,7 +12671,7 @@
       "secondary": []
     },
     "strawberry-wallpaper": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "streamlabs": {
@@ -13174,7 +13189,7 @@
       "secondary": []
     },
     "teamviewermeeting": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "techsmith-capture": {
@@ -13214,7 +13229,7 @@
       ]
     },
     "tella": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "tempbox": {
@@ -13234,7 +13249,7 @@
       "secondary": []
     },
     "tencent-meeting": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "tentacle-sync-studio": {
@@ -13399,11 +13414,15 @@
     },
     "threema": {
       "primary": "securityPrivacy",
-      "secondary": []
+      "secondary": [
+        "communication"
+      ]
     },
     "threema-work": {
       "primary": "securityPrivacy",
-      "secondary": []
+      "secondary": [
+        "communication"
+      ]
     },
     "ths": {
       "primary": "financeCrypto",
@@ -14288,7 +14307,7 @@
       "secondary": []
     },
     "virtual-desktop-streamer": {
-      "primary": "videoMedia",
+      "primary": "games",
       "secondary": []
     },
     "virtual-ii": {
@@ -14388,7 +14407,7 @@
       "secondary": []
     },
     "vk-calls": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "vk-messenger": {
@@ -14464,7 +14483,7 @@
       "secondary": []
     },
     "voov-meeting": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "vorta": {
@@ -14504,7 +14523,7 @@
       "secondary": []
     },
     "vsee": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "vuescan": {
@@ -14528,7 +14547,7 @@
       "secondary": []
     },
     "wacom-tablet": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "wailbrew": {
@@ -14540,11 +14559,11 @@
       "secondary": []
     },
     "wallpaper-wizard": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "waltr": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "waltr-heic-converter": {
@@ -14552,7 +14571,7 @@
       "secondary": []
     },
     "waltr-pro": {
-      "primary": "videoMedia",
+      "primary": "utilities",
       "secondary": []
     },
     "warcraft-logs-uploader": {
@@ -14565,7 +14584,9 @@
     },
     "warsaw": {
       "primary": "securityPrivacy",
-      "secondary": []
+      "secondary": [
+        "financeCrypto"
+      ]
     },
     "wasabi-wallet": {
       "primary": "financeCrypto",
@@ -14596,7 +14617,7 @@
       "secondary": []
     },
     "wd-security": {
-      "primary": "securityPrivacy",
+      "primary": "other",
       "secondary": []
     },
     "wealthfolio": {
@@ -14616,7 +14637,7 @@
       "secondary": []
     },
     "webex-meetings": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "webkinz": {
@@ -14644,7 +14665,7 @@
       "secondary": []
     },
     "webviewscreensaver": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "wechat": {
@@ -14932,7 +14953,7 @@
       "secondary": []
     },
     "wwdc": {
-      "primary": "videoMedia",
+      "primary": "developerTools",
       "secondary": []
     },
     "wxmacmolplt": {
@@ -15046,7 +15067,7 @@
       "secondary": []
     },
     "xppen-pentablet": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "xprocheck": {
@@ -15066,7 +15087,7 @@
       "secondary": []
     },
     "xscreensaver": {
-      "primary": "videoMedia",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "xsplit-vcam": {
@@ -15074,7 +15095,7 @@
       "secondary": []
     },
     "xtool-studio": {
-      "primary": "designGraphics",
+      "primary": "other",
       "secondary": []
     },
     "yaak": {
@@ -15110,7 +15131,7 @@
       "secondary": []
     },
     "yandextelemost": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "yate": {
@@ -15122,7 +15143,7 @@
       "secondary": []
     },
     "yealink-meeting": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "yed": {
@@ -15292,11 +15313,11 @@
       "secondary": []
     },
     "zoom-for-it-admins": {
-      "primary": "videoMedia",
+      "primary": "communication",
       "secondary": []
     },
     "zoom-m3-edit-and-play": {
-      "primary": "audioMusic",
+      "primary": "other",
       "secondary": []
     },
     "zotero": {
