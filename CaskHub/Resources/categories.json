@@ -62,6 +62,10 @@
     "other": {
       "displayName": "Other",
       "icon": "square.grid.2x2"
+    },
+    "officeTools": {
+      "displayName": "Office Tools",
+      "icon": "doc.richtext"
     }
   },
   "tokenToCategory": {
@@ -2848,7 +2852,7 @@
       "secondary": []
     },
     "dangerzone": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "dante-controller": {
@@ -6850,19 +6854,19 @@
       "secondary": []
     },
     "libreoffice": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "libreoffice-language-pack": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "libreoffice-still": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "libreoffice-still-language-pack": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "librepcb": {
@@ -7840,7 +7844,7 @@
       "secondary": []
     },
     "microsoft-auto-update": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "microsoft-azure-storage-explorer": {
@@ -7854,19 +7858,19 @@
       "secondary": []
     },
     "microsoft-excel": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "microsoft-office": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "microsoft-office-businesspro": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "microsoft-onenote": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "microsoft-openjdk": {
@@ -7874,11 +7878,11 @@
       "secondary": []
     },
     "microsoft-outlook": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "microsoft-powerpoint": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "microsoft-teams": {
@@ -7886,7 +7890,7 @@
       "secondary": []
     },
     "microsoft-word": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "middle": {
@@ -9158,7 +9162,7 @@
       "secondary": []
     },
     "onlyoffice": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "ontime": {
@@ -11112,7 +11116,7 @@
       "secondary": []
     },
     "revolver-office": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "rewritebar": {
@@ -12170,7 +12174,7 @@
       "secondary": []
     },
     "softmaker-freeoffice": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "softorino-youtube-converter": {
@@ -14908,11 +14912,11 @@
       "secondary": []
     },
     "wpsoffice": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "wpsoffice-cn": {
-      "primary": "productivity",
+      "primary": "officeTools",
       "secondary": []
     },
     "wrike": {
