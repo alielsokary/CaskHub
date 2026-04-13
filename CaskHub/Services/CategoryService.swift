@@ -15,19 +15,24 @@ struct CategoryDefinition: Codable, Hashable {
     let icon: String
 }
 
+struct TokenCategoryMapping: Codable, Hashable {
+    let primary: CategoryID
+    let secondary: [CategoryID]
+}
+
 struct CaskCategoryData: Codable {
     let version: Int
     let generatedDate: String
     let totalCasks: Int
     let categories: [String: CategoryDefinition]
-    let tokenToCategory: [String: String]
+    let tokenToCategory: [String: TokenCategoryMapping]
 }
 
 @MainActor
 @Observable
 final class CategoryService {
     private(set) var categoryDefinitions: [CategoryID: CategoryDefinition] = [:]
-    private(set) var tokenToCategory: [String: CategoryID] = [:]
+    private(set) var tokenMappings: [String: TokenCategoryMapping] = [:]
     private(set) var categoryTokenSets: [CategoryID: Set<String>] = [:]
     private(set) var isLoaded = false
 
@@ -49,20 +54,30 @@ final class CategoryService {
         }
 
         categoryDefinitions = catalog.categories
-        tokenToCategory = catalog.tokenToCategory
+        tokenMappings = catalog.tokenToCategory
 
         var sets: [CategoryID: Set<String>] = [:]
-        for (token, catID) in catalog.tokenToCategory {
-            sets[catID, default: []].insert(token)
+        for (token, mapping) in catalog.tokenToCategory {
+            sets[mapping.primary, default: []].insert(token)
+            for secondaryCat in mapping.secondary {
+                sets[secondaryCat, default: []].insert(token)
+            }
         }
         categoryTokenSets = sets
         isLoaded = true
     }
 
+    /// Returns the primary category for a cask token.
     func category(for token: String) -> CategoryID? {
-        tokenToCategory[token]
+        tokenMappings[token]?.primary
     }
 
+    /// Returns the full mapping (primary + secondary) for a cask token.
+    func mapping(for token: String) -> TokenCategoryMapping? {
+        tokenMappings[token]
+    }
+
+    /// Returns all cask tokens in a category (includes both primary and secondary assignments).
     func tokens(in categoryID: CategoryID) -> Set<String> {
         categoryTokenSets[categoryID] ?? []
     }
@@ -71,9 +86,13 @@ final class CategoryService {
         categoryDefinitions[categoryID]?.displayName ?? categoryID
     }
 
-    /// Future hook for Foundation Models on-device classification
-    func classify(token: String, as categoryID: CategoryID) {
-        tokenToCategory[token] = categoryID
+    /// Classify a token into a category at runtime (e.g. from on-device ML or remote update).
+    func classify(token: String, as categoryID: CategoryID, secondary: [CategoryID] = []) {
+        let mapping = TokenCategoryMapping(primary: categoryID, secondary: secondary)
+        tokenMappings[token] = mapping
         categoryTokenSets[categoryID, default: []].insert(token)
+        for secondaryCat in secondary {
+            categoryTokenSets[secondaryCat, default: []].insert(token)
+        }
     }
 }
