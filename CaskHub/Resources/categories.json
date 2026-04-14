@@ -146,10 +146,8 @@
       "secondary": []
     },
     "86box": {
-      "primary": "games",
-      "secondary": [
-        "developerTools"
-      ]
+      "primary": "developerTools",
+      "secondary": []
     },
     "8bitdo-ultimate-software": {
       "primary": "utilities",
@@ -326,7 +324,7 @@
       "secondary": []
     },
     "aerial": {
-      "primary": "utilities",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "affine": {
@@ -490,7 +488,7 @@
       "secondary": []
     },
     "algodoo": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "alienator88-sentinel": {
@@ -1405,7 +1403,7 @@
       "secondary": []
     },
     "bit-slicer": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "bitbox": {
@@ -1915,7 +1913,7 @@
       "secondary": []
     },
     "capto": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "carbide-create": {
@@ -2193,7 +2191,7 @@
       "secondary": []
     },
     "classroom-mode-for-minecraft": {
-      "primary": "games",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "claude": {
@@ -2301,7 +2299,7 @@
       "secondary": []
     },
     "clock-signal": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "clocker": {
@@ -2489,7 +2487,7 @@
       "secondary": []
     },
     "cold-turkey-blocker": {
-      "primary": "games",
+      "primary": "utilities",
       "secondary": []
     },
     "colemak-dh": {
@@ -2675,7 +2673,7 @@
       "secondary": []
     },
     "coq-platform": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "core-tunnel": {
@@ -3051,12 +3049,14 @@
       "secondary": []
     },
     "defold": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "dehelper": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "deltachat": {
       "primary": "communication",
@@ -3107,11 +3107,11 @@
       ]
     },
     "developerexcuses": {
-      "primary": "utilities",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "devilutionx": {
-      "primary": "utilities",
+      "primary": "games",
       "secondary": []
     },
     "devkinsta": {
@@ -3917,8 +3917,10 @@
       "secondary": []
     },
     "eudic": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "eufymake-studio": {
       "primary": "designGraphics",
@@ -4159,7 +4161,7 @@
       "secondary": []
     },
     "filebot": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "filefaker": {
@@ -4179,7 +4181,7 @@
       "secondary": []
     },
     "filen": {
-      "primary": "utilities",
+      "primary": "cloudStorage",
       "secondary": []
     },
     "filepane": {
@@ -4235,7 +4237,7 @@
       "secondary": []
     },
     "firebird-emu": {
-      "primary": "games",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "firecamp": {
@@ -4255,7 +4257,7 @@
       "secondary": []
     },
     "firestorm": {
-      "primary": "utilities",
+      "primary": "games",
       "secondary": []
     },
     "fireworks": {
@@ -4459,7 +4461,7 @@
       "secondary": []
     },
     "foldit": {
-      "primary": "games",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "folo": {
@@ -4483,7 +4485,7 @@
       "secondary": []
     },
     "fontgoggles": {
-      "primary": "utilities",
+      "primary": "designGraphics",
       "secondary": []
     },
     "fontlab": {
@@ -4541,7 +4543,7 @@
       "secondary": []
     },
     "fractal-bot": {
-      "primary": "games",
+      "primary": "audioMusic",
       "secondary": []
     },
     "frame0": {
@@ -4583,11 +4585,11 @@
       ]
     },
     "free42-binary": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "free42-decimal": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "freecad": {
@@ -4619,7 +4621,7 @@
       "secondary": []
     },
     "freesurfer": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "freetex": {
@@ -4731,7 +4733,7 @@
       "secondary": []
     },
     "gamemaker": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "gamma-control": {
@@ -4771,7 +4773,7 @@
       "secondary": []
     },
     "gb-studio": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "gcc-aarch64-embedded": {
@@ -4791,7 +4793,7 @@
       "secondary": []
     },
     "gdevelop": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "geany": {
@@ -4857,7 +4859,7 @@
       "secondary": []
     },
     "geph": {
-      "primary": "utilities",
+      "primary": "securityPrivacy",
       "secondary": []
     },
     "gephi": {
@@ -5019,11 +5021,11 @@
       "secondary": []
     },
     "godot": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "godot-mono": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "godspeed": {
@@ -5043,7 +5045,7 @@
       "secondary": []
     },
     "golly": {
-      "primary": "games",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "gologin": {
@@ -5211,7 +5213,7 @@
       "secondary": []
     },
     "grids": {
-      "primary": "utilities",
+      "primary": "communication",
       "secondary": []
     },
     "gridtracker2": {
@@ -5579,7 +5581,7 @@
       ]
     },
     "ibabel": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "ibackup-viewer": {
@@ -5727,8 +5729,10 @@
       "secondary": []
     },
     "infinity": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "inform": {
       "primary": "developerTools",
@@ -5811,7 +5815,7 @@
       "secondary": []
     },
     "invisor-lite": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "invoker": {
@@ -5833,7 +5837,7 @@
       "secondary": []
     },
     "ipaverse": {
-      "primary": "games",
+      "primary": "utilities",
       "secondary": []
     },
     "ipfs-desktop": {
@@ -6066,7 +6070,7 @@
       "secondary": []
     },
     "jellyfin": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "jellyfin-media-player": {
@@ -6246,7 +6250,7 @@
       "secondary": []
     },
     "karing": {
-      "primary": "utilities",
+      "primary": "securityPrivacy",
       "secondary": []
     },
     "katalon-studio": {
@@ -6398,7 +6402,7 @@
       "secondary": []
     },
     "kimis": {
-      "primary": "utilities",
+      "primary": "communication",
       "secondary": []
     },
     "kindavim": {
@@ -6878,9 +6882,9 @@
       "secondary": []
     },
     "locationsimulator": {
-      "primary": "utilities",
+      "primary": "developerTools",
       "secondary": [
-        "developerTools"
+        "utilities"
       ]
     },
     "lockrattler": {
@@ -7150,7 +7154,7 @@
       "secondary": []
     },
     "macintoshjs": {
-      "primary": "utilities",
+      "primary": "games",
       "secondary": []
     },
     "macloggerdx": {
@@ -7375,8 +7379,10 @@
       "secondary": []
     },
     "marsedit": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "marta": {
       "primary": "utilities",
@@ -7445,7 +7451,7 @@
       "secondary": []
     },
     "mcreator": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "mdb-accdb-viewer": {
@@ -7453,7 +7459,7 @@
       "secondary": []
     },
     "mdrp": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "mds": {
@@ -7477,7 +7483,7 @@
       "secondary": []
     },
     "mediainfo": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "mediamate": {
@@ -7591,11 +7597,11 @@
       "secondary": []
     },
     "meru": {
-      "primary": "utilities",
+      "primary": "communication",
       "secondary": []
     },
     "meshlab": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "meta": {
@@ -7787,7 +7793,7 @@
       "secondary": []
     },
     "minecraft-education": {
-      "primary": "games",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "minecraft-server": {
@@ -8187,7 +8193,7 @@
       "secondary": []
     },
     "multiviewer": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "mumu": {
@@ -8221,7 +8227,7 @@
       "secondary": []
     },
     "musaicfm": {
-      "primary": "utilities",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "museeks": {
@@ -8513,7 +8519,7 @@
       "secondary": []
     },
     "nheko": {
-      "primary": "utilities",
+      "primary": "communication",
       "secondary": []
     },
     "nifty": {
@@ -8726,8 +8732,10 @@
       "secondary": []
     },
     "numi": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "nutstore": {
       "primary": "cloudStorage",
@@ -8757,7 +8765,9 @@
     },
     "obs": {
       "primary": "utilities",
-      "secondary": []
+      "secondary": [
+        "videoMedia"
+      ]
     },
     "obscura-vpn": {
       "primary": "securityPrivacy",
@@ -9321,7 +9331,7 @@
       "secondary": []
     },
     "pandora": {
-      "primary": "utilities",
+      "primary": "audioMusic",
       "secondary": []
     },
     "panoply": {
@@ -9397,8 +9407,10 @@
       "secondary": []
     },
     "parsify": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "passepartout": {
       "primary": "securityPrivacy",
@@ -9483,7 +9495,7 @@
       "secondary": []
     },
     "pdfsam-basic": {
-      "primary": "utilities",
+      "primary": "productivity",
       "secondary": []
     },
     "pdl": {
@@ -9721,18 +9733,16 @@
       "secondary": []
     },
     "playcover-community": {
-      "primary": "games",
+      "primary": "utilities",
       "secondary": []
     },
     "playdate-mirror": {
-      "primary": "games",
+      "primary": "videoMedia",
       "secondary": []
     },
     "playdate-simulator": {
-      "primary": "games",
-      "secondary": [
-        "developerTools"
-      ]
+      "primary": "developerTools",
+      "secondary": []
     },
     "playmemories-home": {
       "primary": "videoMedia",
@@ -9779,11 +9789,11 @@
       ]
     },
     "plus42-binary": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "plus42-decimal": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "pock": {
@@ -9845,7 +9855,7 @@
       "secondary": []
     },
     "pongsaver": {
-      "primary": "games",
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "pop-app": {
@@ -10065,8 +10075,10 @@
       "secondary": []
     },
     "productive": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "profind": {
       "primary": "utilities",
@@ -10195,7 +10207,7 @@
       "secondary": []
     },
     "pulse-sms": {
-      "primary": "utilities",
+      "primary": "communication",
       "secondary": []
     },
     "purei-play": {
@@ -10207,7 +10219,7 @@
       "secondary": []
     },
     "pxplay": {
-      "primary": "utilities",
+      "primary": "games",
       "secondary": []
     },
     "pycharm": {
@@ -10246,7 +10258,9 @@
     },
     "qflipper": {
       "primary": "utilities",
-      "secondary": []
+      "secondary": [
+        "securityPrivacy"
+      ]
     },
     "qgis": {
       "primary": "scienceEducation",
@@ -10827,7 +10841,7 @@
       "secondary": []
     },
     "ringcentral-phone": {
-      "primary": "utilities",
+      "primary": "communication",
       "secondary": []
     },
     "rio": {
@@ -10967,7 +10981,7 @@
       "secondary": []
     },
     "rouvy": {
-      "primary": "games",
+      "primary": "other",
       "secondary": []
     },
     "rowmote-helper": {
@@ -11157,7 +11171,7 @@
       "secondary": []
     },
     "screen-studio": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "screenflick": {
@@ -11463,7 +11477,7 @@
       "secondary": []
     },
     "shutter-encoder": {
-      "primary": "utilities",
+      "primary": "videoMedia",
       "secondary": []
     },
     "sidenotes": {
@@ -11505,7 +11519,7 @@
       "secondary": []
     },
     "silicon-labs-vcp-driver": {
-      "primary": "utilities",
+      "primary": "other",
       "secondary": []
     },
     "silnite": {
@@ -11541,7 +11555,7 @@
       "secondary": []
     },
     "simpledemviewer": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "simplemind": {
@@ -11816,7 +11830,7 @@
       ]
     },
     "solar2d": {
-      "primary": "games",
+      "primary": "developerTools",
       "secondary": []
     },
     "solvespace": {
@@ -11848,7 +11862,7 @@
       "secondary": []
     },
     "sonos": {
-      "primary": "utilities",
+      "primary": "other",
       "secondary": []
     },
     "sonos-s1-controller": {
@@ -11973,7 +11987,7 @@
       "secondary": []
     },
     "spectrolite": {
-      "primary": "utilities",
+      "primary": "designGraphics",
       "secondary": []
     },
     "speedify": {
@@ -12143,7 +12157,7 @@
       "secondary": []
     },
     "stash": {
-      "primary": "utilities",
+      "primary": "securityPrivacy",
       "secondary": []
     },
     "stashpad": {
@@ -12287,7 +12301,7 @@
       "secondary": []
     },
     "subsurface": {
-      "primary": "utilities",
+      "primary": "other",
       "secondary": []
     },
     "sunlogincontrol": {
@@ -12363,7 +12377,7 @@
       "secondary": []
     },
     "surge": {
-      "primary": "utilities",
+      "primary": "securityPrivacy",
       "secondary": []
     },
     "surge-xt": {
@@ -12397,7 +12411,7 @@
       "secondary": []
     },
     "swift-publisher": {
-      "primary": "utilities",
+      "primary": "designGraphics",
       "secondary": []
     },
     "swift-quit": {
@@ -12535,8 +12549,10 @@
       "secondary": []
     },
     "table-tool": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "tableau": {
       "primary": "scienceEducation",
@@ -12587,8 +12603,10 @@
       "secondary": []
     },
     "tad": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "tag-app": {
       "primary": "audioMusic",
@@ -12671,7 +12689,7 @@
       "secondary": []
     },
     "tdr-molotok": {
-      "primary": "utilities",
+      "primary": "audioMusic",
       "secondary": []
     },
     "tdr-nova": {
@@ -12679,7 +12697,7 @@
       "secondary": []
     },
     "tdr-prism": {
-      "primary": "utilities",
+      "primary": "audioMusic",
       "secondary": []
     },
     "tdr-vos-slickeq": {
@@ -12807,8 +12825,10 @@
       "secondary": []
     },
     "textbuddy": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "textexpander": {
       "primary": "productivity",
@@ -12955,7 +12975,7 @@
       "secondary": []
     },
     "ti-connect-ce": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "ti-smartview-ce-for-the-ti-84-plus-family": {
@@ -13169,7 +13189,7 @@
       "secondary": []
     },
     "tpvirtual": {
-      "primary": "games",
+      "primary": "other",
       "secondary": []
     },
     "tqsl": {
@@ -13197,7 +13217,7 @@
       "secondary": []
     },
     "trainerroad": {
-      "primary": "utilities",
+      "primary": "other",
       "secondary": []
     },
     "transcribe": {
@@ -13221,11 +13241,11 @@
       "secondary": []
     },
     "transocks": {
-      "primary": "utilities",
+      "primary": "securityPrivacy",
       "secondary": []
     },
     "treeviewer": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "tresorit": {
@@ -13899,7 +13919,7 @@
       "secondary": []
     },
     "volanta": {
-      "primary": "games",
+      "primary": "utilities",
       "secondary": []
     },
     "volta-app": {
@@ -14047,7 +14067,7 @@
       "secondary": []
     },
     "wch-ch34x-usb-serial-driver": {
-      "primary": "utilities",
+      "primary": "other",
       "secondary": []
     },
     "wd-security": {
@@ -14059,7 +14079,7 @@
       "secondary": []
     },
     "weasis": {
-      "primary": "utilities",
+      "primary": "scienceEducation",
       "secondary": []
     },
     "webcatalog": {
@@ -14095,7 +14115,7 @@
       "secondary": []
     },
     "webull": {
-      "primary": "utilities",
+      "primary": "financeCrypto",
       "secondary": []
     },
     "webviewscreensaver": {
@@ -14195,7 +14215,7 @@
       "secondary": []
     },
     "winbox": {
-      "primary": "utilities",
+      "primary": "other",
       "secondary": []
     },
     "winclone": {
@@ -14214,7 +14234,9 @@
     },
     "windows95": {
       "primary": "utilities",
-      "secondary": []
+      "secondary": [
+        "games"
+      ]
     },
     "windscribe": {
       "primary": "securityPrivacy",
@@ -14505,10 +14527,8 @@
       "secondary": []
     },
     "xnviewmp": {
-      "primary": "utilities",
-      "secondary": [
-        "designGraphics"
-      ]
+      "primary": "designGraphics",
+      "secondary": []
     },
     "xonotic": {
       "primary": "games",
@@ -14629,8 +14649,10 @@
       "secondary": []
     },
     "youdaodict": {
-      "primary": "utilities",
-      "secondary": []
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "youdaonote": {
       "primary": "productivity",
@@ -14793,7 +14815,7 @@
       "secondary": []
     },
     "zwift": {
-      "primary": "games",
+      "primary": "other",
       "secondary": []
     },
     "zxpinstaller": {
