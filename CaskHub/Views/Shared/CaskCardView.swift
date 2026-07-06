@@ -102,13 +102,11 @@ struct CaskCardView: View {
                 .font(.headline)
                 .lineLimit(1)
 
-            if let desc = cask.desc {
-                Text(desc)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .frame(minHeight: 30, alignment: .top)
-            }
+            Text(cask.desc ?? " ")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .frame(minHeight: 30, alignment: .top)
 
             metadataRow
         }
