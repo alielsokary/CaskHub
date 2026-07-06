@@ -58,7 +58,8 @@ struct ContentView: View {
         .task {
             async let catalog: Void = viewModel.fetchCasks()
             async let local: Void = localHomebrew.refresh()
-            _ = await (catalog, local)
+            async let categories: Void = categoryService.refreshFromRemote()
+            _ = await (catalog, local, categories)
         }
         .onChange(of: selectedSidebar) { _, newValue in
             viewModel.selectedSidebar = newValue
