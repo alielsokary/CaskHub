@@ -17,6 +17,10 @@ final class ImageCacheService {
     private let session: URLSession
     private var ownerTypeCache: [String: Bool] = [:] // owner -> isOrg
 
+    /// How long a full-chain miss suppresses re-fetching. Misses re-try daily
+    /// so users pick up newly backfilled CaskKit icons without launch chatter.
+    private static let missRetryInterval: TimeInterval = 24 * 60 * 60
+
     private static let cacheDirectory: URL = {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         let dir = caches.appendingPathComponent("CaskHub/icons", isDirectory: true)
@@ -54,16 +58,32 @@ final class ImageCacheService {
             return diskImage
         }
 
-        // 3. Coalesce in-flight requests
+        // 3. Recent-miss cooldown: every tier failed with real HTTP responses
+        // within the last day — skip the whole chain until the cooldown lapses.
+        if hasRecentMiss(token: token) {
+            return nil
+        }
+
+        // 4. Coalesce in-flight requests
         if let existing = inFlightTasks[token] {
             return await existing.value
         }
 
         let task = Task<NSImage?, Never> {
+            // Track whether any tier got an actual HTTP response: a miss is
+            // only recorded when servers answered (offline must not poison
+            // the cooldown for a day).
+            var sawHTTPResponse = false
+            func fetch(_ url: URL) async -> NSImage? {
+                let (image, responded) = await self.downloadImage(from: url)
+                sawHTTPResponse = sawHTTPResponse || responded
+                return image
+            }
+
             // Tier 0: CaskKit original icon (our own extraction pipeline —
             // jsDelivr CDN with raw.githubusercontent fallback, backfilling)
             for url in CaskIconURL.caskKitIconURLs(for: token) {
-                if let image = await downloadImage(from: url) {
+                if let image = await fetch(url) {
                     cache(image: image, token: token)
                     return image
                 }
@@ -71,14 +91,14 @@ final class ImageCacheService {
 
             // Tier 1: App-Fair app icon (original icons, stale — pre-2022 coverage)
             if let url = CaskIconURL.appIconURL(for: token),
-               let image = await downloadImage(from: url) {
+               let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
             }
 
             // Tier 2: Homepage favicon via icon.horse (best for apps with dedicated websites)
             if let url = CaskIconURL.faviconURL(for: cask.homepage),
-               let image = await downloadImage(from: url) {
+               let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
             }
@@ -87,11 +107,14 @@ final class ImageCacheService {
             if let owner = CaskIconURL.gitHubOwner(homepage: cask.homepage, downloadURL: cask.url),
                await isGitHubOrganization(owner: owner),
                let url = CaskIconURL.gitHubAvatarURL(for: owner),
-               let image = await downloadImage(from: url) {
+               let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
             }
 
+            if sawHTTPResponse {
+                markMiss(token: token)
+            }
             return nil
         }
 
@@ -103,20 +126,44 @@ final class ImageCacheService {
 
     // MARK: - Private
 
-    private func downloadImage(from url: URL) async -> NSImage? {
+    /// gotResponse distinguishes "server said no" (404 etc.) from transport
+    /// failure (offline) — only real responses may arm the miss cooldown.
+    private func downloadImage(from url: URL) async -> (image: NSImage?, gotResponse: Bool) {
         guard let (data, response) = try? await session.data(from: url),
-              let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200,
+              let httpResponse = response as? HTTPURLResponse else {
+            return (nil, false)
+        }
+        guard httpResponse.statusCode == 200,
               let image = NSImage(data: data),
               image.isValid else {
-            return nil
+            return (nil, true)
         }
-        return image
+        return (image, true)
     }
 
     private func cache(image: NSImage, token: String) {
         memoryCache.setObject(image, forKey: token as NSString)
         saveToDisk(image: image, token: token)
+        try? FileManager.default.removeItem(at: missMarkerPath(for: token))
+    }
+
+    // MARK: - Miss cooldown
+
+    private func missMarkerPath(for token: String) -> URL {
+        Self.cacheDirectory.appendingPathComponent("\(token).miss")
+    }
+
+    private func hasRecentMiss(token: String) -> Bool {
+        let path = missMarkerPath(for: token)
+        guard let mtime = try? FileManager.default
+            .attributesOfItem(atPath: path.path)[.modificationDate] as? Date else {
+            return false
+        }
+        return Date().timeIntervalSince(mtime) < Self.missRetryInterval
+    }
+
+    private func markMiss(token: String) {
+        try? Data().write(to: missMarkerPath(for: token), options: .atomic)
     }
 
     private func diskPath(for token: String) -> URL {
