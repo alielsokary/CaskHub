@@ -14,8 +14,13 @@ import Observation
 final class ImageCacheService {
     private let memoryCache = NSCache<NSString, NSImage>()
     private var inFlightTasks: [String: Task<NSImage?, Never>] = [:]
+    private var upgradeInFlight: Set<String> = []
     private let session: URLSession
     private var ownerTypeCache: [String: Bool] = [:] // owner -> isOrg
+
+    /// How long a full-chain miss suppresses re-fetching. Misses re-try daily
+    /// so users pick up newly backfilled CaskKit icons without launch chatter.
+    private static let missRetryInterval: TimeInterval = 24 * 60 * 60
 
     private static let cacheDirectory: URL = {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
@@ -38,6 +43,7 @@ final class ImageCacheService {
         self.session = session
         memoryCache.countLimit = 500
         ownerTypeCache = Self.loadOwnerTypeCache()
+        Self.migrateUntieredCacheIfNeeded()
     }
 
     func image(for cask: Cask) async -> NSImage? {
@@ -48,28 +54,56 @@ final class ImageCacheService {
             return cached
         }
 
-        // 2. Disk cache
+        // 2. Disk cache — fallback-tier hits also schedule a background
+        // CaskKit upgrade check (at most daily), so icons cached from
+        // favicon/avatar before CaskKit coverage arrived aren't pinned forever.
         if let diskImage = loadFromDisk(token: token) {
             memoryCache.setObject(diskImage, forKey: token as NSString)
+            maybeUpgradeFallbackIcon(token: token)
             return diskImage
         }
 
-        // 3. Coalesce in-flight requests
+        // 3. Recent-miss cooldown: every tier failed with real HTTP responses
+        // within the last day — skip the whole chain until the cooldown lapses.
+        if hasRecentMiss(token: token) {
+            return nil
+        }
+
+        // 4. Coalesce in-flight requests
         if let existing = inFlightTasks[token] {
             return await existing.value
         }
 
         let task = Task<NSImage?, Never> {
-            // Tier 1: App-Fair app icon (highest quality, actual macOS app icons)
+            // Track whether any tier got an actual HTTP response: a miss is
+            // only recorded when servers answered (offline must not poison
+            // the cooldown for a day).
+            var sawHTTPResponse = false
+            func fetch(_ url: URL) async -> NSImage? {
+                let (image, responded) = await self.downloadImage(from: url)
+                sawHTTPResponse = sawHTTPResponse || responded
+                return image
+            }
+
+            // Tier 0: CaskKit original icon (our own extraction pipeline —
+            // jsDelivr CDN with raw.githubusercontent fallback, backfilling)
+            for url in CaskIconURL.caskKitIconURLs(for: token) {
+                if let image = await fetch(url) {
+                    cache(image: image, token: token, fromCaskKit: true)
+                    return image
+                }
+            }
+
+            // Tier 1: App-Fair app icon (original icons, stale — pre-2022 coverage)
             if let url = CaskIconURL.appIconURL(for: token),
-               let image = await downloadImage(from: url) {
+               let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
             }
 
             // Tier 2: Homepage favicon via icon.horse (best for apps with dedicated websites)
             if let url = CaskIconURL.faviconURL(for: cask.homepage),
-               let image = await downloadImage(from: url) {
+               let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
             }
@@ -78,11 +112,14 @@ final class ImageCacheService {
             if let owner = CaskIconURL.gitHubOwner(homepage: cask.homepage, downloadURL: cask.url),
                await isGitHubOrganization(owner: owner),
                let url = CaskIconURL.gitHubAvatarURL(for: owner),
-               let image = await downloadImage(from: url) {
+               let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
             }
 
+            if sawHTTPResponse {
+                markMiss(token: token)
+            }
             return nil
         }
 
@@ -94,20 +131,109 @@ final class ImageCacheService {
 
     // MARK: - Private
 
-    private func downloadImage(from url: URL) async -> NSImage? {
+    /// gotResponse distinguishes "server said no" (404 etc.) from transport
+    /// failure (offline) — only real responses may arm the miss cooldown.
+    private func downloadImage(from url: URL) async -> (image: NSImage?, gotResponse: Bool) {
         guard let (data, response) = try? await session.data(from: url),
-              let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200,
+              let httpResponse = response as? HTTPURLResponse else {
+            return (nil, false)
+        }
+        guard httpResponse.statusCode == 200,
               let image = NSImage(data: data),
               image.isValid else {
-            return nil
+            return (nil, true)
         }
-        return image
+        return (image, true)
     }
 
-    private func cache(image: NSImage, token: String) {
+    private func cache(image: NSImage, token: String, fromCaskKit: Bool = false) {
         memoryCache.setObject(image, forKey: token as NSString)
         saveToDisk(image: image, token: token)
+        try? FileManager.default.removeItem(at: missMarkerPath(for: token))
+        if fromCaskKit {
+            // Terminal quality — never re-checked.
+            try? FileManager.default.removeItem(at: fallbackMarkerPath(for: token))
+        } else {
+            // Fallback tier (App-Fair/favicon/avatar): upgrade-eligible.
+            // mtime = now, so the first CaskKit re-check happens tomorrow —
+            // CaskKit necessarily missed moments ago on this same chain run.
+            try? Data().write(to: fallbackMarkerPath(for: token), options: .atomic)
+        }
+    }
+
+    // MARK: - Fallback upgrade
+
+    private func fallbackMarkerPath(for token: String) -> URL {
+        Self.cacheDirectory.appendingPathComponent("\(token).fallback")
+    }
+
+    /// A disk-cached fallback icon is re-checked against CaskKit at most once
+    /// per missRetryInterval — lazily, only when the cask is actually shown.
+    /// A hit permanently replaces the cached icon and retires the marker.
+    private func maybeUpgradeFallbackIcon(token: String) {
+        let marker = fallbackMarkerPath(for: token)
+        guard let mtime = try? FileManager.default
+            .attributesOfItem(atPath: marker.path)[.modificationDate] as? Date,
+            Date().timeIntervalSince(mtime) >= Self.missRetryInterval,
+            !upgradeInFlight.contains(token) else {
+            return
+        }
+        upgradeInFlight.insert(token)
+        Task {
+            for url in CaskIconURL.caskKitIconURLs(for: token) {
+                let (image, _) = await downloadImage(from: url)
+                if let image {
+                    cache(image: image, token: token, fromCaskKit: true)
+                    upgradeInFlight.remove(token)
+                    return
+                }
+            }
+            // Still not on CaskKit — reset the daily timer.
+            try? FileManager.default.setAttributes(
+                [.modificationDate: Date()], ofItemAtPath: marker.path)
+            upgradeInFlight.remove(token)
+        }
+    }
+
+    /// One-time migration: icons cached before tier tracking existed get a
+    /// backdated fallback marker, making them upgrade-eligible immediately.
+    private nonisolated static func migrateUntieredCacheIfNeeded() {
+        Task.detached(priority: .utility) {
+            let dir = await Self.cacheDirectory
+            let flag = dir.appendingPathComponent(".tier-migration-done")
+            guard !FileManager.default.fileExists(atPath: flag.path) else { return }
+            let files = (try? FileManager.default.contentsOfDirectory(
+                at: dir, includingPropertiesForKeys: nil)) ?? []
+            let epoch = Date(timeIntervalSince1970: 0)
+            for file in files where file.pathExtension == "png" {
+                let token = file.deletingPathExtension().lastPathComponent
+                let marker = dir.appendingPathComponent("\(token).fallback")
+                guard !FileManager.default.fileExists(atPath: marker.path) else { continue }
+                try? Data().write(to: marker, options: .atomic)
+                try? FileManager.default.setAttributes(
+                    [.modificationDate: epoch], ofItemAtPath: marker.path)
+            }
+            try? Data().write(to: flag, options: .atomic)
+        }
+    }
+
+    // MARK: - Miss cooldown
+
+    private func missMarkerPath(for token: String) -> URL {
+        Self.cacheDirectory.appendingPathComponent("\(token).miss")
+    }
+
+    private func hasRecentMiss(token: String) -> Bool {
+        let path = missMarkerPath(for: token)
+        guard let mtime = try? FileManager.default
+            .attributesOfItem(atPath: path.path)[.modificationDate] as? Date else {
+            return false
+        }
+        return Date().timeIntervalSince(mtime) < Self.missRetryInterval
+    }
+
+    private func markMiss(token: String) {
+        try? Data().write(to: missMarkerPath(for: token), options: .atomic)
     }
 
     private func diskPath(for token: String) -> URL {
