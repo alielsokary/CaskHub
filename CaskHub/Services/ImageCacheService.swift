@@ -60,7 +60,16 @@ final class ImageCacheService {
         }
 
         let task = Task<NSImage?, Never> {
-            // Tier 1: App-Fair app icon (highest quality, actual macOS app icons)
+            // Tier 0: CaskKit original icon (our own extraction pipeline —
+            // jsDelivr CDN with raw.githubusercontent fallback, backfilling)
+            for url in CaskIconURL.caskKitIconURLs(for: token) {
+                if let image = await downloadImage(from: url) {
+                    cache(image: image, token: token)
+                    return image
+                }
+            }
+
+            // Tier 1: App-Fair app icon (original icons, stale — pre-2022 coverage)
             if let url = CaskIconURL.appIconURL(for: token),
                let image = await downloadImage(from: url) {
                 cache(image: image, token: token)
