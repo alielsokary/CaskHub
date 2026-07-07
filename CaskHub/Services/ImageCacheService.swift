@@ -16,7 +16,6 @@ final class ImageCacheService {
     private var inFlightTasks: [String: Task<NSImage?, Never>] = [:]
     private var upgradeInFlight: Set<String> = []
     private let session: URLSession
-    private var ownerTypeCache: [String: Bool] = [:] // owner -> isOrg
 
     /// How long a full-chain miss suppresses re-fetching. Misses re-try daily
     /// so users pick up newly backfilled CaskKit icons without launch chatter.
@@ -29,21 +28,10 @@ final class ImageCacheService {
         return dir
     }()
 
-    private static let ownerTypeCachePath: URL = {
-        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        return caches.appendingPathComponent("CaskHub/github_owner_types.json")
-    }()
-
-    /// Shared session that doesn't follow redirects — used to inspect github.com/orgs/{owner} status codes
-    private static let noRedirectSession: URLSession = {
-        URLSession(configuration: .ephemeral, delegate: NoRedirectDelegate.shared, delegateQueue: nil)
-    }()
-
     init(session: URLSession = .shared) {
         self.session = session
         memoryCache.countLimit = 500
-        ownerTypeCache = Self.loadOwnerTypeCache()
-        Self.migrateUntieredCacheIfNeeded()
+        Self.purgeGeneratedIconsIfNeeded()
     }
 
     func image(for cask: Cask) async -> NSImage? {
@@ -94,29 +82,16 @@ final class ImageCacheService {
                 }
             }
 
-            // Tier 1: App-Fair app icon (original icons, stale — pre-2022 coverage)
-            if let url = CaskIconURL.appIconURL(for: token),
+            // Tier 1: App-Fair app icon (also original; frozen pre-2022 —
+            // covers some casks CaskKit can't extract today)
+            if let url = CaskIconURL.appFairIconURL(for: token),
                let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
             }
 
-            // Tier 2: Homepage favicon via icon.horse (best for apps with dedicated websites)
-            if let url = CaskIconURL.faviconURL(for: cask.homepage),
-               let image = await fetch(url) {
-                cache(image: image, token: token)
-                return image
-            }
-
-            // Tier 3: GitHub org avatar only (skip personal accounts — their avatars are faces, not app icons)
-            if let owner = CaskIconURL.gitHubOwner(homepage: cask.homepage, downloadURL: cask.url),
-               await isGitHubOrganization(owner: owner),
-               let url = CaskIconURL.gitHubAvatarURL(for: owner),
-               let image = await fetch(url) {
-                cache(image: image, token: token)
-                return image
-            }
-
+            // No generated fallbacks (favicons, avatars) — by design the
+            // placeholder shows until an original icon exists.
             if sawHTTPResponse {
                 markMiss(token: token)
             }
@@ -195,24 +170,31 @@ final class ImageCacheService {
         }
     }
 
-    /// One-time migration: icons cached before tier tracking existed get a
-    /// backdated fallback marker, making them upgrade-eligible immediately.
-    private nonisolated static func migrateUntieredCacheIfNeeded() {
+    /// One-time migration: purge cached icons that predate the original-only
+    /// chain. Anything carrying a fallback marker (or unmarked from before
+    /// tier tracking) may be a favicon/avatar — delete it and let the cask
+    /// refetch through CaskKit → App-Fair. CaskKit-tier caches are unmarked
+    /// only if fetched after tier tracking, so we key off the v1 flag:
+    /// pre-tracking installs purge everything marked or migrated.
+    private nonisolated static func purgeGeneratedIconsIfNeeded() {
         Task.detached(priority: .utility) {
             let dir = await Self.cacheDirectory
-            let flag = dir.appendingPathComponent(".tier-migration-done")
+            let flag = dir.appendingPathComponent(".generated-purge-done")
             guard !FileManager.default.fileExists(atPath: flag.path) else { return }
             let files = (try? FileManager.default.contentsOfDirectory(
                 at: dir, includingPropertiesForKeys: nil)) ?? []
-            let epoch = Date(timeIntervalSince1970: 0)
-            for file in files where file.pathExtension == "png" {
-                let token = file.deletingPathExtension().lastPathComponent
-                let marker = dir.appendingPathComponent("\(token).fallback")
-                guard !FileManager.default.fileExists(atPath: marker.path) else { continue }
-                try? Data().write(to: marker, options: .atomic)
-                try? FileManager.default.setAttributes(
-                    [.modificationDate: epoch], ofItemAtPath: marker.path)
+            for marker in files where marker.pathExtension == "fallback" {
+                let token = marker.deletingPathExtension().lastPathComponent
+                try? FileManager.default.removeItem(
+                    at: dir.appendingPathComponent("\(token).png"))
+                try? FileManager.default.removeItem(at: marker)
             }
+            // Retired artifacts from the avatar tier and the v1 migration.
+            try? FileManager.default.removeItem(
+                at: dir.deletingLastPathComponent()
+                    .appendingPathComponent("github_owner_types.json"))
+            try? FileManager.default.removeItem(
+                at: dir.appendingPathComponent(".tier-migration-done"))
             try? Data().write(to: flag, options: .atomic)
         }
     }
@@ -262,70 +244,4 @@ final class ImageCacheService {
         }
     }
 
-    // MARK: - GitHub Organization Check
-
-    /// Checks if a GitHub owner is an Organization (not a personal account).
-    /// Uses HEAD request to github.com/orgs/{owner} — 302 = org, 404 = user.
-    /// No API rate limits. Only definitive results are cached, so transient network failures won't permanently blacklist an owner.
-    private func isGitHubOrganization(owner: String) async -> Bool {
-        if let cached = ownerTypeCache[owner] {
-            return cached
-        }
-
-        guard let isOrg = await checkGitHubOrgStatus(owner: owner) else {
-            // Network error or unexpected status — don't cache, retry next time
-            return false
-        }
-        ownerTypeCache[owner] = isOrg
-        persistOwnerTypeCache()
-        return isOrg
-    }
-
-    /// Returns true for org, false for user, nil for network error or unexpected status (don't cache)
-    private func checkGitHubOrgStatus(owner: String) async -> Bool? {
-        guard let url = URL(string: "https://github.com/orgs/\(owner)") else { return nil }
-        var request = URLRequest(url: url)
-        request.httpMethod = "HEAD"
-        guard let (_, response) = try? await Self.noRedirectSession.data(for: request),
-              let httpResponse = response as? HTTPURLResponse else {
-            return nil
-        }
-        switch httpResponse.statusCode {
-        case 302: return true   // organization (redirects to org page)
-        case 404: return false  // personal user
-        default:  return nil    // unexpected — don't cache
-        }
-    }
-
-    private func persistOwnerTypeCache() {
-        let cache = ownerTypeCache
-        let path = Self.ownerTypeCachePath
-        Task.detached(priority: .utility) {
-            guard let data = try? JSONEncoder().encode(cache) else { return }
-            try? data.write(to: path, options: .atomic)
-        }
-    }
-
-    private static func loadOwnerTypeCache() -> [String: Bool] {
-        guard let data = try? Data(contentsOf: ownerTypeCachePath),
-              let cache = try? JSONDecoder().decode([String: Bool].self, from: data) else {
-            return [:]
-        }
-        return cache
-    }
-}
-
-/// Prevents URLSession from following redirects so we can inspect the status code
-private final class NoRedirectDelegate: NSObject, URLSessionTaskDelegate, Sendable {
-    static let shared = NoRedirectDelegate()
-
-    func urlSession(
-        _ session: URLSession,
-        task: URLSessionTask,
-        willPerformHTTPRedirection response: HTTPURLResponse,
-        newRequest request: URLRequest,
-        completionHandler: @escaping (URLRequest?) -> Void
-    ) {
-        completionHandler(nil) // Don't follow redirect
-    }
 }
