@@ -8,6 +8,15 @@
 import Foundation
 
 enum CaskIconURL {
+    /// Original app icons extracted by CaskKit (icons branch, keyed by token).
+    /// jsDelivr edge CDN first, raw.githubusercontent.com as fallback.
+    static func caskKitIconURLs(for token: String) -> [URL] {
+        [
+            URL(string: "https://cdn.jsdelivr.net/gh/alielsokary/CaskKit@icons/\(token).png"),
+            URL(string: "https://raw.githubusercontent.com/alielsokary/CaskKit/icons/\(token).png"),
+        ].compactMap { $0 }
+    }
+
     /// High-quality app icon from App-Fair/appcasks GitHub releases (~74% coverage of pre-2022 casks)
     static func appIconURL(for token: String) -> URL? {
         URL(string: "https://github.com/App-Fair/appcasks/releases/download/cask-\(token)/AppIcon.png")
