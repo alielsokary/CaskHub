@@ -14,6 +14,7 @@ import Observation
 final class ImageCacheService {
     private let memoryCache = NSCache<NSString, NSImage>()
     private var inFlightTasks: [String: Task<NSImage?, Never>] = [:]
+    private var upgradeInFlight: Set<String> = []
     private let session: URLSession
     private var ownerTypeCache: [String: Bool] = [:] // owner -> isOrg
 
@@ -42,6 +43,7 @@ final class ImageCacheService {
         self.session = session
         memoryCache.countLimit = 500
         ownerTypeCache = Self.loadOwnerTypeCache()
+        Self.migrateUntieredCacheIfNeeded()
     }
 
     func image(for cask: Cask) async -> NSImage? {
@@ -52,9 +54,12 @@ final class ImageCacheService {
             return cached
         }
 
-        // 2. Disk cache
+        // 2. Disk cache — fallback-tier hits also schedule a background
+        // CaskKit upgrade check (at most daily), so icons cached from
+        // favicon/avatar before CaskKit coverage arrived aren't pinned forever.
         if let diskImage = loadFromDisk(token: token) {
             memoryCache.setObject(diskImage, forKey: token as NSString)
+            maybeUpgradeFallbackIcon(token: token)
             return diskImage
         }
 
@@ -84,7 +89,7 @@ final class ImageCacheService {
             // jsDelivr CDN with raw.githubusercontent fallback, backfilling)
             for url in CaskIconURL.caskKitIconURLs(for: token) {
                 if let image = await fetch(url) {
-                    cache(image: image, token: token)
+                    cache(image: image, token: token, fromCaskKit: true)
                     return image
                 }
             }
@@ -141,10 +146,75 @@ final class ImageCacheService {
         return (image, true)
     }
 
-    private func cache(image: NSImage, token: String) {
+    private func cache(image: NSImage, token: String, fromCaskKit: Bool = false) {
         memoryCache.setObject(image, forKey: token as NSString)
         saveToDisk(image: image, token: token)
         try? FileManager.default.removeItem(at: missMarkerPath(for: token))
+        if fromCaskKit {
+            // Terminal quality — never re-checked.
+            try? FileManager.default.removeItem(at: fallbackMarkerPath(for: token))
+        } else {
+            // Fallback tier (App-Fair/favicon/avatar): upgrade-eligible.
+            // mtime = now, so the first CaskKit re-check happens tomorrow —
+            // CaskKit necessarily missed moments ago on this same chain run.
+            try? Data().write(to: fallbackMarkerPath(for: token), options: .atomic)
+        }
+    }
+
+    // MARK: - Fallback upgrade
+
+    private func fallbackMarkerPath(for token: String) -> URL {
+        Self.cacheDirectory.appendingPathComponent("\(token).fallback")
+    }
+
+    /// A disk-cached fallback icon is re-checked against CaskKit at most once
+    /// per missRetryInterval — lazily, only when the cask is actually shown.
+    /// A hit permanently replaces the cached icon and retires the marker.
+    private func maybeUpgradeFallbackIcon(token: String) {
+        let marker = fallbackMarkerPath(for: token)
+        guard let mtime = try? FileManager.default
+            .attributesOfItem(atPath: marker.path)[.modificationDate] as? Date,
+            Date().timeIntervalSince(mtime) >= Self.missRetryInterval,
+            !upgradeInFlight.contains(token) else {
+            return
+        }
+        upgradeInFlight.insert(token)
+        Task {
+            for url in CaskIconURL.caskKitIconURLs(for: token) {
+                let (image, _) = await downloadImage(from: url)
+                if let image {
+                    cache(image: image, token: token, fromCaskKit: true)
+                    upgradeInFlight.remove(token)
+                    return
+                }
+            }
+            // Still not on CaskKit — reset the daily timer.
+            try? FileManager.default.setAttributes(
+                [.modificationDate: Date()], ofItemAtPath: marker.path)
+            upgradeInFlight.remove(token)
+        }
+    }
+
+    /// One-time migration: icons cached before tier tracking existed get a
+    /// backdated fallback marker, making them upgrade-eligible immediately.
+    private nonisolated static func migrateUntieredCacheIfNeeded() {
+        Task.detached(priority: .utility) {
+            let dir = await Self.cacheDirectory
+            let flag = dir.appendingPathComponent(".tier-migration-done")
+            guard !FileManager.default.fileExists(atPath: flag.path) else { return }
+            let files = (try? FileManager.default.contentsOfDirectory(
+                at: dir, includingPropertiesForKeys: nil)) ?? []
+            let epoch = Date(timeIntervalSince1970: 0)
+            for file in files where file.pathExtension == "png" {
+                let token = file.deletingPathExtension().lastPathComponent
+                let marker = dir.appendingPathComponent("\(token).fallback")
+                guard !FileManager.default.fileExists(atPath: marker.path) else { continue }
+                try? Data().write(to: marker, options: .atomic)
+                try? FileManager.default.setAttributes(
+                    [.modificationDate: epoch], ofItemAtPath: marker.path)
+            }
+            try? Data().write(to: flag, options: .atomic)
+        }
     }
 
     // MARK: - Miss cooldown
