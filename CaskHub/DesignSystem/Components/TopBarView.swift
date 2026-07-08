@@ -21,6 +21,8 @@ struct TopBarView: View {
     var onSelectPeriod: ((AnalyticsPeriod) -> Void)?
     /// Hidden on Featured — that list is curated, sorting doesn't apply.
     var showsSort = true
+    /// Called when the user presses Return in the search field.
+    var onSubmitSearch: (() -> Void)?
 
     @State private var showSortMenu = false
     @State private var showPeriodMenu = false
@@ -214,6 +216,7 @@ struct TopBarView: View {
                 .font(CHType.field)
                 .foregroundStyle(Color.chTextTitle)
                 .focused(searchFocus)
+                .onSubmit { onSubmitSearch?() }
             Keycap(symbol: "⌘F")
         }
         .padding(.vertical, 5)
