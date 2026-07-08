@@ -80,6 +80,16 @@ final class LocalHomebrewService {
     /// Token → currently-running action, used by views to show spinners and disable buttons.
     private(set) var inFlightActions: [String: CaskAction] = [:]
 
+    /// Tokens whose install is still in the download phase — the only window
+    /// where cancelling is guaranteed residual-free (nothing staged yet).
+    private(set) var cancellableDownloads: Set<String> = []
+
+    /// Tokens the user asked to cancel; cleared when the process exits.
+    private(set) var cancelRequested: Set<String> = []
+
+    /// Token → live brew process, kept for cancellation. Not UI state.
+    @ObservationIgnored private var runningProcesses: [String: Process] = [:]
+
     /// Token → most recent error message from a failed action. Cleared on the next attempt.
     private(set) var actionErrors: [String: String] = [:]
 
@@ -226,58 +236,158 @@ final class LocalHomebrewService {
         try await runMutation(.updating, token: token, args: ["upgrade", "--cask", token])
     }
 
+    /// Cancels an in-flight install. Only honored during the download phase —
+    /// once brew starts staging files, cancelling could leave a broken install.
+    /// Sends SIGINT to brew and its children (curl); escalates to SIGTERM if
+    /// the tree hasn't exited after 5 seconds.
+    func cancelInstall(token: String) {
+        guard cancellableDownloads.contains(token),
+              let process = runningProcesses[token] else { return }
+        cancelRequested.insert(token)
+        cancellableDownloads.remove(token)
+
+        let pid = process.processIdentifier
+        Task.detached(priority: .userInitiated) {
+            Self.signalTree(pid: pid, signal: SIGINT)
+            try? await Task.sleep(for: .seconds(5))
+            if process.isRunning { process.terminate() }
+        }
+    }
+
     // MARK: - Mutation Plumbing
 
     private func runMutation(_ action: CaskAction, token: String, args: [String]) async throws {
         guard inFlightActions[token] == nil else { return }
         inFlightActions[token] = action
         actionErrors[token] = nil
-        defer { inFlightActions[token] = nil }
+        let startedAt = Date.now
+        defer {
+            inFlightActions[token] = nil
+            cancellableDownloads.remove(token)
+            runningProcesses[token] = nil
+        }
 
         do {
-            try await Self.runBrew(args: args)
+            try await runBrewStreaming(token: token, args: args, cancellable: action == .installing)
+            cancelRequested.remove(token)
             await refresh()
-        } catch let error as LocalHomebrewError {
-            actionErrors[token] = error.errorDescription
-            throw error
         } catch {
-            actionErrors[token] = error.localizedDescription
+            if cancelRequested.contains(token) {
+                // User cancelled — not an error. Remove the partial download
+                // brew left behind so nothing accumulates in its cache.
+                cancelRequested.remove(token)
+                Task.detached(priority: .utility) {
+                    Self.cleanupIncompleteDownloads(since: startedAt)
+                }
+                await refresh()
+                return
+            }
+            if let error = error as? LocalHomebrewError {
+                actionErrors[token] = error.errorDescription
+            } else {
+                actionErrors[token] = error.localizedDescription
+            }
             throw error
         }
     }
 
-    /// Spawns the `brew` binary off the main actor and waits for it to exit.
-    /// stdout is discarded to `/dev/null` to avoid pipe-buffer deadlocks on chatty
-    /// commands like `brew upgrade`. stderr is captured for error reporting.
-    private nonisolated static func runBrew(args: [String]) async throws {
-        guard let brewURL = locateBrewBinary() else {
+    /// Spawns `brew` attached to a pseudo-terminal and streams its output.
+    ///
+    /// The stream is watched for the `==> Installing Cask` marker that closes
+    /// the safe-to-cancel window. The output tail doubles as stderr for error
+    /// reporting.
+    private func runBrewStreaming(token: String, args: [String], cancellable: Bool) async throws {
+        guard let brewURL = Self.locateBrewBinary() else {
             throw LocalHomebrewError.brewBinaryNotFound
         }
 
-        try await Task.detached(priority: .userInitiated) {
-            let process = Process()
-            process.executableURL = brewURL
-            process.arguments = args
-            process.standardOutput = FileHandle.nullDevice
-            let stderrPipe = Pipe()
-            process.standardError = stderrPipe
+        let process = Process()
+        process.executableURL = brewURL
+        process.arguments = args
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        process.standardInput = FileHandle.nullDevice
 
-            try process.run()
-            process.waitUntilExit()
+        try process.run()
+        runningProcesses[token] = process
+        if cancellable { cancellableDownloads.insert(token) }
 
-            let stderr = String(
-                data: stderrPipe.fileHandleForReading.readDataToEndOfFile(),
-                encoding: .utf8
-            ) ?? ""
+        let handle = pipe.fileHandleForReading
+        let outputTail = await Task.detached(priority: .userInitiated) { () -> String in
+            var tail = ""
+            while true {
+                let data = handle.availableData
+                guard !data.isEmpty else { break }  // EOF
+                guard let text = String(data: data, encoding: .utf8) else { continue }
+                tail = String((tail + text).suffix(2000))
 
-            if process.terminationStatus != 0 {
-                throw LocalHomebrewError.brewCommandFailed(
-                    args: args,
-                    exitCode: process.terminationStatus,
-                    stderr: stderr
-                )
+                if text.contains("==> Installing Cask") {
+                    // Download finished — cancelling is no longer residual-free.
+                    Task { @MainActor in self.cancellableDownloads.remove(token) }
+                }
             }
+            process.waitUntilExit()
+            return tail
         }.value
+
+        if process.terminationStatus != 0 {
+            throw LocalHomebrewError.brewCommandFailed(
+                args: args,
+                exitCode: process.terminationStatus,
+                stderr: outputTail.components(separatedBy: "\n").suffix(6).joined(separator: "\n")
+            )
+        }
+    }
+
+    /// Sends `signal` to a process and all of its descendants (brew forks curl;
+    /// signalling only brew would leave curl downloading to a dead parent).
+    private nonisolated static func signalTree(pid: Int32, signal: Int32) {
+        let pgrep = Process()
+        pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+        pgrep.arguments = ["-P", "\(pid)"]
+        let stdout = Pipe()
+        pgrep.standardOutput = stdout
+        pgrep.standardError = FileHandle.nullDevice
+        if (try? pgrep.run()) != nil {
+            let data = stdout.fileHandleForReading.readDataToEndOfFile()
+            pgrep.waitUntilExit()
+            let children = String(data: data, encoding: .utf8)?
+                .split(whereSeparator: \.isNewline)
+                .compactMap { Int32($0) } ?? []
+            for child in children {
+                signalTree(pid: child, signal: signal)
+            }
+        }
+        kill(pid, signal)
+    }
+
+    /// Deletes downloads newer than `cutoff` from Homebrew's cache — the only
+    /// residue a download-phase cancel leaves behind. Covers both `*.incomplete`
+    /// partials and just-finished archives (cancel can land after the download
+    /// completed but before staging began).
+    private nonisolated static func cleanupIncompleteDownloads(since cutoff: Date) {
+        let fm = FileManager.default
+        let cacheURL: URL
+        if let override = ProcessInfo.processInfo.environment["HOMEBREW_CACHE"], !override.isEmpty {
+            cacheURL = URL(fileURLWithPath: override)
+        } else {
+            cacheURL = fm.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/Caches/Homebrew")
+        }
+        let downloadsURL = cacheURL.appendingPathComponent("downloads", isDirectory: true)
+        guard let files = try? fm.contentsOfDirectory(
+            at: downloadsURL,
+            includingPropertiesForKeys: [.contentModificationDateKey]
+        ) else { return }
+
+        for file in files {
+            let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate) ?? .distantPast
+            if modified >= cutoff {
+                try? fm.removeItem(at: file)
+            }
+        }
     }
 
     /// Runs `brew --version` and returns the bare version ("Homebrew 4.6.15" → "4.6.15").

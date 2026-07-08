@@ -7,6 +7,32 @@
 
 import Foundation
 
+/// One `artifacts` stanza from the brew API — heterogeneous single-key
+/// objects ({"app": [...]}, {"binary": [...]}); only the keys matter here.
+struct ArtifactStanza: Codable, Hashable {
+    let keys: Set<String>
+
+    private struct AnyKey: CodingKey {
+        var stringValue: String
+        var intValue: Int? { nil }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
+
+    init(from decoder: Decoder) throws {
+        // Lenient: a malformed stanza must not sink the whole catalog decode.
+        keys = Set((try? decoder.container(keyedBy: AnyKey.self))?
+            .allKeys.map(\.stringValue) ?? [])
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: AnyKey.self)
+        for key in keys {
+            try container.encode(true, forKey: AnyKey(stringValue: key)!)
+        }
+    }
+}
+
 struct Cask: Codable, Identifiable, Hashable {
     let token: String
     let fullToken: String?
@@ -23,8 +49,25 @@ struct Cask: Codable, Identifiable, Hashable {
     let deprecated: Bool
     let disabled: Bool
     let autoUpdates: Bool?
+    var artifacts: [ArtifactStanza]? = nil
 
     var id: String { token }
+
+    /// Ships a command-line `binary` (or a `stage_only` payload like sqlcl)
+    /// and nothing GUI (no app/suite/pkg). The binary/stage requirement keeps
+    /// installer-app GUI casks (autodesk-fusion, logi-options+) off the CLI
+    /// treatment; pkg-based CLIs (git-credential-manager, ibm-cloud-cli)
+    /// stay non-CLI and keep their real icons.
+    ///
+    /// Drives only the placeholder: CLI casks show a terminal tile instead
+    /// of the window glyph. Which CLI casks get real icons anyway (Android
+    /// SDK tools, tuist, conda family) is CaskKit's call — whatever its
+    /// icons branch serves wins over the tile.
+    var isCLI: Bool {
+        guard let artifacts, !artifacts.isEmpty else { return false }
+        return artifacts.contains { !$0.keys.isDisjoint(with: ["binary", "stageOnly", "stage_only"]) }
+            && !artifacts.contains { !$0.keys.isDisjoint(with: ["app", "suite", "pkg"]) }
+    }
 
     var displayName: String {
         name.first ?? token
