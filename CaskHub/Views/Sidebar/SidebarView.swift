@@ -11,63 +11,99 @@ struct SidebarView: View {
     @Binding var selection: SidebarSelection
     var categoryService: CategoryService
     var updatesCount: Int = 0
-
-    @Environment(\.colorScheme) private var colorScheme
+    var installedCount: Int = 0
+    var categoryCounts: [String: Int] = [:]
 
     var body: some View {
-        List(selection: $selection) {
-            Section("DISCOVER") {
-                ForEach(DiscoverItem.allCases) { item in
-                    Label(item.rawValue, systemImage: item.icon)
-                        .tag(SidebarSelection.discover(item))
-                }
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            BrandWordmark()
+                .padding(.horizontal, 18)
+                .padding(.top, 38) // just below the traffic lights (hidden title bar)
+                .padding(.bottom, 6)
 
-            Section("LIBRARY") {
-                ForEach(LibraryItem.allCases) { item in
-                    libraryRow(item)
-                        .tag(SidebarSelection.library(item))
-                }
-            }
+            // Custom rows instead of List selection: the design's terracotta
+            // capsule highlight must not turn gray when the sidebar loses focus.
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    sectionHeader("DISCOVER")
+                    ForEach(DiscoverItem.allCases) { item in
+                        row(.discover(item), title: item.rawValue, icon: item.icon)
+                    }
 
-            Section("CATEGORIES") {
-                ForEach(categoryService.orderedCategories, id: \.id) { entry in
-                    Label(entry.definition.displayName, systemImage: entry.definition.icon)
-                        .tag(SidebarSelection.category(entry.id))
+                    sectionHeader("LIBRARY")
+                    row(.library(.installed), title: "Installed", icon: LibraryItem.installed.icon, count: installedCount)
+                    row(.library(.updates), title: "Updates", icon: LibraryItem.updates.icon, badge: updatesCount)
+
+                    sectionHeader("CATEGORIES")
+                    ForEach(categoryService.orderedCategories, id: \.id) { entry in
+                        row(
+                            .category(entry.id),
+                            title: entry.definition.displayName,
+                            icon: entry.definition.icon,
+                            count: categoryCounts[entry.id]
+                        )
+                    }
                 }
+                .padding(.horizontal, 10)
             }
+            .contentMargins(.bottom, 44, for: .scrollContent)
         }
-        .listStyle(.sidebar)
+        .ignoresSafeArea(.container, edges: .top)
     }
 
-    @ViewBuilder
-    private func libraryRow(_ item: LibraryItem) -> some View {
-        if item == .updates && updatesCount > 0 {
-            HStack {
-                Label(item.rawValue, systemImage: item.icon)
-                Spacer()
-                updatesBadge
+    // MARK: - Rows
+
+    private func row(
+        _ tag: SidebarSelection,
+        title: String,
+        icon: String,
+        count: Int? = nil,
+        badge: Int = 0
+    ) -> some View {
+        let isSelected = selection == tag
+        return Button {
+            selection = tag
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextMuted)
+                    .frame(width: 16)
+                Text(title)
+                    .font(isSelected ? CHType.navActive : CHType.navItem)
+                    .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextNav)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if badge > 0 {
+                    CountBadge(count: badge)
+                } else if let count {
+                    Text("\(count)")
+                        .font(CHType.statusMono)
+                        .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextFaint)
+                }
             }
-        } else {
-            Label(item.rawValue, systemImage: item.icon)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 12)
+            .background {
+                if isSelected {
+                    Capsule()
+                        .fill(Color.chActionInstallBg)
+                        .overlay(Capsule().strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+                }
+            }
+            .contentShape(Capsule())
         }
+        .buttonStyle(.plain)
     }
 
-    private var updatesBadge: some View {
-        Text("\(updatesCount)")
-            .font(.caption2)
-            .fontWeight(.bold)
-            .foregroundStyle(badgeForeground)
-            .frame(minWidth: 18, minHeight: 18)
-            .background(Capsule().fill(badgeBackground))
-    }
-
-    private var badgeBackground: Color {
-        colorScheme == .dark ? .white : .gray
-    }
-
-    private var badgeForeground: Color {
-        colorScheme == .dark ? .black : .white
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(CHType.label)
+            .kerning(CHType.trackingLabel)
+            .foregroundStyle(Color.chTextMuted)
+            .padding(.top, 16)
+            .padding(.horizontal, 10)
+            .padding(.bottom, 5)
     }
 }
 
@@ -78,7 +114,10 @@ struct SidebarView: View {
             let service = CategoryService()
             service.loadCategories()
             return service
-        }()
+        }(),
+        updatesCount: 1,
+        installedCount: 42
     )
-    .frame(width: 200)
+    .frame(width: 226, height: 700)
+    .background(WindowBackdrop())
 }

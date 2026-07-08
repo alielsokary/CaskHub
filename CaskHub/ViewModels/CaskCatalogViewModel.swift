@@ -22,8 +22,21 @@ final class CaskCatalogViewModel {
     private(set) var casks: [Cask] = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
-    private(set) var downloadCounts: [String: Int] = [:]
+    private var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:]
+    private(set) var analyticsPeriod: AnalyticsPeriod = .days30
     var searchText = ""
+
+    /// Top Charts respects the picked period; every other section stays on 365d.
+    /// Falls back to 365d while a shorter period is still loading so the
+    /// popularity sort doesn't collapse to arbitrary order.
+    var downloadCounts: [String: Int] {
+        guard selectedSidebar == .discover(.topCharts) else {
+            return analyticsByPeriod[.days365] ?? [:]
+        }
+        return analyticsByPeriod[analyticsPeriod]
+            ?? analyticsByPeriod[.days365]
+            ?? [:]
+    }
     var sortOption: SortOption = .mostPopular
     var selectedSidebar: SidebarSelection = .discover(.browse)
 
@@ -54,6 +67,15 @@ final class CaskCatalogViewModel {
                 localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
             }
             .count
+    }
+
+    /// Category ID → number of catalog casks in it (intersected with the
+    /// mapping data, so sidebar counts match what clicking the category shows).
+    var categoryCounts: [String: Int] {
+        let catalogTokens = Set(casks.map(\.token))
+        return categoryService.categoryTokenSets.mapValues {
+            $0.intersection(catalogTokens).count
+        }
     }
 
     // MARK: - Filtered Casks (3-stage pipeline)
@@ -131,7 +153,7 @@ final class CaskCatalogViewModel {
 
         do {
             async let caskRequest = apiClient.fetchAllCasks()
-            async let analyticsRequest = apiClient.fetchAnalytics()
+            async let analyticsRequest = apiClient.fetchAnalytics(period: .days365)
 
             let allCasks = try await caskRequest
             casks = allCasks.filter { cask in
@@ -144,15 +166,29 @@ final class CaskCatalogViewModel {
             recentlyAddedTracker.updateWithCurrentTokens(Set(casks.map(\.token)))
 
             if let analytics = try? await analyticsRequest {
-                downloadCounts = Dictionary(
-                    uniqueKeysWithValues: analytics.items.map { ($0.cask, $0.downloadCount) }
-                )
+                analyticsByPeriod[.days365] = Self.countsByToken(from: analytics)
             }
         } catch {
             errorMessage = error.localizedDescription
         }
 
         isLoading = false
+    }
+
+    /// Switches the Top Charts window, fetching that period's data on first use.
+    func selectAnalyticsPeriod(_ period: AnalyticsPeriod) async {
+        analyticsPeriod = period
+        guard analyticsByPeriod[period] == nil else { return }
+        if let analytics = try? await apiClient.fetchAnalytics(period: period) {
+            analyticsByPeriod[period] = Self.countsByToken(from: analytics)
+        }
+    }
+
+    private static func countsByToken(from analytics: CaskAnalyticsResponse) -> [String: Int] {
+        Dictionary(
+            analytics.items.map { ($0.cask, $0.downloadCount) },
+            uniquingKeysWith: max
+        )
     }
 
     func formattedDownloads(for token: String) -> String? {
