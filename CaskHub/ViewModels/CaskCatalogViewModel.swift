@@ -21,8 +21,13 @@ enum SortOption: String, CaseIterable, Identifiable {
     case mostPopular = "Most Popular"
     case nameAZ = "Name (A→Z)"
     case nameZA = "Name (Z→A)"
+    case newest = "Newest"
+    case oldest = "Oldest"
 
     var id: String { rawValue }
+
+    /// Date sorts only make sense where add dates drive the page.
+    static let standard: [SortOption] = [.mostPopular, .nameAZ, .nameZA]
 }
 
 @MainActor
@@ -49,20 +54,23 @@ final class CaskCatalogViewModel {
     var sortOption: SortOption = .mostPopular
     var selectedSidebar: SidebarSelection = .discover(.browse)
 
+    /// Window for the Recently Added page and Browse shelf.
+    var recentlyAddedWindow: RecentlyAddedWindow = .days30
+
     private let apiClient: BrewAPIClientProtocol
     private let categoryService: CategoryService
-    private let recentlyAddedTracker: RecentlyAddedTracker
+    private let recentlyAdded: RecentlyAddedService
     private let localHomebrew: LocalHomebrewService
 
     init(
         apiClient: BrewAPIClientProtocol = BrewAPIClient(),
         categoryService: CategoryService,
-        recentlyAddedTracker: RecentlyAddedTracker,
+        recentlyAdded: RecentlyAddedService,
         localHomebrew: LocalHomebrewService
     ) {
         self.apiClient = apiClient
         self.categoryService = categoryService
-        self.recentlyAddedTracker = recentlyAddedTracker
+        self.recentlyAdded = recentlyAdded
         self.localHomebrew = localHomebrew
     }
 
@@ -104,7 +112,7 @@ final class CaskCatalogViewModel {
             )
         }
 
-        let recentTokens = recentlyAddedTracker.recentTokens()
+        let recentTokens = recentlyAdded.recentTokens(within: recentlyAddedWindow.rawValue)
         var sections = [
             BrowseSection(
                 title: "Most Popular",
@@ -151,14 +159,8 @@ final class CaskCatalogViewModel {
             return casks
 
         case .discover(.recentlyAdded):
-            let recentTokens = recentlyAddedTracker.recentTokens()
-            return casks
-                .filter { recentTokens.contains($0.token) }
-                .sorted { lhs, rhs in
-                    let lhsDate = recentlyAddedTracker.firstSeenDate(for: lhs.token) ?? .distantPast
-                    let rhsDate = recentlyAddedTracker.firstSeenDate(for: rhs.token) ?? .distantPast
-                    return lhsDate > rhsDate
-                }
+            let recentTokens = recentlyAdded.recentTokens(within: recentlyAddedWindow.rawValue)
+            return casks.filter { recentTokens.contains($0.token) }
 
         case .library(.installed):
             return casks.filter { localHomebrew.isInstalled(token: $0.token) }
@@ -192,6 +194,10 @@ final class CaskCatalogViewModel {
             return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
         case .nameZA:
             return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending }
+        case .newest:
+            return casks.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "") > (recentlyAdded.addedDate(for: $1.token) ?? "") }
+        case .oldest:
+            return casks.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "9999") < (recentlyAdded.addedDate(for: $1.token) ?? "9999") }
         }
     }
 
@@ -212,8 +218,6 @@ final class CaskCatalogViewModel {
                 && !cask.token.contains("@")
                 && !cask.token.hasPrefix("font-")
             }
-
-            recentlyAddedTracker.updateWithCurrentTokens(Set(casks.map(\.token)))
 
             if let analytics = try? await analyticsRequest {
                 analyticsByPeriod[.days365] = Self.countsByToken(from: analytics)

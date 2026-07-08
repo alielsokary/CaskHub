@@ -13,7 +13,7 @@ enum ViewMode: String {
 
 struct ContentView: View {
     @State private var categoryService: CategoryService
-    @State private var recentlyAddedTracker = RecentlyAddedTracker()
+    @State private var recentlyAdded = RecentlyAddedService()
     @State private var viewModel: CaskCatalogViewModel
     @State private var imageCache = ImageCacheService()
     @State private var localHomebrew = LocalHomebrewService()
@@ -31,14 +31,14 @@ struct ContentView: View {
     init() {
         let service = CategoryService()
         service.loadCategories()
-        let tracker = RecentlyAddedTracker()
+        let recentlyAddedService = RecentlyAddedService()
         let localHomebrewService = LocalHomebrewService()
         _categoryService = State(initialValue: service)
-        _recentlyAddedTracker = State(initialValue: tracker)
+        _recentlyAdded = State(initialValue: recentlyAddedService)
         _localHomebrew = State(initialValue: localHomebrewService)
         _viewModel = State(initialValue: CaskCatalogViewModel(
             categoryService: service,
-            recentlyAddedTracker: tracker,
+            recentlyAdded: recentlyAddedService,
             localHomebrew: localHomebrewService
         ))
     }
@@ -60,6 +60,9 @@ struct ContentView: View {
                     title: sectionName,
                     caskCount: viewModel.filteredCasks.count,
                     sortOption: $viewModel.sortOption,
+                    sortOptions: selectedSidebar == .discover(.recentlyAdded)
+                        ? SortOption.standard + [.oldest, .newest]
+                        : SortOption.standard,
                     viewMode: $viewMode,
                     searchText: $viewModel.searchText,
                     searchFocus: $searchFocused,
@@ -67,6 +70,8 @@ struct ContentView: View {
                     onSelectPeriod: { period in
                         Task { await viewModel.selectAnalyticsPeriod(period) }
                     },
+                    recentWindow: selectedSidebar == .discover(.recentlyAdded) ? viewModel.recentlyAddedWindow : nil,
+                    onSelectWindow: { viewModel.recentlyAddedWindow = $0 },
                     // Sections have a fixed popularity order; sorting is a no-op there.
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
                     onSubmitSearch: {
@@ -120,13 +125,21 @@ struct ContentView: View {
             async let catalog: Void = viewModel.fetchCasks()
             async let local: Void = localHomebrew.refresh()
             async let categories: Void = categoryService.refreshFromRemote()
-            _ = await (catalog, local, categories)
+            async let addedDates: Void = recentlyAdded.refreshFromRemote()
+            _ = await (catalog, local, categories, addedDates)
         }
         .onChange(of: selectedSidebar) { _, newValue in
             viewModel.selectedSidebar = newValue
             if newValue == .discover(.topCharts) {
                 // Fetch the current period's data if it hasn't loaded yet.
                 Task { await viewModel.selectAnalyticsPeriod(viewModel.analyticsPeriod) }
+            }
+            // Recently Added defaults to Newest; its date sorts don't exist
+            // in other pages' menus, so drop back to Most Popular on leave.
+            if newValue == .discover(.recentlyAdded) {
+                viewModel.sortOption = .newest
+            } else if !SortOption.standard.contains(viewModel.sortOption) {
+                viewModel.sortOption = .mostPopular
             }
         }
         .onChange(of: viewModel.searchText) { _, newValue in
