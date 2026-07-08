@@ -12,7 +12,10 @@ enum BrewAPIConfig {
 
     enum EndpointPath {
         static let allCasks = "/api/cask.json"
-        static let analytics365d = "/api/analytics/cask-install/365d.json"
+
+        static func analytics(_ period: AnalyticsPeriod) -> String {
+            "/api/analytics/cask-install/\(period.rawValue).json"
+        }
     }
 
     enum Headers {

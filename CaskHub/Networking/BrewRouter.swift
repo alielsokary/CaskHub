@@ -9,11 +9,11 @@ import Foundation
 
 enum BrewRouter {
     case allCasks
-    case analytics365d
+    case analytics(AnalyticsPeriod)
 
     var method: HTTPMethod {
         switch self {
-        case .allCasks, .analytics365d:
+        case .allCasks, .analytics:
             return .get
         }
     }
@@ -22,8 +22,8 @@ enum BrewRouter {
         switch self {
         case .allCasks:
             return BrewAPIConfig.EndpointPath.allCasks
-        case .analytics365d:
-            return BrewAPIConfig.EndpointPath.analytics365d
+        case .analytics(let period):
+            return BrewAPIConfig.EndpointPath.analytics(period)
         }
     }
 
