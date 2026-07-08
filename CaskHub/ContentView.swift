@@ -83,7 +83,9 @@ struct ContentView: View {
                 .frame(maxWidth: CHSize.contentWidth)
                 .padding(.horizontal, CHSpace.s5)
                 .frame(maxWidth: .infinity)
-                .padding(.top, CHSpace.s4)
+                // Bottom padding sits outside the scroll view, so scrolled
+                // cards clip 16pt below the bar instead of flush against it.
+                .padding(.vertical, CHSpace.s4)
 
                 if showsResultsHeader {
                     Text("Results for “\(viewModel.searchText)”")
@@ -92,7 +94,7 @@ struct ContentView: View {
                         .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
                         .padding(.horizontal, CHSpace.s5)
                         .frame(maxWidth: .infinity)
-                        .padding(.top, CHSpace.s4)
+                        .padding(.bottom, CHSpace.s4)
                 }
 
                 detailContent
@@ -227,7 +229,6 @@ struct ContentView: View {
             }
             .frame(width: CHSize.contentWidth, alignment: .leading)
             .frame(maxWidth: .infinity)
-            .padding(.top, CHSpace.s4)
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
