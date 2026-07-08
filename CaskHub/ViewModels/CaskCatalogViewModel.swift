@@ -8,6 +8,15 @@
 import Foundation
 import Observation
 
+/// One shelf on the Browse page: a titled row group with a "View All" destination.
+struct BrowseSection: Identifiable {
+    let title: String
+    let destination: SidebarSelection
+    let casks: [Cask]
+
+    var id: String { destination.id }
+}
+
 enum SortOption: String, CaseIterable, Identifiable {
     case mostPopular = "Most Popular"
     case nameAZ = "Name (A→Z)"
@@ -23,7 +32,7 @@ final class CaskCatalogViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:]
-    private(set) var analyticsPeriod: AnalyticsPeriod = .days30
+    private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     var searchText = ""
 
     /// Top Charts respects the picked period; every other section stays on 365d.
@@ -76,6 +85,47 @@ final class CaskCatalogViewModel {
         return categoryService.categoryTokenSets.mapValues {
             $0.intersection(catalogTokens).count
         }
+    }
+
+    // MARK: - Browse Sections
+
+    /// Cards per Browse shelf: two rows of the fixed 4-column grid.
+    private static let browseSectionSize = 8
+
+    /// Shelves for the Browse page: Most Popular, Recently Added, then every
+    /// category except "other" — each holding its top casks by 365d downloads.
+    var browseSections: [BrowseSection] {
+        let counts = analyticsByPeriod[.days365] ?? [:]
+        func top(_ source: [Cask]) -> [Cask] {
+            Array(
+                source
+                    .sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
+                    .prefix(Self.browseSectionSize)
+            )
+        }
+
+        let recentTokens = recentlyAddedTracker.recentTokens()
+        var sections = [
+            BrowseSection(
+                title: "Most Popular",
+                destination: .discover(.topCharts),
+                casks: top(casks)
+            ),
+            BrowseSection(
+                title: "Recently Added",
+                destination: .discover(.recentlyAdded),
+                casks: top(casks.filter { recentTokens.contains($0.token) })
+            )
+        ]
+        for entry in categoryService.orderedCategories where entry.id != "other" {
+            let tokens = categoryService.tokens(in: entry.id)
+            sections.append(BrowseSection(
+                title: entry.definition.displayName,
+                destination: .category(entry.id),
+                casks: top(casks.filter { tokens.contains($0.token) })
+            ))
+        }
+        return sections.filter { !$0.casks.isEmpty }
     }
 
     // MARK: - Filtered Casks (3-stage pipeline)

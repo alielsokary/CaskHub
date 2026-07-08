@@ -56,7 +56,7 @@ struct StatusBarView: View {
         var parts: [String] = []
         if let brewVersion { parts.append("brew \(brewVersion)") }
         parts.append("tap homebrew/cask")
-        parts.append("\(caskCount) casks")
+        parts.append("\(caskCount.formatted()) casks")
         return parts.joined(separator: " · ")
     }
 }

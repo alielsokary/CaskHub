@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @State private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
+    @State private var showsResultsHeader = false
 
     // Fixed 4-column grid from the design mock (cards never reflow wider).
     private let columns = Array(
@@ -66,13 +67,28 @@ struct ContentView: View {
                     onSelectPeriod: { period in
                         Task { await viewModel.selectAnalyticsPeriod(period) }
                     },
-                    showsSort: selectedSidebar != .discover(.featured)
+                    // Sections have a fixed popularity order; sorting is a no-op there.
+                    showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
+                    onSubmitSearch: {
+                        searchFocused = false
+                        showsResultsHeader = !viewModel.searchText.isEmpty
+                    }
                 )
                 // Never wider than the card grid below it, centered to match.
                 .frame(maxWidth: CHSize.contentWidth)
                 .padding(.horizontal, CHSpace.s5)
                 .frame(maxWidth: .infinity)
                 .padding(.top, CHSpace.s4)
+
+                if showsResultsHeader {
+                    Text("Results for “\(viewModel.searchText)”")
+                        .font(CHType.section)
+                        .foregroundStyle(Color.chTextTitle)
+                        .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
+                        .padding(.horizontal, CHSpace.s5)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, CHSpace.s4)
+                }
 
                 detailContent
             }
@@ -113,6 +129,19 @@ struct ContentView: View {
                 Task { await viewModel.selectAnalyticsPeriod(viewModel.analyticsPeriod) }
             }
         }
+        .onChange(of: viewModel.searchText) { _, newValue in
+            if newValue.isEmpty {
+                // Only drop focus when clearing a submitted search — while
+                // still composing (backspaced to empty), keep the field active.
+                if showsResultsHeader { searchFocused = false }
+                showsResultsHeader = false
+            }
+        }
+        .onAppear {
+            // AppKit hands the window's initial key focus to the first text
+            // field; take it back so the search field only activates via ⌘F.
+            DispatchQueue.main.async { searchFocused = false }
+        }
     }
 
     // MARK: - Detail Content
@@ -146,9 +175,16 @@ struct ContentView: View {
 
     /// House pick: shown on Browse when not searching.
     private var heroCask: Cask? {
-        guard case .discover(.browse) = selectedSidebar,
-              viewModel.searchText.isEmpty else { return nil }
+        guard showsBrowseSections else { return nil }
         return viewModel.filteredCasks.first
+    }
+
+    /// Browse shows titled shelves instead of the flat grid — unless searching,
+    /// where a flat result grid is more useful. List mode stays a flat list.
+    private var showsBrowseSections: Bool {
+        selectedSidebar == .discover(.browse)
+            && viewModel.searchText.isEmpty
+            && viewMode == .grid
     }
 
     private func categoryInfo(for cask: Cask) -> (id: String, name: String)? {
@@ -168,15 +204,12 @@ struct ContentView: View {
                         categoryName: categoryInfo(for: hero)?.name
                     )
                 }
-                LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
-                    ForEach(gridCasks) { cask in
-                        CaskCardView(
-                            cask: cask,
-                            downloads: viewModel.formattedDownloads(for: cask.token),
-                            category: categoryInfo(for: cask),
-                            onSelectCategory: { selectedSidebar = .category($0) }
-                        )
+                if showsBrowseSections {
+                    ForEach(viewModel.browseSections) { section in
+                        browseSectionView(section)
                     }
+                } else {
+                    caskGrid(viewModel.filteredCasks)
                 }
             }
             .frame(width: CHSize.contentWidth, alignment: .leading)
@@ -185,10 +218,43 @@ struct ContentView: View {
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
+        // Recreate the scroll view per sidebar selection so navigating
+        // (View All, sidebar clicks) always lands at the top.
+        .id(selectedSidebar)
     }
 
-    private var gridCasks: [Cask] {
-        heroCask == nil ? viewModel.filteredCasks : Array(viewModel.filteredCasks.dropFirst())
+    private func caskGrid(_ casks: [Cask]) -> some View {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
+            ForEach(casks) { cask in
+                CaskCardView(
+                    cask: cask,
+                    downloads: viewModel.formattedDownloads(for: cask.token),
+                    category: categoryInfo(for: cask),
+                    onSelectCategory: { selectedSidebar = .category($0) }
+                )
+            }
+        }
+    }
+
+    private func browseSectionView(_ section: BrowseSection) -> some View {
+        VStack(alignment: .leading, spacing: CHSpace.s3) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(section.title)
+                    .font(CHType.section)
+                    .foregroundStyle(Color.chTextTitle)
+                Spacer()
+                Button {
+                    selectedSidebar = section.destination
+                } label: {
+                    Text("View All")
+                        .font(CHType.button)
+                        .foregroundStyle(Color.chTextBrand)
+                }
+                .buttonStyle(.plain)
+            }
+            caskGrid(section.casks)
+        }
+        .padding(.top, CHSpace.s3)
     }
 
     // MARK: - List View
@@ -202,6 +268,7 @@ struct ContentView: View {
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
+        .id(selectedSidebar)
     }
 
     // MARK: - Error View
