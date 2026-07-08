@@ -14,10 +14,15 @@ struct CaskIconView: View {
     @Environment(ImageCacheService.self) private var imageCache
     @State private var loadedImage: NSImage?
 
+    private var wellShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
+    }
+
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: size * 0.22)
-                .fill(.quaternary)
+            wellShape
+                .fill(Color.chSurfaceField)
+                .overlay(wellShape.strokeBorder(Color.chHairlineStrong, lineWidth: 1))
                 .frame(width: size, height: size)
 
             if let loadedImage {
@@ -25,13 +30,13 @@ struct CaskIconView: View {
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: size * 0.22))
+                    .frame(width: size * 0.8, height: size * 0.8)
+                    .clipShape(RoundedRectangle(cornerRadius: size * 0.18, style: .continuous))
                     .transition(.opacity)
             } else {
                 Image(systemName: "macwindow")
                     .font(.system(size: size * 0.4))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.chTextMuted)
             }
         }
         .animation(.easeIn(duration: 0.2), value: loadedImage != nil)
@@ -65,5 +70,6 @@ struct CaskIconView: View {
         CaskIconView(cask: sampleCask, size: 56)
     }
     .padding()
+    .background(Color.chCream)
     .environment(ImageCacheService())
 }

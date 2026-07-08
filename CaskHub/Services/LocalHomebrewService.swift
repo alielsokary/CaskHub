@@ -89,6 +89,9 @@ final class LocalHomebrewService {
     /// Most recent error from `refresh()` itself (e.g. Caskroom missing).
     private(set) var refreshError: LocalHomebrewError?
 
+    /// Installed Homebrew version ("4.6.15"), fetched once on first refresh.
+    private(set) var brewVersion: String?
+
     private let fileManager: FileManager
 
     init(fileManager: FileManager = .default) {
@@ -101,6 +104,9 @@ final class LocalHomebrewService {
     /// Cheap (~ms for typical installs) — safe to call after every action.
     func refresh() async {
         let fm = fileManager
+        if brewVersion == nil {
+            brewVersion = await Self.fetchBrewVersion()
+        }
         let result = await Task.detached(priority: .userInitiated) {
             Self.scanCaskroom(fileManager: fm)
         }.value
@@ -271,6 +277,31 @@ final class LocalHomebrewService {
                     stderr: stderr
                 )
             }
+        }.value
+    }
+
+    /// Runs `brew --version` and returns the bare version ("Homebrew 4.6.15" → "4.6.15").
+    private nonisolated static func fetchBrewVersion() async -> String? {
+        guard let brewURL = locateBrewBinary() else { return nil }
+        return await Task.detached(priority: .utility) {
+            let process = Process()
+            process.executableURL = brewURL
+            process.arguments = ["--version"]
+            let stdoutPipe = Pipe()
+            process.standardOutput = stdoutPipe
+            process.standardError = FileHandle.nullDevice
+            do {
+                try process.run()
+            } catch {
+                return nil
+            }
+            let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            guard process.terminationStatus == 0,
+                  let firstLine = String(data: data, encoding: .utf8)?
+                      .split(separator: "\n").first
+            else { return nil }
+            return firstLine.split(separator: " ").last.map(String.init)
         }.value
     }
 

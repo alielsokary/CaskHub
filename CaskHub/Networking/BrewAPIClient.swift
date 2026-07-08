@@ -9,7 +9,7 @@ import Foundation
 
 protocol BrewAPIClientProtocol {
     func fetchAllCasks() async throws -> [Cask]
-    func fetchAnalytics() async throws -> CaskAnalyticsResponse
+    func fetchAnalytics(period: AnalyticsPeriod) async throws -> CaskAnalyticsResponse
 }
 
 final class BrewAPIClient: BrewAPIClientProtocol {
@@ -27,7 +27,7 @@ final class BrewAPIClient: BrewAPIClientProtocol {
         try await networkService.fetch(route: .allCasks)
     }
 
-    func fetchAnalytics() async throws -> CaskAnalyticsResponse {
-        try await networkService.fetch(route: .analytics365d)
+    func fetchAnalytics(period: AnalyticsPeriod) async throws -> CaskAnalyticsResponse {
+        try await networkService.fetch(route: .analytics(period))
     }
 }

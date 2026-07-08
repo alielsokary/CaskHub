@@ -19,10 +19,13 @@ struct ContentView: View {
     @State private var localHomebrew = LocalHomebrewService()
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @State private var viewMode: ViewMode = .grid
+    @FocusState private var searchFocused: Bool
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 250, maximum: 300), spacing: 14)
-    ]
+    // Fixed 4-column grid from the design mock (cards never reflow wider).
+    private let columns = Array(
+        repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
+        count: 4
+    )
 
     init() {
         let service = CategoryService()
@@ -44,15 +47,57 @@ struct ContentView: View {
             SidebarView(
                 selection: $selectedSidebar,
                 categoryService: categoryService,
-                updatesCount: viewModel.updatesCount
+                updatesCount: viewModel.updatesCount,
+                installedCount: localHomebrew.installedCasks.count,
+                categoryCounts: viewModel.categoryCounts
             )
-            .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 260)
+            // Min width sized so the longest category name never truncates.
+            .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
         } detail: {
-            detailContent
-                .navigationTitle(navigationTitle)
-                .searchable(text: $viewModel.searchText, prompt: "Search apps...")
-                .toolbar { toolbarItems }
+            VStack(spacing: 0) {
+                TopBarView(
+                    title: sectionName,
+                    caskCount: viewModel.filteredCasks.count,
+                    sortOption: $viewModel.sortOption,
+                    viewMode: $viewMode,
+                    searchText: $viewModel.searchText,
+                    searchFocus: $searchFocused,
+                    analyticsPeriod: selectedSidebar == .discover(.topCharts) ? viewModel.analyticsPeriod : nil,
+                    onSelectPeriod: { period in
+                        Task { await viewModel.selectAnalyticsPeriod(period) }
+                    },
+                    showsSort: selectedSidebar != .discover(.featured)
+                )
+                // Never wider than the card grid below it, centered to match.
+                .frame(maxWidth: CHSize.contentWidth)
+                .padding(.horizontal, CHSpace.s5)
+                .frame(maxWidth: .infinity)
+                .padding(.top, CHSpace.s4)
+
+                detailContent
+            }
+            // The hidden title bar still reserves toolbar height as safe area;
+            // ignore it so the top bar sits 16pt from the window edge.
+            .ignoresSafeArea(.container, edges: .top)
         }
+        .overlay {
+            // Invisible ⌘F target: focuses the custom search field.
+            Button("") { searchFocused = true }
+                .keyboardShortcut("f", modifiers: .command)
+                .opacity(0)
+                .allowsHitTesting(false)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            StatusBarView(
+                caskCount: viewModel.filteredCasks.count,
+                updatesCount: viewModel.updatesCount,
+                brewVersion: localHomebrew.brewVersion
+            )
+        }
+        .containerBackground(for: .window) {
+            WindowBackdrop()
+        }
+        .tint(Color.chTerracotta)
         .environment(imageCache)
         .environment(localHomebrew)
         .task {
@@ -63,6 +108,10 @@ struct ContentView: View {
         }
         .onChange(of: selectedSidebar) { _, newValue in
             viewModel.selectedSidebar = newValue
+            if newValue == .discover(.topCharts) {
+                // Fetch the current period's data if it hasn't loaded yet.
+                Task { await viewModel.selectAnalyticsPeriod(viewModel.analyticsPeriod) }
+            }
         }
     }
 
@@ -71,9 +120,12 @@ struct ContentView: View {
     @ViewBuilder
     private var detailContent: some View {
         if viewModel.isLoading {
-            ProgressView("Loading casks...")
+            ProgressView("Loading casks…")
+                .font(CHType.body)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = viewModel.errorMessage {
             errorView(error)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             switch viewMode {
             case .grid:
@@ -84,34 +136,59 @@ struct ContentView: View {
         }
     }
 
-    private var navigationTitle: String {
-        let count = viewModel.filteredCasks.count
-        let name: String
+    private var sectionName: String {
         switch selectedSidebar {
-        case .discover(let item):
-            name = item.rawValue
-        case .library(let item):
-            name = item.rawValue
-        case .category(let categoryID):
-            name = categoryService.displayName(for: categoryID)
+        case .discover(let item): return item.rawValue
+        case .library(let item): return item.rawValue
+        case .category(let categoryID): return categoryService.displayName(for: categoryID)
         }
-        return "\(name) (\(count) casks)"
+    }
+
+    /// House pick: shown on Browse when not searching.
+    private var heroCask: Cask? {
+        guard case .discover(.browse) = selectedSidebar,
+              viewModel.searchText.isEmpty else { return nil }
+        return viewModel.filteredCasks.first
+    }
+
+    private func categoryInfo(for cask: Cask) -> (id: String, name: String)? {
+        guard let id = categoryService.category(for: cask.token) else { return nil }
+        return (id, categoryService.displayName(for: id))
     }
 
     // MARK: - Grid View
 
     private var gridView: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 14) {
-                ForEach(viewModel.filteredCasks) { cask in
-                    CaskCardView(
-                        cask: cask,
-                        downloads: viewModel.formattedDownloads(for: cask.token)
+            VStack(alignment: .leading, spacing: CHSpace.s4) {
+                if let hero = heroCask {
+                    HeroCard(
+                        cask: hero,
+                        downloads: viewModel.formattedDownloads(for: hero.token),
+                        categoryName: categoryInfo(for: hero)?.name
                     )
                 }
+                LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
+                    ForEach(gridCasks) { cask in
+                        CaskCardView(
+                            cask: cask,
+                            downloads: viewModel.formattedDownloads(for: cask.token),
+                            category: categoryInfo(for: cask),
+                            onSelectCategory: { selectedSidebar = .category($0) }
+                        )
+                    }
+                }
             }
-            .padding()
+            .frame(width: CHSize.contentWidth, alignment: .leading)
+            .frame(maxWidth: .infinity)
+            .padding(.top, CHSpace.s4)
         }
+        .contentMargins(.bottom, 44, for: .scrollContent)
+        .scrollContentBackground(.hidden)
+    }
+
+    private var gridCasks: [Cask] {
+        heroCask == nil ? viewModel.filteredCasks : Array(viewModel.filteredCasks.dropFirst())
     }
 
     // MARK: - List View
@@ -123,62 +200,24 @@ struct ContentView: View {
                 downloads: viewModel.formattedDownloads(for: cask.token)
             )
         }
+        .contentMargins(.bottom, 44, for: .scrollContent)
+        .scrollContentBackground(.hidden)
     }
 
     // MARK: - Error View
 
     private func errorView(_ error: String) -> some View {
         VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
+            BarrelMark()
+                .frame(width: 56, height: 56)
+                .opacity(0.6)
             Text(error)
-                .foregroundStyle(.secondary)
-            Button("Retry") {
+                .font(CHType.body)
+                .foregroundStyle(Color.chTextBody)
+            ActionCapsuleButton(action: .update, fullWidth: false) {
                 Task { await viewModel.fetchCasks() }
             }
         }
-    }
-
-    // MARK: - Toolbar
-
-    @ToolbarContentBuilder
-    private var toolbarItems: some ToolbarContent {
-        ToolbarItem(placement: .automatic) {
-            sortMenu
-        }
-
-        ToolbarItem(placement: .automatic) {
-            Picker("View Mode", selection: $viewMode) {
-                Image(systemName: "square.grid.2x2").tag(ViewMode.grid)
-                Image(systemName: "list.bullet").tag(ViewMode.list)
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 80)
-        }
-    }
-
-    private var sortMenu: some View {
-        Menu {
-            ForEach(SortOption.allCases) { option in
-                Button {
-                    viewModel.sortOption = option
-                } label: {
-                    HStack {
-                        Text(option.rawValue)
-                        if viewModel.sortOption == option {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "arrow.up.arrow.down")
-                Text("Sort by: \(viewModel.sortOption.rawValue)")
-            }
-        }
-        .menuIndicator(.hidden)
     }
 }
 

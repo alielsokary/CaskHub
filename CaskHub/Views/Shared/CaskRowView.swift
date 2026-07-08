@@ -20,7 +20,12 @@ struct CaskRowView: View {
             appInfo
             Spacer()
             metadata
+            // Fixed-width action column + reserved menu slot keep every
+            // capsule vertically aligned across rows.
             actionsControl
+                .frame(width: 130)
+            menuSlot
+                .frame(width: 24)
         }
         .padding(.vertical, 4)
         .alert("Uninstall \(cask.displayName)?", isPresented: $showDeleteConfirmation) {
@@ -50,12 +55,13 @@ struct CaskRowView: View {
     private var appInfo: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(cask.displayName)
-                .font(.headline)
+                .font(CHType.cardTitle)
+                .foregroundStyle(Color.chTextTitle)
                 .lineLimit(1)
             if let desc = cask.desc {
                 Text(desc)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(CHType.bodySm)
+                    .foregroundStyle(Color.chTextBody)
                     .lineLimit(1)
             }
         }
@@ -65,63 +71,36 @@ struct CaskRowView: View {
     // MARK: - Metadata
 
     private var metadata: some View {
-        HStack(spacing: 12) {
-            if let downloads {
-                HStack(spacing: 3) {
-                    Image(systemName: "arrow.down.to.line")
-                    Text(downloads)
-                }
-            }
-            HStack(spacing: 3) {
-                Image(systemName: "tag")
-                Text("v\(cask.displayVersion)")
-            }
-        }
-        .font(.caption)
-        .foregroundStyle(.tertiary)
+        Text(metaText)
+            .font(CHType.statusMono)
+            .foregroundStyle(Color.chTextMuted)
+    }
+
+    private var metaText: String {
+        var parts: [String] = []
+        if let downloads { parts.append("↓ \(downloads)") }
+        parts.append("v\(cask.displayVersion)")
+        return parts.joined(separator: " · ")
     }
 
     // MARK: - Actions
 
-    @ViewBuilder
     private var actionsControl: some View {
-        if let inFlight = localHomebrew.inFlightActions[cask.token] {
-            HStack(spacing: 4) {
-                ProgressView().controlSize(.small)
-                Text(inFlight.inProgressLabel)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        } else if let installation = localHomebrew.installedCasks[cask.token] {
-            installedActionsMenu(for: installation)
-        } else {
-            installButton
-        }
+        CaskActionsView(cask: cask)
     }
 
     @ViewBuilder
-    private func installedActionsMenu(for installation: LocalCaskInstallation) -> some View {
-        let showUpdate = localHomebrew.hasAvailableUpdate(
-            token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates
-        )
-        let canOpen = !installation.appBundleNames.isEmpty
+    private var menuSlot: some View {
+        if localHomebrew.installedCasks[cask.token] != nil,
+           localHomebrew.inFlightActions[cask.token] == nil {
+            installedActionsMenu
+        } else {
+            Color.clear
+        }
+    }
 
+    private var installedActionsMenu: some View {
         Menu {
-            if canOpen {
-                Button {
-                    localHomebrew.openApp(token: cask.token)
-                } label: {
-                    Label("Open", systemImage: "play.fill")
-                }
-            }
-            if showUpdate {
-                Button {
-                    Task { try? await localHomebrew.upgrade(token: cask.token) }
-                } label: {
-                    Label("Update", systemImage: "arrow.up.circle.fill")
-                }
-            }
-            Divider()
             Button(role: .destructive) {
                 showDeleteConfirmation = true
             } label: {
@@ -130,34 +109,13 @@ struct CaskRowView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.chTextMuted)
                 .padding(.horizontal, 6)
                 .contentShape(Rectangle())
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .fixedSize()
-    }
-
-    // MARK: - Install Button (for not-installed casks)
-
-    private var installButton: some View {
-        Button {
-            Task { try? await localHomebrew.install(token: cask.token) }
-        } label: {
-            HStack(spacing: 3) {
-                Image(systemName: "arrow.down.to.line")
-                    .font(.caption2)
-                Text("Install")
-                    .font(.caption)
-                    .fontWeight(.medium)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 5)
-            .background(.quaternary)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -186,4 +144,5 @@ struct CaskRowView: View {
     }
     .frame(width: 600)
     .environment(LocalHomebrewService())
+    .environment(ImageCacheService())
 }

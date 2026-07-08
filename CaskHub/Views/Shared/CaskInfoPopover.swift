@@ -19,14 +19,18 @@ struct CaskInfoPopover: View {
             ForEach(rows, id: \.property) { row in
                 GridRow {
                     Text(row.property)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.secondary)
+                        .font(CHType.body)
+                        .foregroundStyle(Color.chTextBody)
                         .gridColumnAlignment(.leading)
                     if let link = row.link {
                         Link(row.value, destination: link)
+                            .font(CHType.statusMono)
+                            .foregroundStyle(Color.chTextBrand)
                             .gridColumnAlignment(.leading)
                     } else {
                         Text(row.value)
+                            .font(CHType.statusMono)
+                            .foregroundStyle(Color.chTextTitle)
                             .textSelection(.enabled)
                             .gridColumnAlignment(.leading)
                     }
@@ -34,7 +38,6 @@ struct CaskInfoPopover: View {
                 Divider()
             }
         }
-        .font(.callout)
         .padding()
         .frame(minWidth: 400)
     }
@@ -42,9 +45,11 @@ struct CaskInfoPopover: View {
     private var headerRow: some View {
         GridRow {
             Text("Property")
-                .fontWeight(.semibold)
+                .font(CHType.cardTitle)
+                .foregroundStyle(Color.chTextTitle)
             Text("Value")
-                .fontWeight(.semibold)
+                .font(CHType.cardTitle)
+                .foregroundStyle(Color.chTextTitle)
         }
     }
 
