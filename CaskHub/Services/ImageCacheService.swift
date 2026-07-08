@@ -83,8 +83,11 @@ final class ImageCacheService {
             }
 
             // Tier 1: App-Fair app icon (also original; frozen pre-2022 —
-            // covers some casks CaskKit can't extract today)
-            if let url = CaskIconURL.appFairIconURL(for: token),
+            // covers some casks CaskKit can't extract today). Skipped for
+            // CLI casks: their icon policy is CaskKit's alone — anything
+            // else falls through to the app's CLI tile.
+            if !cask.isCLI,
+               let url = CaskIconURL.appFairIconURL(for: token),
                let image = await fetch(url) {
                 cache(image: image, token: token)
                 return image
