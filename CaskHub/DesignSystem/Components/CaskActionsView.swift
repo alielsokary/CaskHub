@@ -18,7 +18,7 @@ struct CaskActionsView: View {
 
     var body: some View {
         if let inFlight = localHomebrew.inFlightActions[cask.token] {
-            inFlightCapsule(label: inFlight.inProgressLabel)
+            inFlightCapsule(for: inFlight)
         } else if let installation = localHomebrew.installedCasks[cask.token] {
             installedActions(for: installation)
         } else {
@@ -65,12 +65,35 @@ struct CaskActionsView: View {
         }
     }
 
-    private func inFlightCapsule(label: String) -> some View {
-        HStack(spacing: 6) {
+    private func inFlightCapsule(for action: CaskAction) -> some View {
+        let token = cask.token
+        let isCanceling = localHomebrew.cancelRequested.contains(token)
+        let canCancel = localHomebrew.cancellableDownloads.contains(token) && !isCanceling
+        let label = isCanceling
+            ? "Canceling…"
+            : (canCancel ? "Downloading…" : action.inProgressLabel)
+
+        return HStack(spacing: 6) {
             ProgressView().controlSize(.small)
             Text(label)
                 .font(CHType.bodySm)
                 .foregroundStyle(Color.chTextBody)
+            if canCancel {
+                Spacer(minLength: 0)
+                Button {
+                    localHomebrew.cancelInstall(token: token)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Color.chTextBody)
+                        .padding(4)
+                        .background(Circle().fill(Color.chSurfaceField))
+                        .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Cancel download")
+            }
         }
         .frame(maxWidth: fullWidth ? .infinity : nil)
         .padding(.vertical, 5)
