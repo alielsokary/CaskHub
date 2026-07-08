@@ -13,12 +13,17 @@ struct TopBarView: View {
     let title: String
     let caskCount: Int
     @Binding var sortOption: SortOption
+    /// Sort choices for the current page (Recently Added adds Newest/Oldest).
+    var sortOptions: [SortOption] = SortOption.standard
     @Binding var viewMode: ViewMode
     @Binding var searchText: String
     var searchFocus: FocusState<Bool>.Binding
     /// Non-nil on Top Charts: shows the analytics period chip next to the sort chip.
     var analyticsPeriod: AnalyticsPeriod?
     var onSelectPeriod: ((AnalyticsPeriod) -> Void)?
+    /// Non-nil on Recently Added: shows the 30/60/90-day window chip.
+    var recentWindow: RecentlyAddedWindow?
+    var onSelectWindow: ((RecentlyAddedWindow) -> Void)?
     /// Hidden on Featured — that list is curated, sorting doesn't apply.
     var showsSort = true
     /// Called when the user presses Return in the search field.
@@ -43,7 +48,14 @@ struct TopBarView: View {
                 sortChip
             }
             if let analyticsPeriod {
-                periodChip(analyticsPeriod)
+                periodChip(current: analyticsPeriod, options: AnalyticsPeriod.allCases, label: \.label) {
+                    onSelectPeriod?($0)
+                }
+            }
+            if let recentWindow {
+                periodChip(current: recentWindow, options: RecentlyAddedWindow.allCases, label: \.label) {
+                    onSelectWindow?($0)
+                }
             }
             viewModeToggle
             searchField
@@ -76,7 +88,7 @@ struct TopBarView: View {
         .buttonStyle(.plain)
         .popover(isPresented: $showSortMenu, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
-                ForEach(SortOption.allCases) { option in
+                ForEach(sortOptions) { option in
                     sortMenuRow(option)
                 }
             }
@@ -114,16 +126,23 @@ struct TopBarView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Top Charts period chip
+    // MARK: - Time window chip (Top Charts period / Recently Added window)
 
-    private func periodChip(_ period: AnalyticsPeriod) -> some View {
+    // Only one window chip is ever visible at a time, so both share the
+    // single showPeriodMenu state.
+    private func periodChip<Option: Identifiable & Equatable>(
+        current: Option,
+        options: [Option],
+        label: KeyPath<Option, String>,
+        onSelect: @escaping (Option) -> Void
+    ) -> some View {
         Button {
             showPeriodMenu.toggle()
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "clock")
                     .font(.system(size: 10, weight: .bold))
-                Text(period.label)
+                Text(current[keyPath: label])
                     .font(CHType.button)
             }
             .foregroundStyle(Color.chTextTitle)
@@ -136,8 +155,10 @@ struct TopBarView: View {
         .buttonStyle(.plain)
         .popover(isPresented: $showPeriodMenu, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
-                ForEach(AnalyticsPeriod.allCases) { option in
-                    periodMenuRow(option, current: period)
+                ForEach(options) { option in
+                    periodMenuRow(label: option[keyPath: label], isSelected: option == current) {
+                        onSelect(option)
+                    }
                 }
             }
             .padding(8)
@@ -145,14 +166,13 @@ struct TopBarView: View {
         }
     }
 
-    private func periodMenuRow(_ option: AnalyticsPeriod, current: AnalyticsPeriod) -> some View {
-        let isSelected = option == current
-        return Button {
-            onSelectPeriod?(option)
+    private func periodMenuRow(label: String, isSelected: Bool, onSelect: @escaping () -> Void) -> some View {
+        Button {
+            onSelect()
             showPeriodMenu = false
         } label: {
             HStack {
-                Text(option.label)
+                Text(label)
                     .font(isSelected ? CHType.navActive : CHType.navItem)
                     .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextNav)
                 Spacer(minLength: 8)
@@ -217,7 +237,18 @@ struct TopBarView: View {
                 .foregroundStyle(Color.chTextTitle)
                 .focused(searchFocus)
                 .onSubmit { onSubmitSearch?() }
-            Keycap(symbol: "⌘F")
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.chTextMuted)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Clear search")
+            }
         }
         .padding(.vertical, 5)
         .padding(.horizontal, 12)
