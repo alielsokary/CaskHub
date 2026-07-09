@@ -304,6 +304,13 @@ final class LocalHomebrewService {
         let process = Process()
         process.executableURL = brewURL
         process.arguments = args
+        // pkg-based casks run `sudo installer` internally; with no TTY sudo can't
+        // prompt. SUDO_ASKPASS makes brew pass `-A` so sudo asks via our GUI helper.
+        if let askpass = Self.ensureAskpassScript(token: token) {
+            var environment = ProcessInfo.processInfo.environment
+            environment["SUDO_ASKPASS"] = askpass.path
+            process.environment = environment
+        }
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe
@@ -338,6 +345,36 @@ final class LocalHomebrewService {
                 stderr: outputTail.components(separatedBy: "\n").suffix(6).joined(separator: "\n")
             )
         }
+    }
+
+    /// Writes the SUDO_ASKPASS helper: re-execs this binary in `--askpass`
+    /// mode. Rewritten per mutation so the binary path (moves between dev
+    /// builds) and the token stay current.
+    private nonisolated static func ensureAskpassScript(token: String) -> URL? {
+        guard let executablePath = Bundle.main.executableURL?.path else { return nil }
+        // Interpolated into a shell script — keep only known-safe characters.
+        let safeToken = token.filter { $0.isLetter || $0.isNumber || "-_+@.".contains($0) }
+        let script = """
+        #!/bin/sh
+        exec "\(executablePath)" --askpass "\(safeToken)"
+        """
+        let fm = FileManager.default
+        guard let base = try? fm.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ) else { return nil }
+        let dir = base.appendingPathComponent("CaskHub", isDirectory: true)
+        let url = dir.appendingPathComponent("askpass.sh")
+        do {
+            try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            try script.write(to: url, atomically: true, encoding: .utf8)
+            try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: url.path)
+        } catch {
+            return nil
+        }
+        return url
     }
 
     /// Sends `signal` to a process and all of its descendants (brew forks curl;

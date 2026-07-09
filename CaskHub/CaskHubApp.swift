@@ -7,7 +7,45 @@
 
 import SwiftUI
 
+/// Branches before SwiftUI starts: when sudo launches this binary as its
+/// SUDO_ASKPASS helper (`--askpass <token>`), show a native password alert
+/// instead of booting the app.
 @main
+enum CaskHubMain {
+    static func main() {
+        if let flagIndex = CommandLine.arguments.firstIndex(of: "--askpass") {
+            let token = CommandLine.arguments.indices.contains(flagIndex + 1)
+                ? CommandLine.arguments[flagIndex + 1] : nil
+            runAskpassDialog(token: token)
+        }
+        CaskHubApp.main()
+    }
+
+    /// Prints the password to stdout for sudo on "Allow"; exits 1 on cancel
+    /// so sudo — and the brew install — abort cleanly.
+    private static func runAskpassDialog(token: String?) -> Never {
+        let app = NSApplication.shared
+        app.setActivationPolicy(.accessory)
+
+        let alert = NSAlert()
+        alert.messageText = "CaskHub needs administrator access"
+        alert.informativeText = token.map {
+            "The installer for “\($0)” requires your login password."
+        } ?? "This installer requires your login password."
+        alert.addButton(withTitle: "Allow")
+        alert.addButton(withTitle: "Cancel")
+
+        let passwordField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 230, height: 24))
+        alert.accessoryView = passwordField
+        alert.window.initialFirstResponder = passwordField
+
+        app.activate()
+        guard alert.runModal() == .alertFirstButtonReturn else { exit(1) }
+        print(passwordField.stringValue)
+        exit(0)
+    }
+}
+
 struct CaskHubApp: App {
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
 
