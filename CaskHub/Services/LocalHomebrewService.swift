@@ -55,6 +55,13 @@ enum LocalHomebrewError: LocalizedError {
         case .brewCommandFailed(let args, let code, let stderr):
             let cmd = (["brew"] + args).joined(separator: " ")
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            // "reports different checksum" = cask; "SHA256 mismatch" = formula dependency.
+            if trimmed.contains("reports different checksum") || trimmed.contains("SHA256 mismatch") {
+                return "The download doesn't match the checksum Homebrew has on record — "
+                    + "the developer likely replaced the release file after it was published. "
+                    + "This isn't a problem with your Mac; Homebrew refuses mismatched downloads "
+                    + "for security. Try again in a day or two once the cask is updated."
+            }
             return trimmed.isEmpty
                 ? "`\(cmd)` failed (exit \(code))."
                 : "`\(cmd)` failed (exit \(code)): \(trimmed)"
