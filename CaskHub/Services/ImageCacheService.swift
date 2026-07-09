@@ -42,6 +42,12 @@ final class ImageCacheService {
             return cached
         }
 
+        // CLI casks: icons cached before the cutover may since have been
+        // retired by CaskKit's curated CLI tier — drop and refetch once.
+        if cask.isCLI {
+            purgeStaleCLIIcon(token: token)
+        }
+
         // 2. Disk cache — fallback-tier hits also schedule a background
         // CaskKit upgrade check (at most daily), so icons cached from
         // favicon/avatar before CaskKit coverage arrived aren't pinned forever.
@@ -136,6 +142,29 @@ final class ImageCacheService {
             // mtime = now, so the first CaskKit re-check happens tomorrow —
             // CaskKit necessarily missed moments ago on this same chain run.
             try? Data().write(to: fallbackMarkerPath(for: token), options: .atomic)
+        }
+    }
+
+    // MARK: - CLI cutover purge
+
+    /// 2026-07-09 12:00 UTC — CaskKit's curated-CLI icon cleanup plus the
+    /// jsDelivr branch TTL that kept serving the retired files.
+    private static let cliIconCutover = Date(timeIntervalSince1970: 1_783_598_400)
+
+    private func purgeStaleCLIIcon(token: String) {
+        let path = diskPath(for: token)
+        guard let mtime = try? FileManager.default
+            .attributesOfItem(atPath: path.path)[.modificationDate] as? Date,
+            mtime < Self.cliIconCutover else {
+            return
+        }
+        try? FileManager.default.removeItem(at: path)
+        try? FileManager.default.removeItem(at: fallbackMarkerPath(for: token))
+        // jsDelivr's long max-age would replay the retired icon's cached 200
+        // from URLCache — evict so the refetch hits the network.
+        let urlCache = session.configuration.urlCache ?? .shared
+        for url in CaskIconURL.caskKitIconURLs(for: token) {
+            urlCache.removeCachedResponse(for: URLRequest(url: url))
         }
     }
 
