@@ -25,9 +25,9 @@ enum CHType {
 
     // UI — everything else
     static let cardTitle = Font.custom(uiFamily, size: 13).weight(.heavy)
-    static let tag = Font.custom(uiFamily, size: 10).weight(.bold)          // card category tag
+    static let tag = Font.custom(uiFamily, size: 10).weight(.bold) // card category tag
     static let countMeta = Font.custom(uiFamily, size: 11.5).weight(.semibold) // "3,781 casks" in top bar
-    static let field = Font.custom(uiFamily, size: 12.5).weight(.semibold)  // search field
+    static let field = Font.custom(uiFamily, size: 12.5).weight(.semibold) // search field
     static let navItem = Font.custom(uiFamily, size: 13).weight(.semibold)
     static let navActive = Font.custom(uiFamily, size: 13).weight(.heavy)
     static let bodySm = Font.custom(uiFamily, size: 11).weight(.semibold)

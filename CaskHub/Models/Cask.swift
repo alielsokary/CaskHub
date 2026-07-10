@@ -14,9 +14,17 @@ struct ArtifactStanza: Codable, Hashable {
 
     private struct AnyKey: CodingKey {
         var stringValue: String
-        var intValue: Int? { nil }
-        init?(stringValue: String) { self.stringValue = stringValue }
-        init?(intValue: Int) { nil }
+        var intValue: Int? {
+            nil
+        }
+
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+
+        init?(intValue _: Int) {
+            nil
+        }
     }
 
     init(from decoder: Decoder) throws {
@@ -49,9 +57,11 @@ struct Cask: Codable, Identifiable, Hashable {
     let deprecated: Bool
     let disabled: Bool
     let autoUpdates: Bool?
-    var artifacts: [ArtifactStanza]? = nil
+    var artifacts: [ArtifactStanza]?
 
-    var id: String { token }
+    var id: String {
+        token
+    }
 
     /// Ships a command-line `binary` (or a `stage_only` payload like sqlcl)
     /// and nothing GUI (no app/suite/pkg). The binary/stage requirement keeps
@@ -61,7 +71,7 @@ struct Cask: Codable, Identifiable, Hashable {
     ///
     /// Drives only the placeholder: CLI casks show a terminal tile instead
     /// of the window glyph. Which CLI casks get real icons anyway (Android
-    /// SDK tools, tuist, conda family) is CaskKit's call — whatever its
+    /// SDK tools, tuist, conda family) is CaskFlow's call — whatever its
     /// icons branch serves wins over the tile.
     var isCLI: Bool {
         guard let artifacts, !artifacts.isEmpty else { return false }
@@ -84,5 +94,13 @@ struct Cask: Codable, Identifiable, Hashable {
 
     var homepageDomain: String? {
         URL(string: homepage)?.host
+    }
+
+    /// "↓ 1.2M · v125.0" — the downloads part is omitted when unknown.
+    func metaLine(downloads: String?) -> String {
+        var parts: [String] = []
+        if let downloads { parts.append("↓ \(downloads)") }
+        parts.append("v\(displayVersion)")
+        return parts.joined(separator: " · ")
     }
 }

@@ -12,7 +12,9 @@ enum AnalyticsPeriod: String, CaseIterable, Identifiable {
     case days90 = "90d"
     case days365 = "365d"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var label: String {
         switch self {

@@ -22,7 +22,7 @@ struct ContentView: View {
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
 
-    // Fixed 4-column grid from the design mock (cards never reflow wider).
+    /// Fixed 4-column grid from the design mock (cards never reflow wider).
     private let columns = Array(
         repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
         count: 4
@@ -37,6 +37,7 @@ struct ContentView: View {
         _recentlyAdded = State(initialValue: recentlyAddedService)
         _localHomebrew = State(initialValue: localHomebrewService)
         _viewModel = State(initialValue: CaskCatalogViewModel(
+            apiClient: BrewAPIClient(),
             categoryService: service,
             recentlyAdded: recentlyAddedService,
             localHomebrew: localHomebrewService
@@ -128,7 +129,7 @@ struct ContentView: View {
             async let local: Void = localHomebrew.refresh()
             async let categories: Void = categoryService.refreshFromRemote()
             async let addedDates: Void = recentlyAdded.refreshFromRemote()
-            _ = await (catalog, local, categories, addedDates)
+            _ = await(catalog, local, categories, addedDates)
         }
         .onChange(of: selectedSidebar) { _, newValue in
             viewModel.selectedSidebar = newValue
@@ -182,9 +183,9 @@ struct ContentView: View {
 
     private var sectionName: String {
         switch selectedSidebar {
-        case .discover(let item): return item.rawValue
-        case .library(let item): return item.rawValue
-        case .category(let categoryID): return categoryService.displayName(for: categoryID)
+        case let .discover(item): return item.rawValue
+        case let .library(item): return item.rawValue
+        case let .category(categoryID): return categoryService.displayName(for: categoryID)
         }
     }
 

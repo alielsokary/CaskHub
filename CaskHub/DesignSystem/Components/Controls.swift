@@ -21,8 +21,8 @@ enum CaskActionStyle {
         }
     }
 
-    // SF Symbols instead of unicode glyphs (↓ ↻ ▶ ●) — the unicode chars fall
-    // back to a random system font and don't match the design's weight.
+    /// SF Symbols instead of unicode glyphs (↓ ↻ ▶ ●) — the unicode chars fall
+    /// back to a random system font and don't match the design's weight.
     var icon: String {
         switch self {
         case .install: return "arrow.down"
@@ -34,7 +34,7 @@ enum CaskActionStyle {
 
     var iconSize: CGFloat {
         switch self {
-        case .installed: return 6.5   // small status dot
+        case .installed: return 6.5 // small status dot
         case .open: return 9
         case .install, .update: return 10.5
         }
@@ -128,8 +128,8 @@ struct Keycap: View {
             .shadow(color: Color.chShadowCard, radius: 2, y: 1)
     }
 
-    // JetBrains Mono has no ⌘ glyph — the fallback renders it tiny next to the
-    // key letter, so draw the command symbol as an SF Symbol instead.
+    /// JetBrains Mono has no ⌘ glyph — the fallback renders it tiny next to the
+    /// key letter, so draw the command symbol as an SF Symbol instead.
     @ViewBuilder
     private var content: some View {
         if symbol.hasPrefix("⌘") {

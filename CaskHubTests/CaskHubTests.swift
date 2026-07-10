@@ -5,32 +5,42 @@
 //  Created by Ali Elsokary on 08/02/2026.
 //
 
-import XCTest
 @testable import CaskHub
+import XCTest
 
 final class CaskHubTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    private func makeCask(version: String) -> Cask {
+        Cask(
+            token: "test",
+            fullToken: nil,
+            tap: nil,
+            name: ["Test"],
+            desc: nil,
+            homepage: "https://example.com",
+            url: nil,
+            version: version,
+            installed: nil,
+            bundleVersion: nil,
+            bundleShortVersion: nil,
+            outdated: false,
+            deprecated: false,
+            disabled: false,
+            autoUpdates: nil
+        )
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    func testDisplayVersionStripsPackagingSuffixes() {
+        XCTAssertEqual(makeCask(version: "125.0").displayVersion, "125.0")
+        XCTAssertEqual(makeCask(version: "125.0,build42").displayVersion, "125.0")
+        XCTAssertEqual(makeCask(version: "125.0_1").displayVersion, "125.0")
+        XCTAssertEqual(makeCask(version: "1.2.3-beta").displayVersion, "1.2.3")
+        XCTAssertEqual(makeCask(version: "2024.10.13").displayVersion, "2024.10.13")
+        // Entirely non-numeric versions fall back to the raw value.
+        XCTAssertEqual(makeCask(version: "beta").displayVersion, "beta")
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    func testMetaLineOmitsUnknownDownloads() {
+        XCTAssertEqual(makeCask(version: "125.0").metaLine(downloads: "1.2M"), "↓ 1.2M · v125.0")
+        XCTAssertEqual(makeCask(version: "125.0").metaLine(downloads: nil), "v125.0")
     }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
-
 }

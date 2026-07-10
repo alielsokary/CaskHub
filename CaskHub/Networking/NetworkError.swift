@@ -23,17 +23,17 @@ enum NetworkError: Error, LocalizedError {
             return "The URL is invalid."
         case .noData:
             return "No data was received from the server."
-        case .decodingError(let detail):
+        case let .decodingError(detail):
             return "Failed to decode the response: \(detail)"
-        case .serverError(let code):
+        case let .serverError(code):
             return "Server error (HTTP \(code))."
-        case .clientError(let code):
+        case let .clientError(code):
             return "Client error (HTTP \(code))."
         case .notFound:
             return "The requested resource was not found."
         case .noInternet:
             return "No internet connection. Please check your network."
-        case .unknownError(let detail):
+        case let .unknownError(detail):
             return "An unexpected error occurred: \(detail)"
         }
     }

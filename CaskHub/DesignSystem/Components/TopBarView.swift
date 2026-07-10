@@ -66,8 +66,8 @@ struct TopBarView: View {
 
     // MARK: - Sort chip
 
-    // Custom popover instead of Menu: NSMenu items ignore custom fonts, and the
-    // design system's Nunito must apply to the dropdown too.
+    /// Custom popover instead of Menu: NSMenu items ignore custom fonts, and the
+    /// design system's Nunito must apply to the dropdown too.
     private var sortChip: some View {
         Button {
             showSortMenu.toggle()
@@ -128,8 +128,8 @@ struct TopBarView: View {
 
     // MARK: - Time window chip (Top Charts period / Recently Added window)
 
-    // Only one window chip is ever visible at a time, so both share the
-    // single showPeriodMenu state.
+    /// Only one window chip is ever visible at a time, so both share the
+    /// single showPeriodMenu state.
     private func periodChip<Option: Identifiable & Equatable>(
         current: Option,
         options: [Option],

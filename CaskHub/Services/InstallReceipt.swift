@@ -17,7 +17,7 @@ import Foundation
 ///
 /// Marked `nonisolated` because the project uses `-default-isolation=MainActor`
 /// and this parser is invoked from a background `Task.detached` in the scan loop.
-nonisolated struct InstallReceipt: Sendable {
+nonisolated struct InstallReceipt {
     /// `.app` bundle filenames extracted from `uninstall_artifacts`, e.g. `["Firefox.app"]`.
     /// Empty when the cask installs no apps (CLI-only casks like `android-platform-tools`).
     ///

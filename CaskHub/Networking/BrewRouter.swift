@@ -22,7 +22,7 @@ enum BrewRouter {
         switch self {
         case .allCasks:
             return BrewAPIConfig.EndpointPath.allCasks
-        case .analytics(let period):
+        case let .analytics(period):
             return BrewAPIConfig.EndpointPath.analytics(period)
         }
     }

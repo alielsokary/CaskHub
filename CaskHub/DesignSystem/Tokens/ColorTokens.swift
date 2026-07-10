@@ -75,8 +75,8 @@ extension Color {
     static let chActionDoneBorder = adaptive(light: NSColor(hex: 0x6FA287, alpha: 0.60), dark: NSColor(hex: 0x6FA287, alpha: 0.50))
     static let chActionDoneFg = adaptive(light: NSColor(hex: 0x3E6E55), dark: NSColor(hex: 0x8FC4A8))
 
-    // ── Segmented view-mode toggle ─────────────────────
-    // Selected segment: ink capsule + cream glyph in light; cream capsule + ink glyph in dark.
+    /// ── Segmented view-mode toggle ─────────────────────
+    /// Selected segment: ink capsule + cream glyph in light; cream capsule + ink glyph in dark.
     static let chSegmentIcon = adaptive(light: NSColor(hex: 0xFDF6E4), dark: NSColor(hex: 0x2B2838))
 
     // ── Badge ──────────────────────────────────────────
@@ -94,6 +94,6 @@ extension Color {
     static let chShadowCard = adaptive(light: NSColor(hex: 0x33304A, alpha: 0.10), dark: NSColor(hex: 0x000000, alpha: 0.28))
     static let chShadowHero = adaptive(light: NSColor(hex: 0x33304A, alpha: 0.12), dark: NSColor(hex: 0x000000, alpha: 0.35))
 
-    // ── Barrel mark ────────────────────────────────────
+    /// ── Barrel mark ────────────────────────────────────
     static let chBarrelOutline = adaptive(light: NSColor(hex: 0x33304A), dark: NSColor(hex: 0xF6E9CB))
 }

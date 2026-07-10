@@ -29,36 +29,17 @@ struct CaskCardView: View {
         .padding(.horizontal, 15)
         .frame(width: CHSize.cardWidth, height: CHSize.cardHeight, alignment: .topLeading)
         .glassPanel(radius: CHRadius.card)
-        .alert("Uninstall \(cask.displayName)?", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Uninstall", role: .destructive) {
-                Task { try? await localHomebrew.uninstall(token: cask.token) }
-            }
-        } message: {
-            Text("This will run `brew uninstall --cask \(cask.token)`.")
-        }
-        .alert("Error", isPresented: hasActionError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(localHomebrew.actionErrors[cask.token] ?? "")
-        }
+        .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }
 
     private var canUninstall: Bool {
-        localHomebrew.installedCasks[cask.token] != nil
-    }
-
-    private var hasActionError: Binding<Bool> {
-        Binding(
-            get: { localHomebrew.actionErrors[cask.token] != nil },
-            set: { if !$0 { localHomebrew.clearError(for: cask.token) } }
-        )
+        localHomebrew.isInstalled(token: cask.token)
     }
 
     // MARK: - Header (icon well + name + info)
 
-    // Fixed-height header (room for a 2-line title + tag) keeps the description,
-    // metadata and action button at the same position on every card.
+    /// Fixed-height header (room for a 2-line title + tag) keeps the description,
+    /// metadata and action button at the same position on every card.
     private var headerRow: some View {
         HStack(alignment: .top, spacing: 10) {
             CaskIconView(cask: cask, size: 38)
@@ -114,16 +95,9 @@ struct CaskCardView: View {
     }
 
     private var metadataLine: some View {
-        Text(metaText)
+        Text(cask.metaLine(downloads: downloads))
             .font(CHType.metaMono)
             .foregroundStyle(Color.chTextMuted)
-    }
-
-    private var metaText: String {
-        var parts: [String] = []
-        if let downloads { parts.append("↓ \(downloads)") }
-        parts.append("v\(cask.displayVersion)")
-        return parts.joined(separator: " · ")
     }
 }
 

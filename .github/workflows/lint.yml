@@ -1,0 +1,22 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Both tools are preinstalled on GitHub macOS runners and read
+      # .swiftlint.yml / .swiftformat from the repo root.
+      - name: SwiftLint
+        run: swiftlint --quiet
+
+      - name: SwiftFormat (check only)
+        run: swiftformat --lint .

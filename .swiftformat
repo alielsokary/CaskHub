@@ -1,0 +1,6 @@
+--swiftversion 5.0
+--exclude skills, Scripts
+
+# Match SwiftLint's style so the two --fix tools never undo each other:
+--commas inline
+--disable wrapMultilineStatementBraces
