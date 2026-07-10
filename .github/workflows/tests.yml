@@ -34,4 +34,3 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
-          disable_search: true
