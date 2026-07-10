@@ -15,9 +15,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         run: |
           xcodebuild -project CaskHub.xcodeproj -scheme CaskHub \
             -destination 'platform=macOS' \
             CODE_SIGNING_ALLOWED=NO \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
             test
+
+      - name: Convert coverage to Cobertura
+        run: |
+          brew install xcresultparser
+          xcresultparser --output-format cobertura TestResults.xcresult > coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
