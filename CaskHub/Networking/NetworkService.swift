@@ -42,13 +42,13 @@ final class NetworkService: NetworkServiceProtocol {
         }
 
         switch httpResponse.statusCode {
-        case 200...299:
+        case 200 ... 299:
             return
         case 404:
             throw NetworkError.notFound
-        case 400...499:
+        case 400 ... 499:
             throw NetworkError.clientError(statusCode: httpResponse.statusCode)
-        case 500...599:
+        case 500 ... 599:
             throw NetworkError.serverError(statusCode: httpResponse.statusCode)
         default:
             throw NetworkError.unknownError("Unexpected HTTP status: \(httpResponse.statusCode)")

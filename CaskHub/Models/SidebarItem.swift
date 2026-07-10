@@ -15,7 +15,9 @@ enum DiscoverItem: String, CaseIterable, Identifiable {
     case topCharts = "Top Charts"
     case recentlyAdded = "Recently Added"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var icon: String {
         switch self {
@@ -31,7 +33,9 @@ enum LibraryItem: String, CaseIterable, Identifiable {
     case installed = "Installed"
     case updates = "Updates"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var icon: String {
         switch self {
@@ -50,17 +54,9 @@ enum SidebarSelection: Hashable, Identifiable {
 
     var id: String {
         switch self {
-        case .discover(let item): return "discover.\(item.rawValue)"
-        case .library(let item): return "library.\(item.rawValue)"
-        case .category(let categoryID): return "category.\(categoryID)"
-        }
-    }
-
-    var displayName: String {
-        switch self {
-        case .discover(let item): return item.rawValue
-        case .library(let item): return item.rawValue
-        case .category: return ""
+        case let .discover(item): return "discover.\(item.rawValue)"
+        case let .library(item): return "library.\(item.rawValue)"
+        case let .category(categoryID): return "category.\(categoryID)"
         }
     }
 }

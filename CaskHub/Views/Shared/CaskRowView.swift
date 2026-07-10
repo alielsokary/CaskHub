@@ -28,26 +28,7 @@ struct CaskRowView: View {
                 .frame(width: 24)
         }
         .padding(.vertical, 4)
-        .alert("Uninstall \(cask.displayName)?", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Uninstall", role: .destructive) {
-                Task { try? await localHomebrew.uninstall(token: cask.token) }
-            }
-        } message: {
-            Text("This will run `brew uninstall --cask \(cask.token)`.")
-        }
-        .alert("Error", isPresented: hasActionError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(localHomebrew.actionErrors[cask.token] ?? "")
-        }
-    }
-
-    private var hasActionError: Binding<Bool> {
-        Binding(
-            get: { localHomebrew.actionErrors[cask.token] != nil },
-            set: { if !$0 { localHomebrew.clearError(for: cask.token) } }
-        )
+        .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }
 
     // MARK: - App Info
@@ -71,16 +52,9 @@ struct CaskRowView: View {
     // MARK: - Metadata
 
     private var metadata: some View {
-        Text(metaText)
+        Text(cask.metaLine(downloads: downloads))
             .font(CHType.statusMono)
             .foregroundStyle(Color.chTextMuted)
-    }
-
-    private var metaText: String {
-        var parts: [String] = []
-        if let downloads { parts.append("↓ \(downloads)") }
-        parts.append("v\(cask.displayVersion)")
-        return parts.joined(separator: " · ")
     }
 
     // MARK: - Actions
@@ -91,7 +65,7 @@ struct CaskRowView: View {
 
     @ViewBuilder
     private var menuSlot: some View {
-        if localHomebrew.installedCasks[cask.token] != nil,
+        if localHomebrew.isInstalled(token: cask.token),
            localHomebrew.inFlightActions[cask.token] == nil {
             installedActionsMenu
         } else {

@@ -84,9 +84,9 @@ struct CaskInfoPopover: View {
             ))
             let sizeValue: String
             switch downloadSize {
-            case .known(let bytes): sizeValue = bytes.formatted(.byteCount(style: .file))
-            case .unknown:          sizeValue = "Unknown"
-            case nil:               sizeValue = "Loading…"
+            case let .known(bytes): sizeValue = bytes.formatted(.byteCount(style: .file))
+            case .unknown: sizeValue = "Unknown"
+            case nil: sizeValue = "Loading…"
             }
             result.append(InfoRow(property: "Download Size", value: sizeValue))
         }
@@ -129,7 +129,7 @@ struct CaskInfoPopover: View {
 private struct InfoRow {
     let property: String
     let value: String
-    var link: URL? = nil
+    var link: URL?
 }
 
 /// Download size via HTTP headers — the brew API doesn't publish sizes.

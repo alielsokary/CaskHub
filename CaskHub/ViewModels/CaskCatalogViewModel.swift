@@ -14,7 +14,9 @@ struct BrowseSection: Identifiable {
     let destination: SidebarSelection
     let casks: [Cask]
 
-    var id: String { destination.id }
+    var id: String {
+        destination.id
+    }
 }
 
 enum SortOption: String, CaseIterable, Identifiable {
@@ -24,7 +26,9 @@ enum SortOption: String, CaseIterable, Identifiable {
     case newest = "Newest"
     case oldest = "Oldest"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     /// Date sorts only make sense where add dates drive the page.
     static let standard: [SortOption] = [.mostPopular, .nameAZ, .nameZA]
@@ -51,6 +55,7 @@ final class CaskCatalogViewModel {
             ?? analyticsByPeriod[.days365]
             ?? [:]
     }
+
     var sortOption: SortOption = .mostPopular
     var selectedSidebar: SidebarSelection = .discover(.browse)
 
@@ -63,7 +68,7 @@ final class CaskCatalogViewModel {
     private let localHomebrew: LocalHomebrewService
 
     init(
-        apiClient: BrewAPIClientProtocol = BrewAPIClient(),
+        apiClient: BrewAPIClientProtocol,
         categoryService: CategoryService,
         recentlyAdded: RecentlyAddedService,
         localHomebrew: LocalHomebrewService
@@ -105,11 +110,7 @@ final class CaskCatalogViewModel {
     var browseSections: [BrowseSection] {
         let counts = analyticsByPeriod[.days365] ?? [:]
         func top(_ source: [Cask]) -> [Cask] {
-            Array(
-                source
-                    .sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
-                    .prefix(Self.browseSectionSize)
-            )
+            Array(sortedByDownloads(source, using: counts).prefix(Self.browseSectionSize))
         }
 
         let recentTokens = recentlyAdded.recentTokens(within: recentlyAddedWindow.rawValue)
@@ -150,10 +151,7 @@ final class CaskCatalogViewModel {
             return casks
 
         case .discover(.featured):
-            return casks
-                .sorted { (downloadCounts[$0.token] ?? 0) > (downloadCounts[$1.token] ?? 0) }
-                .prefix(100)
-                .map { $0 }
+            return Array(sortedByDownloads(casks, using: downloadCounts).prefix(100))
 
         case .discover(.topCharts):
             return casks
@@ -170,7 +168,7 @@ final class CaskCatalogViewModel {
                 localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
             }
 
-        case .category(let categoryID):
+        case let .category(categoryID):
             let tokens = categoryService.tokens(in: categoryID)
             return casks.filter { tokens.contains($0.token) }
         }
@@ -181,15 +179,19 @@ final class CaskCatalogViewModel {
         let query = searchText.lowercased()
         return casks.filter { cask in
             cask.displayName.lowercased().contains(query)
-            || cask.token.lowercased().contains(query)
-            || (cask.desc?.lowercased().contains(query) ?? false)
+                || cask.token.lowercased().contains(query)
+                || (cask.desc?.lowercased().contains(query) ?? false)
         }
+    }
+
+    private func sortedByDownloads(_ source: [Cask], using counts: [String: Int]) -> [Cask] {
+        source.sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
     }
 
     private func applySort(to casks: [Cask]) -> [Cask] {
         switch sortOption {
         case .mostPopular:
-            return casks.sorted { (downloadCounts[$0.token] ?? 0) > (downloadCounts[$1.token] ?? 0) }
+            return sortedByDownloads(casks, using: downloadCounts)
         case .nameAZ:
             return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
         case .nameZA:
@@ -214,9 +216,9 @@ final class CaskCatalogViewModel {
             let allCasks = try await caskRequest
             casks = allCasks.filter { cask in
                 !cask.deprecated
-                && !cask.disabled
-                && !cask.token.contains("@")
-                && !cask.token.hasPrefix("font-")
+                    && !cask.disabled
+                    && !cask.token.contains("@")
+                    && !cask.token.hasPrefix("font-")
             }
 
             if let analytics = try? await analyticsRequest {
@@ -250,8 +252,8 @@ final class CaskCatalogViewModel {
         switch count {
         case 1_000_000...:
             return String(format: "%.1fM", Double(count) / 1_000_000)
-        case 1_000...:
-            return String(format: "%.1fK", Double(count) / 1_000)
+        case 1000...:
+            return String(format: "%.1fK", Double(count) / 1000)
         default:
             return "\(count)"
         }

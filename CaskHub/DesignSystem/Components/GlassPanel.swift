@@ -57,7 +57,7 @@ struct WindowBackdrop: View {
                     stops: [
                         .init(color: .chBg1, location: 0),
                         .init(color: .chBg2, location: 0.55),
-                        .init(color: .chBg3, location: 1),
+                        .init(color: .chBg3, location: 1)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -86,17 +86,17 @@ struct HalftoneTexture: View {
         // ponytail: O(w·h/81) dots per redraw; switch to a tiled image if resize ever stutters
         Canvas { ctx, size in
             let step: CGFloat = 9
-            var y: CGFloat = 4
-            while y < size.height {
-                var x: CGFloat = 4
-                while x < size.width {
+            var dotY: CGFloat = 4
+            while dotY < size.height {
+                var dotX: CGFloat = 4
+                while dotX < size.width {
                     ctx.fill(
-                        Path(ellipseIn: CGRect(x: x, y: y, width: 2, height: 2)),
+                        Path(ellipseIn: CGRect(x: dotX, y: dotY, width: 2, height: 2)),
                         with: .color(.chHalftoneDot)
                     )
-                    x += step
+                    dotX += step
                 }
-                y += step
+                dotY += step
             }
         }
         .allowsHitTesting(false)

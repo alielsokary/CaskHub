@@ -15,12 +15,14 @@ protocol BrewAPIClientProtocol {
 final class BrewAPIClient: BrewAPIClientProtocol {
     private let networkService: NetworkServiceProtocol
 
-    init(networkService: NetworkServiceProtocol = {
+    init(networkService: NetworkServiceProtocol) {
+        self.networkService = networkService
+    }
+
+    convenience init() {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return NetworkService(decoder: decoder)
-    }()) {
-        self.networkService = networkService
+        self.init(networkService: NetworkService(decoder: decoder))
     }
 
     func fetchAllCasks() async throws -> [Cask] {

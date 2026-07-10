@@ -13,9 +13,9 @@ import SwiftUI
 struct BarrelMark: View {
     var body: some View {
         Canvas { ctx, size in
-            let s = min(size.width, size.height) / 48
-            ctx.translateBy(x: (size.width - 48 * s) / 2, y: (size.height - 48 * s) / 2)
-            ctx.scaleBy(x: s, y: s)
+            let scale = min(size.width, size.height) / 48
+            ctx.translateBy(x: (size.width - 48 * scale) / 2, y: (size.height - 48 * scale) / 2)
+            ctx.scaleBy(x: scale, y: scale)
 
             let outline = Color.chBarrelOutline
 
@@ -62,10 +62,10 @@ struct BarrelMark: View {
             // Rivets
             let rivets: [CGPoint] = [
                 CGPoint(x: 12, y: 16.5), CGPoint(x: 24, y: 17.3), CGPoint(x: 36, y: 16.5),
-                CGPoint(x: 12, y: 32.2), CGPoint(x: 24, y: 33.4), CGPoint(x: 36, y: 32.2),
+                CGPoint(x: 12, y: 32.2), CGPoint(x: 24, y: 33.4), CGPoint(x: 36, y: 32.2)
             ]
-            for p in rivets {
-                ctx.fill(Path(ellipseIn: CGRect(x: p.x - 1.3, y: p.y - 1.3, width: 2.6, height: 2.6)), with: .color(.chInk))
+            for rivet in rivets {
+                ctx.fill(Path(ellipseIn: CGRect(x: rivet.x - 1.3, y: rivet.y - 1.3, width: 2.6, height: 2.6)), with: .color(.chInk))
             }
 
             // Shine

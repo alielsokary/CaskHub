@@ -34,7 +34,7 @@ struct CaskIconView: View {
                     .transition(.opacity)
             } else if cask.isCLI {
                 // CLI casks hold no icon at the source — a branded terminal
-                // tile is their placeholder. CaskKit's icons branch decides
+                // tile is their placeholder. CaskFlow's icons branch decides
                 // the exceptions (Android SDK tools, tuist, conda family):
                 // whatever it serves loads like any other icon.
                 cliTile

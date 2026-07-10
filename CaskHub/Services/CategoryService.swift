@@ -31,12 +31,6 @@ struct CaskCategoryData: Codable {
 @MainActor
 @Observable
 final class CategoryService {
-    /// Stable URL — GitHub redirects this to the most recent release's asset.
-    /// 404s until CaskKit cuts its first release, which is the desired fallback path.
-    private static let remoteCategoriesURL = URL(
-        string: "https://github.com/alielsokary/CaskKit/releases/latest/download/categories.json"
-    )!
-
     private(set) var categoryDefinitions: [CategoryID: CategoryDefinition] = [:]
     private(set) var tokenMappings: [String: TokenCategoryMapping] = [:]
     private(set) var categoryTokenSets: [CategoryID: Set<String>] = [:]
@@ -57,27 +51,20 @@ final class CategoryService {
     func loadCategories() {
         guard let url = Bundle.main.url(forResource: "categories", withExtension: "json"),
               let data = try? Data(contentsOf: url),
-              let catalog = try? JSONDecoder().decode(CaskCategoryData.self, from: data) else {
+              let catalog = try? JSONDecoder().decode(CaskCategoryData.self, from: data)
+        else {
             return
         }
         applyData(catalog)
     }
 
-    /// Best-effort fetch of the latest categories.json from CaskKit's GitHub Releases.
+    /// Best-effort fetch of the latest categories.json from CaskFlow's GitHub Releases.
     /// Silent on every failure path — bundled data remains in use.
     /// Schema-version mismatches and older `generatedDate` values are also rejected.
     func refreshFromRemote() async {
-        var request = URLRequest(url: Self.remoteCategoriesURL)
-        request.cachePolicy = .returnCacheDataElseLoad
-        request.timeoutInterval = 10
-
-        guard
-            let (data, response) = try? await URLSession.shared.data(for: request),
-            let http = response as? HTTPURLResponse,
-            (200..<300).contains(http.statusCode),
-            let remote = try? JSONDecoder().decode(CaskCategoryData.self, from: data),
-            remote.version == self.version,
-            remote.generatedDate > self.generatedDate
+        guard let remote = await CaskFlowReleases.fetch(CaskCategoryData.self, asset: "categories.json"),
+              remote.version == version,
+              remote.generatedDate > generatedDate
         else { return }
 
         applyData(remote)
