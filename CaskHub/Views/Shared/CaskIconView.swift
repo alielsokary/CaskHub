@@ -13,6 +13,7 @@ struct CaskIconView: View {
 
     @Environment(ImageCacheService.self) private var imageCache
     @State private var loadedImage: NSImage?
+    @State private var didResolve = false
 
     private var wellShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
@@ -43,14 +44,21 @@ struct CaskIconView: View {
                     .fill(Color.chSurfaceField)
                     .overlay(wellShape.strokeBorder(Color.chHairlineStrong, lineWidth: 1))
                     .frame(width: size, height: size)
-                Image(systemName: "macwindow")
-                    .font(.system(size: size * 0.4))
-                    .foregroundStyle(Color.chTextMuted)
+                if didResolve {
+                    Image(systemName: "macwindow")
+                        .font(.system(size: size * 0.4))
+                        .foregroundStyle(Color.chTextMuted)
+                } else {
+                    ProgressView()
+                        .controlSize(.small)
+                }
             }
         }
         .animation(.easeIn(duration: 0.2), value: loadedImage != nil)
         .task(id: cask.token) {
+            didResolve = false
             loadedImage = await imageCache.image(for: cask)
+            didResolve = true
         }
     }
 
