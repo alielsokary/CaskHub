@@ -6,6 +6,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b2d4203ef8724bc0a2265af613ac29c9)](https://app.codacy.com/gh/alielsokary/CaskHub/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![codecov](https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg)](https://codecov.io/gh/alielsokary/CaskHub)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub?include_prereleases)](https://github.com/alielsokary/CaskHub/releases)
 
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
