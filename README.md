@@ -15,6 +15,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 ## Features
 
 ### Discover
+
 - **Browse** - curated shelves and a rotating hero pick, organized by category
 - **Featured** - the top 100 casks ranked by install popularity
 - **Top Charts** - most-installed casks with a 30 / 90 / 365-day analytics window
@@ -23,6 +24,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 - **Search** - instant search (⌘F) across names, tokens, and descriptions
 
 ### Manage
+
 - **Install / Update / Uninstall** with live progress states and cancellable downloads
 - **Smart update detection** - skips self-updating apps and normalizes packaging-suffix version differences, so the Updates badge only shows updates that matter
 - **Installed library** - detects what's already in your Caskroom, including apps installed from the command line
@@ -30,6 +32,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 - **Rich metadata** - original app icons, download sizes, install counts, homepages, and version info
 
 ### Polish
+
 - Grid and list view modes, flexible sorting, light/dark/system themes
 - A custom design system with bundled typography
 - Bundled category data ships with the app, so browsing never blocks on the network
