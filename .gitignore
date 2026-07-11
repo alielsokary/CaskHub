@@ -65,3 +65,5 @@ fastlane/test_output
 skills/
 .claude-plugin/
 *.txt
+
+Configs/Secrets.xcconfig
