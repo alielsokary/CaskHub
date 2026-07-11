@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub?include_prereleases)](https://github.com/alielsokary/CaskHub/releases)
 
-<img width="850" height="250" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/ef6dec52-6e19-4b09-b344-61cadad4a741" />
+<img width="1700" height="500" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
 
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
