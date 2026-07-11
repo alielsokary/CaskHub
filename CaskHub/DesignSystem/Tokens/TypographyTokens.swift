@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// CaskHub typography tokens — ported from the design system (tokens/typography.css).
-// Baloo 2 (display), Nunito (UI), JetBrains Mono (data); bundled in Resources/Fonts.
-
 enum CHType {
     static let displayFamily = "Baloo 2"
     static let uiFamily = "Nunito"

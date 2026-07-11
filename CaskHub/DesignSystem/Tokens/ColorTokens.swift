@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// CaskHub color tokens — ported from the design system (tokens/colors.css).
-// Light values = design option 3b, dark values = option 3c.
-
 private extension NSColor {
     convenience init(hex: UInt32, alpha: CGFloat = 1) {
         self.init(

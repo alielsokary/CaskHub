@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// CaskHub surface tokens — ported from the design system (tokens/surfaces.css).
-
 enum CHRadius {
     static let window: CGFloat = 20
     static let hero: CGFloat = 20
@@ -20,7 +18,7 @@ enum CHRadius {
     // fields, pills and buttons are capsules
 }
 
-/// Fixed content metrics from the design mock (1360×880 window, 4-card grid).
+/// Fixed content metrics (1360×880 window, 4-card grid).
 enum CHSize {
     static let contentWidth: CGFloat = 1086 // hero + grid column: 4×cardWidth + 3×gridGap
     static let cardWidth: CGFloat = 261

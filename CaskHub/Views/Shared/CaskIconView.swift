@@ -34,10 +34,6 @@ struct CaskIconView: View {
                     .clipShape(RoundedRectangle(cornerRadius: size * 0.18, style: .continuous))
                     .transition(.opacity)
             } else if cask.isCLI {
-                // CLI casks hold no icon at the source — a branded terminal
-                // tile is their placeholder. CaskFlow's icons branch decides
-                // the exceptions (Android SDK tools, tuist, conda family):
-                // whatever it serves loads like any other icon.
                 cliTile
             } else {
                 wellShape

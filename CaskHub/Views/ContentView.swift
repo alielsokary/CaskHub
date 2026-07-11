@@ -12,38 +12,20 @@ enum ViewMode: String {
 }
 
 struct ContentView: View {
-    @State private var categoryService: CategoryService
-    @State private var recentlyAdded = RecentlyAddedService()
-    @State private var viewModel: CaskCatalogViewModel
-    @State private var imageCache = ImageCacheService()
-    @State private var localHomebrew = LocalHomebrewService()
+    @Bindable var viewModel: CaskCatalogViewModel
+    @Environment(CategoryService.self) private var categoryService
+    @Environment(RecentlyAddedService.self) private var recentlyAdded
+    @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @State private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
 
-    /// Fixed 4-column grid from the design mock (cards never reflow wider).
     private let columns = Array(
         repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
         count: 4
     )
-
-    init() {
-        let service = CategoryService()
-        service.loadCategories()
-        let recentlyAddedService = RecentlyAddedService()
-        let localHomebrewService = LocalHomebrewService()
-        _categoryService = State(initialValue: service)
-        _recentlyAdded = State(initialValue: recentlyAddedService)
-        _localHomebrew = State(initialValue: localHomebrewService)
-        _viewModel = State(initialValue: CaskCatalogViewModel(
-            apiClient: BrewAPIClient(),
-            categoryService: service,
-            recentlyAdded: recentlyAddedService,
-            localHomebrew: localHomebrewService
-        ))
-    }
 
     var body: some View {
         NavigationSplitView {
@@ -127,8 +109,6 @@ struct ContentView: View {
             WindowBackdrop()
         }
         .tint(Color.chTerracotta)
-        .environment(imageCache)
-        .environment(localHomebrew)
         .task {
             async let catalog: Void = viewModel.fetchCasks()
             async let local: Void = localHomebrew.refresh()
@@ -329,5 +309,17 @@ private extension ContentView {
 }
 
 #Preview {
-    ContentView()
+    let categories = CategoryService()
+    let recent = RecentlyAddedService()
+    let homebrew = LocalHomebrewService()
+    ContentView(viewModel: CaskCatalogViewModel(
+        apiClient: BrewAPIClient(),
+        categoryService: categories,
+        recentlyAdded: recent,
+        localHomebrew: homebrew
+    ))
+    .environment(categories)
+    .environment(recent)
+    .environment(homebrew)
+    .environment(ImageCacheService())
 }

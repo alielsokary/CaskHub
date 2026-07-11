@@ -62,13 +62,13 @@ final class CaskCatalogViewModel {
     /// Window for the Recently Added page and Browse shelf.
     var recentlyAddedWindow: RecentlyAddedWindow = .days30
 
-    private let apiClient: BrewAPIClientProtocol
+    private let apiClient: BrewAPIClient
     private let categoryService: CategoryService
     private let recentlyAdded: RecentlyAddedService
     private let localHomebrew: LocalHomebrewService
 
     init(
-        apiClient: BrewAPIClientProtocol,
+        apiClient: BrewAPIClient,
         categoryService: CategoryService,
         recentlyAdded: RecentlyAddedService,
         localHomebrew: LocalHomebrewService
