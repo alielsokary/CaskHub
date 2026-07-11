@@ -69,7 +69,7 @@ final class CategoryService {
         applyData(remote)
     }
 
-    private func applyData(_ catalog: CaskCategoryData) {
+    func applyData(_ catalog: CaskCategoryData) {
         categoryDefinitions = catalog.categories
         tokenMappings = catalog.tokenToCategory
 

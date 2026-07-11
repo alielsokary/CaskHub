@@ -38,7 +38,7 @@ final class RecentlyAddedService {
 
     private static let schemaVersion = 1
 
-    private(set) var addedDates: [String: String] = [:]
+    var addedDates: [String: String] = [:]
 
     /// Best-effort fetch, silent on failure — Recently Added stays empty
     /// offline, which is moot since the catalog itself is network-backed.

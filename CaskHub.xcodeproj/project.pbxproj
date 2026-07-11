@@ -52,6 +52,8 @@
 		41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48230028F7D00608C7A /* ContentView.swift */; };
 		41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */; };
 		41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B130028F9F00608C7A /* CaskHubTests.swift */; };
+		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
+		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -110,6 +112,8 @@
 		41DFD48430028F7D00608C7A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 		41DFD4B130028F9F00608C7A /* CaskHubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubTests.swift; sourceTree = "<group>"; };
+		41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModelTests.swift; sourceTree = "<group>"; };
+		41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestHelpers.swift; sourceTree = "<group>"; };
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -290,7 +294,9 @@
 			isa = PBXGroup;
 			children = (
 				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
+				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
+				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
 			);
 			path = CaskHubTests;
 			sourceTree = "<group>";
@@ -493,7 +499,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
+				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
+				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

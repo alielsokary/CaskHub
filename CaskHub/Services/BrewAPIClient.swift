@@ -7,11 +7,16 @@
 
 import Foundation
 
+protocol BrewAPIClientProtocol {
+    func fetchAllCasks() async throws -> [Cask]
+    func fetchAnalytics(period: AnalyticsPeriod) async throws -> CaskAnalyticsResponse
+}
+
 /// The two formulae.brew.sh endpoints the app consumes. Unlike the
 /// best-effort CaskFlowReleases fetches, these throw: the catalog is the
 /// app's main content, so the ViewModel surfaces `localizedDescription`
 /// with a Retry button.
-final class BrewAPIClient {
+final class BrewAPIClient: BrewAPIClientProtocol {
     struct HTTPError: LocalizedError {
         let statusCode: Int
 

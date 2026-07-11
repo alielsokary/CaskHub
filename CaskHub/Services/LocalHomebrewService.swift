@@ -84,7 +84,7 @@ enum LocalHomebrewError: LocalizedError {
 @Observable
 final class LocalHomebrewService {
     /// Token → installation snapshot. Repopulated by `refresh()`.
-    private(set) var installedCasks: [String: LocalCaskInstallation] = [:]
+    var installedCasks: [String: LocalCaskInstallation] = [:]
 
     /// Token → currently-running action, used by views to show spinners and disable buttons.
     private(set) var inFlightActions: [String: CaskAction] = [:]
