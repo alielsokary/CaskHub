@@ -105,8 +105,9 @@ final class CaskCatalogViewModel {
     /// Cards per Browse shelf: two rows of the fixed 4-column grid.
     private static let browseSectionSize = 8
 
-    /// Shelves for the Browse page: Most Popular, Recently Added, then every
-    /// category except "other" — each holding its top casks by 365d downloads.
+    /// Shelves for the Browse page: Most Popular, Recently Added (newest
+    /// first), then every category except "other" — the rest holding their
+    /// top casks by 365d downloads.
     var browseSections: [BrowseSection] {
         let counts = analyticsByPeriod[.days365] ?? [:]
         func top(_ source: [Cask]) -> [Cask] {
@@ -123,7 +124,7 @@ final class CaskCatalogViewModel {
             BrowseSection(
                 title: "Recently Added",
                 destination: .discover(.recentlyAdded),
-                casks: top(casks.filter { recentTokens.contains($0.token) })
+                casks: Array(sortedByNewest(casks.filter { recentTokens.contains($0.token) }).prefix(Self.browseSectionSize))
             )
         ]
         for entry in categoryService.orderedCategories where entry.id != "other" {
@@ -188,6 +189,10 @@ final class CaskCatalogViewModel {
         source.sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
     }
 
+    private func sortedByNewest(_ source: [Cask]) -> [Cask] {
+        source.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "") > (recentlyAdded.addedDate(for: $1.token) ?? "") }
+    }
+
     private func applySort(to casks: [Cask]) -> [Cask] {
         switch sortOption {
         case .mostPopular:
@@ -197,7 +202,7 @@ final class CaskCatalogViewModel {
         case .nameZA:
             return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending }
         case .newest:
-            return casks.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "") > (recentlyAdded.addedDate(for: $1.token) ?? "") }
+            return sortedByNewest(casks)
         case .oldest:
             return casks.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "9999") < (recentlyAdded.addedDate(for: $1.token) ?? "9999") }
         }

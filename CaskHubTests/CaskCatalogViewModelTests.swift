@@ -222,6 +222,25 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(sections[1].casks.first?.token, "browser-9") // top downloads first
     }
 
+    @MainActor
+    func test_browse_recently_added_shelf_orders_by_newest_not_downloads() async {
+        let recent = RecentlyAddedService()
+        recent.addedDates = [
+            "old-hit": dateString(daysAgo: 20),
+            "new-app": dateString(daysAgo: 1)
+        ]
+        let api = MockBrewAPIClient()
+        api.casks = [makeCask("old-hit"), makeCask("new-app")]
+        api.analyticsResponses[.days365] = analyticsResponse([
+            ("old-hit", "1000"), ("new-app", "10")
+        ])
+        let vm = makeViewModel(api: api, recentlyAdded: recent)
+        await vm.fetchCasks()
+
+        let shelf = vm.browseSections.first { $0.title == "Recently Added" }
+        XCTAssertEqual(shelf?.casks.map(\.token), ["new-app", "old-hit"])
+    }
+
     // MARK: Analytics
 
     @MainActor
