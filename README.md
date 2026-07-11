@@ -62,7 +62,9 @@ cd CaskHub
 open CaskHub.xcodeproj
 ```
 
-Select the **CaskHub** scheme and run (⌘R). There are no third-party dependencies to resolve - the app is built entirely on Apple frameworks.
+Select the **CaskHub** scheme and run (⌘R). Xcode resolves the single Swift package dependency ([TelemetryDeck](https://github.com/TelemetryDeck/SwiftSDK)) automatically.
+
+Optional: copy `Configs/Secrets.xcconfig.template` to `Configs/Secrets.xcconfig` and fill in the analytics key — builds work fine without it; analytics just stays off.
 
 ## Architecture
 
@@ -78,6 +80,12 @@ Tests run with XCTest on every push and pull request to `master` and `develop`, 
 ```bash
 xcodebuild test -project CaskHub.xcodeproj -scheme CaskHub -destination 'platform=macOS'
 ```
+
+## Privacy & Analytics
+
+CaskHub collects anonymous usage analytics through [TelemetryDeck](https://telemetrydeck.com), a privacy-first analytics service. No personal data or identifiers ever leave your Mac — user IDs are salted and hashed on-device, and there is no tracking across apps or websites.
+
+You can opt out at any time in **Settings → Privacy**.
 
 ## Contributing
 

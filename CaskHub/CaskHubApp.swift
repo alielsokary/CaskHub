@@ -51,6 +51,7 @@ struct CaskHubApp: App {
 
     init() {
         BrandFonts.register()
+        Analytics.start()
         // Apply before any window exists — state restoration can otherwise
         // revive an appearance archived under an older theme setting.
         Self.applyAppearance(UserDefaults.standard.string(forKey: "appTheme") ?? AppTheme.system.rawValue)

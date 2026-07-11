@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
+    @State private var searchSignalTask: Task<Void, Never>?
 
     /// Fixed 4-column grid from the design mock (cards never reflow wider).
     private let columns = Array(
@@ -69,10 +70,14 @@ struct ContentView: View {
                     searchFocus: $searchFocused,
                     analyticsPeriod: selectedSidebar == .discover(.topCharts) ? viewModel.analyticsPeriod : nil,
                     onSelectPeriod: { period in
+                        Analytics.topChartsPeriodChanged(period)
                         Task { await viewModel.selectAnalyticsPeriod(period) }
                     },
                     recentWindow: selectedSidebar == .discover(.recentlyAdded) ? viewModel.recentlyAddedWindow : nil,
-                    onSelectWindow: { viewModel.recentlyAddedWindow = $0 },
+                    onSelectWindow: {
+                        Analytics.recentWindowChanged($0)
+                        viewModel.recentlyAddedWindow = $0
+                    },
                     // Sections have a fixed popularity order; sorting is a no-op there.
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
                     onSubmitSearch: {
@@ -132,6 +137,7 @@ struct ContentView: View {
             _ = await(catalog, local, categories, addedDates)
         }
         .onChange(of: selectedSidebar) { _, newValue in
+            Analytics.pageOpened(newValue)
             viewModel.selectedSidebar = newValue
             if newValue == .discover(.topCharts) {
                 // Fetch the current period's data if it hasn't loaded yet.
@@ -145,7 +151,23 @@ struct ContentView: View {
                 viewModel.sortOption = .mostPopular
             }
         }
+        .onChange(of: viewMode) { _, newValue in
+            Analytics.viewModeChanged(newValue)
+        }
         .onChange(of: viewModel.searchText) { _, newValue in
+            // Results filter per keystroke (no Return needed), so the search
+            // signal fires when typing settles — not per key, not on submit.
+            searchSignalTask?.cancel()
+            if !newValue.isEmpty {
+                searchSignalTask = Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    guard !Task.isCancelled else { return }
+                    Analytics.searchPerformed(
+                        query: newValue,
+                        results: viewModel.filteredCasks.count
+                    )
+                }
+            }
             if newValue.isEmpty {
                 // Only drop focus when clearing a submitted search — while
                 // still composing (backspaced to empty), keep the field active.
@@ -207,10 +229,12 @@ struct ContentView: View {
         guard let id = categoryService.category(for: cask.token) else { return nil }
         return (id, categoryService.displayName(for: id))
     }
+}
 
-    // MARK: - Grid View
+// MARK: - Grid, List & Error Views
 
-    private var gridView: some View {
+private extension ContentView {
+    var gridView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: CHSpace.s4) {
                 if let hero = heroCask {
@@ -238,7 +262,7 @@ struct ContentView: View {
         .id(selectedSidebar)
     }
 
-    private func caskGrid(_ casks: [Cask]) -> some View {
+    func caskGrid(_ casks: [Cask]) -> some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
             ForEach(casks) { cask in
                 CaskCardView(
@@ -251,7 +275,7 @@ struct ContentView: View {
         }
     }
 
-    private func browseSectionView(_ section: BrowseSection) -> some View {
+    func browseSectionView(_ section: BrowseSection) -> some View {
         VStack(alignment: .leading, spacing: CHSpace.s3) {
             HStack(alignment: .firstTextBaseline) {
                 Text(section.title)
@@ -259,6 +283,7 @@ struct ContentView: View {
                     .foregroundStyle(Color.chTextTitle)
                 Spacer()
                 Button {
+                    Analytics.viewAllTapped(to: section.destination)
                     selectedSidebar = section.destination
                 } label: {
                     Text("View All")
@@ -274,7 +299,7 @@ struct ContentView: View {
 
     // MARK: - List View
 
-    private var listView: some View {
+    var listView: some View {
         List(viewModel.filteredCasks) { cask in
             CaskRowView(
                 cask: cask,
@@ -288,7 +313,7 @@ struct ContentView: View {
 
     // MARK: - Error View
 
-    private func errorView(_ error: String) -> some View {
+    func errorView(_ error: String) -> some View {
         VStack(spacing: 12) {
             BarrelMark()
                 .frame(width: 56, height: 56)

@@ -14,6 +14,10 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Appearance", systemImage: "paintbrush")
                 }
+            PrivacySettingsView()
+                .tabItem {
+                    Label("Privacy", systemImage: "hand.raised")
+                }
         }
         .frame(width: 400, height: 200)
     }
@@ -38,6 +42,31 @@ struct AppearanceSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .onChange(of: selectedTheme) { _, newValue in
+            Analytics.themeChanged(newValue)
+        }
+    }
+}
+
+struct PrivacySettingsView: View {
+    @AppStorage(Analytics.enabledKey) private var analyticsEnabled = true
+
+    var body: some View {
+        Form {
+            Toggle("Share anonymous usage analytics", isOn: $analyticsEnabled)
+            Text("""
+            Helps improve CaskHub via TelemetryDeck. No personal data, \
+            no tracking across apps — only anonymized usage signals.
+            """)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        }
+        .formStyle(.grouped)
+        .padding()
+        .onChange(of: analyticsEnabled) { _, isOn in
+            Analytics.refresh()
+            if isOn { Analytics.analyticsReEnabled() }
+        }
     }
 }
 

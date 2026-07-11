@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		41EBDCEF2F37FD8C00BEABB8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -17,6 +21,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		41AD10042F68A00400BEABB8 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -39,6 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,6 +61,7 @@
 		41EBDCD82F37FD8B00BEABB8 = {
 			isa = PBXGroup;
 			children = (
+				41AD10042F68A00400BEABB8 /* Shared.xcconfig */,
 				41EBDCE32F37FD8B00BEABB8 /* CaskHub */,
 				41EBDCF12F37FD8C00BEABB8 /* CaskHubTests */,
 				41EBDCE22F37FD8B00BEABB8 /* Products */,
@@ -90,6 +97,9 @@
 				41EBDCE32F37FD8B00BEABB8 /* CaskHub */,
 			);
 			name = CaskHub;
+			packageProductDependencies = (
+				41AD10022F68A00200BEABB8 /* TelemetryDeck */,
+			);
 			productName = CaskHub;
 			productReference = 41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */;
 			productType = "com.apple.product-type.application";
@@ -143,6 +153,9 @@
 			);
 			mainGroup = 41EBDCD82F37FD8B00BEABB8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41EBDCE22F37FD8B00BEABB8 /* Products */;
 			projectDirPath = "";
@@ -222,6 +235,7 @@
 /* Begin XCBuildConfiguration section */
 		41EBDD002F37FD8C00BEABB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 41AD10042F68A00400BEABB8 /* Shared.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -288,6 +302,7 @@
 		};
 		41EBDD012F37FD8C00BEABB8 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 41AD10042F68A00400BEABB8 /* Shared.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -360,6 +375,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Configs/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -394,6 +410,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Configs/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -487,6 +504,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		41AD10022F68A00200BEABB8 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 41EBDCD92F37FD8B00BEABB8 /* Project object */;
 }
