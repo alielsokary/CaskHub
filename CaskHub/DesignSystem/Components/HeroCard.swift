@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-/// "House Pick" hero card at the top of Browse (design option 3b/3c).
 struct HeroCard: View {
     let cask: Cask
     var downloads: String?
@@ -59,7 +58,6 @@ struct HeroCard: View {
         }
         .padding(.vertical, 22)
         .padding(.horizontal, 28)
-        // Fixed footprint from the design mock — never stretches with the window.
         .frame(width: CHSize.contentWidth, height: CHSize.heroHeight)
         .glassPanel(radius: CHRadius.hero, surface: .chSurfaceHero, shadow: .chShadowHero)
     }

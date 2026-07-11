@@ -34,7 +34,6 @@ final class CategoryService {
     private(set) var categoryDefinitions: [CategoryID: CategoryDefinition] = [:]
     private(set) var tokenMappings: [String: TokenCategoryMapping] = [:]
     private(set) var categoryTokenSets: [CategoryID: Set<String>] = [:]
-    private(set) var isLoaded = false
     private(set) var version: Int = 0
     private(set) var generatedDate: String = ""
 
@@ -70,7 +69,7 @@ final class CategoryService {
         applyData(remote)
     }
 
-    private func applyData(_ catalog: CaskCategoryData) {
+    func applyData(_ catalog: CaskCategoryData) {
         categoryDefinitions = catalog.categories
         tokenMappings = catalog.tokenToCategory
 
@@ -84,17 +83,11 @@ final class CategoryService {
         categoryTokenSets = sets
         version = catalog.version
         generatedDate = catalog.generatedDate
-        isLoaded = true
     }
 
     /// Returns the primary category for a cask token.
     func category(for token: String) -> CategoryID? {
         tokenMappings[token]?.primary
-    }
-
-    /// Returns the full mapping (primary + secondary) for a cask token.
-    func mapping(for token: String) -> TokenCategoryMapping? {
-        tokenMappings[token]
     }
 
     /// Returns all cask tokens in a category (includes both primary and secondary assignments).
@@ -104,15 +97,5 @@ final class CategoryService {
 
     func displayName(for categoryID: CategoryID) -> String {
         categoryDefinitions[categoryID]?.displayName ?? categoryID
-    }
-
-    /// Classify a token into a category at runtime (e.g. from on-device ML or remote update).
-    func classify(token: String, as categoryID: CategoryID, secondary: [CategoryID] = []) {
-        let mapping = TokenCategoryMapping(primary: categoryID, secondary: secondary)
-        tokenMappings[token] = mapping
-        categoryTokenSets[categoryID, default: []].insert(token)
-        for secondaryCat in secondary {
-            categoryTokenSets[secondaryCat, default: []].insert(token)
-        }
     }
 }

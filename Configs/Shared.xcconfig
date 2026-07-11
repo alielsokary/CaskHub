@@ -1,7 +1,6 @@
 // Base build configuration for all targets.
 //
 // Secrets live in Secrets.xcconfig (gitignored) — copy Secrets.xcconfig.template
-// to create it. The optional #include? means builds succeed without it:
-// injected values just stay empty and the app skips analytics.
+// to create it.
 
 #include? "Secrets.xcconfig"

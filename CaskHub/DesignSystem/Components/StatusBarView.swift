@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-/// Bottom status bar: barrel mark, tap info in mono, keycap hints (design option 3b/3c).
 struct StatusBarView: View {
     var caskCount: Int
     var updatesCount: Int = 0

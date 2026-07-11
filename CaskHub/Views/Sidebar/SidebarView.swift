@@ -21,8 +21,8 @@ struct SidebarView: View {
                 .padding(.top, 38) // just below the traffic lights (hidden title bar)
                 .padding(.bottom, 6)
 
-            // Custom rows instead of List selection: the design's terracotta
-            // capsule highlight must not turn gray when the sidebar loses focus.
+            // Custom rows instead of List selection: the terracotta capsule
+            // highlight must not turn gray when the sidebar loses focus.
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     sectionHeader("DISCOVER")

@@ -44,22 +44,22 @@ final class AnalyticsTests: XCTestCase {
 
     // MARK: - Opt-out state
 
-    func testAnalyticsIsEnabledByDefault() {
+    func test_analytics_is_enabled_by_default() {
         XCTAssertTrue(Analytics.isEnabled)
     }
 
-    func testIsEnabledReflectsStoredOptOut() {
+    func test_is_enabled_reflects_stored_opt_out() {
         UserDefaults.standard.set(false, forKey: Analytics.enabledKey)
         XCTAssertFalse(Analytics.isEnabled)
     }
 
-    func testStartPassesStoredSettingToProvider() {
+    func test_start_passes_stored_setting_to_provider() {
         UserDefaults.standard.set(false, forKey: Analytics.enabledKey)
         Analytics.start()
         XCTAssertEqual(spy.startedWith, [false])
     }
 
-    func testRefreshForwardsCurrentSettingToProvider() {
+    func test_refresh_forwards_current_setting_to_provider() {
         UserDefaults.standard.set(false, forKey: Analytics.enabledKey)
         Analytics.refresh()
         UserDefaults.standard.set(true, forKey: Analytics.enabledKey)
@@ -69,7 +69,7 @@ final class AnalyticsTests: XCTestCase {
 
     // MARK: - Cask action events
 
-    func testCaskActionCompletedMapsActionsToPastTenseSignals() {
+    func test_cask_action_completed_maps_actions_to_past_tense_signals() {
         Analytics.caskActionCompleted(.installing, token: "firefox")
         Analytics.caskActionCompleted(.uninstalling, token: "firefox")
         Analytics.caskActionCompleted(.updating, token: "firefox")
@@ -81,36 +81,36 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(lastSignal?.parameters, ["cask": "firefox"])
     }
 
-    func testCaskActionCompletedIgnoresAppLaunches() {
+    func test_cask_action_completed_ignores_app_launches() {
         Analytics.caskActionCompleted(.opening, token: "firefox")
         XCTAssertTrue(spy.signals.isEmpty)
     }
 
-    func testCaskActionFailedSendsBaseVerbAndToken() {
+    func test_cask_action_failed_sends_base_verb_and_token() {
         Analytics.caskActionFailed(.updating, token: "iterm2")
         XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
         XCTAssertEqual(lastSignal?.parameters, ["action": "update", "cask": "iterm2"])
     }
 
-    func testCaskActionFailedIgnoresAppLaunches() {
+    func test_cask_action_failed_ignores_app_launches() {
         Analytics.caskActionFailed(.opening, token: "firefox")
         XCTAssertTrue(spy.signals.isEmpty)
     }
 
     // MARK: - Navigation events
 
-    func testPageOpenedMapsDiscoverPages() {
+    func test_page_opened_maps_discover_pages() {
         Analytics.pageOpened(.discover(.topCharts))
         XCTAssertEqual(lastSignal?.name, "Page.opened")
         XCTAssertEqual(lastSignal?.parameters, ["page": "topCharts"])
     }
 
-    func testPageOpenedMapsLibraryPages() {
+    func test_page_opened_maps_library_pages() {
         Analytics.pageOpened(.library(.installed))
         XCTAssertEqual(lastSignal?.parameters, ["page": "installed"])
     }
 
-    func testPageOpenedMapsCategoriesWithID() {
+    func test_page_opened_maps_categories_with_id() {
         Analytics.pageOpened(.category("productivity"))
         XCTAssertEqual(
             lastSignal?.parameters,
@@ -118,7 +118,7 @@ final class AnalyticsTests: XCTestCase {
         )
     }
 
-    func testViewAllTappedCarriesDestinationParameters() {
+    func test_view_all_tapped_carries_destination_parameters() {
         Analytics.viewAllTapped(to: .category("developer-tools"))
         XCTAssertEqual(lastSignal?.name, "Browse.viewAllTapped")
         XCTAssertEqual(
@@ -129,7 +129,7 @@ final class AnalyticsTests: XCTestCase {
 
     // MARK: - Search
 
-    func testSearchPerformedNormalizesQueryAndCountsResults() {
+    func test_search_performed_normalizes_query_and_counts_results() {
         Analytics.searchPerformed(query: "  FireFox ", results: 3)
         XCTAssertEqual(lastSignal?.name, "Search.performed")
         XCTAssertEqual(lastSignal?.parameters, ["query": "firefox", "results": "3"])
@@ -137,7 +137,7 @@ final class AnalyticsTests: XCTestCase {
 
     // MARK: - Filters, view mode & settings
 
-    func testFilterAndSettingsEventNamesAndParameters() {
+    func test_filter_and_settings_event_names_and_parameters() {
         Analytics.sortChanged(.nameAZ)
         Analytics.topChartsPeriodChanged(.days90)
         Analytics.recentWindowChanged(.days30)

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Floating glass pill top bar (design option 3b/3c): screen title, cask count,
+/// Floating glass pill top bar: screen title, cask count,
 /// sort chip, grid/list toggle and the search field with its ⌘F keycap.
 struct TopBarView: View {
     let title: String
@@ -66,8 +66,8 @@ struct TopBarView: View {
 
     // MARK: - Sort chip
 
-    /// Custom popover instead of Menu: NSMenu items ignore custom fonts, and the
-    /// design system's Nunito must apply to the dropdown too.
+    /// Custom popover instead of Menu: NSMenu items ignore custom fonts, and
+    /// the dropdown must render Nunito like the rest of the bar.
     private var sortChip: some View {
         Button {
             showSortMenu.toggle()
@@ -100,8 +100,6 @@ struct TopBarView: View {
     private func sortMenuRow(_ option: SortOption) -> some View {
         let isSelected = sortOption == option
         return Button {
-            // Tracked here, not via onChange: page switches also reset the
-            // sort programmatically, and only user picks should count.
             if option != sortOption { Analytics.sortChanged(option) }
             sortOption = option
             showSortMenu = false

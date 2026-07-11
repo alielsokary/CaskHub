@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-// The design system's glass recipe (guidelines/surfaces-glass):
-// frosted tinted surface · white hairline (lit from the top) · soft shadow.
+// Glass recipe: frosted tinted surface · white hairline (lit from the top) ·
+// soft shadow.
 
 private struct GlassPanelModifier: ViewModifier {
     var radius: CGFloat

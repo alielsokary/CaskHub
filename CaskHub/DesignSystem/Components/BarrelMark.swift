@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-/// The CaskHub barrel mascot (identity v2, design option 3a) — terracotta barrel
-/// with staves, riveted gold hoops and a shine. Ported from the design system's
-/// BarrelMark SVG (48×48 viewBox); scales to any square frame.
 struct BarrelMark: View {
     var body: some View {
         Canvas { ctx, size in
