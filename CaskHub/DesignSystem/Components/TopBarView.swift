@@ -100,6 +100,9 @@ struct TopBarView: View {
     private func sortMenuRow(_ option: SortOption) -> some View {
         let isSelected = sortOption == option
         return Button {
+            // Tracked here, not via onChange: page switches also reset the
+            // sort programmatically, and only user picks should count.
+            if option != sortOption { Analytics.sortChanged(option) }
             sortOption = option
             showSortMenu = false
         } label: {

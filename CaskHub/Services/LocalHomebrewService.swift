@@ -256,6 +256,7 @@ final class LocalHomebrewService {
         do {
             try await runBrewStreaming(token: token, args: args, cancellable: action == .installing)
             cancelRequested.remove(token)
+            Analytics.caskActionCompleted(action, token: token)
             await refresh()
         } catch {
             if cancelRequested.contains(token) {
@@ -268,6 +269,7 @@ final class LocalHomebrewService {
                 await refresh()
                 return
             }
+            Analytics.caskActionFailed(action, token: token)
             if let error = error as? LocalHomebrewError {
                 actionErrors[token] = error.errorDescription
             } else {
