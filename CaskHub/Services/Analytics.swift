@@ -25,7 +25,8 @@ protocol AnalyticsProvider {
 enum Analytics {
     static let enabledKey = "analyticsEnabled"
 
-    static let provider: AnalyticsProvider = TelemetryDeckProvider()
+    /// `var` so tests can inject a spy; production never reassigns it.
+    static var provider: AnalyticsProvider = TelemetryDeckProvider()
 
     static var isEnabled: Bool {
         UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
