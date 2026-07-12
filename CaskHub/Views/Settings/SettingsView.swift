@@ -19,7 +19,7 @@ struct SettingsView: View {
                     Label("Privacy", systemImage: "hand.raised")
                 }
         }
-        .frame(width: 400, height: 200)
+        .frame(width: 400, height: 280)
     }
 }
 
@@ -50,6 +50,7 @@ struct AppearanceSettingsView: View {
 
 struct PrivacySettingsView: View {
     @AppStorage(Analytics.enabledKey) private var analyticsEnabled = true
+    @AppStorage(CrashReporter.enabledKey) private var crashReportingEnabled = true
 
     var body: some View {
         Form {
@@ -60,12 +61,22 @@ struct PrivacySettingsView: View {
             """)
             .font(.callout)
             .foregroundStyle(.secondary)
+            Toggle("Share crash reports", isOn: $crashReportingEnabled)
+            Text("""
+            Sends crash reports and error diagnostics to Sentry so bugs \
+            get found and fixed faster.
+            """)
+            .font(.callout)
+            .foregroundStyle(.secondary)
         }
         .formStyle(.grouped)
         .padding()
         .onChange(of: analyticsEnabled) { _, isOn in
             Analytics.refresh()
             if isOn { Analytics.analyticsReEnabled() }
+        }
+        .onChange(of: crashReportingEnabled) { _, _ in
+            CrashReporter.refresh()
         }
     }
 }
