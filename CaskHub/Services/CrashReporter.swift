@@ -108,17 +108,10 @@ final class SentryProvider: CrashReporterProvider {
             options.dsn = dsn
             // Small user base — lower if volume grows.
             options.tracesSampleRate = 1.0
-            let bundle = Bundle.main
-            let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
-            let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
-            // Pinned explicitly (not left to SDK defaults) so events always
-            // match what Scripts/upload_dsyms.sh associates.
-            options.releaseName = "\(bundle.bundleIdentifier ?? "caskhub")@\(version)+\(build)"
-            options.dist = build
+            // Release/dist come from the SDK's bundle-derived defaults;
+            // environment defaults to "production".
             #if DEBUG
             options.environment = "debug"
-            #else
-            options.environment = "production"
             #endif
         }
         started = true
