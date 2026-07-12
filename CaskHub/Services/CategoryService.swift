@@ -23,6 +23,9 @@ struct TokenCategoryMapping: Codable, Hashable {
 struct CaskCategoryData: Codable {
     let version: Int
     let generatedDate: String
+    /// GitHub release tag (e.g. "caskflow-v2026.07.10"), stamped into the
+    /// asset by CaskFlow's release workflow. Absent in older data.
+    let releaseTag: String?
     let totalCasks: Int
     let categories: [String: CategoryDefinition]
     let tokenToCategory: [String: TokenCategoryMapping]
@@ -36,6 +39,7 @@ final class CategoryService {
     private(set) var categoryTokenSets: [CategoryID: Set<String>] = [:]
     private(set) var version: Int = 0
     private(set) var generatedDate: String = ""
+    private(set) var releaseTag: String?
 
     var orderedCategories: [(id: CategoryID, definition: CategoryDefinition)] {
         categoryDefinitions
@@ -83,6 +87,7 @@ final class CategoryService {
         categoryTokenSets = sets
         version = catalog.version
         generatedDate = catalog.generatedDate
+        releaseTag = catalog.releaseTag
     }
 
     /// Returns the primary category for a cask token.

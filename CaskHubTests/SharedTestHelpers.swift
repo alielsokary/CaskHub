@@ -104,6 +104,33 @@ func makeViewModel(
     )
 }
 
+/// The arrange-and-act ritual shared by most catalog tests: a mock API
+/// pre-loaded with `casks` (plus optional year-window analytics), wrapped
+/// in a view model that has already fetched. The api is returned for
+/// call-count assertions and post-fetch stubbing.
+@MainActor
+func makeSUT(
+    casks: [Cask] = [],
+    analytics: [(String, String)]? = nil,
+    categories: CategoryService? = nil,
+    recentlyAdded: RecentlyAddedService? = nil,
+    localHomebrew: LocalHomebrewService? = nil
+) async -> (vm: CaskCatalogViewModel, api: MockBrewAPIClient) {
+    let api = MockBrewAPIClient()
+    api.casks = casks
+    if let analytics {
+        api.analyticsResponses[.days365] = analyticsResponse(analytics)
+    }
+    let vm = makeViewModel(
+        api: api,
+        categories: categories,
+        recentlyAdded: recentlyAdded,
+        localHomebrew: localHomebrew
+    )
+    await vm.fetchCasks()
+    return (vm, api)
+}
+
 @MainActor
 func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
                       categories: [String: CategoryDefinition]) -> CategoryService {
@@ -111,6 +138,7 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
     service.applyData(CaskCategoryData(
         version: 1,
         generatedDate: "2026-07-11",
+        releaseTag: nil,
         totalCasks: tokenToCategory.count,
         categories: categories,
         tokenToCategory: tokenToCategory
