@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
+		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
 		41DFD48630028F7D00608C7A /* Baloo2.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46530028F7D00608C7A /* Baloo2.ttf */; };
 		41DFD48730028F7D00608C7A /* JetBrainsMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46630028F7D00608C7A /* JetBrainsMono.ttf */; };
 		41DFD48830028F7D00608C7A /* Nunito.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46730028F7D00608C7A /* Nunito.ttf */; };
@@ -124,6 +125,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */,
+				41AD10122F68B00300BEABB8 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +341,7 @@
 			name = CaskHub;
 			packageProductDependencies = (
 				41AD10022F68A00200BEABB8 /* TelemetryDeck */,
+				41AD10112F68B00200BEABB8 /* Sentry */,
 			);
 			productName = CaskHub;
 			productReference = 41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */;
@@ -392,6 +395,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+				41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41EBDCE22F37FD8B00BEABB8 /* Products */;
@@ -797,6 +801,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -804,6 +816,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
 			productName = TelemetryDeck;
+		};
+		41AD10112F68B00200BEABB8 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

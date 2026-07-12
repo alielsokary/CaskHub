@@ -6,5 +6,7 @@
 	     entries with the generated Info.plist (GENERATE_INFOPLIST_FILE). -->
 	<key>TelemetryDeckAppID</key>
 	<string>$(TELEMETRYDECK_APP_ID)</string>
+	<key>SentryDSN</key>
+	<string>$(SENTRY_DSN)</string>
 </dict>
 </plist>
