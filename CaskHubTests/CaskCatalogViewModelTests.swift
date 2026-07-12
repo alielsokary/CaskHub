@@ -304,4 +304,26 @@ final class CaskCatalogViewModelTests: XCTestCase {
         vm.selectedSidebar = .discover(.browse)
         XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "100")
     }
+
+    // MARK: - Crash reporting
+
+    @MainActor
+    func test_fetch_failure_is_captured_and_finishes_span_with_error() async {
+        let crashSpy = SpyCrashReporterProvider()
+        let originalCrash = CrashReporter.provider
+        CrashReporter.provider = crashSpy
+        defer { CrashReporter.provider = originalCrash }
+        CrashReporter.captureCounts = [:]
+
+        let api = MockBrewAPIClient()
+        api.casksError = URLError(.notConnectedToInternet)
+        let vm = makeViewModel(api: api)
+
+        await vm.fetchCasks()
+
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+        XCTAssertEqual(crashSpy.spans.last?.name, "catalog.fetch")
+        XCTAssertEqual(crashSpy.spans.last?.operation, "http")
+        XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+    }
 }
