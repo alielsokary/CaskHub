@@ -131,11 +131,17 @@ final class SpyCrashSpan: CrashSpan {
 }
 
 final class SpyCrashReporterProvider: CrashReporterProvider {
+    struct SpanRecord {
+        let name: String
+        let operation: String
+        let span: SpyCrashSpan
+    }
+
     var startedWith: [Bool] = []
     var enabledChanges: [Bool] = []
     var capturedErrors: [Error] = []
     var breadcrumbs: [(message: String, data: [String: String])] = []
-    var spans: [(name: String, operation: String, span: SpyCrashSpan)] = []
+    var spans: [SpanRecord] = []
 
     func start(enabled: Bool) { startedWith.append(enabled) }
     func setEnabled(_ enabled: Bool) { enabledChanges.append(enabled) }
@@ -145,7 +151,7 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
     }
     func startSpan(name: String, operation: String) -> CrashSpan {
         let span = SpyCrashSpan()
-        spans.append((name, operation, span))
+        spans.append(SpanRecord(name: name, operation: operation, span: span))
         return span
     }
 }
