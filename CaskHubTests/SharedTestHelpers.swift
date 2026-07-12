@@ -117,3 +117,41 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
     ))
     return service
 }
+
+// MARK: - Crash-reporting spies
+
+final class SpyCrashSpan: CrashSpan {
+    var finished = false
+    var finishedError: Error?
+    func finish() { finished = true }
+    func finish(error: Error) {
+        finished = true
+        finishedError = error
+    }
+}
+
+final class SpyCrashReporterProvider: CrashReporterProvider {
+    struct SpanRecord {
+        let name: String
+        let operation: String
+        let span: SpyCrashSpan
+    }
+
+    var startedWith: [Bool] = []
+    var enabledChanges: [Bool] = []
+    var capturedErrors: [Error] = []
+    var breadcrumbs: [(message: String, data: [String: String])] = []
+    var spans: [SpanRecord] = []
+
+    func start(enabled: Bool) { startedWith.append(enabled) }
+    func setEnabled(_ enabled: Bool) { enabledChanges.append(enabled) }
+    func capture(_ error: Error) { capturedErrors.append(error) }
+    func addBreadcrumb(_ message: String, data: [String: String]) {
+        breadcrumbs.append((message, data))
+    }
+    func startSpan(name: String, operation: String) -> CrashSpan {
+        let span = SpyCrashSpan()
+        spans.append(SpanRecord(name: name, operation: operation, span: span))
+        return span
+    }
+}

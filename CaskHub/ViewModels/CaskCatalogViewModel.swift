@@ -213,6 +213,7 @@ final class CaskCatalogViewModel {
     func fetchCasks() async {
         isLoading = true
         errorMessage = nil
+        let span = CrashReporter.span(name: "catalog.fetch", operation: "http")
 
         do {
             async let caskRequest = apiClient.fetchAllCasks()
@@ -229,8 +230,11 @@ final class CaskCatalogViewModel {
             if let analytics = try? await analyticsRequest {
                 analyticsByPeriod[.days365] = Self.countsByToken(from: analytics)
             }
+            span.finish()
         } catch {
             errorMessage = error.localizedDescription
+            span.finish(error: error)
+            CrashReporter.capture(error)
         }
 
         isLoading = false

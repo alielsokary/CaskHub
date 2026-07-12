@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
+		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
 		41DFD48630028F7D00608C7A /* Baloo2.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46530028F7D00608C7A /* Baloo2.ttf */; };
 		41DFD48730028F7D00608C7A /* JetBrainsMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46630028F7D00608C7A /* JetBrainsMono.ttf */; };
 		41DFD48830028F7D00608C7A /* Nunito.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46730028F7D00608C7A /* Nunito.ttf */; };
@@ -32,6 +33,7 @@
 		41DFD49B30028F7D00608C7A /* CaskIconURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46230028F7D00608C7A /* CaskIconURL.swift */; };
 		41DFD49C30028F7D00608C7A /* SidebarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46330028F7D00608C7A /* SidebarItem.swift */; };
 		41DFD49D30028F7D00608C7A /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46B30028F7D00608C7A /* Analytics.swift */; };
+		41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10132F68B00400BEABB8 /* CrashReporter.swift */; };
 		41DFD49E30028F7D00608C7A /* Analytics+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46C30028F7D00608C7A /* Analytics+Events.swift */; };
 		41DFD49F30028F7D00608C7A /* BrewAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46D30028F7D00608C7A /* BrewAPIClient.swift */; };
 		41DFD4A030028F7D00608C7A /* CaskFlowReleases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */; };
@@ -51,6 +53,7 @@
 		41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48030028F7D00608C7A /* SidebarView.swift */; };
 		41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48230028F7D00608C7A /* ContentView.swift */; };
 		41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */; };
+		41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */; };
 		41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B130028F9F00608C7A /* CaskHubTests.swift */; };
 		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
 		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
@@ -91,6 +94,7 @@
 		41DFD46730028F7D00608C7A /* Nunito.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Nunito.ttf; sourceTree = "<group>"; };
 		41DFD46930028F7D00608C7A /* categories.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = categories.json; sourceTree = "<group>"; };
 		41DFD46B30028F7D00608C7A /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
+		41AD10132F68B00400BEABB8 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
 		41DFD46C30028F7D00608C7A /* Analytics+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analytics+Events.swift"; sourceTree = "<group>"; };
 		41DFD46D30028F7D00608C7A /* BrewAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewAPIClient.swift; sourceTree = "<group>"; };
 		41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskFlowReleases.swift; sourceTree = "<group>"; };
@@ -111,6 +115,7 @@
 		41DFD48230028F7D00608C7A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		41DFD48430028F7D00608C7A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
+		41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
 		41DFD4B130028F9F00608C7A /* CaskHubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubTests.swift; sourceTree = "<group>"; };
 		41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModelTests.swift; sourceTree = "<group>"; };
 		41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestHelpers.swift; sourceTree = "<group>"; };
@@ -124,6 +129,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */,
+				41AD10122F68B00300BEABB8 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,6 +221,7 @@
 			isa = PBXGroup;
 			children = (
 				41DFD46B30028F7D00608C7A /* Analytics.swift */,
+				41AD10132F68B00400BEABB8 /* CrashReporter.swift */,
 				41DFD46C30028F7D00608C7A /* Analytics+Events.swift */,
 				41DFD46D30028F7D00608C7A /* BrewAPIClient.swift */,
 				41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */,
@@ -294,6 +301,7 @@
 			isa = PBXGroup;
 			children = (
 				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
+				41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */,
 				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
 				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
@@ -339,6 +347,7 @@
 			name = CaskHub;
 			packageProductDependencies = (
 				41AD10022F68A00200BEABB8 /* TelemetryDeck */,
+				41AD10112F68B00200BEABB8 /* Sentry */,
 			);
 			productName = CaskHub;
 			productReference = 41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */;
@@ -392,6 +401,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+				41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41EBDCE22F37FD8B00BEABB8 /* Products */;
@@ -473,6 +483,7 @@
 				41DFD49B30028F7D00608C7A /* CaskIconURL.swift in Sources */,
 				41DFD49C30028F7D00608C7A /* SidebarItem.swift in Sources */,
 				41DFD49D30028F7D00608C7A /* Analytics.swift in Sources */,
+				41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */,
 				41DFD49E30028F7D00608C7A /* Analytics+Events.swift in Sources */,
 				41DFD49F30028F7D00608C7A /* BrewAPIClient.swift in Sources */,
 				41DFD4A030028F7D00608C7A /* CaskFlowReleases.swift in Sources */,
@@ -499,6 +510,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
+				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
 				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
@@ -797,6 +809,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -804,6 +824,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
 			productName = TelemetryDeck;
+		};
+		41AD10112F68B00200BEABB8 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -24,7 +24,12 @@ final class ImageCacheService {
     private static let cacheDirectory: URL = {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         let dir = caches.appendingPathComponent("CaskHub/icons", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            // Disk cache is dead for the session — icons fall back to memory-only.
+            CrashReporter.capture(error)
+        }
         return dir
     }()
 
@@ -284,7 +289,11 @@ final class ImageCacheService {
                 return
             }
             let path = await Self.cacheDirectory.appendingPathComponent("\(token).png")
-            try? pngData.write(to: path, options: .atomic)
+            do {
+                try pngData.write(to: path, options: .atomic)
+            } catch {
+                await CrashReporter.capture(error)
+            }
         }
     }
 }

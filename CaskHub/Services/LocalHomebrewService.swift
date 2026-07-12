@@ -136,6 +136,7 @@ final class LocalHomebrewService {
             refreshError = nil
         case let .failure(error):
             refreshError = error
+            CrashReporter.capture(error)
         }
         lastRefresh = .now
     }
@@ -253,8 +254,10 @@ final class LocalHomebrewService {
             runningProcesses[token] = nil
         }
 
+        let span = CrashReporter.span(name: args.first ?? "brew", operation: "brew")
         do {
             try await runBrewStreaming(token: token, args: args, cancellable: action == .installing)
+            span.finish()
             cancelRequested.remove(token)
             Analytics.caskActionCompleted(action, token: token)
             await refresh()
@@ -262,6 +265,7 @@ final class LocalHomebrewService {
             if cancelRequested.contains(token) {
                 // User cancelled — not an error. Remove the partial download
                 // brew left behind so nothing accumulates in its cache.
+                span.finish()
                 cancelRequested.remove(token)
                 Task.detached(priority: .utility) {
                     Self.cleanupIncompleteDownloads(since: startedAt)
@@ -269,6 +273,8 @@ final class LocalHomebrewService {
                 await refresh()
                 return
             }
+            span.finish(error: error)
+            CrashReporter.capture(error)
             Analytics.caskActionFailed(action, token: token)
             if let error = error as? LocalHomebrewError {
                 actionErrors[token] = error.errorDescription

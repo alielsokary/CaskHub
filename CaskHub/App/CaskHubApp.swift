@@ -30,6 +30,7 @@ struct CaskHubApp: App {
 
     init() {
         BrandFonts.register()
+        CrashReporter.start()
         Analytics.start()
         AppTheme.apply(UserDefaults.standard.string(forKey: "appTheme") ?? AppTheme.system.rawValue)
 
