@@ -42,6 +42,10 @@ enum Analytics {
     }
 
     static func send(_ signalName: String, parameters: [String: String] = [:]) {
+        // Usage events double as pre-crash breadcrumbs. Governed by the
+        // crash-reporting consent, not the analytics one — breadcrumbs only
+        // leave the machine attached to a Sentry event.
+        CrashReporter.breadcrumb(signalName, data: parameters)
         provider.send(signalName, parameters: parameters)
     }
 }

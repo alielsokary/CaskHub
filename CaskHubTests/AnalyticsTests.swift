@@ -162,4 +162,34 @@ final class AnalyticsTests: XCTestCase {
             [:]
         ])
     }
+
+    // MARK: - Crash-report breadcrumbs
+
+    func test_send_records_breadcrumb_regardless_of_analytics_consent() {
+        let crashSpy = SpyCrashReporterProvider()
+        let originalCrash = CrashReporter.provider
+        CrashReporter.provider = crashSpy
+        defer { CrashReporter.provider = originalCrash }
+        UserDefaults.standard.set(false, forKey: Analytics.enabledKey)
+
+        Analytics.send("Page.opened", parameters: ["page": "installed"])
+
+        XCTAssertEqual(crashSpy.breadcrumbs.last?.message, "Page.opened")
+        XCTAssertEqual(crashSpy.breadcrumbs.last?.data, ["page": "installed"])
+    }
+
+    func test_send_skips_breadcrumb_when_crash_reporting_is_off() {
+        let crashSpy = SpyCrashReporterProvider()
+        let originalCrash = CrashReporter.provider
+        CrashReporter.provider = crashSpy
+        defer {
+            CrashReporter.provider = originalCrash
+            UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
+        }
+        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+
+        Analytics.send("Page.opened")
+
+        XCTAssertTrue(crashSpy.breadcrumbs.isEmpty)
+    }
 }
