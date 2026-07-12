@@ -13,17 +13,13 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_fetch_casks_excludes_deprecated_disabled_versioned_and_font_casks() async {
-        let api = MockBrewAPIClient()
-        api.casks = [
+        let (vm, _) = await makeSUT(casks: [
             makeCask("firefox"),
             makeCask("legacy-app", deprecated: true),
             makeCask("dead-app", disabled: true),
             makeCask("node@18"),
             makeCask("font-fira-code")
-        ]
-        let vm = makeViewModel(api: api)
-
-        await vm.fetchCasks()
+        ])
 
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
         XCTAssertNil(vm.errorMessage)
@@ -61,14 +57,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_filtered_casks_matches_search_in_name_token_and_description() async {
-        let api = MockBrewAPIClient()
-        api.casks = [
+        let (vm, _) = await makeSUT(casks: [
             makeCask("visual-studio-code", name: "Visual Studio Code"),
             makeCask("firefox", name: "Firefox", desc: "Web browser"),
             makeCask("slack", name: "Slack")
-        ]
-        let vm = makeViewModel(api: api)
-        await vm.fetchCasks()
+        ])
 
         vm.searchText = "browser" // description match
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
@@ -99,10 +92,10 @@ final class CaskCatalogViewModelTests: XCTestCase {
                 "developer-tools": CategoryDefinition(displayName: "Developer Tools", icon: "hammer")
             ]
         )
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("firefox"), makeCask("slack"), makeCask("iterm2")]
-        let vm = makeViewModel(api: api, categories: categories)
-        await vm.fetchCasks()
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("firefox"), makeCask("slack"), makeCask("iterm2")],
+            categories: categories
+        )
 
         vm.selectedSidebar = .category("browsers")
 
@@ -119,15 +112,15 @@ final class CaskCatalogViewModelTests: XCTestCase {
             "slack": installation("slack", version: "2.0"),     // current
             "chrome": installation("chrome", version: "1.0")    // outdated but auto-updates
         ]
-        let api = MockBrewAPIClient()
-        api.casks = [
-            makeCask("firefox", version: "2.0"),
-            makeCask("slack", version: "2.0"),
-            makeCask("chrome", version: "3.0", autoUpdates: true),
-            makeCask("iterm2", version: "9.9")
-        ]
-        let vm = makeViewModel(api: api, localHomebrew: local)
-        await vm.fetchCasks()
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("firefox", version: "2.0"),
+                makeCask("slack", version: "2.0"),
+                makeCask("chrome", version: "3.0", autoUpdates: true),
+                makeCask("iterm2", version: "9.9")
+            ],
+            localHomebrew: local
+        )
 
         vm.selectedSidebar = .library(.installed)
         XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["firefox", "slack", "chrome"])
@@ -144,10 +137,10 @@ final class CaskCatalogViewModelTests: XCTestCase {
             "new-app": dateString(daysAgo: 5),
             "old-app": dateString(daysAgo: 100)
         ]
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("new-app"), makeCask("old-app"), makeCask("undated-app")]
-        let vm = makeViewModel(api: api, recentlyAdded: recent)
-        await vm.fetchCasks()
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("new-app"), makeCask("old-app"), makeCask("undated-app")],
+            recentlyAdded: recent
+        )
 
         vm.selectedSidebar = .discover(.recentlyAdded)
 
@@ -165,13 +158,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
             "bravo": dateString(daysAgo: 1),
             "alpha": dateString(daysAgo: 50)
         ]
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("alpha"), makeCask("charlie"), makeCask("bravo")]
-        api.analyticsResponses[.days365] = analyticsResponse([
-            ("bravo", "300"), ("alpha", "200"), ("charlie", "100")
-        ])
-        let vm = makeViewModel(api: api, recentlyAdded: recent)
-        await vm.fetchCasks()
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("alpha"), makeCask("charlie"), makeCask("bravo")],
+            analytics: [("bravo", "300"), ("alpha", "200"), ("charlie", "100")],
+            recentlyAdded: recent
+        )
 
         vm.sortOption = .mostPopular
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["bravo", "alpha", "charlie"])
@@ -203,13 +194,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
             "developer-tools": CategoryDefinition(displayName: "Developer Tools", icon: "hammer"),
             "other": CategoryDefinition(displayName: "Other", icon: "square")
         ])
-        let api = MockBrewAPIClient()
-        api.casks = (browserTokens + ["misc-app"]).map { makeCask($0) }
-        api.analyticsResponses[.days365] = analyticsResponse(
-            browserTokens.enumerated().map { ($0.element, "\(($0.offset + 1) * 100)") }
+        let (vm, _) = await makeSUT(
+            casks: (browserTokens + ["misc-app"]).map { makeCask($0) },
+            analytics: browserTokens.enumerated().map { ($0.element, "\(($0.offset + 1) * 100)") },
+            categories: categories
         )
-        let vm = makeViewModel(api: api, categories: categories)
-        await vm.fetchCasks()
 
         let sections = vm.browseSections
 
@@ -229,13 +218,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
             "old-hit": dateString(daysAgo: 20),
             "new-app": dateString(daysAgo: 1)
         ]
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("old-hit"), makeCask("new-app")]
-        api.analyticsResponses[.days365] = analyticsResponse([
-            ("old-hit", "1000"), ("new-app", "10")
-        ])
-        let vm = makeViewModel(api: api, recentlyAdded: recent)
-        await vm.fetchCasks()
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("old-hit"), makeCask("new-app")],
+            analytics: [("old-hit", "1000"), ("new-app", "10")],
+            recentlyAdded: recent
+        )
 
         let shelf = vm.browseSections.first { $0.title == "Recently Added" }
         XCTAssertEqual(shelf?.casks.map(\.token), ["new-app", "old-hit"])
@@ -245,13 +232,10 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_formatted_downloads_abbreviates_thousands_and_millions() async {
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("big"), makeCask("mid"), makeCask("small"), makeCask("zero")]
-        api.analyticsResponses[.days365] = analyticsResponse([
-            ("big", "2,500,000"), ("mid", "3,400"), ("small", "999"), ("zero", "0")
-        ])
-        let vm = makeViewModel(api: api)
-        await vm.fetchCasks()
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("big"), makeCask("mid"), makeCask("small"), makeCask("zero")],
+            analytics: [("big", "2,500,000"), ("mid", "3,400"), ("small", "999"), ("zero", "0")]
+        )
 
         XCTAssertEqual(vm.formattedDownloads(for: "big"), "2.5M")
         XCTAssertEqual(vm.formattedDownloads(for: "mid"), "3.4K")
@@ -262,22 +246,17 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_duplicate_analytics_entries_keep_the_max_count() async {
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("firefox")]
-        api.analyticsResponses[.days365] = analyticsResponse([
-            ("firefox", "100"), ("firefox", "250")
-        ])
-        let vm = makeViewModel(api: api)
-        await vm.fetchCasks()
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("firefox")],
+            analytics: [("firefox", "100"), ("firefox", "250")]
+        )
 
         XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "250")
     }
 
     @MainActor
     func test_select_analytics_period_fetches_each_period_once() async {
-        let api = MockBrewAPIClient()
-        let vm = makeViewModel(api: api)
-        await vm.fetchCasks()
+        let (vm, api) = await makeSUT()
         XCTAssertEqual(api.analyticsFetches, [.days365])
 
         await vm.selectAnalyticsPeriod(.days30)
@@ -290,12 +269,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_top_charts_uses_selected_period_while_other_pages_stay_on_year() async {
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("firefox")]
-        api.analyticsResponses[.days365] = analyticsResponse([("firefox", "100")])
+        let (vm, api) = await makeSUT(
+            casks: [makeCask("firefox")],
+            analytics: [("firefox", "100")]
+        )
         api.analyticsResponses[.days30] = analyticsResponse([("firefox", "5,000")])
-        let vm = makeViewModel(api: api)
-        await vm.fetchCasks()
 
         vm.selectedSidebar = .discover(.topCharts)
         await vm.selectAnalyticsPeriod(.days30)

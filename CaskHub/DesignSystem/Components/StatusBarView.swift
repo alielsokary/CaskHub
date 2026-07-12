@@ -11,6 +11,7 @@ struct StatusBarView: View {
     var caskCount: Int
     var updatesCount: Int = 0
     var brewVersion: String?
+    var caskFlowRelease: String?
 
     var body: some View {
         HStack(spacing: 16) {
@@ -55,7 +56,8 @@ struct StatusBarView: View {
         var parts: [String] = []
         if let brewVersion { parts.append("brew \(brewVersion)") }
         parts.append("tap homebrew/cask")
-        parts.append("\(caskCount.formatted()) casks")
+        if caskCount > 0 { parts.append("\(caskCount.formatted()) casks") }
+        if let caskFlowRelease { parts.append(caskFlowRelease) }
         return parts.joined(separator: " · ")
     }
 }
@@ -63,7 +65,7 @@ struct StatusBarView: View {
 #Preview {
     ZStack(alignment: .bottom) {
         WindowBackdrop()
-        StatusBarView(caskCount: 3781, updatesCount: 2)
+        StatusBarView(caskCount: 3781, updatesCount: 2, caskFlowRelease: "caskflow-v2026.07.10")
     }
     .frame(width: 700, height: 200)
 }

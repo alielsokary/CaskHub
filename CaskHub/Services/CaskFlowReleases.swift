@@ -19,7 +19,6 @@ enum CaskFlowReleases {
     /// network, HTTP, or decoding failure — callers keep their current data.
     static func fetch<T: Decodable>(_: T.Type, asset: String) async -> T? {
         var request = URLRequest(url: baseURL.appendingPathComponent(asset))
-        request.cachePolicy = .returnCacheDataElseLoad
         request.timeoutInterval = 10
 
         guard let (data, response) = try? await URLSession.shared.data(for: request),
