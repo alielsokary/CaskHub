@@ -76,8 +76,11 @@ echo "==> Stapling"
 xcrun stapler staple "$APP"
 spctl -a -t exec -vv "$APP"
 
+# --norsrc/--noextattr/--noqtn: keep AppleDouble (._*) entries out of the zip —
+# some unzippers write them as literal files inside the signed bundle and
+# Gatekeeper then rejects it as "unsealed contents".
 ZIP="$WORK/updates/CaskHub-$VERSION.zip"
-ditto -c -k --keepParent "$APP" "$ZIP"
+ditto -c -k --norsrc --noextattr --noqtn --keepParent "$APP" "$ZIP"
 
 # --- Appcast ------------------------------------------------------------------
 # ponytail: appcast lists only the latest version — enough for Sparkle to offer
