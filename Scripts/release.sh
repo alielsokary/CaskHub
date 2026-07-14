@@ -98,7 +98,8 @@ cp "$WORK/updates/appcast.xml" "$REPO_ROOT/appcast.xml"
 
 # --- Publish ------------------------------------------------------------------
 echo "==> Creating GitHub release v$VERSION"
-gh release create "v$VERSION" "$ZIP" --title "CaskHub v$VERSION" --generate-notes
+gh release create "v$VERSION" "$ZIP" --title "CaskHub v$VERSION" --generate-notes \
+    --target "$(git rev-parse HEAD)"
 
 echo "==> Committing appcast"
 git add appcast.xml
