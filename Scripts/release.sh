@@ -17,6 +17,12 @@ DOWNLOAD_URL_PREFIX="https://github.com/alielsokary/CaskHub/releases/download/v$
 cd "$REPO_ROOT"
 
 # --- Preflight ---------------------------------------------------------------
+BRANCH="$(git branch --show-current)"
+if [[ "$BRANCH" != release/* ]]; then
+    echo "error: releases are cut from release/* branches (current: $BRANCH)" >&2
+    exit 1
+fi
+
 if [[ -n "$(git status --porcelain)" ]]; then
     echo "error: working tree not clean — commit or stash first" >&2
     exit 1
