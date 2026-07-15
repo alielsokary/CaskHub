@@ -41,9 +41,7 @@ final class CaskCatalogViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:]
-    private(set) var analyticsPeriod: AnalyticsPeriod = .days365 {
-        didSet { UserDefaults.standard.set(analyticsPeriod.rawValue, forKey: Self.periodKey) }
-    }
+    private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     var searchText = ""
 
     private static let periodKey = "analyticsPeriod"
@@ -65,34 +63,41 @@ final class CaskCatalogViewModel {
     var selectedSidebar: SidebarSelection = .discover(.browse)
 
     /// Window for the Recently Added page and Browse shelf.
-    var recentlyAddedWindow: RecentlyAddedWindow = .days30 {
-        didSet { UserDefaults.standard.set(recentlyAddedWindow.rawValue, forKey: Self.windowKey) }
-    }
+    private(set) var recentlyAddedWindow: RecentlyAddedWindow = .days30
 
     private let apiClient: BrewAPIClientProtocol
     private let categoryService: CategoryService
     private let recentlyAdded: RecentlyAddedService
     private let localHomebrew: LocalHomebrewService
+    private let defaults: UserDefaults
 
     init(
         apiClient: BrewAPIClientProtocol,
         categoryService: CategoryService,
         recentlyAdded: RecentlyAddedService,
-        localHomebrew: LocalHomebrewService
+        localHomebrew: LocalHomebrewService,
+        defaults: UserDefaults = .standard
     ) {
         self.apiClient = apiClient
         self.categoryService = categoryService
         self.recentlyAdded = recentlyAdded
         self.localHomebrew = localHomebrew
+        self.defaults = defaults
 
-        // Restore persisted picks (didSet doesn't fire during init).
-        if let raw = UserDefaults.standard.string(forKey: Self.periodKey),
+        // Restore persisted picks.
+        if let raw = defaults.string(forKey: Self.periodKey),
            let period = AnalyticsPeriod(rawValue: raw) {
             analyticsPeriod = period
         }
-        if let window = RecentlyAddedWindow(rawValue: UserDefaults.standard.integer(forKey: Self.windowKey)) {
+        if let window = RecentlyAddedWindow(rawValue: defaults.integer(forKey: Self.windowKey)) {
             recentlyAddedWindow = window
         }
+    }
+
+    /// Switches the Recently Added window and remembers the pick.
+    func selectRecentlyAddedWindow(_ window: RecentlyAddedWindow) {
+        recentlyAddedWindow = window
+        defaults.set(window.rawValue, forKey: Self.windowKey)
     }
 
     // MARK: - Sidebar Counts
@@ -259,6 +264,7 @@ final class CaskCatalogViewModel {
     /// Switches the Top Charts window, fetching that period's data on first use.
     func selectAnalyticsPeriod(_ period: AnalyticsPeriod) async {
         analyticsPeriod = period
+        defaults.set(period.rawValue, forKey: Self.periodKey)
         guard analyticsByPeriod[period] == nil else { return }
         if let analytics = try? await apiClient.fetchAnalytics(period: period) {
             analyticsByPeriod[period] = Self.countsByToken(from: analytics)

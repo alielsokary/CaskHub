@@ -58,7 +58,7 @@ struct ContentView: View {
                     recentWindow: selectedSidebar == .discover(.recentlyAdded) ? viewModel.recentlyAddedWindow : nil,
                     onSelectWindow: {
                         Analytics.recentWindowChanged($0)
-                        viewModel.recentlyAddedWindow = $0
+                        viewModel.selectRecentlyAddedWindow($0)
                     },
                     // Sections have a fixed popularity order; sorting is a no-op there.
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
