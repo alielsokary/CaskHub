@@ -29,7 +29,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(width: 400, height: 280)
+        .frame(width: 460, height: 480)
     }
 }
 
@@ -92,10 +92,13 @@ struct GeneralSettingsView: View {
                 Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
             }
             Section("Storage") {
-                Button("Clear Icon Cache") { imageCache.clearCache() }
-                Text("Removes cached app icons. They re-download the next time each app is shown.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Removes cached app icons. They re-download the next time each app is shown.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Button("Clear Icon Cache") { imageCache.clearCache() }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .formStyle(.grouped)
