@@ -41,8 +41,13 @@ final class CaskCatalogViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:]
-    private(set) var analyticsPeriod: AnalyticsPeriod = .days365
+    private(set) var analyticsPeriod: AnalyticsPeriod = .days365 {
+        didSet { UserDefaults.standard.set(analyticsPeriod.rawValue, forKey: Self.periodKey) }
+    }
     var searchText = ""
+
+    private static let periodKey = "analyticsPeriod"
+    private static let windowKey = "recentlyAddedWindow"
 
     /// Top Charts respects the picked period; every other section stays on 365d.
     /// Falls back to 365d while a shorter period is still loading so the
@@ -60,7 +65,9 @@ final class CaskCatalogViewModel {
     var selectedSidebar: SidebarSelection = .discover(.browse)
 
     /// Window for the Recently Added page and Browse shelf.
-    var recentlyAddedWindow: RecentlyAddedWindow = .days30
+    var recentlyAddedWindow: RecentlyAddedWindow = .days30 {
+        didSet { UserDefaults.standard.set(recentlyAddedWindow.rawValue, forKey: Self.windowKey) }
+    }
 
     private let apiClient: BrewAPIClientProtocol
     private let categoryService: CategoryService
@@ -77,6 +84,15 @@ final class CaskCatalogViewModel {
         self.categoryService = categoryService
         self.recentlyAdded = recentlyAdded
         self.localHomebrew = localHomebrew
+
+        // Restore persisted picks (didSet doesn't fire during init).
+        if let raw = UserDefaults.standard.string(forKey: Self.periodKey),
+           let period = AnalyticsPeriod(rawValue: raw) {
+            analyticsPeriod = period
+        }
+        if let window = RecentlyAddedWindow(rawValue: UserDefaults.standard.integer(forKey: Self.windowKey)) {
+            recentlyAddedWindow = window
+        }
     }
 
     // MARK: - Sidebar Counts

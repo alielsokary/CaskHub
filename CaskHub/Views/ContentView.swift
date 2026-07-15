@@ -17,7 +17,7 @@ struct ContentView: View {
     @Environment(RecentlyAddedService.self) private var recentlyAdded
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
-    @State private var viewMode: ViewMode = .grid
+    @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
