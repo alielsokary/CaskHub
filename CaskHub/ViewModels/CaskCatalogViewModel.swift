@@ -44,6 +44,9 @@ final class CaskCatalogViewModel {
     private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     var searchText = ""
 
+    private static let periodKey = "analyticsPeriod"
+    private static let windowKey = "recentlyAddedWindow"
+
     /// Top Charts respects the picked period; every other section stays on 365d.
     /// Falls back to 365d while a shorter period is still loading so the
     /// popularity sort doesn't collapse to arbitrary order.
@@ -60,23 +63,35 @@ final class CaskCatalogViewModel {
     var selectedSidebar: SidebarSelection = .discover(.browse)
 
     /// Window for the Recently Added page and Browse shelf.
-    var recentlyAddedWindow: RecentlyAddedWindow = .days30
+    private(set) var recentlyAddedWindow: RecentlyAddedWindow = .days30
 
     private let apiClient: BrewAPIClientProtocol
     private let categoryService: CategoryService
     private let recentlyAdded: RecentlyAddedService
     private let localHomebrew: LocalHomebrewService
+    private let defaults: UserDefaults
 
     init(
         apiClient: BrewAPIClientProtocol,
         categoryService: CategoryService,
         recentlyAdded: RecentlyAddedService,
-        localHomebrew: LocalHomebrewService
+        localHomebrew: LocalHomebrewService,
+        defaults: UserDefaults = .standard
     ) {
         self.apiClient = apiClient
         self.categoryService = categoryService
         self.recentlyAdded = recentlyAdded
         self.localHomebrew = localHomebrew
+        self.defaults = defaults
+
+        // Restore persisted picks.
+        if let raw = defaults.string(forKey: Self.periodKey),
+           let period = AnalyticsPeriod(rawValue: raw) {
+            analyticsPeriod = period
+        }
+        if let window = RecentlyAddedWindow(rawValue: defaults.integer(forKey: Self.windowKey)) {
+            recentlyAddedWindow = window
+        }
     }
 
     // MARK: - Sidebar Counts
@@ -240,9 +255,16 @@ final class CaskCatalogViewModel {
         isLoading = false
     }
 
+    /// Switches the Recently Added window and remembers the pick.
+    func selectRecentlyAddedWindow(_ window: RecentlyAddedWindow) {
+        recentlyAddedWindow = window
+        defaults.set(window.rawValue, forKey: Self.windowKey)
+    }
+
     /// Switches the Top Charts window, fetching that period's data on first use.
     func selectAnalyticsPeriod(_ period: AnalyticsPeriod) async {
         analyticsPeriod = period
+        defaults.set(period.rawValue, forKey: Self.periodKey)
         guard analyticsByPeriod[period] == nil else { return }
         if let analytics = try? await apiClient.fetchAnalytics(period: period) {
             analyticsByPeriod[period] = Self.countsByToken(from: analytics)

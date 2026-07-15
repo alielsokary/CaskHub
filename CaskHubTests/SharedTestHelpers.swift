@@ -94,14 +94,26 @@ func makeViewModel(
     api: MockBrewAPIClient,
     categories: CategoryService? = nil,
     recentlyAdded: RecentlyAddedService? = nil,
-    localHomebrew: LocalHomebrewService? = nil
+    localHomebrew: LocalHomebrewService? = nil,
+    defaults: UserDefaults? = nil
 ) -> CaskCatalogViewModel {
     CaskCatalogViewModel(
         apiClient: api,
         categoryService: categories ?? CategoryService(),
         recentlyAdded: recentlyAdded ?? RecentlyAddedService(),
-        localHomebrew: localHomebrew ?? LocalHomebrewService()
+        localHomebrew: localHomebrew ?? LocalHomebrewService(),
+        // Scratch suite by default so no test ever writes the app's real prefs.
+        defaults: defaults ?? makeScratchDefaults("viewmodel-scratch")
     )
+}
+
+/// A scratch UserDefaults suite, wiped before use so persistence tests
+/// never see each other's (or the real app's) values.
+func makeScratchDefaults(_ name: String = #function) -> UserDefaults {
+    let suite = "test.\(name)"
+    let defaults = UserDefaults(suiteName: suite)!
+    defaults.removePersistentDomain(forName: suite)
+    return defaults
 }
 
 /// The arrange-and-act ritual shared by most catalog tests: a mock API
