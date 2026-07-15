@@ -9,7 +9,6 @@ import SwiftUI
 
 struct StatusBarView: View {
     var caskCount: Int
-    var updatesCount: Int = 0
     var brewVersion: String?
     var caskFlowRelease: String?
 
@@ -21,15 +20,6 @@ struct StatusBarView: View {
             Text(statusLine)
                 .font(CHType.statusMono)
                 .foregroundStyle(Color.chTextBody)
-
-            if updatesCount > 0 {
-                HStack(spacing: 5) {
-                    CountBadge(count: updatesCount)
-                    Text("updates available")
-                        .font(CHType.bodySm)
-                        .foregroundStyle(Color.chTextBody)
-                }
-            }
 
             Spacer()
 
@@ -65,7 +55,7 @@ struct StatusBarView: View {
 #Preview {
     ZStack(alignment: .bottom) {
         WindowBackdrop()
-        StatusBarView(caskCount: 3781, updatesCount: 2, caskFlowRelease: "caskflow-v2026.07.10")
+        StatusBarView(caskCount: 3781, caskFlowRelease: "caskflow-v2026.07.10")
     }
     .frame(width: 700, height: 200)
 }

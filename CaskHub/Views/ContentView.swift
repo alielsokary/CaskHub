@@ -101,7 +101,6 @@ struct ContentView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             StatusBarView(
                 caskCount: viewModel.casks.count,
-                updatesCount: viewModel.updatesCount,
                 brewVersion: localHomebrew.brewVersion,
                 caskFlowRelease: categoryService.releaseTag
             )
@@ -161,6 +160,10 @@ struct ContentView: View {
             // field; take it back so the search field only activates via ⌘F.
             DispatchQueue.main.async { searchFocused = false }
         }
+        .modifier(ResignFocusOnOutsideClick(
+            isFocused: { searchFocused },
+            resign: { searchFocused = false }
+        ))
     }
 
     // MARK: - Detail Content
@@ -306,6 +309,37 @@ private extension ContentView {
                 Task { await viewModel.fetchCasks() }
             }
         }
+    }
+}
+
+// MARK: - Outside-Click Focus Handling
+
+/// Drops focus when a click lands anywhere outside the active field editor.
+/// A local monitor only observes — the event is returned untouched, so
+/// buttons and the field itself stay fully clickable. While a text field is
+/// focused, its text is edited by an NSTextView (the window's field editor),
+/// so clicks inside it keep focus.
+struct ResignFocusOnOutsideClick: ViewModifier {
+    let isFocused: () -> Bool
+    let resign: () -> Void
+    @State private var monitor: Any?
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+                    if isFocused(),
+                       let frameView = event.window?.contentView?.superview,
+                       !(frameView.hitTest(event.locationInWindow) is NSTextView) {
+                        resign()
+                    }
+                    return event
+                }
+            }
+            .onDisappear {
+                if let monitor { NSEvent.removeMonitor(monitor) }
+                monitor = nil
+            }
     }
 }
 
