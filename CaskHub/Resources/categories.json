@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-06",
-  "totalCasks": 3786,
+  "generatedDate": "2026-07-09",
+  "totalCasks": 3796,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -6506,6 +6506,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "itermcompanion": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "itk-snap": {
       "primary": "designGraphics",
       "secondary": []
@@ -6513,6 +6519,12 @@
     "itsycal": {
       "primary": "menuBar",
       "secondary": []
+    },
+    "itsypad": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "itsytv": {
       "primary": "menuBar",
@@ -6891,6 +6903,13 @@
     "keeper-password-manager": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "keeperdb": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai",
+        "securityPrivacy"
+      ]
     },
     "keepingyouawake": {
       "primary": "utilities",
@@ -7742,6 +7761,12 @@
     "mac-mouse-fix": {
       "primary": "utilities",
       "secondary": []
+    },
+    "mac-sai": {
+      "primary": "utilities",
+      "secondary": [
+        "securityPrivacy"
+      ]
     },
     "macai": {
       "primary": "productivity",
@@ -10113,6 +10138,12 @@
       "primary": "games",
       "secondary": []
     },
+    "otty": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "outerbase-studio": {
       "primary": "developerTools",
       "secondary": []
@@ -11189,6 +11220,12 @@
       "primary": "audioMusic",
       "secondary": []
     },
+    "proxybridge": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "proxygen-app": {
       "primary": "developerTools",
       "secondary": []
@@ -11554,6 +11591,12 @@
       "primary": "utilities",
       "secondary": [
         "productivity",
+        "ai"
+      ]
+    },
+    "raycast-glaze": {
+      "primary": "developerTools",
+      "secondary": [
         "ai"
       ]
     },
@@ -12130,6 +12173,12 @@
     "rwts-pdfwriter": {
       "primary": "productivity",
       "secondary": []
+    },
+    "sabaki": {
+      "primary": "games",
+      "secondary": [
+        "utilities"
+      ]
     },
     "sabnzbd": {
       "primary": "utilities",
@@ -14393,6 +14442,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "toolhive-studio": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "toolreleases": {
       "primary": "utilities",
       "secondary": []
@@ -15106,6 +15161,12 @@
     "vibetunnel": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "vicinae": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "videoduke": {
       "primary": "videoMedia",
@@ -16291,5 +16352,6 @@
       "primary": "utilities",
       "secondary": []
     }
-  }
+  },
+  "releaseTag": "caskflow-v2026.07.12"
 }

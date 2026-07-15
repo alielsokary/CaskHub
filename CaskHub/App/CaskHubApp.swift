@@ -22,6 +22,8 @@ enum CaskHubMain {
 struct CaskHubApp: App {
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
 
+    @State private var updaterService = UpdaterService()
+
     @State private var categoryService: CategoryService
     @State private var recentlyAdded: RecentlyAddedService
     @State private var localHomebrew: LocalHomebrewService
@@ -63,6 +65,11 @@ struct CaskHubApp: App {
         }
         .defaultSize(width: 1360, height: 880)
         .windowStyle(.hiddenTitleBar)
+        .commands {
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updaterService)
+            }
+        }
 
         Settings {
             SettingsView()

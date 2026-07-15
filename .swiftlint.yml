@@ -1,6 +1,7 @@
 excluded:
   - skills
   - Scripts
+  - .build
 
 line_length:
   warning: 140
