@@ -5,6 +5,7 @@
 //  Created by Ali Elsokary on 08/02/2026.
 //
 
+import AppKit
 import SwiftUI
 
 @main
@@ -66,6 +67,19 @@ struct CaskHubApp: App {
         .defaultSize(width: 1360, height: 880)
         .windowStyle(.hiddenTitleBar)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About CaskHub") {
+                    NSApplication.shared.orderFrontStandardAboutPanel(options: [
+                        .credits: NSAttributedString(
+                            string: "Made with ❤️ by Ali Elsokary",
+                            attributes: [
+                                .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+                                .foregroundColor: NSColor.secondaryLabelColor
+                            ]
+                        )
+                    ])
+                }
+            }
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesView(updater: updaterService)
             }
