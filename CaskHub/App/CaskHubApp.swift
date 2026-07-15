@@ -5,7 +5,6 @@
 //  Created by Ali Elsokary on 08/02/2026.
 //
 
-import AppKit
 import SwiftUI
 
 @main
@@ -21,6 +20,8 @@ enum CaskHubMain {
 }
 
 struct CaskHubApp: App {
+    static let aboutWindowID = "about"
+
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
 
     @State private var updaterService = UpdaterService()
@@ -68,22 +69,19 @@ struct CaskHubApp: App {
         .windowStyle(.hiddenTitleBar)
         .commands {
             CommandGroup(replacing: .appInfo) {
-                Button("About CaskHub") {
-                    NSApplication.shared.orderFrontStandardAboutPanel(options: [
-                        .credits: NSAttributedString(
-                            string: "Made with ❤️ by Ali Elsokary",
-                            attributes: [
-                                .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
-                                .foregroundColor: NSColor.secondaryLabelColor
-                            ]
-                        )
-                    ])
-                }
+                AboutCommandButton()
             }
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesView(updater: updaterService)
             }
         }
+
+        Window("About CaskHub", id: Self.aboutWindowID) {
+            AboutView()
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+        .restorationBehavior(.disabled)
 
         Settings {
             SettingsView()
