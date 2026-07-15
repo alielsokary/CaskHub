@@ -5,11 +5,16 @@
 //  Created by Ali Elsokary on 21/02/2026.
 //
 
+import ServiceManagement
 import SwiftUI
 
 struct SettingsView: View {
     var body: some View {
         TabView {
+            GeneralSettingsView()
+                .tabItem {
+                    Label("General", systemImage: "gearshape")
+                }
             AppearanceSettingsView()
                 .tabItem {
                     Label("Appearance", systemImage: "paintbrush")
@@ -23,12 +28,51 @@ struct SettingsView: View {
     }
 }
 
+struct GeneralSettingsView: View {
+    @Environment(UpdaterService.self) private var updater
+    @Environment(ImageCacheService.self) private var imageCache
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+
+    var body: some View {
+        @Bindable var updater = updater
+        Form {
+            Section("Startup") {
+                Toggle("Launch CaskHub at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, enabled in
+                        setLaunchAtLogin(enabled)
+                    }
+            }
+            Section("Updates") {
+                Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
+            }
+            Section("Storage") {
+                Button("Clear Icon Cache") { imageCache.clearCache() }
+                Text("Removes cached app icons. They re-download the next time each app is shown.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+    }
+
+    private func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            CrashReporter.capture(error)
+            // Reflect the real state — the change didn't take.
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
+    }
+}
+
 struct AppearanceSettingsView: View {
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
-
-    private var theme: AppTheme {
-        AppTheme(rawValue: selectedTheme) ?? .system
-    }
 
     var body: some View {
         Form {
@@ -83,4 +127,6 @@ struct PrivacySettingsView: View {
 
 #Preview {
     SettingsView()
+        .environment(UpdaterService())
+        .environment(ImageCacheService())
 }

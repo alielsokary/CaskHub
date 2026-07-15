@@ -118,6 +118,16 @@ final class ImageCacheService {
         return result
     }
 
+    /// Wipes the in-memory and on-disk icon caches. Each icon re-downloads
+    /// through the normal CaskFlow → App-Fair chain the next time it's shown.
+    func clearCache() {
+        memoryCache.removeAllObjects()
+        try? FileManager.default.removeItem(at: Self.cacheDirectory)
+        try? FileManager.default.createDirectory(
+            at: Self.cacheDirectory, withIntermediateDirectories: true
+        )
+    }
+
     // MARK: - Private
 
     /// gotResponse distinguishes "server said no" (404 etc.) from transport
