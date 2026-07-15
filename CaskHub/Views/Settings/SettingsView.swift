@@ -146,23 +146,32 @@ struct PrivacySettingsView: View {
 
     var body: some View {
         Form {
-            Toggle("Share anonymous usage analytics", isOn: $analyticsEnabled)
-            Text("""
-            Helps improve CaskHub via TelemetryDeck. No personal data, \
-            no tracking across apps — only anonymized usage signals.
-            """)
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            Toggle("Share crash reports", isOn: $crashReportingEnabled)
-            Text("""
-            Sends crash reports and error diagnostics to Sentry so bugs \
-            get found and fixed faster.
-            """)
-            .font(.callout)
-            .foregroundStyle(.secondary)
+            LabeledContent("Analytics:") {
+                checkboxRow(
+                    "Share anonymous usage analytics",
+                    isOn: $analyticsEnabled,
+                    description: """
+                    Helps improve CaskHub by sending anonymized usage signals \
+                    via TelemetryDeck. No personal data is collected and it \
+                    cannot be used to identify you.
+                    """
+                )
+            }
+            LabeledContent("Crash Report:") {
+                checkboxRow(
+                    "Share crash reports",
+                    isOn: $crashReportingEnabled,
+                    description: """
+                    Helps improve CaskHub's stability by sending crash reports \
+                    and error diagnostics to Sentry so bugs get found and \
+                    fixed faster.
+                    """
+                )
+            }
         }
-        .formStyle(.grouped)
-        .padding()
+        .formStyle(.columns)
+        .padding(24)
+        .frame(maxHeight: .infinity, alignment: .top)
         .onChange(of: analyticsEnabled) { _, isOn in
             Analytics.refresh()
             if isOn { Analytics.analyticsReEnabled() }
@@ -170,6 +179,24 @@ struct PrivacySettingsView: View {
         .onChange(of: crashReportingEnabled) { _, _ in
             CrashReporter.refresh()
         }
+    }
+
+    /// Checkbox with its explanation underneath, indented to the checkbox title.
+    private func checkboxRow(
+        _ title: String,
+        isOn: Binding<Bool>,
+        description: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(title, isOn: isOn)
+                .toggleStyle(.checkbox)
+            Text(description)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.leading, 20)
+        }
+        .padding(.bottom, 12)
     }
 }
 
