@@ -92,13 +92,12 @@ struct GeneralSettingsView: View {
                 Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
             }
             Section("Storage") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Removes cached app icons. They re-download the next time each app is shown.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    Button("Clear Icon Cache") { imageCache.clearCache() }
+                LabeledContent("Clear cached app icons") {
+                    Button("Clear Cache") { imageCache.clearCache() }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Removes cached app icons. They re-download the next time each app is shown.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
