@@ -5,8 +5,6 @@
 //  Created by Ali Elsokary on 08/02/2026.
 //
 
-import Combine
-import Sparkle
 import SwiftUI
 
 @main
@@ -24,11 +22,7 @@ enum CaskHubMain {
 struct CaskHubApp: App {
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
 
-    private let updaterController = SPUStandardUpdaterController(
-        startingUpdater: true,
-        updaterDelegate: nil,
-        userDriverDelegate: nil
-    )
+    @State private var updaterService = UpdaterService()
 
     @State private var categoryService: CategoryService
     @State private var recentlyAdded: RecentlyAddedService
@@ -73,39 +67,12 @@ struct CaskHubApp: App {
         .windowStyle(.hiddenTitleBar)
         .commands {
             CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updater: updaterController.updater)
+                CheckForUpdatesView(updater: updaterService)
             }
         }
 
         Settings {
             SettingsView()
         }
-    }
-}
-
-/// Menu item that stays disabled while Sparkle is mid-check, per Sparkle's recommended SwiftUI integration.
-private final class CheckForUpdatesViewModel: ObservableObject {
-    @Published var canCheckForUpdates = false
-
-    init(updater: SPUUpdater) {
-        updater.publisher(for: \.canCheckForUpdates)
-            .assign(to: &$canCheckForUpdates)
-    }
-}
-
-struct CheckForUpdatesView: View {
-    @ObservedObject private var viewModel: CheckForUpdatesViewModel
-    private let updater: SPUUpdater
-
-    init(updater: SPUUpdater) {
-        self.updater = updater
-        self.viewModel = CheckForUpdatesViewModel(updater: updater)
-    }
-
-    var body: some View {
-        Button("Check for Updates…") {
-            updater.checkForUpdates()
-        }
-        .disabled(!viewModel.canCheckForUpdates)
     }
 }
