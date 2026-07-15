@@ -21,7 +21,6 @@ struct ContentView: View {
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
-    @State private var clickMonitor: Any?
 
     private let columns = Array(
         repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
@@ -160,25 +159,11 @@ struct ContentView: View {
             // AppKit hands the window's initial key focus to the first text
             // field; take it back so the search field only activates via ⌘F.
             DispatchQueue.main.async { searchFocused = false }
-
-            // Clicking anywhere outside the active field editor drops search
-            // focus. A local monitor only observes — the event is returned
-            // untouched, so buttons and the field itself stay fully clickable.
-            // While focused, the field's text is edited by an NSTextView
-            // (the window's field editor), so clicks inside it keep focus.
-            clickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
-                if searchFocused,
-                   let frameView = event.window?.contentView?.superview,
-                   !(frameView.hitTest(event.locationInWindow) is NSTextView) {
-                    searchFocused = false
-                }
-                return event
-            }
         }
-        .onDisappear {
-            if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
-            clickMonitor = nil
-        }
+        .modifier(ResignFocusOnOutsideClick(
+            isFocused: { searchFocused },
+            resign: { searchFocused = false }
+        ))
     }
 
     // MARK: - Detail Content
@@ -324,6 +309,37 @@ private extension ContentView {
                 Task { await viewModel.fetchCasks() }
             }
         }
+    }
+}
+
+// MARK: - Outside-Click Focus Handling
+
+/// Drops focus when a click lands anywhere outside the active field editor.
+/// A local monitor only observes — the event is returned untouched, so
+/// buttons and the field itself stay fully clickable. While a text field is
+/// focused, its text is edited by an NSTextView (the window's field editor),
+/// so clicks inside it keep focus.
+struct ResignFocusOnOutsideClick: ViewModifier {
+    let isFocused: () -> Bool
+    let resign: () -> Void
+    @State private var monitor: Any?
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+                    if isFocused(),
+                       let frameView = event.window?.contentView?.superview,
+                       !(frameView.hitTest(event.locationInWindow) is NSTextView) {
+                        resign()
+                    }
+                    return event
+                }
+            }
+            .onDisappear {
+                if let monitor { NSEvent.removeMonitor(monitor) }
+                monitor = nil
+            }
     }
 }
 
