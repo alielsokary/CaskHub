@@ -90,6 +90,11 @@ struct ContentView: View {
             // The hidden title bar still reserves toolbar height as safe area;
             // ignore it so the top bar sits 16pt from the window edge.
             .ignoresSafeArea(.container, edges: .top)
+            // Click on empty space (not a button/field) drops search focus.
+            // Interactive children consume their own taps, so clicking into
+            // the search field still focuses it.
+            .contentShape(Rectangle())
+            .onTapGesture { searchFocused = false }
         }
         .overlay {
             // Invisible ⌘F target: focuses the custom search field.
@@ -101,7 +106,6 @@ struct ContentView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             StatusBarView(
                 caskCount: viewModel.casks.count,
-                updatesCount: viewModel.updatesCount,
                 brewVersion: localHomebrew.brewVersion,
                 caskFlowRelease: categoryService.releaseTag
             )
