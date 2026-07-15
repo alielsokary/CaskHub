@@ -20,8 +20,6 @@ enum CaskHubMain {
 }
 
 struct CaskHubApp: App {
-    static let aboutWindowID = "about"
-
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
 
     @State private var updaterService = UpdaterService()
@@ -68,20 +66,10 @@ struct CaskHubApp: App {
         .defaultSize(width: 1360, height: 880)
         .windowStyle(.hiddenTitleBar)
         .commands {
-            CommandGroup(replacing: .appInfo) {
-                AboutCommandButton()
-            }
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesView(updater: updaterService)
             }
         }
-
-        Window("About CaskHub", id: Self.aboutWindowID) {
-            AboutView()
-        }
-        .windowResizability(.contentSize)
-        .defaultPosition(.center)
-        .restorationBehavior(.disabled)
 
         Settings {
             SettingsView()

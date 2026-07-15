@@ -5,6 +5,7 @@
 //  Created by Ali Elsokary on 21/02/2026.
 //
 
+import AppKit
 import ServiceManagement
 import SwiftUI
 
@@ -23,8 +24,53 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")
                 }
+            AboutSettingsView()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
         }
         .frame(width: 400, height: 280)
+    }
+}
+
+struct AboutSettingsView: View {
+    private var version: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = info?["CFBundleVersion"] as? String ?? "—"
+        return "Version \(short) (\(build))"
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(nsImage: NSApplication.shared.applicationIconImage)
+                .resizable()
+                .frame(width: 72, height: 72)
+
+            Text("CaskHub")
+                .font(.title2.bold())
+
+            Text(version)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+
+            Text("Made with ❤️ by Ali Elsokary")
+                .font(.callout)
+                .padding(.top, 4)
+
+            Link("github.com/alielsokary/CaskHub",
+                 destination: URL(string: "https://github.com/alielsokary/CaskHub")!)
+                .font(.callout)
+
+            Spacer()
+
+            Text("© 2026 Ali Elsokary. All rights reserved.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
 }
 
