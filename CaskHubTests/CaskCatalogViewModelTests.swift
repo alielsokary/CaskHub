@@ -145,7 +145,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
         vm.selectedSidebar = .discover(.recentlyAdded)
 
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["new-app"]) // default 30d window
-        vm.recentlyAddedWindow = .days90
+        vm.selectRecentlyAddedWindow(.days90)
         XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["new-app"])
     }
 
@@ -303,5 +303,37 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(crashSpy.spans.last?.name, "catalog.fetch")
         XCTAssertEqual(crashSpy.spans.last?.operation, "http")
         XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+    }
+
+    // MARK: - Persistence
+
+    @MainActor
+    func test_selected_analytics_period_and_recent_window_survive_relaunch() async {
+        let defaults = makeScratchDefaults()
+        let vm = makeViewModel(api: MockBrewAPIClient(), defaults: defaults)
+
+        await vm.selectAnalyticsPeriod(.days30)
+        vm.selectRecentlyAddedWindow(.days90)
+
+        // "Relaunch": a fresh view model over the same defaults.
+        let relaunched = makeViewModel(api: MockBrewAPIClient(), defaults: defaults)
+        XCTAssertEqual(relaunched.analyticsPeriod, .days30)
+        XCTAssertEqual(relaunched.recentlyAddedWindow, .days90)
+    }
+
+    @MainActor
+    func test_defaults_apply_when_nothing_persisted_or_value_is_garbage() {
+        let defaults = makeScratchDefaults()
+
+        let fresh = makeViewModel(api: MockBrewAPIClient(), defaults: defaults)
+        XCTAssertEqual(fresh.analyticsPeriod, .days365)
+        XCTAssertEqual(fresh.recentlyAddedWindow, .days30)
+
+        // Unknown raw values (e.g. from a future version) fall back safely.
+        defaults.set("14d", forKey: "analyticsPeriod")
+        defaults.set(45, forKey: "recentlyAddedWindow")
+        let garbled = makeViewModel(api: MockBrewAPIClient(), defaults: defaults)
+        XCTAssertEqual(garbled.analyticsPeriod, .days365)
+        XCTAssertEqual(garbled.recentlyAddedWindow, .days30)
     }
 }

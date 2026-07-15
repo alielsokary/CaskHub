@@ -17,7 +17,7 @@ struct ContentView: View {
     @Environment(RecentlyAddedService.self) private var recentlyAdded
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var selectedSidebar: SidebarSelection = .discover(.browse)
-    @State private var viewMode: ViewMode = .grid
+    @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
@@ -58,7 +58,7 @@ struct ContentView: View {
                     recentWindow: selectedSidebar == .discover(.recentlyAdded) ? viewModel.recentlyAddedWindow : nil,
                     onSelectWindow: {
                         Analytics.recentWindowChanged($0)
-                        viewModel.recentlyAddedWindow = $0
+                        viewModel.selectRecentlyAddedWindow($0)
                     },
                     // Sections have a fixed popularity order; sorting is a no-op there.
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,

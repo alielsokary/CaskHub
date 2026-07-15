@@ -73,6 +73,8 @@ struct CaskHubApp: App {
 
         Settings {
             SettingsView()
+                .environment(updaterService)
+                .environment(imageCache)
         }
     }
 }
