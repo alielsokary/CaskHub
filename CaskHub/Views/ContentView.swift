@@ -21,6 +21,7 @@ struct ContentView: View {
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
+    @State private var clickMonitor: Any?
 
     private let columns = Array(
         repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
@@ -90,11 +91,6 @@ struct ContentView: View {
             // The hidden title bar still reserves toolbar height as safe area;
             // ignore it so the top bar sits 16pt from the window edge.
             .ignoresSafeArea(.container, edges: .top)
-            // Click on empty space (not a button/field) drops search focus.
-            // Interactive children consume their own taps, so clicking into
-            // the search field still focuses it.
-            .contentShape(Rectangle())
-            .onTapGesture { searchFocused = false }
         }
         .overlay {
             // Invisible ⌘F target: focuses the custom search field.
@@ -164,6 +160,24 @@ struct ContentView: View {
             // AppKit hands the window's initial key focus to the first text
             // field; take it back so the search field only activates via ⌘F.
             DispatchQueue.main.async { searchFocused = false }
+
+            // Clicking anywhere outside the active field editor drops search
+            // focus. A local monitor only observes — the event is returned
+            // untouched, so buttons and the field itself stay fully clickable.
+            // While focused, the field's text is edited by an NSTextView
+            // (the window's field editor), so clicks inside it keep focus.
+            clickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+                if searchFocused,
+                   let frameView = event.window?.contentView?.superview,
+                   !(frameView.hitTest(event.locationInWindow) is NSTextView) {
+                    searchFocused = false
+                }
+                return event
+            }
+        }
+        .onDisappear {
+            if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
+            clickMonitor = nil
         }
     }
 
