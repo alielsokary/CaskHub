@@ -94,12 +94,6 @@ final class CaskCatalogViewModel {
         }
     }
 
-    /// Switches the Recently Added window and remembers the pick.
-    func selectRecentlyAddedWindow(_ window: RecentlyAddedWindow) {
-        recentlyAddedWindow = window
-        defaults.set(window.rawValue, forKey: Self.windowKey)
-    }
-
     // MARK: - Sidebar Counts
 
     /// Number of locally-installed, non-auto-updating casks whose installed
@@ -259,6 +253,12 @@ final class CaskCatalogViewModel {
         }
 
         isLoading = false
+    }
+
+    /// Switches the Recently Added window and remembers the pick.
+    func selectRecentlyAddedWindow(_ window: RecentlyAddedWindow) {
+        recentlyAddedWindow = window
+        defaults.set(window.rawValue, forKey: Self.windowKey)
     }
 
     /// Switches the Top Charts window, fetching that period's data on first use.
