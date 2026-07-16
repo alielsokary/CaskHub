@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-09",
-  "totalCasks": 3796,
+  "generatedDate": "2026-07-15",
+  "totalCasks": 3800,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -2196,6 +2196,12 @@
         "ai"
       ]
     },
+    "chatgpt-classic": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
+    },
     "chatterino": {
       "primary": "communication",
       "secondary": []
@@ -2653,12 +2659,6 @@
       "secondary": []
     },
     "codex": {
-      "primary": "developerTools",
-      "secondary": [
-        "ai"
-      ]
-    },
-    "codex-app": {
       "primary": "developerTools",
       "secondary": [
         "ai"
@@ -8083,6 +8083,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "markdown-preview": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "markdown-service-tools": {
       "primary": "productivity",
       "secondary": []
@@ -12701,6 +12707,12 @@
       "primary": "other",
       "secondary": []
     },
+    "siliconscope": {
+      "primary": "utilities",
+      "secondary": [
+        "menuBar"
+      ]
+    },
     "silkypix-developer-studio-se": {
       "primary": "designGraphics",
       "secondary": [
@@ -15411,6 +15423,12 @@
       "primary": "communication",
       "secondary": []
     },
+    "vorssaint": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "vorta": {
       "primary": "utilities",
       "secondary": []
@@ -15702,6 +15720,12 @@
     "wifispoof": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "willow-voice": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
     },
     "winbox": {
       "primary": "other",
@@ -16353,5 +16377,5 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.07.12"
+  "releaseTag": "caskflow-v2026.07.15"
 }
