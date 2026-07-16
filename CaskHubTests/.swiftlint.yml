@@ -1,0 +1,6 @@
+# Test-only overrides, merged on top of the root config (nested configuration).
+# Test suites grow linearly with the features they cover, so the default
+# 250-line type cap bites test classes far earlier than app classes.
+type_body_length:
+  warning: 400
+  error: 500

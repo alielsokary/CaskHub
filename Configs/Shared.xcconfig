@@ -1,0 +1,6 @@
+// Base build configuration for all targets.
+//
+// Secrets live in Secrets.xcconfig (gitignored) — copy Secrets.xcconfig.template
+// to create it.
+
+#include? "Secrets.xcconfig"

@@ -12,17 +12,19 @@ import Observation
 // MARK: - Public Types
 
 /// Snapshot of one locally-installed cask, derived from its INSTALL_RECEIPT.json.
-struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
+struct LocalCaskInstallation: Hashable, Identifiable {
     let token: String
     let installedVersion: String
     let installedAt: Date?
     let appBundleNames: [String]
 
-    var id: String { token }
+    var id: String {
+        token
+    }
 }
 
 /// Which background action is currently running for a given cask, if any.
-enum CaskAction: Equatable, Sendable {
+enum CaskAction: Equatable {
     case opening
     case installing
     case updating
@@ -30,9 +32,9 @@ enum CaskAction: Equatable, Sendable {
 
     var inProgressLabel: String {
         switch self {
-        case .opening:      return "Opening…"
-        case .installing:   return "Installing…"
-        case .updating:     return "Updating…"
+        case .opening: return "Opening…"
+        case .installing: return "Installing…"
+        case .updating: return "Updating…"
         case .uninstalling: return "Uninstalling…"
         }
     }
@@ -50,11 +52,18 @@ enum LocalHomebrewError: LocalizedError {
             return "Couldn't locate the brew binary. Is Homebrew installed?"
         case .caskroomNotFound:
             return "Couldn't locate the Homebrew Caskroom."
-        case .appBundleNotFound(let token):
+        case let .appBundleNotFound(token):
             return "Couldn't find an installed app for \(token)."
-        case .brewCommandFailed(let args, let code, let stderr):
+        case let .brewCommandFailed(args, code, stderr):
             let cmd = (["brew"] + args).joined(separator: " ")
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            // "reports different checksum" = cask; "SHA256 mismatch" = formula dependency.
+            if trimmed.contains("reports different checksum") || trimmed.contains("SHA256 mismatch") {
+                return "The download doesn't match the checksum Homebrew has on record — "
+                    + "the developer likely replaced the release file after it was published. "
+                    + "This isn't a problem with your Mac; Homebrew refuses mismatched downloads "
+                    + "for security. Try again in a day or two once the cask is updated."
+            }
             return trimmed.isEmpty
                 ? "`\(cmd)` failed (exit \(code))."
                 : "`\(cmd)` failed (exit \(code)): \(trimmed)"
@@ -75,10 +84,20 @@ enum LocalHomebrewError: LocalizedError {
 @Observable
 final class LocalHomebrewService {
     /// Token → installation snapshot. Repopulated by `refresh()`.
-    private(set) var installedCasks: [String: LocalCaskInstallation] = [:]
+    var installedCasks: [String: LocalCaskInstallation] = [:]
 
     /// Token → currently-running action, used by views to show spinners and disable buttons.
     private(set) var inFlightActions: [String: CaskAction] = [:]
+
+    /// Tokens whose install is still in the download phase — the only window
+    /// where cancelling is guaranteed residual-free (nothing staged yet).
+    private(set) var cancellableDownloads: Set<String> = []
+
+    /// Tokens the user asked to cancel; cleared when the process exits.
+    private(set) var cancelRequested: Set<String> = []
+
+    /// Token → live brew process, kept for cancellation. Not UI state.
+    @ObservationIgnored private var runningProcesses: [String: Process] = [:]
 
     /// Token → most recent error message from a failed action. Cleared on the next attempt.
     private(set) var actionErrors: [String: String] = [:]
@@ -88,6 +107,9 @@ final class LocalHomebrewService {
 
     /// Most recent error from `refresh()` itself (e.g. Caskroom missing).
     private(set) var refreshError: LocalHomebrewError?
+
+    /// Installed Homebrew version ("4.6.15"), fetched once on first refresh.
+    private(set) var brewVersion: String?
 
     private let fileManager: FileManager
 
@@ -101,16 +123,20 @@ final class LocalHomebrewService {
     /// Cheap (~ms for typical installs) — safe to call after every action.
     func refresh() async {
         let fm = fileManager
+        if brewVersion == nil {
+            brewVersion = await Self.fetchBrewVersion()
+        }
         let result = await Task.detached(priority: .userInitiated) {
             Self.scanCaskroom(fileManager: fm)
         }.value
 
         switch result {
-        case .success(let casks):
+        case let .success(casks):
             installedCasks = casks
             refreshError = nil
-        case .failure(let error):
+        case let .failure(error):
             refreshError = error
+            CrashReporter.capture(error)
         }
         lastRefresh = .now
     }
@@ -124,34 +150,18 @@ final class LocalHomebrewService {
         actionErrors[token] = nil
     }
 
-    /// TODO (Learning Mode contribution #1): Implement version comparison.
-    ///
-    /// Homebrew cask versions are NOT strict semver. Examples seen in the wild:
-    ///   - `"125.0"`           — clean
-    ///   - `"125.0,build42"`   — comma suffix is the build/revision
-    ///   - `"125.0_1"`         — underscore suffix is the cask revision
-    ///   - `"2024.10.13"`      — date-based
-    ///   - `"1.2.3-beta"`      — hyphen suffix
-    ///
-    /// You have three reasonable strategies:
-    ///
-    ///   1. **String equality** (5 lines, current placeholder):
-    ///        return installation.installedVersion != remoteVersion
-    ///      Simplest. Occasionally noisy when only the revision suffix changes.
-    ///
-    ///   2. **Normalized comparison** (~8 lines):
-    ///      Strip everything after the first `,` or `_` on both sides, then compare.
-    ///      Fewer false positives, slightly more code.
-    ///
-    ///   3. **Full semver parsing**:
-    ///      Probably overkill — many casks aren't semver at all.
-    ///
-    /// The decision shapes how often the "Updates" sidebar will flash counts at
-    /// the user. Pick the one whose trade-offs feel right for CaskHub, then
-    /// replace the body below.
+    /// Compares versions with the packaging suffix stripped — cask versions
+    /// aren't semver (`125.0,build42` has a build suffix, `125.0_1` a cask
+    /// revision), so comparing normalized prefixes avoids flagging an update
+    /// when only the packaging changed.
     func isOutdated(token: String, remoteVersion: String) -> Bool {
         guard let installation = installedCasks[token] else { return false }
-        return installation.installedVersion != remoteVersion
+        return Self.comparableVersion(installation.installedVersion)
+            != Self.comparableVersion(remoteVersion)
+    }
+
+    private nonisolated static func comparableVersion(_ version: String) -> Substring {
+        version.prefix { $0 != "," && $0 != "_" }
     }
 
     /// Single source of truth for "should this cask show an Update button / appear
@@ -166,13 +176,6 @@ final class LocalHomebrewService {
     }
 
     // MARK: - Actions
-
-    /// Returns true when the cask installs at least one `.app` bundle that we
-    /// can launch. CLI-only casks (e.g. `android-platform-tools`) return false
-    /// and the UI should not show an Open button for them.
-    func canOpenApp(token: String) -> Bool {
-        installedCasks[token]?.appBundleNames.isEmpty == false
-    }
 
     /// Launches the installed app via `NSWorkspace`. Errors are written to
     /// `actionErrors[token]` so the view has one consistent error path.
@@ -220,168 +223,121 @@ final class LocalHomebrewService {
         try await runMutation(.updating, token: token, args: ["upgrade", "--cask", token])
     }
 
+    /// Cancels an in-flight install. Only honored during the download phase —
+    /// once brew starts staging files, cancelling could leave a broken install.
+    /// Sends SIGINT to brew and its children (curl); escalates to SIGTERM if
+    /// the tree hasn't exited after 5 seconds.
+    func cancelInstall(token: String) {
+        guard cancellableDownloads.contains(token),
+              let process = runningProcesses[token] else { return }
+        cancelRequested.insert(token)
+        cancellableDownloads.remove(token)
+
+        let pid = process.processIdentifier
+        Task.detached(priority: .userInitiated) {
+            Self.signalTree(pid: pid, signal: SIGINT)
+            try? await Task.sleep(for: .seconds(5))
+            if process.isRunning { process.terminate() }
+        }
+    }
+
     // MARK: - Mutation Plumbing
 
     private func runMutation(_ action: CaskAction, token: String, args: [String]) async throws {
         guard inFlightActions[token] == nil else { return }
         inFlightActions[token] = action
         actionErrors[token] = nil
-        defer { inFlightActions[token] = nil }
+        let startedAt = Date.now
+        defer {
+            inFlightActions[token] = nil
+            cancellableDownloads.remove(token)
+            runningProcesses[token] = nil
+        }
 
+        let span = CrashReporter.span(name: args.first ?? "brew", operation: "brew")
         do {
-            try await Self.runBrew(args: args)
+            try await runBrewStreaming(token: token, args: args, cancellable: action == .installing)
+            span.finish()
+            cancelRequested.remove(token)
+            Analytics.caskActionCompleted(action, token: token)
             await refresh()
-        } catch let error as LocalHomebrewError {
-            actionErrors[token] = error.errorDescription
-            throw error
         } catch {
-            actionErrors[token] = error.localizedDescription
+            if cancelRequested.contains(token) {
+                // User cancelled — not an error. Remove the partial download
+                // brew left behind so nothing accumulates in its cache.
+                span.finish()
+                cancelRequested.remove(token)
+                Task.detached(priority: .utility) {
+                    Self.cleanupIncompleteDownloads(since: startedAt)
+                }
+                await refresh()
+                return
+            }
+            span.finish(error: error)
+            CrashReporter.capture(error)
+            Analytics.caskActionFailed(action, token: token)
+            if let error = error as? LocalHomebrewError {
+                actionErrors[token] = error.errorDescription
+            } else {
+                actionErrors[token] = error.localizedDescription
+            }
             throw error
         }
     }
 
-    /// Spawns the `brew` binary off the main actor and waits for it to exit.
-    /// stdout is discarded to `/dev/null` to avoid pipe-buffer deadlocks on chatty
-    /// commands like `brew upgrade`. stderr is captured for error reporting.
-    private nonisolated static func runBrew(args: [String]) async throws {
-        guard let brewURL = locateBrewBinary() else {
+    /// Spawns `brew` attached to a pseudo-terminal and streams its output.
+    ///
+    /// The stream is watched for the `==> Installing Cask` marker that closes
+    /// the safe-to-cancel window. The output tail doubles as stderr for error
+    /// reporting.
+    private func runBrewStreaming(token: String, args: [String], cancellable: Bool) async throws {
+        guard let brewURL = Self.locateBrewBinary() else {
             throw LocalHomebrewError.brewBinaryNotFound
         }
 
-        try await Task.detached(priority: .userInitiated) {
-            let process = Process()
-            process.executableURL = brewURL
-            process.arguments = args
-            process.standardOutput = FileHandle.nullDevice
-            let stderrPipe = Pipe()
-            process.standardError = stderrPipe
+        let process = Process()
+        process.executableURL = brewURL
+        process.arguments = args
+        // pkg-based casks run `sudo installer` internally; with no TTY sudo can't
+        // prompt. SUDO_ASKPASS makes brew pass `-A` so sudo asks via our GUI helper.
+        if let askpass = Self.ensureAskpassScript(token: token) {
+            var environment = ProcessInfo.processInfo.environment
+            environment["SUDO_ASKPASS"] = askpass.path
+            process.environment = environment
+        }
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        process.standardInput = FileHandle.nullDevice
 
-            try process.run()
+        try process.run()
+        runningProcesses[token] = process
+        if cancellable { cancellableDownloads.insert(token) }
+
+        let handle = pipe.fileHandleForReading
+        let outputTail = await Task.detached(priority: .userInitiated) { () -> String in
+            var tail = ""
+            while true {
+                let data = handle.availableData
+                guard !data.isEmpty else { break } // EOF
+                guard let text = String(data: data, encoding: .utf8) else { continue }
+                tail = String((tail + text).suffix(2000))
+
+                if text.contains("==> Installing Cask") {
+                    // Download finished — cancelling is no longer residual-free.
+                    Task { @MainActor in self.cancellableDownloads.remove(token) }
+                }
+            }
             process.waitUntilExit()
-
-            let stderr = String(
-                data: stderrPipe.fileHandleForReading.readDataToEndOfFile(),
-                encoding: .utf8
-            ) ?? ""
-
-            if process.terminationStatus != 0 {
-                throw LocalHomebrewError.brewCommandFailed(
-                    args: args,
-                    exitCode: process.terminationStatus,
-                    stderr: stderr
-                )
-            }
+            return tail
         }.value
-    }
 
-    // MARK: - Filesystem Scanning
-
-    /// Scans the Caskroom to build a map of locally-installed casks.
-    ///
-    /// **Version**: read from the version-directory NAME inside each cask directory
-    /// (e.g. `Caskroom/finetune/1.4.1/`), NOT from `INSTALL_RECEIPT.json`'s
-    /// `source.version` which freezes at the original install and never updates
-    /// after `brew upgrade`.
-    ///
-    /// **Date**: read from the filesystem modification date of the version directory,
-    /// which reflects when Homebrew staged the files for that version.
-    ///
-    /// **App bundles**: still extracted from the top-level install receipt's
-    /// `uninstall_artifacts` — the app name rarely changes between versions.
-    private nonisolated static func scanCaskroom(
-        fileManager: FileManager
-    ) -> Result<[String: LocalCaskInstallation], LocalHomebrewError> {
-        guard let caskroomURL = locateCaskroom(fileManager: fileManager) else {
-            return .failure(.caskroomNotFound)
-        }
-
-        let entries: [URL]
-        do {
-            entries = try fileManager.contentsOfDirectory(
-                at: caskroomURL,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles]
-            )
-        } catch {
-            return .success([:])
-        }
-
-        var result: [String: LocalCaskInstallation] = [:]
-        for entry in entries {
-            var isDir: ObjCBool = false
-            guard
-                fileManager.fileExists(atPath: entry.path, isDirectory: &isDir),
-                isDir.boolValue
-            else { continue }
-
-            let token = entry.lastPathComponent
-
-            // 1. Find version directories — non-hidden subdirectories of the cask
-            //    directory. `.skipsHiddenFiles` already excludes `.metadata/`.
-            guard let subDirs = try? fileManager.contentsOfDirectory(
-                at: entry,
-                includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey],
-                options: [.skipsHiddenFiles]
-            ) else { continue }
-
-            let versionDirs = subDirs.filter {
-                (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
-            }
-
-            // Pick the most recently modified version directory.
-            guard let versionDir = versionDirs.max(by: { a, b in
-                let dateA = (try? a.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-                let dateB = (try? b.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-                return dateA < dateB
-            }) else { continue }
-
-            let version = versionDir.lastPathComponent
-            let installedAt = try? versionDir.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-
-            // 2. Read the receipt for app bundle names only.
-            let receiptURL = entry
-                .appendingPathComponent(".metadata", isDirectory: true)
-                .appendingPathComponent("INSTALL_RECEIPT.json")
-
-            let appBundleNames: [String]
-            if let data = try? Data(contentsOf: receiptURL),
-               let receipt = try? InstallReceipt(jsonData: data) {
-                appBundleNames = receipt.appBundleNames
-            } else {
-                appBundleNames = []
-            }
-
-            result[token] = LocalCaskInstallation(
-                token: token,
-                installedVersion: version,
-                installedAt: installedAt,
-                appBundleNames: appBundleNames
+        if process.terminationStatus != 0 {
+            throw LocalHomebrewError.brewCommandFailed(
+                args: args,
+                exitCode: process.terminationStatus,
+                stderr: outputTail.components(separatedBy: "\n").suffix(6).joined(separator: "\n")
             )
         }
-        return .success(result)
-    }
-
-    // MARK: - Path Discovery
-
-    /// Tries `$HOMEBREW_PREFIX/Caskroom`, then Apple Silicon, then Intel default.
-    private nonisolated static func locateCaskroom(fileManager: FileManager) -> URL? {
-        var candidates: [URL] = []
-        if let prefix = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"], !prefix.isEmpty {
-            candidates.append(URL(fileURLWithPath: prefix).appendingPathComponent("Caskroom", isDirectory: true))
-        }
-        candidates.append(URL(fileURLWithPath: "/opt/homebrew/Caskroom", isDirectory: true))
-        candidates.append(URL(fileURLWithPath: "/usr/local/Caskroom", isDirectory: true))
-        return candidates.first { fileManager.fileExists(atPath: $0.path) }
-    }
-
-    /// Tries `$HOMEBREW_PREFIX/bin/brew`, then Apple Silicon, then Intel default.
-    private nonisolated static func locateBrewBinary() -> URL? {
-        var candidates: [URL] = []
-        if let prefix = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"], !prefix.isEmpty {
-            candidates.append(URL(fileURLWithPath: prefix).appendingPathComponent("bin/brew"))
-        }
-        candidates.append(URL(fileURLWithPath: "/opt/homebrew/bin/brew"))
-        candidates.append(URL(fileURLWithPath: "/usr/local/bin/brew"))
-        return candidates.first { FileManager.default.isExecutableFile(atPath: $0.path) }
     }
 }

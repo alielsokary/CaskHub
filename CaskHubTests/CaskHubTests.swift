@@ -5,32 +5,24 @@
 //  Created by Ali Elsokary on 08/02/2026.
 //
 
-import XCTest
 @testable import CaskHub
+import XCTest
 
 final class CaskHubTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    @MainActor
+    func test_display_version_strips_packaging_suffixes() {
+        XCTAssertEqual(makeCask("test", version: "125.0").displayVersion, "125.0")
+        XCTAssertEqual(makeCask("test", version: "125.0,build42").displayVersion, "125.0")
+        XCTAssertEqual(makeCask("test", version: "125.0_1").displayVersion, "125.0")
+        XCTAssertEqual(makeCask("test", version: "1.2.3-beta").displayVersion, "1.2.3")
+        XCTAssertEqual(makeCask("test", version: "2024.10.13").displayVersion, "2024.10.13")
+        // Entirely non-numeric versions fall back to the raw value.
+        XCTAssertEqual(makeCask("test", version: "beta").displayVersion, "beta")
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    @MainActor
+    func test_meta_line_omits_unknown_downloads() {
+        XCTAssertEqual(makeCask("test", version: "125.0").metaLine(downloads: "1.2M"), "↓ 1.2M · v125.0")
+        XCTAssertEqual(makeCask("test", version: "125.0").metaLine(downloads: nil), "v125.0")
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
-
 }

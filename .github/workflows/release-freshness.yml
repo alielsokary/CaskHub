@@ -1,7 +1,7 @@
 name: Release freshness
 
 # Release gate: PRs into master must ship a bundled categories.json at least
-# as new as CaskKit's latest data release. Fix is one command:
+# as new as CaskFlow's latest data release. Fix is one command:
 #   ./Scripts/sync_bundled_categories.sh && git commit -am "Sync bundled categories"
 on:
   pull_request:
@@ -16,11 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compare bundled categories.json with CaskKit's latest release
+      - name: Compare bundled categories.json with CaskFlow's latest release
         run: |
           set -euo pipefail
           curl -fsSL -o /tmp/latest.json \
-            "https://github.com/alielsokary/CaskKit/releases/latest/download/categories.json"
+            "https://github.com/alielsokary/CaskFlow/releases/latest/download/categories.json"
           python3 - << 'EOF'
           import json, sys
 

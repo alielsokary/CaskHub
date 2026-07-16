@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-06",
-  "totalCasks": 3786,
+  "generatedDate": "2026-07-15",
+  "totalCasks": 3800,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -2196,6 +2196,12 @@
         "ai"
       ]
     },
+    "chatgpt-classic": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
+    },
     "chatterino": {
       "primary": "communication",
       "secondary": []
@@ -2653,12 +2659,6 @@
       "secondary": []
     },
     "codex": {
-      "primary": "developerTools",
-      "secondary": [
-        "ai"
-      ]
-    },
-    "codex-app": {
       "primary": "developerTools",
       "secondary": [
         "ai"
@@ -6506,6 +6506,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "itermcompanion": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "itk-snap": {
       "primary": "designGraphics",
       "secondary": []
@@ -6513,6 +6519,12 @@
     "itsycal": {
       "primary": "menuBar",
       "secondary": []
+    },
+    "itsypad": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "itsytv": {
       "primary": "menuBar",
@@ -6891,6 +6903,13 @@
     "keeper-password-manager": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "keeperdb": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai",
+        "securityPrivacy"
+      ]
     },
     "keepingyouawake": {
       "primary": "utilities",
@@ -7743,6 +7762,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "mac-sai": {
+      "primary": "utilities",
+      "secondary": [
+        "securityPrivacy"
+      ]
+    },
     "macai": {
       "primary": "productivity",
       "secondary": [
@@ -8057,6 +8082,12 @@
     "marginnote": {
       "primary": "productivity",
       "secondary": []
+    },
+    "markdown-preview": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "markdown-service-tools": {
       "primary": "productivity",
@@ -10113,6 +10144,12 @@
       "primary": "games",
       "secondary": []
     },
+    "otty": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "outerbase-studio": {
       "primary": "developerTools",
       "secondary": []
@@ -11189,6 +11226,12 @@
       "primary": "audioMusic",
       "secondary": []
     },
+    "proxybridge": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "proxygen-app": {
       "primary": "developerTools",
       "secondary": []
@@ -11554,6 +11597,12 @@
       "primary": "utilities",
       "secondary": [
         "productivity",
+        "ai"
+      ]
+    },
+    "raycast-glaze": {
+      "primary": "developerTools",
+      "secondary": [
         "ai"
       ]
     },
@@ -12131,6 +12180,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "sabaki": {
+      "primary": "games",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "sabnzbd": {
       "primary": "utilities",
       "secondary": []
@@ -12651,6 +12706,12 @@
     "silicon-labs-vcp-driver": {
       "primary": "other",
       "secondary": []
+    },
+    "siliconscope": {
+      "primary": "utilities",
+      "secondary": [
+        "menuBar"
+      ]
     },
     "silkypix-developer-studio-se": {
       "primary": "designGraphics",
@@ -14393,6 +14454,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "toolhive-studio": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "toolreleases": {
       "primary": "utilities",
       "secondary": []
@@ -15107,6 +15174,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "vicinae": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "videoduke": {
       "primary": "videoMedia",
       "secondary": []
@@ -15349,6 +15422,12 @@
     "voov-meeting": {
       "primary": "communication",
       "secondary": []
+    },
+    "vorssaint": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
     },
     "vorta": {
       "primary": "utilities",
@@ -15641,6 +15720,12 @@
     "wifispoof": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "willow-voice": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
     },
     "winbox": {
       "primary": "other",
@@ -16291,5 +16376,6 @@
       "primary": "utilities",
       "secondary": []
     }
-  }
+  },
+  "releaseTag": "caskflow-v2026.07.15"
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>CaskHub</title>
+        <item>
+            <title>0.4.0</title>
+            <pubDate>Thu, 16 Jul 2026 03:13:16 +0300</pubDate>
+            <sparkle:version>147</sparkle:version>
+            <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.2</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.4.0/CaskHub-0.4.0.zip" length="4715068" type="application/octet-stream" sparkle:edSignature="cjxlB8T5bj3vXjBb+JR1jj6MYJaWoMAHo5Snv9SKkSv7jb2TzpitEisi1wdsdIeef7cpzdKWw4W06njH774SCA=="/>
+        </item>
+    </channel>
+</rss>

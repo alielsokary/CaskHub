@@ -6,15 +6,65 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
+		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
+		41AD10222F68C00300BEABB8 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10212F68C00200BEABB8 /* Sparkle */; };
+		41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10132F68B00400BEABB8 /* CrashReporter.swift */; };
+		41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */; };
+		41AD10312F68D00200BEABB8 /* UpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10302F68D00100BEABB8 /* UpdaterService.swift */; };
+		41DFD48630028F7D00608C7A /* Baloo2.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46530028F7D00608C7A /* Baloo2.ttf */; };
+		41DFD48730028F7D00608C7A /* JetBrainsMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46630028F7D00608C7A /* JetBrainsMono.ttf */; };
+		41DFD48830028F7D00608C7A /* Nunito.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46730028F7D00608C7A /* Nunito.ttf */; };
+		41DFD48930028F7D00608C7A /* categories.json in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD46930028F7D00608C7A /* categories.json */; };
+		41DFD48A30028F7D00608C7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD48430028F7D00608C7A /* Assets.xcassets */; };
+		41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44E30028F7D00608C7A /* Askpass.swift */; };
+		41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44F30028F7D00608C7A /* CaskHubApp.swift */; };
+		41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45130028F7D00608C7A /* BarrelMark.swift */; };
+		41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45230028F7D00608C7A /* CaskActionsView.swift */; };
+		41DFD48F30028F7D00608C7A /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45330028F7D00608C7A /* Controls.swift */; };
+		41DFD49030028F7D00608C7A /* GlassPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45430028F7D00608C7A /* GlassPanel.swift */; };
+		41DFD49130028F7D00608C7A /* HeroCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45530028F7D00608C7A /* HeroCard.swift */; };
+		41DFD49230028F7D00608C7A /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45630028F7D00608C7A /* StatusBarView.swift */; };
+		41DFD49330028F7D00608C7A /* TopBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45730028F7D00608C7A /* TopBarView.swift */; };
+		41DFD49430028F7D00608C7A /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45930028F7D00608C7A /* ColorTokens.swift */; };
+		41DFD49530028F7D00608C7A /* SurfaceTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45A30028F7D00608C7A /* SurfaceTokens.swift */; };
+		41DFD49630028F7D00608C7A /* TypographyTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45B30028F7D00608C7A /* TypographyTokens.swift */; };
+		41DFD49730028F7D00608C7A /* BrandFonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45D30028F7D00608C7A /* BrandFonts.swift */; };
+		41DFD49830028F7D00608C7A /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45F30028F7D00608C7A /* AppTheme.swift */; };
+		41DFD49930028F7D00608C7A /* Cask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46030028F7D00608C7A /* Cask.swift */; };
+		41DFD49A30028F7D00608C7A /* CaskAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46130028F7D00608C7A /* CaskAnalytics.swift */; };
+		41DFD49B30028F7D00608C7A /* CaskIconURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46230028F7D00608C7A /* CaskIconURL.swift */; };
+		41DFD49C30028F7D00608C7A /* SidebarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46330028F7D00608C7A /* SidebarItem.swift */; };
+		41DFD49D30028F7D00608C7A /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46B30028F7D00608C7A /* Analytics.swift */; };
+		41DFD49E30028F7D00608C7A /* Analytics+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46C30028F7D00608C7A /* Analytics+Events.swift */; };
+		41DFD49F30028F7D00608C7A /* BrewAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46D30028F7D00608C7A /* BrewAPIClient.swift */; };
+		41DFD4A030028F7D00608C7A /* CaskFlowReleases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */; };
+		41DFD4A130028F7D00608C7A /* CategoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46F30028F7D00608C7A /* CategoryService.swift */; };
+		41DFD4A230028F7D00608C7A /* ImageCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47030028F7D00608C7A /* ImageCacheService.swift */; };
+		41DFD4A330028F7D00608C7A /* InstallReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47130028F7D00608C7A /* InstallReceipt.swift */; };
+		41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */; };
+		41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */; };
+		41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */; };
+		41DFD4A730028F7D00608C7A /* CaskCatalogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */; };
+		41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47830028F7D00608C7A /* SettingsView.swift */; };
+		41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */; };
+		41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47B30028F7D00608C7A /* CaskCardView.swift */; };
+		41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47C30028F7D00608C7A /* CaskIconView.swift */; };
+		41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */; };
+		41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47E30028F7D00608C7A /* CaskRowView.swift */; };
+		41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48030028F7D00608C7A /* SidebarView.swift */; };
+		41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48230028F7D00608C7A /* ContentView.swift */; };
+		41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */; };
+		41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B130028F9F00608C7A /* CaskHubTests.swift */; };
+		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
+		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
+		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
+		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		41EBDCEF2F37FD8C00BEABB8 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 41EBDCD92F37FD8B00BEABB8 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 41EBDCE02F37FD8B00BEABB8;
-			remoteInfo = CaskHub;
-		};
-		41EBDCF92F37FD8C00BEABB8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 41EBDCD92F37FD8B00BEABB8 /* Project object */;
 			proxyType = 1;
@@ -24,34 +74,70 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		41AD10042F68A00400BEABB8 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
+		41AD10132F68B00400BEABB8 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
+		41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
+		41AD10302F68D00100BEABB8 /* UpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterService.swift; sourceTree = "<group>"; };
+		41DFD44E30028F7D00608C7A /* Askpass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Askpass.swift; sourceTree = "<group>"; };
+		41DFD44F30028F7D00608C7A /* CaskHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubApp.swift; sourceTree = "<group>"; };
+		41DFD45130028F7D00608C7A /* BarrelMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarrelMark.swift; sourceTree = "<group>"; };
+		41DFD45230028F7D00608C7A /* CaskActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionsView.swift; sourceTree = "<group>"; };
+		41DFD45330028F7D00608C7A /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
+		41DFD45430028F7D00608C7A /* GlassPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanel.swift; sourceTree = "<group>"; };
+		41DFD45530028F7D00608C7A /* HeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroCard.swift; sourceTree = "<group>"; };
+		41DFD45630028F7D00608C7A /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
+		41DFD45730028F7D00608C7A /* TopBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopBarView.swift; sourceTree = "<group>"; };
+		41DFD45930028F7D00608C7A /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
+		41DFD45A30028F7D00608C7A /* SurfaceTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceTokens.swift; sourceTree = "<group>"; };
+		41DFD45B30028F7D00608C7A /* TypographyTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypographyTokens.swift; sourceTree = "<group>"; };
+		41DFD45D30028F7D00608C7A /* BrandFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandFonts.swift; sourceTree = "<group>"; };
+		41DFD45F30028F7D00608C7A /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		41DFD46030028F7D00608C7A /* Cask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cask.swift; sourceTree = "<group>"; };
+		41DFD46130028F7D00608C7A /* CaskAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAnalytics.swift; sourceTree = "<group>"; };
+		41DFD46230028F7D00608C7A /* CaskIconURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskIconURL.swift; sourceTree = "<group>"; };
+		41DFD46330028F7D00608C7A /* SidebarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarItem.swift; sourceTree = "<group>"; };
+		41DFD46530028F7D00608C7A /* Baloo2.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Baloo2.ttf; sourceTree = "<group>"; };
+		41DFD46630028F7D00608C7A /* JetBrainsMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = JetBrainsMono.ttf; sourceTree = "<group>"; };
+		41DFD46730028F7D00608C7A /* Nunito.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Nunito.ttf; sourceTree = "<group>"; };
+		41DFD46930028F7D00608C7A /* categories.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = categories.json; sourceTree = "<group>"; };
+		41DFD46B30028F7D00608C7A /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
+		41DFD46C30028F7D00608C7A /* Analytics+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analytics+Events.swift"; sourceTree = "<group>"; };
+		41DFD46D30028F7D00608C7A /* BrewAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewAPIClient.swift; sourceTree = "<group>"; };
+		41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskFlowReleases.swift; sourceTree = "<group>"; };
+		41DFD46F30028F7D00608C7A /* CategoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryService.swift; sourceTree = "<group>"; };
+		41DFD47030028F7D00608C7A /* ImageCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheService.swift; sourceTree = "<group>"; };
+		41DFD47130028F7D00608C7A /* InstallReceipt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallReceipt.swift; sourceTree = "<group>"; };
+		41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewService.swift; sourceTree = "<group>"; };
+		41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Brew.swift"; sourceTree = "<group>"; };
+		41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyAddedService.swift; sourceTree = "<group>"; };
+		41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModel.swift; sourceTree = "<group>"; };
+		41DFD47830028F7D00608C7A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionAlerts.swift; sourceTree = "<group>"; };
+		41DFD47B30028F7D00608C7A /* CaskCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCardView.swift; sourceTree = "<group>"; };
+		41DFD47C30028F7D00608C7A /* CaskIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskIconView.swift; sourceTree = "<group>"; };
+		41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskInfoPopover.swift; sourceTree = "<group>"; };
+		41DFD47E30028F7D00608C7A /* CaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskRowView.swift; sourceTree = "<group>"; };
+		41DFD48030028F7D00608C7A /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		41DFD48230028F7D00608C7A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		41DFD48430028F7D00608C7A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
+		41DFD4B130028F9F00608C7A /* CaskHubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubTests.swift; sourceTree = "<group>"; };
+		ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewTests.swift; sourceTree = "<group>"; };
+		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
+		41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModelTests.swift; sourceTree = "<group>"; };
+		41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestHelpers.swift; sourceTree = "<group>"; };
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		41EBDCF82F37FD8C00BEABB8 /* CaskHubUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		41EBDCE32F37FD8B00BEABB8 /* CaskHub */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CaskHub;
-			sourceTree = "<group>";
-		};
-		41EBDCF12F37FD8C00BEABB8 /* CaskHubTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CaskHubTests;
-			sourceTree = "<group>";
-		};
-		41EBDCFB2F37FD8C00BEABB8 /* CaskHubUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CaskHubUITests;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		41EBDCDE2F37FD8B00BEABB8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */,
+				41AD10122F68B00300BEABB8 /* Sentry in Frameworks */,
+				41AD10222F68C00300BEABB8 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,22 +148,184 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		41EBDCF52F37FD8C00BEABB8 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		41DFD45030028F7D00608C7A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD44E30028F7D00608C7A /* Askpass.swift */,
+				41DFD44F30028F7D00608C7A /* CaskHubApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		41DFD45830028F7D00608C7A /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD45130028F7D00608C7A /* BarrelMark.swift */,
+				41DFD45230028F7D00608C7A /* CaskActionsView.swift */,
+				41DFD45330028F7D00608C7A /* Controls.swift */,
+				41DFD45430028F7D00608C7A /* GlassPanel.swift */,
+				41DFD45530028F7D00608C7A /* HeroCard.swift */,
+				41DFD45630028F7D00608C7A /* StatusBarView.swift */,
+				41DFD45730028F7D00608C7A /* TopBarView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		41DFD45C30028F7D00608C7A /* Tokens */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD45930028F7D00608C7A /* ColorTokens.swift */,
+				41DFD45A30028F7D00608C7A /* SurfaceTokens.swift */,
+				41DFD45B30028F7D00608C7A /* TypographyTokens.swift */,
+			);
+			path = Tokens;
+			sourceTree = "<group>";
+		};
+		41DFD45E30028F7D00608C7A /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD45830028F7D00608C7A /* Components */,
+				41DFD45C30028F7D00608C7A /* Tokens */,
+				41DFD45D30028F7D00608C7A /* BrandFonts.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		41DFD46430028F7D00608C7A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD45F30028F7D00608C7A /* AppTheme.swift */,
+				41DFD46030028F7D00608C7A /* Cask.swift */,
+				41DFD46130028F7D00608C7A /* CaskAnalytics.swift */,
+				41DFD46230028F7D00608C7A /* CaskIconURL.swift */,
+				41DFD46330028F7D00608C7A /* SidebarItem.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		41DFD46830028F7D00608C7A /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD46530028F7D00608C7A /* Baloo2.ttf */,
+				41DFD46630028F7D00608C7A /* JetBrainsMono.ttf */,
+				41DFD46730028F7D00608C7A /* Nunito.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		41DFD46A30028F7D00608C7A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD46830028F7D00608C7A /* Fonts */,
+				41DFD46930028F7D00608C7A /* categories.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		41DFD47530028F7D00608C7A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD46B30028F7D00608C7A /* Analytics.swift */,
+				41AD10132F68B00400BEABB8 /* CrashReporter.swift */,
+				41DFD46C30028F7D00608C7A /* Analytics+Events.swift */,
+				41DFD46D30028F7D00608C7A /* BrewAPIClient.swift */,
+				41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */,
+				41DFD46F30028F7D00608C7A /* CategoryService.swift */,
+				41DFD47030028F7D00608C7A /* ImageCacheService.swift */,
+				41DFD47130028F7D00608C7A /* InstallReceipt.swift */,
+				41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */,
+				41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */,
+				41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */,
+				41AD10302F68D00100BEABB8 /* UpdaterService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		41DFD47730028F7D00608C7A /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		41DFD47930028F7D00608C7A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD47830028F7D00608C7A /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		41DFD47F30028F7D00608C7A /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */,
+				41DFD47B30028F7D00608C7A /* CaskCardView.swift */,
+				41DFD47C30028F7D00608C7A /* CaskIconView.swift */,
+				41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */,
+				41DFD47E30028F7D00608C7A /* CaskRowView.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		41DFD48130028F7D00608C7A /* Sidebar */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD48030028F7D00608C7A /* SidebarView.swift */,
+			);
+			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		41DFD48330028F7D00608C7A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD47930028F7D00608C7A /* Settings */,
+				41DFD47F30028F7D00608C7A /* Shared */,
+				41DFD48130028F7D00608C7A /* Sidebar */,
+				41DFD48230028F7D00608C7A /* ContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		41DFD48530028F7D00608C7A /* CaskHub */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD45030028F7D00608C7A /* App */,
+				41DFD46430028F7D00608C7A /* Models */,
+				41DFD47530028F7D00608C7A /* Services */,
+				41DFD47730028F7D00608C7A /* ViewModels */,
+				41DFD48330028F7D00608C7A /* Views */,
+				41DFD45E30028F7D00608C7A /* DesignSystem */,
+				41DFD46A30028F7D00608C7A /* Resources */,
+				41DFD48430028F7D00608C7A /* Assets.xcassets */,
+			);
+			path = CaskHub;
+			sourceTree = "<group>";
+		};
+		41DFD4B230028F9F00608C7A /* CaskHubTests */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
+				41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */,
+				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
+				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
+				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
+				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
+				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
+			);
+			path = CaskHubTests;
+			sourceTree = "<group>";
+		};
 		41EBDCD82F37FD8B00BEABB8 = {
 			isa = PBXGroup;
 			children = (
-				41EBDCE32F37FD8B00BEABB8 /* CaskHub */,
-				41EBDCF12F37FD8C00BEABB8 /* CaskHubTests */,
-				41EBDCFB2F37FD8C00BEABB8 /* CaskHubUITests */,
+				41AD10042F68A00400BEABB8 /* Shared.xcconfig */,
+				41DFD48530028F7D00608C7A /* CaskHub */,
+				41DFD4B230028F9F00608C7A /* CaskHubTests */,
 				41EBDCE22F37FD8B00BEABB8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,7 +335,6 @@
 			children = (
 				41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */,
 				41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */,
-				41EBDCF82F37FD8C00BEABB8 /* CaskHubUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,6 +347,7 @@
 			buildConfigurationList = 41EBDD022F37FD8C00BEABB8 /* Build configuration list for PBXNativeTarget "CaskHub" */;
 			buildPhases = (
 				41EBDCDD2F37FD8B00BEABB8 /* Sources */,
+				A6C640897F580D7F5B1174DB /* SwiftLint */,
 				41EBDCDE2F37FD8B00BEABB8 /* Frameworks */,
 				41EBDCDF2F37FD8B00BEABB8 /* Resources */,
 			);
@@ -107,11 +355,11 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				41EBDCE32F37FD8B00BEABB8 /* CaskHub */,
-			);
 			name = CaskHub;
 			packageProductDependencies = (
+				41AD10022F68A00200BEABB8 /* TelemetryDeck */,
+				41AD10112F68B00200BEABB8 /* Sentry */,
+				41AD10212F68C00200BEABB8 /* Sparkle */,
 			);
 			productName = CaskHub;
 			productReference = 41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */;
@@ -130,38 +378,10 @@
 			dependencies = (
 				41EBDCF02F37FD8C00BEABB8 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				41EBDCF12F37FD8C00BEABB8 /* CaskHubTests */,
-			);
 			name = CaskHubTests;
-			packageProductDependencies = (
-			);
 			productName = CaskHubTests;
 			productReference = 41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		41EBDCF72F37FD8C00BEABB8 /* CaskHubUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 41EBDD082F37FD8C00BEABB8 /* Build configuration list for PBXNativeTarget "CaskHubUITests" */;
-			buildPhases = (
-				41EBDCF42F37FD8C00BEABB8 /* Sources */,
-				41EBDCF52F37FD8C00BEABB8 /* Frameworks */,
-				41EBDCF62F37FD8C00BEABB8 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				41EBDCFA2F37FD8C00BEABB8 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				41EBDCFB2F37FD8C00BEABB8 /* CaskHubUITests */,
-			);
-			name = CaskHubUITests;
-			packageProductDependencies = (
-			);
-			productName = CaskHubUITests;
-			productReference = 41EBDCF82F37FD8C00BEABB8 /* CaskHubUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -171,16 +391,12 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					41EBDCE02F37FD8B00BEABB8 = {
 						CreatedOnToolsVersion = 26.2;
 					};
 					41EBDCED2F37FD8C00BEABB8 = {
-						CreatedOnToolsVersion = 26.2;
-						TestTargetID = 41EBDCE02F37FD8B00BEABB8;
-					};
-					41EBDCF72F37FD8C00BEABB8 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 41EBDCE02F37FD8B00BEABB8;
 					};
@@ -195,6 +411,11 @@
 			);
 			mainGroup = 41EBDCD82F37FD8B00BEABB8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+				41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				41AD10202F68C00100BEABB8 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41EBDCE22F37FD8B00BEABB8 /* Products */;
 			projectDirPath = "";
@@ -202,7 +423,6 @@
 			targets = (
 				41EBDCE02F37FD8B00BEABB8 /* CaskHub */,
 				41EBDCED2F37FD8C00BEABB8 /* CaskHubTests */,
-				41EBDCF72F37FD8C00BEABB8 /* CaskHubUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -212,6 +432,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41DFD48630028F7D00608C7A /* Baloo2.ttf in Resources */,
+				41DFD48730028F7D00608C7A /* JetBrainsMono.ttf in Resources */,
+				41DFD48830028F7D00608C7A /* Nunito.ttf in Resources */,
+				41DFD48930028F7D00608C7A /* categories.json in Resources */,
+				41DFD48A30028F7D00608C7A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,20 +447,75 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		41EBDCF62F37FD8C00BEABB8 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A6C640897F580D7F5B1174DB /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/swiftlint-$(TARGET_NAME)-$(CURRENT_PROJECT_VERSION).stamp",
+			);
 			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${CI}\" = \"true\" ]; then\n    echo \"Info: Skipping SwiftLint build phase on CI.\"\n    exit 0\nfi\n\nexport PATH=\"$PATH:/opt/homebrew/bin\"\nif command -v swiftlint >/dev/null; then\n    swiftlint --fix\n    swiftlint --quiet\nelse\n  echo \"warning: SwiftLint not installed — brew install swiftlint\"\nfi\n";
 		};
-/* End PBXResourcesBuildPhase section */
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		41EBDCDD2F37FD8B00BEABB8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */,
+				41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */,
+				41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */,
+				41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */,
+				41DFD48F30028F7D00608C7A /* Controls.swift in Sources */,
+				41DFD49030028F7D00608C7A /* GlassPanel.swift in Sources */,
+				41DFD49130028F7D00608C7A /* HeroCard.swift in Sources */,
+				41DFD49230028F7D00608C7A /* StatusBarView.swift in Sources */,
+				41DFD49330028F7D00608C7A /* TopBarView.swift in Sources */,
+				41DFD49430028F7D00608C7A /* ColorTokens.swift in Sources */,
+				41DFD49530028F7D00608C7A /* SurfaceTokens.swift in Sources */,
+				41DFD49630028F7D00608C7A /* TypographyTokens.swift in Sources */,
+				41DFD49730028F7D00608C7A /* BrandFonts.swift in Sources */,
+				41DFD49830028F7D00608C7A /* AppTheme.swift in Sources */,
+				41DFD49930028F7D00608C7A /* Cask.swift in Sources */,
+				41DFD49A30028F7D00608C7A /* CaskAnalytics.swift in Sources */,
+				41DFD49B30028F7D00608C7A /* CaskIconURL.swift in Sources */,
+				41DFD49C30028F7D00608C7A /* SidebarItem.swift in Sources */,
+				41DFD49D30028F7D00608C7A /* Analytics.swift in Sources */,
+				41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */,
+				41DFD49E30028F7D00608C7A /* Analytics+Events.swift in Sources */,
+				41DFD49F30028F7D00608C7A /* BrewAPIClient.swift in Sources */,
+				41DFD4A030028F7D00608C7A /* CaskFlowReleases.swift in Sources */,
+				41DFD4A130028F7D00608C7A /* CategoryService.swift in Sources */,
+				41DFD4A230028F7D00608C7A /* ImageCacheService.swift in Sources */,
+				41DFD4A330028F7D00608C7A /* InstallReceipt.swift in Sources */,
+				41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */,
+				41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */,
+				41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */,
+				41AD10312F68D00200BEABB8 /* UpdaterService.swift in Sources */,
+				41DFD4A730028F7D00608C7A /* CaskCatalogViewModel.swift in Sources */,
+				41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */,
+				41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */,
+				41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */,
+				41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */,
+				41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */,
+				41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */,
+				41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */,
+				41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,13 +523,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		41EBDCF42F37FD8C00BEABB8 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
+				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
+				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,
+				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
+				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
+				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
+				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,16 +541,12 @@
 			target = 41EBDCE02F37FD8B00BEABB8 /* CaskHub */;
 			targetProxy = 41EBDCEF2F37FD8C00BEABB8 /* PBXContainerItemProxy */;
 		};
-		41EBDCFA2F37FD8C00BEABB8 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 41EBDCE02F37FD8B00BEABB8 /* CaskHub */;
-			targetProxy = 41EBDCF92F37FD8C00BEABB8 /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		41EBDD002F37FD8C00BEABB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 41AD10042F68A00400BEABB8 /* Shared.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -303,6 +579,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = USYCM7BRK3;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -328,6 +605,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -335,6 +613,7 @@
 		};
 		41EBDD012F37FD8C00BEABB8 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 41AD10042F68A00400BEABB8 /* Shared.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -367,6 +646,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = USYCM7BRK3;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -385,6 +665,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -394,22 +675,27 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = USYCM7BRK3;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Configs/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CaskHub;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mag.CaskHub;
+				MARKETING_VERSION = 0.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -426,22 +712,27 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = USYCM7BRK3;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Configs/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CaskHub;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mag.CaskHub;
+				MARKETING_VERSION = 0.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -459,10 +750,11 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = USYCM7BRK3;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.CaskHubTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -480,10 +772,11 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = USYCM7BRK3;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.CaskHubTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -492,44 +785,6 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CaskHub.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CaskHub";
-			};
-			name = Release;
-		};
-		41EBDD092F37FD8C00BEABB8 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = USYCM7BRK3;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mag.CaskHubUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = CaskHub;
-			};
-			name = Debug;
-		};
-		41EBDD0A2F37FD8C00BEABB8 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = USYCM7BRK3;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mag.CaskHubUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = CaskHub;
 			};
 			name = Release;
 		};
@@ -563,16 +818,52 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		41EBDD082F37FD8C00BEABB8 /* Build configuration list for PBXNativeTarget "CaskHubUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				41EBDD092F37FD8C00BEABB8 /* Debug */,
-				41EBDD0A2F37FD8C00BEABB8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+		41AD10202F68C00100BEABB8 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		41AD10022F68A00200BEABB8 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41AD10012F68A00100BEABB8 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
+		};
+		41AD10112F68B00200BEABB8 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41AD10102F68B00100BEABB8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+		41AD10212F68C00200BEABB8 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41AD10202F68C00100BEABB8 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 41EBDCD92F37FD8B00BEABB8 /* Project object */;
 }

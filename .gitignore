@@ -60,3 +60,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Local Claude tooling and exports — not part of the app
+skills/
+.claude-plugin/
+*.txt
+
+Configs/Secrets.xcconfig

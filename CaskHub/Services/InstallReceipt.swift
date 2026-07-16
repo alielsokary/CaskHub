@@ -10,14 +10,15 @@ import Foundation
 /// Minimal parser for Homebrew's per-cask install receipt at
 /// `<Caskroom>/<token>/.metadata/INSTALL_RECEIPT.json`.
 ///
-/// We use `JSONSerialization` rather than `Decodable` because the
-/// `uninstall_artifacts` field is a heterogeneous array of single-key
-/// dictionaries with mixed value types (strings, arrays, nested objects).
-/// Walking the tree manually is simpler than fighting custom decoders.
+/// Uses `JSONSerialization` rather than `Decodable`: `uninstall_artifacts`
+/// is a heterogeneous array of single-key dictionaries with mixed value
+/// types. Decodable handles that shape too (`ArtifactStanza` decodes the
+/// same kind of stanza with a custom key type), but extracting a single
+/// key is fewer lines as a tree walk than as a custom `init(from:)`.
 ///
 /// Marked `nonisolated` because the project uses `-default-isolation=MainActor`
 /// and this parser is invoked from a background `Task.detached` in the scan loop.
-nonisolated struct InstallReceipt: Sendable {
+nonisolated struct InstallReceipt {
     /// `.app` bundle filenames extracted from `uninstall_artifacts`, e.g. `["Firefox.app"]`.
     /// Empty when the cask installs no apps (CLI-only casks like `android-platform-tools`).
     ///

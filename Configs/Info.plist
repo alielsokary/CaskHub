@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/alielsokary/CaskHub/master/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>cucukcwS38gXn5erJTq5ar/IzOsf4FtkQwvhg4AxvYU=</string>
+	<key>SentryDSN</key>
+	<string>$(SENTRY_DSN)</string>
+	<key>TelemetryDeckAppID</key>
+	<string>$(TELEMETRYDECK_APP_ID)</string>
+</dict>
+</plist>
