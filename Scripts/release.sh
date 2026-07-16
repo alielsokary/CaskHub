@@ -12,7 +12,7 @@ WORK="$REPO_ROOT/.build/release"
 NOTARY_PROFILE="caskhub-notary"
 TEAM_ID="USYCM7BRK3"
 SPARKLE_VERSION="2.9.4"
-DOWNLOAD_URL_PREFIX="https://github.com/alielsokary/CaskHub/releases/download/v$VERSION/"
+DOWNLOAD_URL_PREFIX="https://github.com/alielsokary/CaskHub/releases/download/$VERSION/"
 
 cd "$REPO_ROOT"
 
@@ -106,13 +106,13 @@ echo "==> Generating appcast (signs with EdDSA key from Keychain)"
 cp "$WORK/updates/appcast.xml" "$REPO_ROOT/appcast.xml"
 
 # --- Publish ------------------------------------------------------------------
-echo "==> Creating GitHub release v$VERSION"
-gh release create "v$VERSION" "$ZIP" --title "CaskHub v$VERSION" --generate-notes \
+echo "==> Creating GitHub release $VERSION"
+gh release create "$VERSION" "$ZIP" --title "$VERSION" --generate-notes \
     --target "$(git rev-parse HEAD)"
 
 echo "==> Committing appcast"
 git add appcast.xml
-git commit -m "release: v$VERSION appcast"
+git commit -m "release: $VERSION appcast"
 git push
 
-echo "==> Done. v$VERSION is live; Sparkle clients will see it via appcast.xml."
+echo "==> Done. $VERSION is live; Sparkle clients will see it via appcast.xml."
