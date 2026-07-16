@@ -1,0 +1,90 @@
+name: Release build
+
+# Builds, notarizes, and drafts a release from a release/* branch.
+# The draft goes live only when the release PR merges to master
+# (see publish-release.yml).
+#
+# Required repository secrets:
+#   DEVELOPER_ID_P12 / DEVELOPER_ID_P12_PASSWORD   base64 .p12 + its password
+#   NOTARY_KEY / NOTARY_KEY_ID / NOTARY_ISSUER_ID  App Store Connect API key
+#   SPARKLE_ED_PRIVATE_KEY                         from `generate_keys -x`
+#   TELEMETRYDECK_APP_ID / SENTRY_DSN              analytics (optional values)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 0.5.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-26
+    steps:
+      - name: Preflight
+        env:
+          REF: ${{ github.ref }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          case "$REF" in
+            refs/heads/release/*) ;;
+            *) echo "::error::Run this workflow from a release/* branch (got $REF)"; exit 1 ;;
+          esac
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version must be a bare number like 0.5.0 (got '$VERSION')"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # build number = git rev-list --count HEAD
+
+      - name: Import Developer ID certificate
+        env:
+          DEVELOPER_ID_P12: ${{ secrets.DEVELOPER_ID_P12 }}
+          DEVELOPER_ID_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/release.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          printf '%s' "$DEVELOPER_ID_P12" | base64 -d > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
+            -P "$DEVELOPER_ID_P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+          rm "$RUNNER_TEMP/cert.p12"
+
+      - name: Write credential files
+        env:
+          NOTARY_KEY: ${{ secrets.NOTARY_KEY }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+          TELEMETRYDECK_APP_ID: ${{ secrets.TELEMETRYDECK_APP_ID }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          printf '%s' "$NOTARY_KEY" > "$RUNNER_TEMP/AuthKey.p8"
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$RUNNER_TEMP/sparkle_ed_key"
+          # xcconfig treats // as a comment even inside values; keep the DSN's
+          # scheme intact with an empty $() substitution (see Secrets.xcconfig.template)
+          printf 'TELEMETRYDECK_APP_ID = %s\nSENTRY_DSN = %s\n' \
+            "$TELEMETRYDECK_APP_ID" \
+            "$(printf '%s' "$SENTRY_DSN" | sed 's|//|/$()/|')" \
+            > Configs/Secrets.xcconfig
+
+      - name: Build, notarize, and draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTARY_KEY_FILE: ${{ runner.temp }}/AuthKey.p8
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          SPARKLE_ED_KEY_FILE: ${{ runner.temp }}/sparkle_ed_key
+          VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name "Ali Elsokary"
+          git config user.email "galaxysokary92@gmail.com"
+          Scripts/release.sh "$VERSION"
