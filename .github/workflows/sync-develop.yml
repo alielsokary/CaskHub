@@ -1,0 +1,38 @@
+name: Sync develop with master
+
+# Back-merge automation: every push to master opens (or reuses) a
+# "chore: master to develop" PR so develop never drifts behind releases.
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open PR master -> develop
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # ponytail: reuse the open PR if one exists; new master commits land on it automatically
+          if [ -n "$(gh pr list --base develop --head master --state open --json number --jq '.[].number')" ]; then
+            echo "Open master->develop PR already exists; nothing to do."
+            exit 0
+          fi
+          if ! out=$(gh pr create \
+            --base develop \
+            --head master \
+            --title "chore: master to develop" \
+            --body "Automated back-merge to keep develop in sync with master." \
+            --assignee alielsokary 2>&1); then
+            echo "$out"
+            # only "develop already has everything" is a legitimate no-op
+            echo "$out" | grep -qi "no commits between" || exit 1
+          fi
