@@ -102,6 +102,9 @@ final class LocalHomebrewService {
     /// Token → most recent error message from a failed action. Cleared on the next attempt.
     private(set) var actionErrors: [String: String] = [:]
 
+    /// True while `updateAll` is walking its queue; drives the Update All button.
+    private(set) var isUpdatingAll = false
+
     /// Last successful refresh timestamp; nil before the first scan completes.
     private(set) var lastRefresh: Date?
 
@@ -221,6 +224,18 @@ final class LocalHomebrewService {
     /// Runs `brew upgrade --cask <token>`. Refreshes local state on success.
     func upgrade(token: String) async throws {
         try await runMutation(.updating, token: token, args: ["upgrade", "--cask", token])
+    }
+
+    /// Upgrades every token, one at a time — concurrent brew processes contend
+    /// for Homebrew's locks. A failed upgrade lands in `actionErrors[token]`
+    /// (surfaced by that cask's alert) without stopping the rest of the queue.
+    func updateAll(tokens: [String]) async {
+        guard !isUpdatingAll else { return }
+        isUpdatingAll = true
+        defer { isUpdatingAll = false }
+        for token in tokens {
+            try? await upgrade(token: token)
+        }
     }
 
     /// Cancels an in-flight install. Only honored during the download phase —
