@@ -3,7 +3,7 @@
 [![Tests](https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml/badge.svg?branch=develop)](https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b2d4203ef8724bc0a2265af613ac29c9)](https://app.codacy.com/gh/alielsokary/CaskHub/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![codecov](https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg)](https://codecov.io/gh/alielsokary/CaskHub)
-[![Platform](https://img.shields.io/badge/Platform-macOS%2015.6%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-15.6%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub?include_prereleases)](https://github.com/alielsokary/CaskHub/releases)
 
