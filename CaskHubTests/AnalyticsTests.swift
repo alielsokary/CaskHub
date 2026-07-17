@@ -97,6 +97,12 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertTrue(spy.signals.isEmpty)
     }
 
+    func test_update_all_tapped_sends_queue_size() {
+        Analytics.updateAllTapped(count: 3)
+        XCTAssertEqual(lastSignal?.name, "Cask.updateAllTapped")
+        XCTAssertEqual(lastSignal?.parameters, ["count": "3"])
+    }
+
     // MARK: - Navigation events
 
     func test_page_opened_maps_discover_pages() {
