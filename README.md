@@ -5,12 +5,23 @@
 [![codecov](https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg)](https://codecov.io/gh/alielsokary/CaskHub)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub?include_prereleases)](https://github.com/alielsokary/CaskHub/releases)
+[![Platform](https://img.shields.io/badge/Platform-macOS%2015.0%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
 
 <img width="1700" height="500" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
 
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
 CaskHub is 100% free and open source, no subscription, no premium tier, no ads, nothing.
+
+## Install
+
+[![Download CaskHub](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/alielsokary/CaskHub/releases/latest)
+
+Or install with Homebrew:
+
+```bash
+brew install --cask alielsokary/tap/caskhub
+```
 
 ## Features
 
@@ -49,12 +60,12 @@ Categories, first-seen dates, and original app icons are produced by the compani
 
 ## Requirements
 
-- **macOS 26.2** or later
+- **macOS 15.6** or later
 - **[Homebrew](https://brew.sh)** - required for installing, updating, and uninstalling casks (browsing works without it)
 
 ## Building from Source
 
-Binary releases are planned. Until then, build with Xcode 26 or later:
+Prefer building it yourself? You'll need Xcode 26 or later:
 
 ```bash
 git clone https://github.com/alielsokary/CaskHub.git
