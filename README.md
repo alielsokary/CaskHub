@@ -47,6 +47,7 @@ brew install --cask alielsokary/tap/caskhub
 - Grid and list view modes, flexible sorting, light/dark/system themes
 - A custom design system with bundled typography
 - Bundled category data ships with the app, so browsing never blocks on the network
+- **Built-in app updates** - CaskHub keeps itself up to date via [Sparkle](https://sparkle-project.org)
 
 ## How It Works
 
@@ -73,16 +74,16 @@ cd CaskHub
 open CaskHub.xcodeproj
 ```
 
-Select the **CaskHub** scheme and run (⌘R). Xcode resolves the single Swift package dependency ([TelemetryDeck](https://github.com/TelemetryDeck/SwiftSDK)) automatically.
+Select the **CaskHub** scheme and run (⌘R). Xcode resolves the Swift package dependencies ([Sparkle](https://github.com/sparkle-project/Sparkle), [Sentry](https://github.com/getsentry/sentry-cocoa), and [TelemetryDeck](https://github.com/TelemetryDeck/SwiftSDK)) automatically.
 
-Optional: copy `Configs/Secrets.xcconfig.template` to `Configs/Secrets.xcconfig` and fill in the analytics key — builds work fine without it; analytics just stays off.
+Optional: copy `Configs/Secrets.xcconfig.template` to `Configs/Secrets.xcconfig` and fill in the TelemetryDeck app ID and Sentry DSN. Builds work fine without them; analytics and crash reporting just stay off.
 
 ## Architecture
 
 - **SwiftUI + MVVM** with `@Observable` view models and `@MainActor` isolation
 - **Protocol-based networking layer** for testability (`BrewAPIClientProtocol`, `NetworkServiceProtocol`) with dependency injection throughout
 - **Two-tier icon caching** (memory + disk) and HTTP-header-based download-size resolution
-- **Zero third-party runtime dependencies** - Foundation, SwiftUI, AppKit, and Observation only
+- **Minimal dependencies** - three focused packages: [Sparkle](https://sparkle-project.org) for app updates, [Sentry](https://sentry.io) for crash reporting, and [TelemetryDeck](https://telemetrydeck.com) for analytics
 
 ## Testing & CI
 
@@ -94,9 +95,11 @@ xcodebuild test -project CaskHub.xcodeproj -scheme CaskHub -destination 'platfor
 
 ## Privacy & Analytics
 
-CaskHub collects anonymous usage analytics through [TelemetryDeck](https://telemetrydeck.com), a privacy-first analytics service. No personal data or identifiers ever leave your Mac — user IDs are salted and hashed on-device, and there is no tracking across apps or websites.
+CaskHub collects anonymous usage analytics through [TelemetryDeck](https://telemetrydeck.com), a privacy-first analytics service. No personal data or identifiers ever leave your Mac: user IDs are salted and hashed on-device, and there is no tracking across apps or websites.
 
-You can opt out at any time in **Settings → Privacy**.
+CaskHub also sends anonymous crash reports through [Sentry](https://sentry.io) to help diagnose and fix stability issues.
+
+You can opt out of both at any time in **Settings → Privacy**.
 
 ## Contributing
 
