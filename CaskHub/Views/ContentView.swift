@@ -60,6 +60,14 @@ struct ContentView: View {
                         Analytics.recentWindowChanged($0)
                         viewModel.selectRecentlyAddedWindow($0)
                     },
+                    onUpdateAll: selectedSidebar == .library(.updates) && viewModel.updatesCount > 0
+                        ? {
+                            let tokens = viewModel.updatableCasks.map(\.token)
+                            Analytics.updateAllTapped(count: tokens.count)
+                            Task { await localHomebrew.updateAll(tokens: tokens) }
+                        }
+                        : nil,
+                    isUpdatingAll: localHomebrew.isUpdatingAll,
                     // Sections have a fixed popularity order; sorting is a no-op there.
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
                     onSubmitSearch: {

@@ -127,6 +127,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         vm.selectedSidebar = .library(.updates)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
+        XCTAssertEqual(vm.updatableCasks.map(\.token), ["firefox"])
         XCTAssertEqual(vm.updatesCount, 1)
     }
 

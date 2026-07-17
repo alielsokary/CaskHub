@@ -26,6 +26,12 @@ extension Analytics {
         send("Cask.actionFailed", parameters: ["action": verb.base, "cask": token])
     }
 
+    /// The Updates page "Update All" tap; each cask in the queue then emits
+    /// its own `Cask.updated` / `Cask.actionFailed` signal as usual.
+    static func updateAllTapped(count: Int) {
+        send("Cask.updateAllTapped", parameters: ["count": "\(count)"])
+    }
+
     // MARK: - Navigation
 
     /// Fires for every detail-page change: sidebar clicks, category clicks
@@ -101,7 +107,7 @@ private extension CaskAction {
         case .installing: return ("install", "installed")
         case .uninstalling: return ("uninstall", "uninstalled")
         case .updating: return ("update", "updated")
-        case .opening: return nil
+        case .opening, .queued: return nil
         }
     }
 }

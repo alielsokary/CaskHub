@@ -79,6 +79,9 @@ final class TelemetryDeckProvider: AnalyticsProvider {
     }
 
     func send(_ signalName: String, parameters: [String: String]) {
+        // Never initialized (no secret): the SDK's shared-instance getter
+        // asserts in Debug builds, so signals must not reach it.
+        guard config != nil else { return }
         TelemetryDeck.signal(signalName, parameters: parameters)
     }
 }
