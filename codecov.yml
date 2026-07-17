@@ -1,0 +1,8 @@
+# Project coverage fluctuates ±0.1% between identical runs (timing-dependent
+# async paths), and codecov's default 0% threshold fails no-code PRs on that
+# noise. 1% absorbs it while still catching real regressions.
+coverage:
+  status:
+    project:
+      default:
+        threshold: 1%
