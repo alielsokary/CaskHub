@@ -3,6 +3,7 @@
 [![Tests](https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml/badge.svg?branch=develop)](https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b2d4203ef8724bc0a2265af613ac29c9)](https://app.codacy.com/gh/alielsokary/CaskHub/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![codecov](https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg)](https://codecov.io/gh/alielsokary/CaskHub)
+[![macOS](https://img.shields.io/badge/macOS-15.6%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub?include_prereleases)](https://github.com/alielsokary/CaskHub/releases)
 
@@ -11,6 +12,16 @@
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
 CaskHub is 100% free and open source, no subscription, no premium tier, no ads, nothing.
+
+## Install
+
+<a href="https://github.com/alielsokary/CaskHub/releases/latest"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
+
+Or install with Homebrew:
+
+```bash
+brew install --cask alielsokary/tap/caskhub
+```
 
 ## Features
 
@@ -36,6 +47,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 - Grid and list view modes, flexible sorting, light/dark/system themes
 - A custom design system with bundled typography
 - Bundled category data ships with the app, so browsing never blocks on the network
+- **Built-in app updates** - CaskHub keeps itself up to date via [Sparkle](https://sparkle-project.org)
 
 ## How It Works
 
@@ -49,12 +61,12 @@ Categories, first-seen dates, and original app icons are produced by the compani
 
 ## Requirements
 
-- **macOS 26.2** or later
+- **macOS 15.6** or later
 - **[Homebrew](https://brew.sh)** - required for installing, updating, and uninstalling casks (browsing works without it)
 
 ## Building from Source
 
-Binary releases are planned. Until then, build with Xcode 26 or later:
+Prefer building it yourself? You'll need Xcode 26 or later:
 
 ```bash
 git clone https://github.com/alielsokary/CaskHub.git
@@ -62,16 +74,14 @@ cd CaskHub
 open CaskHub.xcodeproj
 ```
 
-Select the **CaskHub** scheme and run (⌘R). Xcode resolves the single Swift package dependency ([TelemetryDeck](https://github.com/TelemetryDeck/SwiftSDK)) automatically.
-
-Optional: copy `Configs/Secrets.xcconfig.template` to `Configs/Secrets.xcconfig` and fill in the analytics key — builds work fine without it; analytics just stays off.
+Select the **CaskHub** scheme and run (⌘R). Xcode resolves the Swift package dependencies ([Sparkle](https://github.com/sparkle-project/Sparkle), [Sentry](https://github.com/getsentry/sentry-cocoa), and [TelemetryDeck](https://github.com/TelemetryDeck/SwiftSDK)) automatically.
 
 ## Architecture
 
 - **SwiftUI + MVVM** with `@Observable` view models and `@MainActor` isolation
 - **Protocol-based networking layer** for testability (`BrewAPIClientProtocol`, `NetworkServiceProtocol`) with dependency injection throughout
 - **Two-tier icon caching** (memory + disk) and HTTP-header-based download-size resolution
-- **Zero third-party runtime dependencies** - Foundation, SwiftUI, AppKit, and Observation only
+- **Minimal dependencies** - three focused packages: [Sparkle](https://sparkle-project.org) for app updates, [Sentry](https://sentry.io) for crash reporting, and [TelemetryDeck](https://telemetrydeck.com) for analytics
 
 ## Testing & CI
 
@@ -83,9 +93,11 @@ xcodebuild test -project CaskHub.xcodeproj -scheme CaskHub -destination 'platfor
 
 ## Privacy & Analytics
 
-CaskHub collects anonymous usage analytics through [TelemetryDeck](https://telemetrydeck.com), a privacy-first analytics service. No personal data or identifiers ever leave your Mac — user IDs are salted and hashed on-device, and there is no tracking across apps or websites.
+CaskHub collects anonymous usage analytics through [TelemetryDeck](https://telemetrydeck.com), a privacy-first analytics service. No personal data or identifiers ever leave your Mac: user IDs are salted and hashed on-device, and there is no tracking across apps or websites.
 
-You can opt out at any time in **Settings → Privacy**.
+CaskHub also sends anonymous crash reports through [Sentry](https://sentry.io) to help diagnose and fix stability issues.
+
+You can opt out of both at any time in **Settings → Privacy**.
 
 ## Contributing
 
