@@ -34,4 +34,9 @@ final class CaskHubTests: XCTestCase {
         await local.updateAll(tokens: [])
         XCTAssertFalse(local.isUpdatingAll)
     }
+
+    @MainActor
+    func test_queued_action_labels_as_queued() {
+        XCTAssertEqual(CaskAction.queued.inProgressLabel, "Queued…")
+    }
 }

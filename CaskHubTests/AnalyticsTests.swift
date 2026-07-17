@@ -97,6 +97,13 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertTrue(spy.signals.isEmpty)
     }
 
+    /// Queued is a UI placeholder, not an outcome — it must never emit.
+    func test_cask_action_events_ignore_queued_state() {
+        Analytics.caskActionCompleted(.queued, token: "firefox")
+        Analytics.caskActionFailed(.queued, token: "firefox")
+        XCTAssertTrue(spy.signals.isEmpty)
+    }
+
     func test_update_all_tapped_sends_queue_size() {
         Analytics.updateAllTapped(count: 3)
         XCTAssertEqual(lastSignal?.name, "Cask.updateAllTapped")

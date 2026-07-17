@@ -107,7 +107,7 @@ private extension CaskAction {
         case .installing: return ("install", "installed")
         case .uninstalling: return ("uninstall", "uninstalled")
         case .updating: return ("update", "updated")
-        case .opening: return nil
+        case .opening, .queued: return nil
         }
     }
 }
