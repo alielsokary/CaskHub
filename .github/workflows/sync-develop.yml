@@ -2,6 +2,11 @@ name: Sync develop with master
 
 # Back-merge automation: every push to master opens (or reuses) a
 # "chore: master to develop" PR so develop never drifts behind releases.
+#
+# Requires the repo setting "Allow GitHub Actions to create and approve pull
+# requests" (Settings → Actions → General). Without it, gh pr create fails
+# with "GitHub Actions is not permitted to create or approve pull requests"
+# even though this workflow has pull-requests: write.
 on:
   push:
     branches: [master]
