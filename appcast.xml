@@ -3,12 +3,12 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.4.0</title>
-            <pubDate>Thu, 16 Jul 2026 03:13:16 +0300</pubDate>
-            <sparkle:version>147</sparkle:version>
-            <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+            <title>0.4.1</title>
+            <pubDate>Fri, 17 Jul 2026 00:59:10 +0000</pubDate>
+            <sparkle:version>159</sparkle:version>
+            <sparkle:shortVersionString>0.4.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.2</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.4.0/CaskHub-0.4.0.zip" length="4715068" type="application/octet-stream" sparkle:edSignature="cjxlB8T5bj3vXjBb+JR1jj6MYJaWoMAHo5Snv9SKkSv7jb2TzpitEisi1wdsdIeef7cpzdKWw4W06njH774SCA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.4.1/CaskHub-0.4.1.zip" length="4722857" type="application/octet-stream" sparkle:edSignature="CdirWYPkbfojgToEwMyfop9qwq/cHEVIQ0y0Di8iDFscOOX7Fu5DCYrySIGyJ+lwDMrRfSk46nBunWH2lOWnDA=="/>
         </item>
     </channel>
 </rss>
