@@ -131,3 +131,68 @@ final class ContentViewTests: XCTestCase {
         XCTAssertEqual(probe.resignCount, 0)
     }
 }
+
+/// Renders TopBarView's Update All chip in both states — the chip only
+/// exists on the Updates page, which no other test visits.
+final class TopBarViewTests: XCTestCase {
+    /// Owns the @FocusState TopBarView needs; tests can't declare one.
+    private struct TopBarHarness: View {
+        let isUpdatingAll: Bool
+        let onAppear: () -> Void
+        @FocusState private var searchFocused: Bool
+
+        var body: some View {
+            TopBarView(
+                title: "Updates",
+                caskCount: 2,
+                sortOption: .constant(.mostPopular),
+                viewMode: .constant(.grid),
+                searchText: .constant(""),
+                searchFocus: $searchFocused,
+                onUpdateAll: {},
+                isUpdatingAll: isUpdatingAll
+            )
+            .onAppear(perform: onAppear)
+        }
+    }
+
+    @MainActor
+    private final class RenderProbe {
+        var appeared = false
+    }
+
+    @MainActor
+    private func renderTopBar(isUpdatingAll: Bool) {
+        let probe = RenderProbe()
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 900, height: 80),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(
+            rootView: TopBarHarness(isUpdatingAll: isUpdatingAll) { probe.appeared = true }
+        )
+        window.orderFrontRegardless()
+
+        let deadline = Date().addingTimeInterval(2)
+        while !probe.appeared, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
+        XCTAssertTrue(probe.appeared, "top bar never rendered")
+
+        window.contentView = NSView()
+        window.close()
+    }
+
+    @MainActor
+    func test_update_all_chip_renders_idle_state() {
+        renderTopBar(isUpdatingAll: false)
+    }
+
+    @MainActor
+    func test_update_all_chip_renders_updating_state() {
+        renderTopBar(isUpdatingAll: true)
+    }
+}

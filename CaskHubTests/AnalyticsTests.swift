@@ -103,6 +103,12 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(lastSignal?.parameters, ["count": "3"])
     }
 
+    /// Builds without the TelemetryDeck secret never initialize the SDK;
+    /// sending must be a no-op then, not a Debug-build assertion crash.
+    func test_uninitialized_telemetry_provider_drops_signals() {
+        TelemetryDeckProvider().send("Test.signal", parameters: [:])
+    }
+
     // MARK: - Navigation events
 
     func test_page_opened_maps_discover_pages() {
