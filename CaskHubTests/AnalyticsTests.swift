@@ -97,7 +97,6 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertTrue(spy.signals.isEmpty)
     }
 
-    /// Queued is a UI placeholder, not an outcome — it must never emit.
     func test_cask_action_events_ignore_queued_state() {
         Analytics.caskActionCompleted(.queued, token: "firefox")
         Analytics.caskActionFailed(.queued, token: "firefox")
@@ -110,8 +109,6 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(lastSignal?.parameters, ["count": "3"])
     }
 
-    /// Builds without the TelemetryDeck secret never initialize the SDK;
-    /// sending must be a no-op then, not a Debug-build assertion crash.
     func test_uninitialized_telemetry_provider_drops_signals() {
         TelemetryDeckProvider().send("Test.signal", parameters: [:])
     }

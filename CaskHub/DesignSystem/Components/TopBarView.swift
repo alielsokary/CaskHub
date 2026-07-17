@@ -7,29 +7,21 @@
 
 import SwiftUI
 
-/// Floating glass pill top bar: screen title, cask count,
-/// sort chip, grid/list toggle and the search field with its ⌘F keycap.
 struct TopBarView: View {
     let title: String
     let caskCount: Int
     @Binding var sortOption: SortOption
-    /// Sort choices for the current page (Recently Added adds Newest/Oldest).
     var sortOptions: [SortOption] = SortOption.standard
     @Binding var viewMode: ViewMode
     @Binding var searchText: String
     var searchFocus: FocusState<Bool>.Binding
-    /// Non-nil on Top Charts: shows the analytics period chip next to the sort chip.
     var analyticsPeriod: AnalyticsPeriod?
     var onSelectPeriod: ((AnalyticsPeriod) -> Void)?
-    /// Non-nil on Recently Added: shows the 30/60/90-day window chip.
     var recentWindow: RecentlyAddedWindow?
     var onSelectWindow: ((RecentlyAddedWindow) -> Void)?
-    /// Non-nil on Updates with pending updates: shows the Update All capsule.
     var onUpdateAll: (() -> Void)?
     var isUpdatingAll = false
-    /// Hidden on Featured — that list is curated, sorting doesn't apply.
     var showsSort = true
-    /// Called when the user presses Return in the search field.
     var onSubmitSearch: (() -> Void)?
 
     @State private var showSortMenu = false
@@ -72,8 +64,6 @@ struct TopBarView: View {
 
     // MARK: - Update All chip
 
-    /// Amber capsule matching the per-cask Update action; spins and disables
-    /// while the queue is draining.
     private var updateAllChip: some View {
         Button {
             onUpdateAll?()
@@ -101,8 +91,6 @@ struct TopBarView: View {
 
     // MARK: - Sort chip
 
-    /// Custom popover instead of Menu: NSMenu items ignore custom fonts, and
-    /// the dropdown must render Nunito like the rest of the bar.
     private var sortChip: some View {
         Button {
             showSortMenu.toggle()
@@ -164,8 +152,6 @@ struct TopBarView: View {
 
     // MARK: - Time window chip (Top Charts period / Recently Added window)
 
-    /// Only one window chip is ever visible at a time, so both share the
-    /// single showPeriodMenu state.
     private func periodChip<Option: Identifiable & Equatable>(
         current: Option,
         options: [Option],

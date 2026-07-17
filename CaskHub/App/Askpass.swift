@@ -7,13 +7,7 @@
 
 import AppKit
 
-/// The `--askpass` program mode: sudo re-launches this binary as its
-/// SUDO_ASKPASS helper (script written by
-/// `LocalHomebrewService.ensureAskpassScript`) and reads the password
-/// from stdout.
 enum Askpass {
-    /// Prints the password to stdout for sudo on "Allow"; exits 1 on cancel
-    /// so sudo — and the brew install — abort cleanly.
     static func runDialog(token: String?) -> Never {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)

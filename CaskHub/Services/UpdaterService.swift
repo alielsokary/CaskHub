@@ -9,8 +9,6 @@ import Combine
 import Sparkle
 import SwiftUI
 
-/// Owns Sparkle's updater lifecycle: starts the standard updater controller
-/// and exposes check state for menu items.
 @Observable
 final class UpdaterService {
     private let controller: SPUStandardUpdaterController
@@ -33,14 +31,12 @@ final class UpdaterService {
         controller.updater.checkForUpdates()
     }
 
-    /// Mirrors Sparkle's own auto-check preference (persisted by Sparkle).
     var automaticallyChecksForUpdates: Bool {
         get { controller.updater.automaticallyChecksForUpdates }
         set { controller.updater.automaticallyChecksForUpdates = newValue }
     }
 }
 
-/// Menu item that stays disabled while Sparkle is mid-check.
 struct CheckForUpdatesView: View {
     let updater: UpdaterService
 

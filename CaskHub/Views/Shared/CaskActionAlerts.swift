@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-/// The uninstall-confirmation and action-error alerts shared by every view
-/// that renders a cask (cards and rows).
 private struct CaskActionAlerts: ViewModifier {
     let cask: Cask
     @Binding var showUninstallConfirmation: Bool

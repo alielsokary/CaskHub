@@ -76,7 +76,6 @@ struct BarrelMark: View {
     }
 }
 
-/// "caskhub" wordmark: barrel + Baloo 2 lettering with terracotta "hub".
 struct BrandWordmark: View {
     var body: some View {
         HStack(spacing: 9) {

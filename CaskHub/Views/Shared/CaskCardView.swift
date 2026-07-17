@@ -38,8 +38,6 @@ struct CaskCardView: View {
 
     // MARK: - Header (icon well + name + info)
 
-    /// Fixed-height header (room for a 2-line title + tag) keeps the description,
-    /// metadata and action button at the same position on every card.
     private var headerRow: some View {
         HStack(alignment: .top, spacing: 10) {
             CaskIconView(cask: cask, size: 38)

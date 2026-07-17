@@ -113,7 +113,6 @@ struct GeneralSettingsView: View {
             }
         } catch {
             CrashReporter.capture(error)
-            // Reflect the real state — the change didn't take.
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
     }
@@ -181,7 +180,6 @@ struct PrivacySettingsView: View {
         }
     }
 
-    /// Checkbox with its explanation underneath, indented to the checkbox title.
     private func checkboxRow(
         _ title: String,
         isOn: Binding<Bool>,

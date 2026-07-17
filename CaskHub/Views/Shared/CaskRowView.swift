@@ -20,8 +20,6 @@ struct CaskRowView: View {
             appInfo
             Spacer()
             metadata
-            // Fixed-width action column + reserved menu slot keep every
-            // capsule vertically aligned across rows.
             actionsControl
                 .frame(width: 130)
             menuSlot

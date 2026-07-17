@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-/// Shared action strip for a cask: install / update / open / installed / in-flight,
-/// driven by LocalHomebrewService. Used by the hero, cards and rows.
 struct CaskActionsView: View {
     let cask: Cask
     var fullWidth = true

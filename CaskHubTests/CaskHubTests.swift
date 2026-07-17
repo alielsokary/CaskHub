@@ -16,7 +16,6 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(makeCask("test", version: "125.0_1").displayVersion, "125.0")
         XCTAssertEqual(makeCask("test", version: "1.2.3-beta").displayVersion, "1.2.3")
         XCTAssertEqual(makeCask("test", version: "2024.10.13").displayVersion, "2024.10.13")
-        // Entirely non-numeric versions fall back to the raw value.
         XCTAssertEqual(makeCask("test", version: "beta").displayVersion, "beta")
     }
 
@@ -26,8 +25,6 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(makeCask("test", version: "125.0").metaLine(downloads: nil), "v125.0")
     }
 
-    /// An empty queue must still clear the flag — a stuck `isUpdatingAll`
-    /// would disable the Update All button forever.
     @MainActor
     func test_update_all_with_empty_queue_clears_flag() async {
         let local = LocalHomebrewService()

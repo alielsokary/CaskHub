@@ -14,8 +14,6 @@ import Foundation
 extension Analytics {
     // MARK: - Cask actions
 
-    /// Success signal for install / uninstall / update. App launches
-    /// (`.opening`) are deliberately not tracked.
     static func caskActionCompleted(_ action: CaskAction, token: String) {
         guard let verb = action.analyticsVerb else { return }
         send("Cask.\(verb.past)", parameters: ["cask": token])
@@ -34,8 +32,7 @@ extension Analytics {
 
     // MARK: - Navigation
 
-    /// Fires for every detail-page change: sidebar clicks, category clicks
-    /// on cards, and View All — they all route through the same selection.
+    /// Fires for every detail-page change: sidebar clicks, category clicks on cards, and View All
     static func pageOpened(_ selection: SidebarSelection) {
         send("Page.opened", parameters: parameters(for: selection))
     }

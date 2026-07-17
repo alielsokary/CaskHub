@@ -132,9 +132,6 @@ private struct InfoRow {
     var link: URL?
 }
 
-/// Download size via HTTP headers — the brew API doesn't publish sizes.
-/// Cached (including failures) for the app's lifetime: cask URLs are
-/// version-pinned, so a size never changes under the same URL.
 /// ponytail: uses the API's default `url`; per-arch `variations` can differ.
 @MainActor
 enum DownloadSizeCache {
@@ -167,7 +164,6 @@ enum DownloadSizeCache {
             return response.expectedContentLength
         }
 
-        // Fallback: 1-byte ranged GET; total size arrives as "bytes 0-0/<total>".
         var ranged = URLRequest(url: url, timeoutInterval: 15)
         ranged.setValue("bytes=0-0", forHTTPHeaderField: "Range")
         guard let response = try? await URLSession.shared.data(for: ranged).1 as? HTTPURLResponse,
