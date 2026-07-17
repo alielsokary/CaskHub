@@ -3,6 +3,10 @@
 # appcast → GitHub release. Requires: Developer ID cert in Keychain, notarytool
 # keychain profile "caskhub-notary", gh CLI authenticated.
 #
+# CI (.github/workflows/release.yml) overrides the Keychain-based credentials:
+#   NOTARY_KEY_FILE / NOTARY_KEY_ID / NOTARY_ISSUER_ID  App Store Connect API key
+#   SPARKLE_ED_KEY_FILE                                 EdDSA private key file
+#
 # Usage: Scripts/release.sh <version>   e.g. Scripts/release.sh 1.0.0
 set -euo pipefail
 
@@ -75,8 +79,14 @@ APP="$WORK/export/CaskHub.app"
 # --- Notarize & staple --------------------------------------------------------
 echo "==> Notarizing (this can take a few minutes)"
 ditto -c -k --keepParent "$APP" "$WORK/notarize.zip"
-xcrun notarytool submit "$WORK/notarize.zip" \
-    --keychain-profile "$NOTARY_PROFILE" --wait
+if [[ -n "${NOTARY_KEY_FILE:-}" ]]; then
+    xcrun notarytool submit "$WORK/notarize.zip" \
+        --key "$NOTARY_KEY_FILE" --key-id "$NOTARY_KEY_ID" \
+        --issuer "$NOTARY_ISSUER_ID" --wait
+else
+    xcrun notarytool submit "$WORK/notarize.zip" \
+        --keychain-profile "$NOTARY_PROFILE" --wait
+fi
 
 echo "==> Stapling"
 xcrun stapler staple "$APP"
@@ -101,18 +111,24 @@ if [[ -z "$GENERATE_APPCAST" ]]; then
     GENERATE_APPCAST="$WORK/sparkle-dist/bin/generate_appcast"
 fi
 
-echo "==> Generating appcast (signs with EdDSA key from Keychain)"
-"$GENERATE_APPCAST" --download-url-prefix "$DOWNLOAD_URL_PREFIX" "$WORK/updates"
+echo "==> Generating appcast"
+APPCAST_ARGS=(--download-url-prefix "$DOWNLOAD_URL_PREFIX")
+if [[ -n "${SPARKLE_ED_KEY_FILE:-}" ]]; then
+    APPCAST_ARGS+=(--ed-key-file "$SPARKLE_ED_KEY_FILE")
+fi
+"$GENERATE_APPCAST" "${APPCAST_ARGS[@]}" "$WORK/updates"
 cp "$WORK/updates/appcast.xml" "$REPO_ROOT/appcast.xml"
 
 # --- Publish ------------------------------------------------------------------
-echo "==> Creating GitHub release $VERSION"
+# Draft: nothing is public (no release, no tag) until the release PR merges to
+# master and .github/workflows/publish-release.yml flips the draft live.
+echo "==> Creating draft GitHub release $VERSION"
 gh release create "$VERSION" "$ZIP" --title "$VERSION" --generate-notes \
-    --target "$(git rev-parse HEAD)"
+    --draft --target "$(git rev-parse HEAD)"
 
 echo "==> Committing appcast"
 git add appcast.xml
 git commit -m "release: $VERSION appcast"
 git push
 
-echo "==> Done. $VERSION is live; Sparkle clients will see it via appcast.xml."
+echo "==> Done. $VERSION is drafted. Merge the release PR into master to publish it."
