@@ -76,8 +76,6 @@ open CaskHub.xcodeproj
 
 Select the **CaskHub** scheme and run (⌘R). Xcode resolves the Swift package dependencies ([Sparkle](https://github.com/sparkle-project/Sparkle), [Sentry](https://github.com/getsentry/sentry-cocoa), and [TelemetryDeck](https://github.com/TelemetryDeck/SwiftSDK)) automatically.
 
-Optional: copy `Configs/Secrets.xcconfig.template` to `Configs/Secrets.xcconfig` and fill in the TelemetryDeck app ID and Sentry DSN. Builds work fine without them; analytics and crash reporting just stay off.
-
 ## Architecture
 
 - **SwiftUI + MVVM** with `@Observable` view models and `@MainActor` isolation
