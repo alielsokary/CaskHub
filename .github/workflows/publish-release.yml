@@ -1,0 +1,31 @@
+name: Publish release
+
+# When a release PR merges to master, publish the draft release that the
+# Release build workflow created. Publishing creates the tag and makes the
+# zip's download URL (already referenced by master's appcast.xml) live.
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish draft release matching the merged version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="$(grep -m1 'MARKETING_VERSION = ' CaskHub.xcodeproj/project.pbxproj \
+            | sed 's/.*= \(.*\);/\1/')"
+          if [ "$(gh release view "$VERSION" --json isDraft --jq .isDraft 2>/dev/null)" = "true" ]; then
+            gh release edit "$VERSION" --draft=false --latest
+            echo "Published $VERSION"
+          else
+            echo "No draft release for $VERSION — nothing to publish."
+          fi
