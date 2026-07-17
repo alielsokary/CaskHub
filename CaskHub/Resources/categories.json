@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-15",
-  "totalCasks": 3800,
+  "generatedDate": "2026-07-16",
+  "totalCasks": 3803,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -6780,6 +6780,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "juicy": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "jukebox": {
       "primary": "audioMusic",
       "secondary": []
@@ -10114,6 +10120,12 @@
         "ai"
       ]
     },
+    "oscar": {
+      "primary": "scienceEducation",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "oscilloscope": {
       "primary": "audioMusic",
       "secondary": []
@@ -12903,6 +12915,12 @@
     "sloth": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "smallstepagent": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "developerTools"
+      ]
     },
     "smart-converter-pro": {
       "primary": "videoMedia",
@@ -16377,5 +16395,5 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.07.15"
+  "releaseTag": "caskflow-v2026.07.17"
 }
