@@ -96,14 +96,17 @@ final class CaskCatalogViewModel {
 
     // MARK: - Sidebar Counts
 
-    /// Number of locally-installed, non-auto-updating casks whose installed
-    /// version differs from the latest available version in the catalog.
+    /// Locally-installed, non-auto-updating casks whose installed version
+    /// differs from the latest available version in the catalog. Feeds the
+    /// sidebar badge, the Updates page and the Update All button.
+    var updatableCasks: [Cask] {
+        casks.filter { [localHomebrew] in
+            localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
+        }
+    }
+
     var updatesCount: Int {
-        casks.lazy
-            .filter { [localHomebrew] in
-                localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
-            }
-            .count
+        updatableCasks.count
     }
 
     /// Category ID → number of catalog casks in it (intersected with the
@@ -180,9 +183,7 @@ final class CaskCatalogViewModel {
             return casks.filter { localHomebrew.isInstalled(token: $0.token) }
 
         case .library(.updates):
-            return casks.filter {
-                localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
-            }
+            return updatableCasks
 
         case let .category(categoryID):
             let tokens = categoryService.tokens(in: categoryID)

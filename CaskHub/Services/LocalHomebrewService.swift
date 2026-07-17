@@ -29,6 +29,8 @@ enum CaskAction: Equatable {
     case installing
     case updating
     case uninstalling
+    /// In the Update All queue, not yet started.
+    case queued
 
     var inProgressLabel: String {
         switch self {
@@ -36,6 +38,7 @@ enum CaskAction: Equatable {
         case .installing: return "Installing…"
         case .updating: return "Updating…"
         case .uninstalling: return "Uninstalling…"
+        case .queued: return "Queued…"
         }
     }
 }
@@ -101,6 +104,9 @@ final class LocalHomebrewService {
 
     /// Token → most recent error message from a failed action. Cleared on the next attempt.
     private(set) var actionErrors: [String: String] = [:]
+
+    /// True while `updateAll` is walking its queue; drives the Update All button.
+    private(set) var isUpdatingAll = false
 
     /// Last successful refresh timestamp; nil before the first scan completes.
     private(set) var lastRefresh: Date?
@@ -223,6 +229,23 @@ final class LocalHomebrewService {
         try await runMutation(.updating, token: token, args: ["upgrade", "--cask", token])
     }
 
+    /// Upgrades every token, one at a time — concurrent brew processes contend
+    /// for Homebrew's locks. A failed upgrade lands in `actionErrors[token]`
+    /// (surfaced by that cask's alert) without stopping the rest of the queue.
+    func updateAll(tokens: [String]) async {
+        guard !isUpdatingAll else { return }
+        isUpdatingAll = true
+        defer { isUpdatingAll = false }
+        // Mark the whole queue up front: waiting cards show "Waiting…"
+        // instead of a tappable Update button that would race the queue.
+        for token in tokens where inFlightActions[token] == nil {
+            inFlightActions[token] = .queued
+        }
+        for token in tokens {
+            try? await upgrade(token: token)
+        }
+    }
+
     /// Cancels an in-flight install. Only honored during the download phase —
     /// once brew starts staging files, cancelling could leave a broken install.
     /// Sends SIGINT to brew and its children (curl); escalates to SIGTERM if
@@ -244,7 +267,9 @@ final class LocalHomebrewService {
     // MARK: - Mutation Plumbing
 
     private func runMutation(_ action: CaskAction, token: String, args: [String]) async throws {
-        guard inFlightActions[token] == nil else { return }
+        // .queued is a placeholder set by updateAll — its upgrade may proceed;
+        // anything else means a real action is already running.
+        guard inFlightActions[token] == nil || inFlightActions[token] == .queued else { return }
         inFlightActions[token] = action
         actionErrors[token] = nil
         let startedAt = Date.now

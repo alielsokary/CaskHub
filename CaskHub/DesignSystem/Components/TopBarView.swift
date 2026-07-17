@@ -24,6 +24,9 @@ struct TopBarView: View {
     /// Non-nil on Recently Added: shows the 30/60/90-day window chip.
     var recentWindow: RecentlyAddedWindow?
     var onSelectWindow: ((RecentlyAddedWindow) -> Void)?
+    /// Non-nil on Updates with pending updates: shows the Update All capsule.
+    var onUpdateAll: (() -> Void)?
+    var isUpdatingAll = false
     /// Hidden on Featured — that list is curated, sorting doesn't apply.
     var showsSort = true
     /// Called when the user presses Return in the search field.
@@ -44,6 +47,9 @@ struct TopBarView: View {
 
             Spacer(minLength: 10)
 
+            if onUpdateAll != nil {
+                updateAllChip
+            }
             if showsSort {
                 sortChip
             }
@@ -62,6 +68,35 @@ struct TopBarView: View {
         }
         .padding(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 10))
         .glassPanel(radius: 999, surface: .chSurfaceToolbar)
+    }
+
+    // MARK: - Update All chip
+
+    /// Amber capsule matching the per-cask Update action; spins and disables
+    /// while the queue is draining.
+    private var updateAllChip: some View {
+        Button {
+            onUpdateAll?()
+        } label: {
+            HStack(spacing: 6) {
+                if isUpdatingAll {
+                    ProgressView().controlSize(.mini)
+                } else {
+                    Image(systemName: CaskActionStyle.update.icon)
+                        .font(.system(size: 10, weight: .bold))
+                }
+                Text(isUpdatingAll ? "Updating…" : "Update All")
+                    .font(CHType.button)
+            }
+            .foregroundStyle(Color.chActionUpdateFg)
+            .padding(.vertical, 5)
+            .padding(.horizontal, 14)
+            .background(Capsule().fill(Color.chActionUpdateBg))
+            .overlay(Capsule().strokeBorder(Color.chActionUpdateBorder, lineWidth: 1))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(isUpdatingAll)
     }
 
     // MARK: - Sort chip
