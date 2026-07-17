@@ -48,8 +48,6 @@ mkdir -p "$WORK/updates"
 
 # --- Archive & export with Developer ID --------------------------------------
 echo "==> Archiving"
-# Sign with Developer ID at archive time — the project's automatic "Apple
-# Development" identity only exists on Ali's Mac, not in the CI keychain.
 xcodebuild -project CaskHub.xcodeproj -scheme CaskHub -configuration Release \
     archive -archivePath "$WORK/CaskHub.xcarchive" \
     -derivedDataPath "$WORK/DerivedData" \
