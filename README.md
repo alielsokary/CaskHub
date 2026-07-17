@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg)](https://codecov.io/gh/alielsokary/CaskHub)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub?include_prereleases)](https://github.com/alielsokary/CaskHub/releases)
-[![Platform](https://img.shields.io/badge/Platform-macOS%2015.0%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
+[![Platform](https://img.shields.io/badge/Platform-macOS%2015.6%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
 
 <img width="1700" height="500" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
 
