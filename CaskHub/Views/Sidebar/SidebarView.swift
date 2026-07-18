@@ -18,11 +18,9 @@ struct SidebarView: View {
         VStack(alignment: .leading, spacing: 0) {
             BrandWordmark()
                 .padding(.horizontal, 18)
-                .padding(.top, 38) // just below the traffic lights (hidden title bar)
+                .padding(.top, 38)
                 .padding(.bottom, 6)
 
-            // Custom rows instead of List selection: the terracotta capsule
-            // highlight must not turn gray when the sidebar loses focus.
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     sectionHeader("DISCOVER")

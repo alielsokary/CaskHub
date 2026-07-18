@@ -23,8 +23,6 @@ struct TokenCategoryMapping: Codable, Hashable {
 struct CaskCategoryData: Codable {
     let version: Int
     let generatedDate: String
-    /// GitHub release tag (e.g. "caskflow-v2026.07.10"), stamped into the
-    /// asset by CaskFlow's release workflow. Absent in older data.
     let releaseTag: String?
     let totalCasks: Int
     let categories: [String: CategoryDefinition]
@@ -61,9 +59,6 @@ final class CategoryService {
         applyData(catalog)
     }
 
-    /// Best-effort fetch of the latest categories.json from CaskFlow's GitHub Releases.
-    /// Silent on every failure path — bundled data remains in use.
-    /// Schema-version mismatches and older `generatedDate` values are also rejected.
     func refreshFromRemote() async {
         guard let remote = await CaskFlowReleases.fetch(CaskCategoryData.self, asset: "categories.json"),
               remote.version == version,
@@ -90,12 +85,10 @@ final class CategoryService {
         releaseTag = catalog.releaseTag
     }
 
-    /// Returns the primary category for a cask token.
     func category(for token: String) -> CategoryID? {
         tokenMappings[token]?.primary
     }
 
-    /// Returns all cask tokens in a category (includes both primary and secondary assignments).
     func tokens(in categoryID: CategoryID) -> Set<String> {
         categoryTokenSets[categoryID] ?? []
     }

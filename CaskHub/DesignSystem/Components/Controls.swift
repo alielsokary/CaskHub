@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Tonal liquid-glass controls: capsule action buttons, count badge, keycap.
-
 enum CaskActionStyle {
     case install, update, open, installed
 
@@ -98,7 +96,6 @@ struct ActionCapsuleButton: View {
     }
 }
 
-/// Amber count badge (sidebar "Updates", status bar).
 struct CountBadge: View {
     let count: Int
 
@@ -112,7 +109,6 @@ struct CountBadge: View {
     }
 }
 
-/// Glass keycap for keyboard hints (⌘K, /, U …).
 struct Keycap: View {
     let symbol: String
 

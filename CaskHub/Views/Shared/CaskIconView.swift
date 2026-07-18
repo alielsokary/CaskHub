@@ -72,23 +72,7 @@ struct CaskIconView: View {
 }
 
 #Preview {
-    let sampleCask = Cask(
-        token: "firefox",
-        fullToken: nil,
-        tap: nil,
-        name: ["Firefox"],
-        desc: "Web browser",
-        homepage: "https://www.mozilla.org/firefox/",
-        url: nil,
-        version: "125.0",
-        installed: nil,
-        bundleVersion: nil,
-        bundleShortVersion: nil,
-        outdated: false,
-        deprecated: false,
-        disabled: false,
-        autoUpdates: true
-    )
+    let sampleCask = Cask.preview(token: "firefox", name: "Firefox", desc: "Web browser", version: "125.0")
     HStack(spacing: 20) {
         CaskIconView(cask: sampleCask, size: 32)
         CaskIconView(cask: sampleCask, size: 44)

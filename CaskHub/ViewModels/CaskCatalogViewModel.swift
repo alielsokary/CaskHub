@@ -8,7 +8,6 @@
 import Foundation
 import Observation
 
-/// One shelf on the Browse page: a titled row group with a "View All" destination.
 struct BrowseSection: Identifiable {
     let title: String
     let destination: SidebarSelection
@@ -30,7 +29,6 @@ enum SortOption: String, CaseIterable, Identifiable {
         rawValue
     }
 
-    /// Date sorts only make sense where add dates drive the page.
     static let standard: [SortOption] = [.mostPopular, .nameAZ, .nameZA]
 }
 
@@ -47,9 +45,6 @@ final class CaskCatalogViewModel {
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"
 
-    /// Top Charts respects the picked period; every other section stays on 365d.
-    /// Falls back to 365d while a shorter period is still loading so the
-    /// popularity sort doesn't collapse to arbitrary order.
     var downloadCounts: [String: Int] {
         guard selectedSidebar == .discover(.topCharts) else {
             return analyticsByPeriod[.days365] ?? [:]
@@ -62,7 +57,6 @@ final class CaskCatalogViewModel {
     var sortOption: SortOption = .mostPopular
     var selectedSidebar: SidebarSelection = .discover(.browse)
 
-    /// Window for the Recently Added page and Browse shelf.
     private(set) var recentlyAddedWindow: RecentlyAddedWindow = .days30
 
     private let apiClient: BrewAPIClientProtocol
@@ -84,7 +78,6 @@ final class CaskCatalogViewModel {
         self.localHomebrew = localHomebrew
         self.defaults = defaults
 
-        // Restore persisted picks.
         if let raw = defaults.string(forKey: Self.periodKey),
            let period = AnalyticsPeriod(rawValue: raw) {
             analyticsPeriod = period
@@ -96,9 +89,6 @@ final class CaskCatalogViewModel {
 
     // MARK: - Sidebar Counts
 
-    /// Locally-installed, non-auto-updating casks whose installed version
-    /// differs from the latest available version in the catalog. Feeds the
-    /// sidebar badge, the Updates page and the Update All button.
     var updatableCasks: [Cask] {
         casks.filter { [localHomebrew] in
             localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
@@ -109,8 +99,6 @@ final class CaskCatalogViewModel {
         updatableCasks.count
     }
 
-    /// Category ID → number of catalog casks in it (intersected with the
-    /// mapping data, so sidebar counts match what clicking the category shows).
     var categoryCounts: [String: Int] {
         let catalogTokens = Set(casks.map(\.token))
         return categoryService.categoryTokenSets.mapValues {
@@ -120,12 +108,8 @@ final class CaskCatalogViewModel {
 
     // MARK: - Browse Sections
 
-    /// Cards per Browse shelf: two rows of the fixed 4-column grid.
     private static let browseSectionSize = 8
 
-    /// Shelves for the Browse page: Most Popular, Recently Added (newest
-    /// first), then every category except "other" — the rest holding their
-    /// top casks by 365d downloads.
     var browseSections: [BrowseSection] {
         let counts = analyticsByPeriod[.days365] ?? [:]
         func top(_ source: [Cask]) -> [Cask] {
@@ -256,13 +240,11 @@ final class CaskCatalogViewModel {
         isLoading = false
     }
 
-    /// Switches the Recently Added window and remembers the pick.
     func selectRecentlyAddedWindow(_ window: RecentlyAddedWindow) {
         recentlyAddedWindow = window
         defaults.set(window.rawValue, forKey: Self.windowKey)
     }
 
-    /// Switches the Top Charts window, fetching that period's data on first use.
     func selectAnalyticsPeriod(_ period: AnalyticsPeriod) async {
         analyticsPeriod = period
         defaults.set(period.rawValue, forKey: Self.periodKey)
@@ -281,13 +263,7 @@ final class CaskCatalogViewModel {
 
     func formattedDownloads(for token: String) -> String? {
         guard let count = downloadCounts[token], count > 0 else { return nil }
-        switch count {
-        case 1_000_000...:
-            return String(format: "%.1fM", Double(count) / 1_000_000)
-        case 1000...:
-            return String(format: "%.1fK", Double(count) / 1000)
-        default:
-            return "\(count)"
-        }
+        // ponytail: en_US pin keeps the K/M suffixes stable across locales
+        return count.formatted(.number.notation(.compactName).locale(Locale(identifier: "en_US")))
     }
 }

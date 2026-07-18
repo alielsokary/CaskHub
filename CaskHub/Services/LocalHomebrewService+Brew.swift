@@ -7,15 +7,9 @@
 
 import Foundation
 
-/// The nonisolated plumbing that talks to the Homebrew installation directly:
-/// process helpers, Caskroom scanning, and path discovery. No UI state here —
-/// everything is static and safe to call off the main actor.
 extension LocalHomebrewService {
     // MARK: - Process Helpers
 
-    /// Writes the SUDO_ASKPASS helper: re-execs this binary in `--askpass`
-    /// mode. Rewritten per mutation so the binary path (moves between dev
-    /// builds) and the token stay current.
     nonisolated static func ensureAskpassScript(token: String) -> URL? {
         guard let executablePath = Bundle.main.executableURL?.path else { return nil }
         // Interpolated into a shell script — keep only known-safe characters.
@@ -43,8 +37,6 @@ extension LocalHomebrewService {
         return url
     }
 
-    /// Sends `signal` to a process and all of its descendants (brew forks curl;
-    /// signalling only brew would leave curl downloading to a dead parent).
     nonisolated static func signalTree(pid: Int32, signal: Int32) {
         let pgrep = Process()
         pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
@@ -65,10 +57,6 @@ extension LocalHomebrewService {
         kill(pid, signal)
     }
 
-    /// Deletes downloads newer than `cutoff` from Homebrew's cache — the only
-    /// residue a download-phase cancel leaves behind. Covers both `*.incomplete`
-    /// partials and just-finished archives (cancel can land after the download
-    /// completed but before staging began).
     nonisolated static func cleanupIncompleteDownloads(since cutoff: Date) {
         let fm = FileManager.default
         let cacheURL: URL
@@ -89,7 +77,6 @@ extension LocalHomebrewService {
         }
     }
 
-    /// Runs `brew --version` and returns the bare version ("Homebrew 4.6.15" → "4.6.15").
     nonisolated static func fetchBrewVersion() async -> String? {
         guard let brewURL = locateBrewBinary() else { return nil }
         return await Task.detached(priority: .utility) {
@@ -116,7 +103,6 @@ extension LocalHomebrewService {
 
     // MARK: - Filesystem Scanning
 
-    /// Scans the Caskroom to build a map of locally-installed casks.
     nonisolated static func scanCaskroom(
         fileManager: FileManager
     ) -> Result<[String: LocalCaskInstallation], LocalHomebrewError> {
@@ -140,26 +126,14 @@ extension LocalHomebrewService {
         return .success(result)
     }
 
-    /// Builds the snapshot for one `Caskroom/<token>/` directory.
-    ///
-    /// **Version**: read from the version-directory NAME (e.g.
-    /// `Caskroom/finetune/1.4.1/`), NOT from `INSTALL_RECEIPT.json`'s
-    /// `source.version` which freezes at the original install and never
-    /// updates after `brew upgrade`. When several version directories exist,
-    /// the most recently modified one wins.
-    ///
-    /// **Date**: the version directory's modification date — when Homebrew
-    /// staged the files for that version.
-    ///
-    /// **App bundles**: extracted from the install receipt's
-    /// `uninstall_artifacts` — the app name rarely changes between versions.
+    /// Version comes from the version-directory name, not the receipt's `source.version`,
+    /// which freezes at the original install and never updates after `brew upgrade`.
     private nonisolated static func scanCaskEntry(
         _ entry: URL,
         fileManager: FileManager
     ) -> LocalCaskInstallation? {
         var isDir: ObjCBool = false
         guard fileManager.fileExists(atPath: entry.path, isDirectory: &isDir), isDir.boolValue,
-              // `.skipsHiddenFiles` also excludes the `.metadata/` directory.
               let subDirs = try? fileManager.contentsOfDirectory(
                   at: entry,
                   includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey],
@@ -197,8 +171,6 @@ extension LocalHomebrewService {
 
     // MARK: - Path Discovery
 
-    /// Candidate locations for `relativePath` under the Homebrew prefix:
-    /// `$HOMEBREW_PREFIX` first, then Apple Silicon, then Intel default.
     private nonisolated static func brewPrefixCandidates(_ relativePath: String) -> [URL] {
         var candidates: [URL] = []
         if let prefix = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"], !prefix.isEmpty {

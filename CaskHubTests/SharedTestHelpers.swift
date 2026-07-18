@@ -43,26 +43,17 @@ func makeCask(
     disabled: Bool = false,
     autoUpdates: Bool? = nil
 ) -> Cask {
-    Cask(
+    .preview(
         token: token,
-        fullToken: nil,
-        tap: nil,
-        name: [name ?? token],
+        name: name,
         desc: desc,
-        homepage: "https://example.com",
-        url: nil,
         version: version,
-        installed: nil,
-        bundleVersion: nil,
-        bundleShortVersion: nil,
-        outdated: false,
         deprecated: deprecated,
         disabled: disabled,
         autoUpdates: autoUpdates
     )
 }
 
-/// (token, count) pairs — counts as the API's comma-grouped strings.
 @MainActor
 func analyticsResponse(_ counts: [(String, String)]) -> CaskAnalyticsResponse {
     CaskAnalyticsResponse(
@@ -82,13 +73,11 @@ func installation(_ token: String, version: String) -> LocalCaskInstallation {
     LocalCaskInstallation(token: token, installedVersion: version, installedAt: nil, appBundleNames: [])
 }
 
-/// "YYYY-MM-DD" matching RecentlyAddedService's date format.
 func dateString(daysAgo: Int) -> String {
     let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: .now)!
     return date.formatted(.iso8601.year().month().day())
 }
 
-// Nil defaults: MainActor-isolated inits can't run in default-argument position.
 @MainActor
 func makeViewModel(
     api: MockBrewAPIClient,
@@ -102,13 +91,10 @@ func makeViewModel(
         categoryService: categories ?? CategoryService(),
         recentlyAdded: recentlyAdded ?? RecentlyAddedService(),
         localHomebrew: localHomebrew ?? LocalHomebrewService(),
-        // Scratch suite by default so no test ever writes the app's real prefs.
         defaults: defaults ?? makeScratchDefaults("viewmodel-scratch")
     )
 }
 
-/// A scratch UserDefaults suite, wiped before use so persistence tests
-/// never see each other's (or the real app's) values.
 func makeScratchDefaults(_ name: String = #function) -> UserDefaults {
     let suite = "test.\(name)"
     let defaults = UserDefaults(suiteName: suite)!
@@ -116,10 +102,6 @@ func makeScratchDefaults(_ name: String = #function) -> UserDefaults {
     return defaults
 }
 
-/// The arrange-and-act ritual shared by most catalog tests: a mock API
-/// pre-loaded with `casks` (plus optional year-window analytics), wrapped
-/// in a view model that has already fetched. The api is returned for
-/// call-count assertions and post-fetch stubbing.
 @MainActor
 func makeSUT(
     casks: [Cask] = [],

@@ -38,8 +38,6 @@ struct CaskCardView: View {
 
     // MARK: - Header (icon well + name + info)
 
-    /// Fixed-height header (room for a 2-line title + tag) keeps the description,
-    /// metadata and action button at the same position on every card.
     private var headerRow: some View {
         HStack(alignment: .top, spacing: 10) {
             CaskIconView(cask: cask, size: 38)
@@ -106,21 +104,11 @@ struct CaskCardView: View {
         WindowBackdrop()
         HStack {
             CaskCardView(
-                cask: Cask(
+                cask: .preview(
                     token: "firefox",
-                    fullToken: "firefox",
-                    tap: "homebrew/cask",
-                    name: ["Firefox"],
+                    name: "Firefox",
                     desc: "Web browser developed by Mozilla Foundation",
-                    homepage: "https://www.mozilla.org/firefox/",
-                    url: "https://download.mozilla.org/firefox.dmg",
                     version: "125.0",
-                    installed: nil,
-                    bundleVersion: nil,
-                    bundleShortVersion: nil,
-                    outdated: false,
-                    deprecated: false,
-                    disabled: false,
                     autoUpdates: true
                 ),
                 downloads: "1.2M"
@@ -128,22 +116,11 @@ struct CaskCardView: View {
             .frame(width: 250)
 
             CaskCardView(
-                cask: Cask(
+                cask: .preview(
                     token: "ledger-live",
-                    fullToken: "ledger-live",
-                    tap: "homebrew/cask",
-                    name: ["Ledger Live"],
+                    name: "Ledger Live",
                     desc: "Manage your crypto assets and hardware wallet securely.",
-                    homepage: "https://www.ledger.com",
-                    url: nil,
-                    version: "2.80.0",
-                    installed: nil,
-                    bundleVersion: nil,
-                    bundleShortVersion: nil,
-                    outdated: false,
-                    deprecated: false,
-                    disabled: false,
-                    autoUpdates: nil
+                    version: "2.80.0"
                 ),
                 downloads: "45K"
             )
