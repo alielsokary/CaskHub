@@ -43,18 +43,11 @@ func makeCask(
     disabled: Bool = false,
     autoUpdates: Bool? = nil
 ) -> Cask {
-    Cask(
+    .preview(
         token: token,
-        fullToken: nil,
-        tap: nil,
-        name: [name ?? token],
+        name: name,
         desc: desc,
-        homepage: "https://example.com",
-        url: nil,
         version: version,
-        bundleVersion: nil,
-        bundleShortVersion: nil,
-        outdated: false,
         deprecated: deprecated,
         disabled: disabled,
         autoUpdates: autoUpdates

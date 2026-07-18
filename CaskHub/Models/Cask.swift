@@ -92,23 +92,19 @@ extension Cask {
         token: String,
         name: String? = nil,
         desc: String? = nil,
-        homepage: String = "https://example.com",
-        url: String? = nil,
         version: String = "1.0",
         deprecated: Bool = false,
         disabled: Bool = false,
-        autoUpdates: Bool? = nil,
-        fullToken: String? = nil,
-        tap: String? = nil
+        autoUpdates: Bool? = nil
     ) -> Cask {
         Cask(
             token: token,
-            fullToken: fullToken,
-            tap: tap,
+            fullToken: nil,
+            tap: nil,
             name: [name ?? token],
             desc: desc,
-            homepage: homepage,
-            url: url,
+            homepage: "https://example.com",
+            url: nil,
             version: version,
             bundleVersion: nil,
             bundleShortVersion: nil,

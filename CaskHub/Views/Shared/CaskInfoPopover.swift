@@ -176,16 +176,21 @@ enum DownloadSizeCache {
 
 #Preview {
     CaskInfoPopover(
-        cask: .preview(
+        cask: Cask(
             token: "1password",
-            name: "1Password",
+            fullToken: "1password",
+            tap: "homebrew/cask",
+            name: ["1Password"],
             desc: "Password manager",
             homepage: "https://1password.com/",
             url: "https://downloads.1password.com/mac/1Password-8.12.10-aarch64.zip",
             version: "8.12.10",
-            autoUpdates: true,
-            fullToken: "1password",
-            tap: "homebrew/cask"
+            bundleVersion: nil,
+            bundleShortVersion: nil,
+            outdated: false,
+            deprecated: false,
+            disabled: false,
+            autoUpdates: true
         )
     )
     .environment(LocalHomebrewService())
