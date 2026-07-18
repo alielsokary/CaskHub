@@ -71,6 +71,7 @@ struct CaskIconView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     let sampleCask = Cask.preview(token: "firefox", name: "Firefox", desc: "Web browser", version: "125.0")
     HStack(spacing: 20) {
@@ -82,3 +83,4 @@ struct CaskIconView: View {
     .background(Color.chCream)
     .environment(ImageCacheService())
 }
+#endif

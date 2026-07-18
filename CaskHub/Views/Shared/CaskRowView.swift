@@ -21,7 +21,7 @@ struct CaskRowView: View {
             Spacer()
             metadata
             actionsControl
-                .frame(width: 130)
+                .frame(minWidth: 130, alignment: .trailing)
             menuSlot
                 .frame(width: 24)
         }
@@ -58,7 +58,7 @@ struct CaskRowView: View {
     // MARK: - Actions
 
     private var actionsControl: some View {
-        CaskActionsView(cask: cask)
+        CaskActionsView(cask: cask, fullWidth: false)
     }
 
     @ViewBuilder
@@ -91,6 +91,7 @@ struct CaskRowView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     List {
         CaskRowView(
@@ -108,3 +109,4 @@ struct CaskRowView: View {
     .environment(LocalHomebrewService())
     .environment(ImageCacheService())
 }
+#endif

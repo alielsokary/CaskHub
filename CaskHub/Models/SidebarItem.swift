@@ -32,6 +32,7 @@ enum DiscoverItem: String, CaseIterable, Identifiable {
 enum LibraryItem: String, CaseIterable, Identifiable {
     case installed = "Installed"
     case updates = "Updates"
+    case adopt = "Adopt Apps"
 
     var id: String {
         rawValue
@@ -41,6 +42,7 @@ enum LibraryItem: String, CaseIterable, Identifiable {
         switch self {
         case .installed: return "arrow.down.to.line"
         case .updates: return "arrow.triangle.2.circlepath"
+        case .adopt: return "tray.and.arrow.down"
         }
     }
 }

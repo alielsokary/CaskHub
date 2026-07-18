@@ -41,9 +41,10 @@ func makeCask(
     version: String = "1.0",
     deprecated: Bool = false,
     disabled: Bool = false,
-    autoUpdates: Bool? = nil
+    autoUpdates: Bool? = nil,
+    appNames: [String]? = nil
 ) -> Cask {
-    .preview(
+    var cask = Cask.preview(
         token: token,
         name: name,
         desc: desc,
@@ -52,6 +53,8 @@ func makeCask(
         disabled: disabled,
         autoUpdates: autoUpdates
     )
+    cask.artifacts = appNames.map { [ArtifactStanza(keys: ["app"], appNames: $0)] }
+    return cask
 }
 
 @MainActor
@@ -135,7 +138,8 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
         releaseTag: nil,
         totalCasks: tokenToCategory.count,
         categories: categories,
-        tokenToCategory: tokenToCategory
+        tokenToCategory: tokenToCategory,
+        iconTokens: nil
     ))
     return service
 }

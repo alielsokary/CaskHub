@@ -43,6 +43,8 @@
 		41DFD4A130028F7D00608C7A /* CategoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46F30028F7D00608C7A /* CategoryService.swift */; };
 		41DFD4A230028F7D00608C7A /* ImageCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47030028F7D00608C7A /* ImageCacheService.swift */; };
 		41DFD4A330028F7D00608C7A /* InstallReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47130028F7D00608C7A /* InstallReceipt.swift */; };
+		7FFA89946C514C00BF5496DB /* BrewOutputCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */; };
+		D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */; };
 		41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */; };
 		41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */; };
 		41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */; };
@@ -107,6 +109,8 @@
 		41DFD46F30028F7D00608C7A /* CategoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryService.swift; sourceTree = "<group>"; };
 		41DFD47030028F7D00608C7A /* ImageCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheService.swift; sourceTree = "<group>"; };
 		41DFD47130028F7D00608C7A /* InstallReceipt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallReceipt.swift; sourceTree = "<group>"; };
+		5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewOutputCollector.swift; sourceTree = "<group>"; };
+		41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppManagementPermission.swift; sourceTree = "<group>"; };
 		41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewService.swift; sourceTree = "<group>"; };
 		41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Brew.swift"; sourceTree = "<group>"; };
 		41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyAddedService.swift; sourceTree = "<group>"; };
@@ -236,6 +240,8 @@
 				41DFD46F30028F7D00608C7A /* CategoryService.swift */,
 				41DFD47030028F7D00608C7A /* ImageCacheService.swift */,
 				41DFD47130028F7D00608C7A /* InstallReceipt.swift */,
+				5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */,
+				41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */,
 				41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */,
 				41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */,
 				41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */,
@@ -503,6 +509,8 @@
 				41DFD4A130028F7D00608C7A /* CategoryService.swift in Sources */,
 				41DFD4A230028F7D00608C7A /* ImageCacheService.swift in Sources */,
 				41DFD4A330028F7D00608C7A /* InstallReceipt.swift in Sources */,
+				7FFA89946C514C00BF5496DB /* BrewOutputCollector.swift in Sources */,
+				D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */,
 				41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */,
 				41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */,
 				41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */,

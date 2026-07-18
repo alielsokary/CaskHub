@@ -93,10 +93,15 @@ struct CaskInfoPopover: View {
 
         let localInstallation = localHomebrew.installedCasks[cask.token]
 
-        result.append(InfoRow(
-            property: "Installed Version",
-            value: localInstallation?.installedVersion ?? "Not installed"
-        ))
+        let installedValue: String
+        if let version = localInstallation?.installedVersion {
+            installedValue = version
+        } else if let external = localHomebrew.externalAppVersion(for: cask) {
+            installedValue = "\(external) (not adopted)"
+        } else {
+            installedValue = "Not installed"
+        }
+        result.append(InfoRow(property: "Installed Version", value: installedValue))
 
         if let bundleVersion = cask.bundleVersion {
             result.append(InfoRow(property: "Bundle Version", value: bundleVersion))

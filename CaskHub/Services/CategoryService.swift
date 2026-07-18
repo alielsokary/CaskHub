@@ -27,6 +27,9 @@ struct CaskCategoryData: Codable {
     let totalCasks: Int
     let categories: [String: CategoryDefinition]
     let tokenToCategory: [String: TokenCategoryMapping]
+    /// Manifest of tokens with an icon on the CaskFlow icons branch, stamped
+    /// into the release asset. Absent in pre-2026.07 data → nil.
+    let iconTokens: [String]?
 }
 
 @MainActor
@@ -38,6 +41,7 @@ final class CategoryService {
     private(set) var version: Int = 0
     private(set) var generatedDate: String = ""
     private(set) var releaseTag: String?
+    private(set) var iconTokens: Set<String>?
 
     var orderedCategories: [(id: CategoryID, definition: CategoryDefinition)] {
         categoryDefinitions
@@ -83,6 +87,7 @@ final class CategoryService {
         version = catalog.version
         generatedDate = catalog.generatedDate
         releaseTag = catalog.releaseTag
+        iconTokens = catalog.iconTokens.map(Set.init)
     }
 
     func category(for token: String) -> CategoryID? {

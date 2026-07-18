@@ -78,6 +78,7 @@ struct GeneralSettingsView: View {
     @Environment(UpdaterService.self) private var updater
     @Environment(ImageCacheService.self) private var imageCache
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var appManagement: AppManagementPermission.Status = .unknown
 
     var body: some View {
         @Bindable var updater = updater
@@ -91,6 +92,25 @@ struct GeneralSettingsView: View {
             Section("Updates") {
                 Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
             }
+            Section("Permissions") {
+                LabeledContent("App Management") {
+                    HStack(spacing: 10) {
+                        permissionBadge
+                        if appManagement != .granted {
+                            Button("Open System Settings") {
+                                AppManagementPermission.openSystemSettings()
+                            }
+                        }
+                    }
+                }
+                Text("""
+                Needed to adopt or update apps whose casks modify the app bundle \
+                (macOS otherwise blocks CaskHub from modifying other apps). Enable \
+                CaskHub under System Settings → Privacy & Security → App Management.
+                """)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            }
             Section("Storage") {
                 LabeledContent("Clear cached app icons") {
                     Button("Clear Cache") { imageCache.clearCache() }
@@ -102,6 +122,35 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .task { refreshAppManagement() }
+        .onReceive(
+            NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
+        ) { _ in
+            // Re-probe when the user comes back from System Settings.
+            refreshAppManagement()
+        }
+    }
+
+    @ViewBuilder
+    private var permissionBadge: some View {
+        switch appManagement {
+        case .granted:
+            Label("Granted", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        case .denied:
+            Label("Not Granted", systemImage: "xmark.circle.fill")
+                .foregroundStyle(.red)
+        case .unknown:
+            Label("Unknown", systemImage: "questionmark.circle")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func refreshAppManagement() {
+        Task.detached(priority: .utility) {
+            let status = AppManagementPermission.probe()
+            await MainActor.run { appManagement = status }
+        }
     }
 
     private func setLaunchAtLogin(_ enabled: Bool) {

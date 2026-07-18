@@ -9,6 +9,12 @@ import Foundation
 
 struct ArtifactStanza: Codable, Hashable {
     let keys: Set<String>
+    let appNames: [String]
+
+    init(keys: Set<String>, appNames: [String] = []) {
+        self.keys = keys
+        self.appNames = appNames
+    }
 
     private struct AnyKey: CodingKey {
         var stringValue: String
@@ -25,15 +31,54 @@ struct ArtifactStanza: Codable, Hashable {
         }
     }
 
+    /// An `app` array element: a bundle name, or a `{"target": …}` rename dict.
+    /// Lenient so one odd entry can't zero out the whole array.
+    private struct AppEntry: Decodable {
+        let name: String?
+        let target: String?
+
+        init(from decoder: Decoder) throws {
+            if let string = try? decoder.singleValueContainer().decode(String.self) {
+                name = string
+                target = nil
+                return
+            }
+            name = nil
+            target = (try? decoder.container(keyedBy: AnyKey.self))
+                .flatMap { try? $0.decode(String.self, forKey: AnyKey(stringValue: "target")!) }
+        }
+    }
+
     init(from decoder: Decoder) throws {
-        keys = Set((try? decoder.container(keyedBy: AnyKey.self))?
-            .allKeys.map(\.stringValue) ?? [])
+        guard let container = try? decoder.container(keyedBy: AnyKey.self) else {
+            keys = []
+            appNames = []
+            return
+        }
+        keys = Set(container.allKeys.map(\.stringValue))
+
+        let entries = AnyKey(stringValue: "app")
+            .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? []
+        var names: [String] = []
+        for entry in entries {
+            if let name = entry.name {
+                names.append(name)
+            } else if let target = entry.target, !names.isEmpty {
+                // `app "X.app", target: "Y.app"` — the on-disk bundle is the target.
+                names[names.count - 1] = URL(fileURLWithPath: target).lastPathComponent
+            }
+        }
+        appNames = names
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: AnyKey.self)
         for key in keys {
-            try container.encode(true, forKey: AnyKey(stringValue: key)!)
+            if key == "app", !appNames.isEmpty {
+                try container.encode(appNames, forKey: AnyKey(stringValue: key)!)
+            } else {
+                try container.encode(true, forKey: AnyKey(stringValue: key)!)
+            }
         }
     }
 }
@@ -57,6 +102,11 @@ struct Cask: Codable, Identifiable, Hashable {
 
     var id: String {
         token
+    }
+
+    /// Bundle names this cask installs into /Applications (e.g. "Google Chrome.app").
+    var appArtifactNames: [String] {
+        artifacts?.flatMap(\.appNames) ?? []
     }
 
     var isCLI: Bool {

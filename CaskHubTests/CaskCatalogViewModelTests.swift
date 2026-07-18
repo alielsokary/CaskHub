@@ -106,7 +106,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_installed_and_updates_pages_reflect_local_state() async {
-        let local = LocalHomebrewService()
+        // Scratch defaults: the host app's real prefs may have greedyUpdates on.
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("installed-updates"))
         local.installedCasks = [
             "firefox": installation("firefox", version: "1.0"),
             "slack": installation("slack", version: "2.0"),

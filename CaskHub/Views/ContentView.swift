@@ -34,6 +34,7 @@ struct ContentView: View {
                 categoryService: categoryService,
                 updatesCount: viewModel.updatesCount,
                 installedCount: localHomebrew.installedCasks.count,
+                adoptableCount: viewModel.adoptableCasks.count,
                 categoryCounts: viewModel.categoryCounts
             )
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
@@ -67,6 +68,11 @@ struct ContentView: View {
                         }
                         : nil,
                     isUpdatingAll: localHomebrew.isUpdatingAll,
+                    greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
+                    onToggleGreedy: { enabled in
+                        Analytics.greedyUpdatesChanged(enabled)
+                        localHomebrew.setGreedyUpdates(enabled)
+                    },
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
                     onSubmitSearch: {
                         searchFocused = false
@@ -89,6 +95,7 @@ struct ContentView: View {
                 }
 
                 detailContent
+                    .environment(\.isAdoptPage, selectedSidebar == .library(.adopt))
             }
             .ignoresSafeArea(.container, edges: .top)
         }
@@ -270,13 +277,21 @@ private extension ContentView {
     // MARK: - List View
 
     var listView: some View {
-        List(viewModel.filteredCasks) { cask in
-            CaskRowView(
-                cask: cask,
-                downloads: viewModel.formattedDownloads(for: cask.token)
-            )
+        List {
+            ForEach(viewModel.filteredCasks) { cask in
+                CaskRowView(
+                    cask: cask,
+                    downloads: viewModel.formattedDownloads(for: cask.token)
+                )
+            }
+            // NSTableView-backed List ignores contentMargins/safe-area insets on macOS;
+            // a spacer row keeps the last cask clear of the overlaid status bar.
+            // 30 + the row chrome around it ≈ the grid's 44pt bottom margin.
+            Color.clear
+                .frame(height: 30)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
         }
-        .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .id(selectedSidebar)
     }

@@ -70,6 +70,10 @@ extension Analytics {
         send("View.modeChanged", parameters: ["mode": mode.rawValue])
     }
 
+    static func greedyUpdatesChanged(_ enabled: Bool) {
+        send("Filter.greedyChanged", parameters: ["enabled": "\(enabled)"])
+    }
+
     // MARK: - Settings
 
     static func themeChanged(_ theme: String) {
@@ -102,6 +106,7 @@ private extension CaskAction {
     var analyticsVerb: (base: String, past: String)? {
         switch self {
         case .installing: return ("install", "installed")
+        case .adopting: return ("adopt", "adopted")
         case .uninstalling: return ("uninstall", "uninstalled")
         case .updating: return ("update", "updated")
         case .opening, .queued: return nil

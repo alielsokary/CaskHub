@@ -164,6 +164,28 @@ extension LocalHomebrewService {
         )
     }
 
+    nonisolated static func scanApplications(fileManager: FileManager) -> Set<String> {
+        let folders = [
+            URL(fileURLWithPath: "/Applications"),
+            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
+        ]
+        var names: Set<String> = []
+        for folder in folders {
+            guard let entries = try? fileManager.contentsOfDirectory(
+                at: folder,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles]
+            ) else { continue }
+            for entry in entries where entry.pathExtension == "app" {
+                // Mac App Store apps carry a receipt; adopting those would fight MAS updates.
+                let masReceipt = entry.appendingPathComponent("Contents/_MASReceipt/receipt")
+                guard !fileManager.fileExists(atPath: masReceipt.path) else { continue }
+                names.insert(entry.lastPathComponent)
+            }
+        }
+        return names
+    }
+
     private nonisolated static func modificationDate(of url: URL) -> Date {
         (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
             ?? .distantPast
