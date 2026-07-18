@@ -17,6 +17,11 @@ final class ImageCacheService {
     private var upgradeInFlight: Set<String> = []
     private let session: URLSession
 
+    /// Manifest of tokens with an icon on the CaskFlow icons branch, from
+    /// categories.json — absent tokens are guaranteed 404s, never requested.
+    /// nil = manifest unknown (old category data) → fall back to probing.
+    var knownIconTokens: () -> Set<String>? = { nil }
+
     private static let missRetryInterval: TimeInterval = 24 * 60 * 60
 
     private static let cacheDirectory: URL = {
@@ -53,6 +58,11 @@ final class ImageCacheService {
             return diskImage
         }
 
+        let inManifest = knownIconTokens()?.contains(token) ?? true
+        if cask.isCLI, !inManifest {
+            return nil
+        }
+
         if hasRecentMiss(token: token) {
             return nil
         }
@@ -69,10 +79,12 @@ final class ImageCacheService {
                 return image
             }
 
-            for url in CaskIconURL.caskFlowIconURLs(for: token) {
-                if let image = await fetch(url) {
-                    cache(image: image, token: token, fromCaskFlow: true)
-                    return image
+            if inManifest {
+                for url in CaskIconURL.caskFlowIconURLs(for: token) {
+                    if let image = await fetch(url) {
+                        cache(image: image, token: token, fromCaskFlow: true)
+                        return image
+                    }
                 }
             }
 
@@ -158,6 +170,9 @@ final class ImageCacheService {
     }
 
     private func maybeUpgradeFallbackIcon(token: String) {
+        if let known = knownIconTokens(), !known.contains(token) {
+            return
+        }
         let marker = fallbackMarkerPath(for: token)
         guard let mtime = try? FileManager.default
             .attributesOfItem(atPath: marker.path)[.modificationDate] as? Date,

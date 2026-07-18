@@ -135,7 +135,8 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
         releaseTag: nil,
         totalCasks: tokenToCategory.count,
         categories: categories,
-        tokenToCategory: tokenToCategory
+        tokenToCategory: tokenToCategory,
+        iconTokens: nil
     ))
     return service
 }
