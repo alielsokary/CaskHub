@@ -30,8 +30,6 @@ extension Color {
     static let chInk = Color(nsColor: NSColor(hex: 0x33304A))
     static let chTerracotta = Color(nsColor: NSColor(hex: 0xC8674A))
     static let chTerracottaLid = Color(nsColor: NSColor(hex: 0xA94F36))
-    static let chSage = Color(nsColor: NSColor(hex: 0x6FA287))
-    static let chAmber = Color(nsColor: NSColor(hex: 0xD99A4E))
     static let chGoldBand = Color(nsColor: NSColor(hex: 0xF0D59A))
 
     // ── Window background gradient stops ──────────────
@@ -40,7 +38,6 @@ extension Color {
     static let chBg3 = adaptive(light: NSColor(hex: 0xF3E6C6), dark: NSColor(hex: 0x262234))
 
     // ── Glass surfaces ─────────────────────────────────
-    static let chSurfaceSidebar = adaptive(light: NSColor(hex: 0xFDF6E4, alpha: 0.80), dark: NSColor(hex: 0x242132, alpha: 0.88))
     static let chSurfaceToolbar = adaptive(light: NSColor(hex: 0xFDF6E4, alpha: 0.82), dark: NSColor(hex: 0x353147, alpha: 0.85))
     static let chSurfaceCard = adaptive(light: NSColor(hex: 0xFDF6E4, alpha: 0.80), dark: NSColor(hex: 0x353147, alpha: 0.85))
     static let chSurfaceHero = adaptive(light: NSColor(hex: 0xFDF6E4, alpha: 0.78), dark: NSColor(hex: 0x3A3450, alpha: 0.85))
@@ -51,7 +48,6 @@ extension Color {
     // ── Hairlines & separators ─────────────────────────
     static let chHairline = adaptive(light: NSColor(hex: 0xFFFFFF, alpha: 0.75), dark: NSColor(hex: 0xFFFFFF, alpha: 0.14))
     static let chHairlineStrong = adaptive(light: NSColor(hex: 0xFFFFFF, alpha: 0.90), dark: NSColor(hex: 0xFFFFFF, alpha: 0.22))
-    static let chSeparator = adaptive(light: NSColor(hex: 0x33304A, alpha: 0.18), dark: NSColor(hex: 0xF6E9CB, alpha: 0.12))
 
     // ── Text ───────────────────────────────────────────
     static let chTextTitle = adaptive(light: NSColor(hex: 0x33304A), dark: NSColor(hex: 0xF6E9CB))

@@ -94,21 +94,11 @@ struct CaskRowView: View {
 #Preview {
     List {
         CaskRowView(
-            cask: Cask(
+            cask: .preview(
                 token: "firefox",
-                fullToken: nil,
-                tap: nil,
-                name: ["Firefox"],
+                name: "Firefox",
                 desc: "Web browser developed by Mozilla Foundation",
-                homepage: "https://www.mozilla.org/firefox/",
-                url: nil,
                 version: "125.0",
-                installed: nil,
-                bundleVersion: nil,
-                bundleShortVersion: nil,
-                outdated: false,
-                deprecated: false,
-                disabled: false,
                 autoUpdates: true
             ),
             downloads: "1.2M"

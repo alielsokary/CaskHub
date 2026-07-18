@@ -112,42 +112,16 @@ struct TopBarView: View {
         .popover(isPresented: $showSortMenu, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(sortOptions) { option in
-                    sortMenuRow(option)
+                    menuRow(label: option.rawValue, isSelected: sortOption == option) {
+                        if option != sortOption { Analytics.sortChanged(option) }
+                        sortOption = option
+                        showSortMenu = false
+                    }
                 }
             }
             .padding(8)
             .frame(width: 190)
         }
-    }
-
-    private func sortMenuRow(_ option: SortOption) -> some View {
-        let isSelected = sortOption == option
-        return Button {
-            if option != sortOption { Analytics.sortChanged(option) }
-            sortOption = option
-            showSortMenu = false
-        } label: {
-            HStack {
-                Text(option.rawValue)
-                    .font(isSelected ? CHType.navActive : CHType.navItem)
-                    .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextNav)
-                Spacer(minLength: 8)
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.chActionInstallFg)
-                }
-            }
-            .padding(.vertical, 5)
-            .padding(.horizontal, 10)
-            .background {
-                if isSelected {
-                    Capsule().fill(Color.chActionInstallBg)
-                }
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Time window chip (Top Charts period / Recently Added window)
@@ -178,8 +152,9 @@ struct TopBarView: View {
         .popover(isPresented: $showPeriodMenu, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(options) { option in
-                    periodMenuRow(label: option[keyPath: label], isSelected: option == current) {
+                    menuRow(label: option[keyPath: label], isSelected: option == current) {
                         onSelect(option)
+                        showPeriodMenu = false
                     }
                 }
             }
@@ -188,11 +163,8 @@ struct TopBarView: View {
         }
     }
 
-    private func periodMenuRow(label: String, isSelected: Bool, onSelect: @escaping () -> Void) -> some View {
-        Button {
-            onSelect()
-            showPeriodMenu = false
-        } label: {
+    private func menuRow(label: String, isSelected: Bool, onSelect: @escaping () -> Void) -> some View {
+        Button(action: onSelect) {
             HStack {
                 Text(label)
                     .font(isSelected ? CHType.navActive : CHType.navItem)

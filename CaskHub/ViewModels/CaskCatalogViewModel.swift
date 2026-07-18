@@ -263,13 +263,7 @@ final class CaskCatalogViewModel {
 
     func formattedDownloads(for token: String) -> String? {
         guard let count = downloadCounts[token], count > 0 else { return nil }
-        switch count {
-        case 1_000_000...:
-            return String(format: "%.1fM", Double(count) / 1_000_000)
-        case 1000...:
-            return String(format: "%.1fK", Double(count) / 1000)
-        default:
-            return "\(count)"
-        }
+        // ponytail: en_US pin keeps the K/M suffixes stable across locales
+        return count.formatted(.number.notation(.compactName).locale(Locale(identifier: "en_US")))
     }
 }

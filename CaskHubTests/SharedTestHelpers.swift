@@ -52,7 +52,6 @@ func makeCask(
         homepage: "https://example.com",
         url: nil,
         version: version,
-        installed: nil,
         bundleVersion: nil,
         bundleShortVersion: nil,
         outdated: false,

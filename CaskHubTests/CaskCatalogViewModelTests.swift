@@ -276,7 +276,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         vm.selectedSidebar = .discover(.topCharts)
         await vm.selectAnalyticsPeriod(.days30)
-        XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "5.0K")
+        XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "5K")
 
         vm.selectedSidebar = .discover(.browse)
         XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "100")

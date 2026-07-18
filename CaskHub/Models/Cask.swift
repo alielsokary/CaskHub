@@ -47,7 +47,6 @@ struct Cask: Codable, Identifiable, Hashable {
     let homepage: String
     let url: String?
     let version: String
-    let installed: String?
     let bundleVersion: String?
     let bundleShortVersion: String?
     let outdated: Bool
@@ -79,10 +78,6 @@ struct Cask: Codable, Identifiable, Hashable {
         return numeric.isEmpty ? base : numeric
     }
 
-    var homepageDomain: String? {
-        URL(string: homepage)?.host
-    }
-
     func metaLine(downloads: String?) -> String {
         var parts: [String] = []
         if let downloads { parts.append("↓ \(downloads)") }
@@ -90,3 +85,38 @@ struct Cask: Codable, Identifiable, Hashable {
         return parts.joined(separator: " · ")
     }
 }
+
+#if DEBUG
+extension Cask {
+    static func preview(
+        token: String,
+        name: String? = nil,
+        desc: String? = nil,
+        homepage: String = "https://example.com",
+        url: String? = nil,
+        version: String = "1.0",
+        deprecated: Bool = false,
+        disabled: Bool = false,
+        autoUpdates: Bool? = nil,
+        fullToken: String? = nil,
+        tap: String? = nil
+    ) -> Cask {
+        Cask(
+            token: token,
+            fullToken: fullToken,
+            tap: tap,
+            name: [name ?? token],
+            desc: desc,
+            homepage: homepage,
+            url: url,
+            version: version,
+            bundleVersion: nil,
+            bundleShortVersion: nil,
+            outdated: false,
+            deprecated: deprecated,
+            disabled: disabled,
+            autoUpdates: autoUpdates
+        )
+    }
+}
+#endif
