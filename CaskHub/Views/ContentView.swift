@@ -270,13 +270,18 @@ private extension ContentView {
     // MARK: - List View
 
     var listView: some View {
-        List(viewModel.filteredCasks) { cask in
-            CaskRowView(
-                cask: cask,
-                downloads: viewModel.formattedDownloads(for: cask.token)
-            )
+        List {
+            ForEach(viewModel.filteredCasks) { cask in
+                CaskRowView(
+                    cask: cask,
+                    downloads: viewModel.formattedDownloads(for: cask.token)
+                )
+            }
+            Color.clear
+                .frame(height: 30)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
         }
-        .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .id(selectedSidebar)
     }
