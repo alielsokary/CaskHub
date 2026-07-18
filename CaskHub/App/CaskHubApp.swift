@@ -27,7 +27,7 @@ struct CaskHubApp: App {
     @State private var categoryService: CategoryService
     @State private var recentlyAdded: RecentlyAddedService
     @State private var localHomebrew: LocalHomebrewService
-    @State private var imageCache = ImageCacheService()
+    @State private var imageCache: ImageCacheService
     @State private var catalog: CaskCatalogViewModel
 
     init() {
@@ -40,6 +40,9 @@ struct CaskHubApp: App {
         categories.loadCategories()
         let recent = RecentlyAddedService()
         let homebrew = LocalHomebrewService()
+        let images = ImageCacheService()
+        images.knownIconTokens = { categories.iconTokens }
+        _imageCache = State(initialValue: images)
         _categoryService = State(initialValue: categories)
         _recentlyAdded = State(initialValue: recent)
         _localHomebrew = State(initialValue: homebrew)
