@@ -20,6 +20,10 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Appearance", systemImage: "paintbrush")
                 }
+            HomebrewSettingsView()
+                .tabItem {
+                    Label("Homebrew", systemImage: "shippingbox")
+                }
             PrivacySettingsView()
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")
@@ -167,6 +171,99 @@ struct GeneralSettingsView: View {
     }
 }
 
+struct HomebrewSettingsView: View {
+    @Environment(LocalHomebrewService.self) private var localHomebrew
+    @State private var invalidSelection = false
+
+    var body: some View {
+        Form {
+            Section("Status") {
+                LabeledContent("Homebrew") {
+                    if let version = localHomebrew.brewVersion {
+                        Label("Installed (\(version))", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        HStack(spacing: 10) {
+                            Label("Not Found", systemImage: "xmark.circle.fill")
+                                .foregroundStyle(.red)
+                            Button("Go to brew.sh") {
+                                NSWorkspace.shared.open(URL(string: "https://brew.sh")!)
+                            }
+                        }
+                    }
+                }
+            }
+            Section("Paths") {
+                pathRow("Brew Binary", localHomebrew.resolvedBrewPath)
+                pathRow("Caskroom", localHomebrew.resolvedCaskroomPath)
+            }
+            Section("Library") {
+                LabeledContent("Installed Casks", value: "\(localHomebrew.installedCasks.count)")
+                LabeledContent(
+                    "Last Scan",
+                    value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened) ?? "Never"
+                )
+            }
+            Section("Custom Location") {
+                LabeledContent("Custom Path") {
+                    HStack(spacing: 10) {
+                        Text(localHomebrew.customBrewPrefix ?? "Not set")
+                            .foregroundStyle(localHomebrew.customBrewPrefix == nil ? .secondary : .primary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Button("Choose…") { chooseCustomPrefix() }
+                        if localHomebrew.customBrewPrefix != nil {
+                            Button("Reset") {
+                                Task { await localHomebrew.setCustomBrewPrefix(nil) }
+                            }
+                        }
+                    }
+                }
+                Text("""
+                Point CaskHub at a Homebrew installed outside the standard locations \
+                (/opt/homebrew and /usr/local). Select the brew binary or its \
+                installation folder.
+                """)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+        .alert("No Homebrew There", isPresented: $invalidSelection) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The selected location doesn't contain a brew binary.")
+        }
+    }
+
+    private func pathRow(_ title: String, _ path: String?) -> some View {
+        LabeledContent(title) {
+            Text(path ?? "Not found")
+                .font(.callout.monospaced())
+                .foregroundStyle(path == nil ? .secondary : .primary)
+                .textSelection(.enabled)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+    }
+
+    private func chooseCustomPrefix() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.showsHiddenFiles = true
+        panel.message = "Select the brew binary or the Homebrew installation folder"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard let prefix = LocalHomebrewService.brewPrefix(fromSelection: url) else {
+            invalidSelection = true
+            return
+        }
+        Task { await localHomebrew.setCustomBrewPrefix(prefix) }
+    }
+}
+
 struct AppearanceSettingsView: View {
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
 
@@ -251,4 +348,5 @@ struct PrivacySettingsView: View {
     SettingsView()
         .environment(UpdaterService())
         .environment(ImageCacheService())
+        .environment(LocalHomebrewService())
 }

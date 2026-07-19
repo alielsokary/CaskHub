@@ -216,8 +216,13 @@ extension LocalHomebrewService {
 
     // MARK: - Path Discovery
 
+    nonisolated static let customBrewPrefixKey = "customBrewPrefix"
+
     private nonisolated static func brewPrefixCandidates(_ relativePath: String) -> [URL] {
         var candidates: [URL] = []
+        if let custom = UserDefaults.standard.string(forKey: customBrewPrefixKey), !custom.isEmpty {
+            candidates.append(URL(fileURLWithPath: custom).appendingPathComponent(relativePath))
+        }
         if let prefix = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"], !prefix.isEmpty {
             candidates.append(URL(fileURLWithPath: prefix).appendingPathComponent(relativePath))
         }
@@ -226,8 +231,24 @@ extension LocalHomebrewService {
         return candidates
     }
 
-    private nonisolated static func locateCaskroom(fileManager: FileManager) -> URL? {
+    nonisolated static func locateCaskroom(fileManager: FileManager) -> URL? {
         brewPrefixCandidates("Caskroom").first { fileManager.fileExists(atPath: $0.path) }
+    }
+
+    /// Resolves a user's picker selection to a brew prefix. Accepts the brew
+    /// binary itself, a prefix folder, or the bin folder inside it.
+    nonisolated static func brewPrefix(fromSelection url: URL) -> String? {
+        let fm = FileManager.default
+        if url.lastPathComponent == "brew", fm.isExecutableFile(atPath: url.path) {
+            return url.deletingLastPathComponent().deletingLastPathComponent().path
+        }
+        if fm.isExecutableFile(atPath: url.appendingPathComponent("bin/brew").path) {
+            return url.path
+        }
+        if fm.isExecutableFile(atPath: url.appendingPathComponent("brew").path) {
+            return url.deletingLastPathComponent().path
+        }
+        return nil
     }
 
     nonisolated static func locateBrewBinary() -> URL? {

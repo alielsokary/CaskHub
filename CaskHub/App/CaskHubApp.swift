@@ -80,6 +80,7 @@ struct CaskHubApp: App {
             SettingsView()
                 .environment(updaterService)
                 .environment(imageCache)
+                .environment(localHomebrew)
         }
     }
 }

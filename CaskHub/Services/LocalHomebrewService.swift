@@ -138,6 +138,16 @@ final class LocalHomebrewService {
 
     private(set) var brewVersion: String?
 
+    private(set) var customBrewPrefix: String?
+
+    var resolvedBrewPath: String? {
+        Self.locateBrewBinary()?.path
+    }
+
+    var resolvedCaskroomPath: String? {
+        Self.locateCaskroom(fileManager: fileManager)?.path
+    }
+
     /// Include self-updating casks (`auto_updates: true`) in updates, via `brew upgrade --greedy`.
     private(set) var greedyUpdates: Bool
 
@@ -150,6 +160,7 @@ final class LocalHomebrewService {
         self.fileManager = fileManager
         self.defaults = defaults
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
+        customBrewPrefix = defaults.string(forKey: Self.customBrewPrefixKey)
 
         // The permission-request alert tells the user to grant App Management and
         // come back — returning to the app is the cue to finish those adoptions.
@@ -175,6 +186,17 @@ final class LocalHomebrewService {
     func setGreedyUpdates(_ enabled: Bool) {
         greedyUpdates = enabled
         defaults.set(enabled, forKey: Self.greedyKey)
+    }
+
+    func setCustomBrewPrefix(_ prefix: String?) async {
+        customBrewPrefix = prefix
+        if let prefix, !prefix.isEmpty {
+            defaults.set(prefix, forKey: Self.customBrewPrefixKey)
+        } else {
+            defaults.removeObject(forKey: Self.customBrewPrefixKey)
+        }
+        brewVersion = nil
+        await refresh()
     }
 
     // MARK: - Detection

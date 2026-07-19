@@ -111,6 +111,22 @@ final class CaskHubTests: XCTestCase {
         XCTAssertFalse(service.isExternalCLI(other))
     }
 
+    func test_brew_prefix_resolves_from_binary_prefix_and_bin_folder() throws {
+        let brew = "/opt/homebrew/bin/brew"
+        try XCTSkipUnless(FileManager.default.isExecutableFile(atPath: brew), "needs Homebrew at /opt/homebrew")
+
+        XCTAssertEqual(
+            LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: brew)), "/opt/homebrew"
+        )
+        XCTAssertEqual(
+            LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: "/opt/homebrew")), "/opt/homebrew"
+        )
+        XCTAssertEqual(
+            LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: "/opt/homebrew/bin")), "/opt/homebrew"
+        )
+        XCTAssertNil(LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: "/private/tmp")))
+    }
+
     func test_adopt_mismatch_detection() {
         XCTAssertTrue(LocalHomebrewError.isAdoptMismatch(
             args: ["install", "--cask", "x", "--adopt"],
