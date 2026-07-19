@@ -164,6 +164,29 @@ extension LocalHomebrewService {
         )
     }
 
+    /// Executable names in the places CLI tools commonly install to. GUI apps
+    /// don't inherit the shell's PATH, so fixed locations beat consulting it.
+    nonisolated static func scanBinaryDirectories(fileManager: FileManager) -> Set<String> {
+        let home = fileManager.homeDirectoryForCurrentUser
+        let folders = [
+            URL(fileURLWithPath: "/usr/local/bin"),
+            home.appendingPathComponent(".local/bin"),
+            home.appendingPathComponent("bin")
+        ]
+        var names: Set<String> = []
+        for folder in folders {
+            guard let entries = try? fileManager.contentsOfDirectory(
+                at: folder,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles]
+            ) else { continue }
+            for entry in entries where fileManager.isExecutableFile(atPath: entry.path) {
+                names.insert(entry.lastPathComponent)
+            }
+        }
+        return names
+    }
+
     nonisolated static func scanApplications(fileManager: FileManager) -> Set<String> {
         let folders = [
             URL(fileURLWithPath: "/Applications"),

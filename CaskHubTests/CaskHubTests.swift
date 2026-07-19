@@ -86,6 +86,31 @@ final class CaskHubTests: XCTestCase {
         XCTAssertFalse(service.isAdoptable(cli))
     }
 
+    func test_artifact_stanza_decodes_binary_names_from_paths() throws {
+        let json = """
+        [{"binary": ["claude"], "target": "/opt/homebrew/bin/claude"},
+         {"binary": ["staged/bin/tool", {"target": "tool-renamed"}]}]
+        """
+        let stanzas = try JSONDecoder().decode([ArtifactStanza].self, from: Data(json.utf8))
+        XCTAssertEqual(stanzas[0].binaryNames, ["claude"])
+        XCTAssertEqual(stanzas[1].binaryNames, ["tool-renamed"])
+    }
+
+    @MainActor
+    func test_external_cli_detection_requires_binary_on_disk_and_no_brew_install() {
+        let service = LocalHomebrewService()
+        service.externalBinaryNames = ["claude"]
+
+        let claudeCode = makeCask("claude-code", binaryNames: ["claude"])
+        XCTAssertTrue(service.isExternalCLI(claudeCode))
+
+        service.installedCasks["claude-code"] = installation("claude-code", version: "2.0")
+        XCTAssertFalse(service.isExternalCLI(claudeCode), "brew-installed wins over external detection")
+
+        let other = makeCask("some-tool", binaryNames: ["some-tool"])
+        XCTAssertFalse(service.isExternalCLI(other))
+    }
+
     func test_adopt_mismatch_detection() {
         XCTAssertTrue(LocalHomebrewError.isAdoptMismatch(
             args: ["install", "--cask", "x", "--adopt"],

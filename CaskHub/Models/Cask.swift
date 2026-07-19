@@ -10,10 +10,12 @@ import Foundation
 struct ArtifactStanza: Codable, Hashable {
     let keys: Set<String>
     let appNames: [String]
+    let binaryNames: [String]
 
-    init(keys: Set<String>, appNames: [String] = []) {
+    init(keys: Set<String>, appNames: [String] = [], binaryNames: [String] = []) {
         self.keys = keys
         self.appNames = appNames
+        self.binaryNames = binaryNames
     }
 
     private struct AnyKey: CodingKey {
@@ -53,22 +55,30 @@ struct ArtifactStanza: Codable, Hashable {
         guard let container = try? decoder.container(keyedBy: AnyKey.self) else {
             keys = []
             appNames = []
+            binaryNames = []
             return
         }
         keys = Set(container.allKeys.map(\.stringValue))
+        appNames = Self.artifactNames(in: container, key: "app")
+        binaryNames = Self.artifactNames(in: container, key: "binary")
+    }
 
-        let entries = AnyKey(stringValue: "app")
+    /// Entries can be names or staged paths, with `{"target": …}` rename dicts
+    /// following the entry they rename — the on-disk name is the target's basename.
+    private static func artifactNames(
+        in container: KeyedDecodingContainer<AnyKey>, key: String
+    ) -> [String] {
+        let entries = AnyKey(stringValue: key)
             .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? []
         var names: [String] = []
         for entry in entries {
             if let name = entry.name {
-                names.append(name)
+                names.append(URL(fileURLWithPath: name).lastPathComponent)
             } else if let target = entry.target, !names.isEmpty {
-                // `app "X.app", target: "Y.app"` — the on-disk bundle is the target.
                 names[names.count - 1] = URL(fileURLWithPath: target).lastPathComponent
             }
         }
-        appNames = names
+        return names
     }
 
     func encode(to encoder: Encoder) throws {
@@ -107,6 +117,11 @@ struct Cask: Codable, Identifiable, Hashable {
     /// Bundle names this cask installs into /Applications (e.g. "Google Chrome.app").
     var appArtifactNames: [String] {
         artifacts?.flatMap(\.appNames) ?? []
+    }
+
+    /// Executable names this cask links into the brew prefix (e.g. "claude").
+    var binaryArtifactNames: [String] {
+        artifacts?.flatMap(\.binaryNames) ?? []
     }
 
     var isCLI: Bool {

@@ -45,6 +45,9 @@ struct CaskActionsView: View {
                 }
                 disabledUninstallHint
             }
+        } else if localHomebrew.isExternalCLI(cask) {
+            ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
+                .help("Installed on this Mac outside Homebrew. CaskHub can't manage it.")
         } else {
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
                 Task { try? await localHomebrew.install(token: cask.token) }

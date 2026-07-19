@@ -104,6 +104,9 @@ final class LocalHomebrewService {
     /// Non-Mac-App-Store bundle names found in /Applications and ~/Applications.
     var externalAppNames: Set<String> = []
 
+    /// Executable names found in common install locations (~/.local/bin, /usr/local/bin, …).
+    var externalBinaryNames: Set<String> = []
+
     private(set) var adoptReplaceOffers: Set<String> = []
 
     private(set) var appManagementDenials: Set<String> = []
@@ -175,10 +178,15 @@ final class LocalHomebrewService {
         if brewVersion == nil {
             brewVersion = await Self.fetchBrewVersion()
         }
-        let (result, appNames) = await Task.detached(priority: .userInitiated) {
-            (Self.scanCaskroom(fileManager: fm), Self.scanApplications(fileManager: fm))
+        let (result, appNames, binaryNames) = await Task.detached(priority: .userInitiated) {
+            (
+                Self.scanCaskroom(fileManager: fm),
+                Self.scanApplications(fileManager: fm),
+                Self.scanBinaryDirectories(fileManager: fm)
+            )
         }.value
         externalAppNames = appNames
+        externalBinaryNames = binaryNames
 
         switch result {
         case let .success(casks):
@@ -199,6 +207,13 @@ final class LocalHomebrewService {
     func isAdoptable(_ cask: Cask) -> Bool {
         installedCasks[cask.token] == nil
             && cask.appArtifactNames.contains(where: externalAppNames.contains)
+    }
+
+    /// A CLI cask whose tool is on the device via some other installer
+    /// (e.g. claude-code's native install script). Detected, not managed.
+    func isExternalCLI(_ cask: Cask) -> Bool {
+        installedCasks[cask.token] == nil
+            && cask.binaryArtifactNames.contains(where: externalBinaryNames.contains)
     }
 
     func clearError(for token: String) {
