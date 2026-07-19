@@ -171,11 +171,13 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
     var enabledChanges: [Bool] = []
     var capturedErrors: [Error] = []
     var breadcrumbs: [(message: String, data: [String: String])] = []
+    var tags: [String: String] = [:]
     var spans: [SpanRecord] = []
 
     func start(enabled: Bool) { startedWith.append(enabled) }
     func setEnabled(_ enabled: Bool) { enabledChanges.append(enabled) }
     func capture(_ error: Error) { capturedErrors.append(error) }
+    func setTag(_ key: String, value: String) { tags[key] = value }
     func addBreadcrumb(_ message: String, data: [String: String]) {
         breadcrumbs.append((message, data))
     }

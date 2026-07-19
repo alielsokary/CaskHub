@@ -18,6 +18,7 @@ protocol CrashReporterProvider {
     func setEnabled(_ enabled: Bool)
     func capture(_ error: Error)
     func addBreadcrumb(_ message: String, data: [String: String])
+    func setTag(_ key: String, value: String)
     func startSpan(name: String, operation: String) -> CrashSpan
 }
 
@@ -44,6 +45,9 @@ enum CrashReporter {
     static func capture(_ error: Error) {
         guard isEnabled else { return }
         let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain, nsError.code == URLError.notConnectedToInternet.rawValue {
+            return
+        }
         let signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
         let count = captureCounts[signature, default: 0]
         guard count < captureLimit else { return }
@@ -54,6 +58,11 @@ enum CrashReporter {
     static func breadcrumb(_ message: String, data: [String: String] = [:]) {
         guard isEnabled else { return }
         provider.addBreadcrumb(message, data: data)
+    }
+
+    static func tag(_ key: String, value: String) {
+        guard isEnabled else { return }
+        provider.setTag(key, value: value)
     }
 
     static func span(name: String, operation: String) -> CrashSpan {
@@ -99,7 +108,22 @@ final class SentryProvider: CrashReporterProvider {
     }
 
     func capture(_ error: Error) {
-        SentrySDK.capture(error: error)
+        SentrySDK.capture(error: error) { scope in
+            if let fingerprint = Self.fingerprint(for: error) {
+                scope.setFingerprint(fingerprint)
+            }
+        }
+    }
+
+    /// Groups brew failures per subcommand instead of NSError domain+code.
+    static func fingerprint(for error: Error) -> [String]? {
+        guard case let LocalHomebrewError.brewCommandFailed(args, _, _) = error,
+              let subcommand = args.first else { return nil }
+        return ["brewCommandFailed", subcommand]
+    }
+
+    func setTag(_ key: String, value: String) {
+        SentrySDK.configureScope { $0.setTag(value: value, key: key) }
     }
 
     func addBreadcrumb(_ message: String, data: [String: String]) {
