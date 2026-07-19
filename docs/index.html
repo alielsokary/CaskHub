@@ -270,6 +270,10 @@
   .step p { font-size: .95rem; }
   .step p code { font-family: var(--mono); font-size: .85em; color: var(--gold); }
 
+  /* Themes */
+  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .themes img { width: 100%; height: auto; }
+
   /* Trust strip */
   .trust { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
@@ -326,7 +330,7 @@
 
   @media (max-width: 860px) {
     .bento { grid-template-columns: 1fr; }
-    .steps, .trust { grid-template-columns: 1fr; }
+    .steps, .trust, .themes { grid-template-columns: 1fr; }
     .nav-links a:not(.gh) { display: none; }
   }
   @media (max-width: 520px) {
@@ -376,7 +380,7 @@
       <a class="btn btn-ghost" href="https://github.com/alielsokary/CaskHub">View source</a>
     </div>
     <p class="meta rise d6">100% free &amp; open source <span>·</span> MIT licensed <span>·</span> macOS 15.6+</p>
-    <video class="app-shot rise d7" autoplay muted loop playsinline poster="assets/app-screenshot.webp" width="2064" height="1056" aria-label="CaskHub's Browse tab scrolling through curated shelves, Most Popular and Recently Added casks, and categories">
+    <video class="app-shot rise d7" autoplay muted loop playsinline poster="assets/app-screenshot.webp" width="2064" height="1272" aria-label="CaskHub's Browse tab scrolling through curated shelves, Most Popular and Recently Added casks, and categories">
       <source src="assets/app-demo.mp4" type="video/mp4">
     </video>
   </section>
@@ -454,6 +458,17 @@
         <h3>Real brew actions</h3>
         <p>Installs, updates, and uninstalls run through your actual <code>brew</code> binary, staying fully compatible with the command line.</p>
       </div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-label="Appearance">
+    <div class="section-head center">
+      <p class="kicker">Appearance</p>
+      <h2>Comes in light and dark.</h2>
+    </div>
+    <div class="themes">
+      <img src="assets/theme-light.webp" alt="CaskHub in light mode" width="1600" height="1032" loading="lazy">
+      <img src="assets/theme-dark.webp" alt="CaskHub in dark mode" width="1600" height="1032" loading="lazy">
     </div>
   </section>
 
