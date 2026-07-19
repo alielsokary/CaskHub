@@ -16,13 +16,11 @@ enum AppManagementPermission {
         case granted, denied, unknown
     }
 
-    static let settingsURL = URL(
-        string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles"
-    )!
-
     @MainActor
     static func openSystemSettings() {
-        NSWorkspace.shared.open(settingsURL)
+        NSWorkspace.shared.open(
+            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles")!
+        )
     }
 
     /// Non-invasive probe: `access(2)` consults the App Management gate, so a bundle

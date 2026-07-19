@@ -140,14 +140,6 @@ final class LocalHomebrewService {
 
     private(set) var customBrewPrefix: String?
 
-    var resolvedBrewPath: String? {
-        Self.locateBrewBinary()?.path
-    }
-
-    var resolvedCaskroomPath: String? {
-        Self.locateCaskroom(fileManager: fileManager)?.path
-    }
-
     /// Include self-updating casks (`auto_updates: true`) in updates, via `brew upgrade --greedy`.
     private(set) var greedyUpdates: Bool
 

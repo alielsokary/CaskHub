@@ -204,8 +204,8 @@ struct HomebrewSettingsView: View {
                 )
             }
             Section("Paths") {
-                pathRow("Brew Binary", localHomebrew.resolvedBrewPath)
-                pathRow("Caskroom", localHomebrew.resolvedCaskroomPath)
+                pathRow("Brew Binary", LocalHomebrewService.locateBrewBinary()?.path)
+                pathRow("Caskroom", LocalHomebrewService.locateCaskroom(fileManager: .default)?.path)
             }
             Section("Library") {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCasks.count)")

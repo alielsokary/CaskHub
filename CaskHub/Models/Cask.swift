@@ -84,11 +84,7 @@ struct ArtifactStanza: Codable, Hashable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: AnyKey.self)
         for key in keys {
-            if key == "app", !appNames.isEmpty {
-                try container.encode(appNames, forKey: AnyKey(stringValue: key)!)
-            } else {
-                try container.encode(true, forKey: AnyKey(stringValue: key)!)
-            }
+            try container.encode(true, forKey: AnyKey(stringValue: key)!)
         }
     }
 }
