@@ -83,6 +83,7 @@ struct GeneralSettingsView: View {
     @Environment(ImageCacheService.self) private var imageCache
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var appManagement: AppManagementPermission.Status = .unknown
+    @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
 
     var body: some View {
         @Bindable var updater = updater
@@ -95,6 +96,12 @@ struct GeneralSettingsView: View {
             }
             Section("Updates") {
                 Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
+            }
+            Section("Sidebar") {
+                Toggle("Show Adopt Apps", isOn: $showAdoptApps)
+                Text("Adopt Apps lists installed apps that Homebrew can start managing for you.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
             Section("Permissions") {
                 LabeledContent("App Management") {
