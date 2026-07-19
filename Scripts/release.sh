@@ -129,7 +129,9 @@ gh release create "$VERSION" "$ZIP" --title "$VERSION" --generate-notes \
     --draft --target "$(git rev-parse HEAD)"
 
 echo "==> Committing appcast"
-git add appcast.xml
+# Keep the README download button pointing at this release's versioned zip
+sed -E -i '' "s|releases/download/[0-9.]+/CaskHub-[0-9.]+\.zip|releases/download/$VERSION/CaskHub-$VERSION.zip|" "$REPO_ROOT/README.md"
+git add appcast.xml "$REPO_ROOT/README.md"
 git commit -m "release: $VERSION appcast"
 git push
 

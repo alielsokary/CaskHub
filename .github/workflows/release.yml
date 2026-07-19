@@ -101,7 +101,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: caskhub
-          SENTRY_PROJECT: apple-macos
+          SENTRY_PROJECT: "4511720485224543"
         run: |
           curl -sL https://sentry.io/get-cli/ | bash
           Scripts/upload_dsyms.sh .build/release/CaskHub.xcarchive

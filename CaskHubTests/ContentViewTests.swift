@@ -122,6 +122,46 @@ final class ContentViewTests: XCTestCase {
     }
 }
 
+final class SidebarViewTests: XCTestCase {
+    @MainActor
+    private final class SelectionProbe {
+        var selection: SidebarSelection = .library(.adopt)
+    }
+
+    @MainActor
+    func test_hiding_adopt_apps_moves_adopt_selection_to_installed() {
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: SidebarView.showAdoptKey)
+        addTeardownBlock { defaults.removeObject(forKey: SidebarView.showAdoptKey) }
+
+        let probe = SelectionProbe()
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 226, height: 700),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: SidebarView(
+            selection: Binding(get: { probe.selection }, set: { probe.selection = $0 }),
+            categoryService: CategoryService(),
+            adoptableCount: 3
+        ))
+        window.orderFrontRegardless()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+
+        defaults.set(false, forKey: SidebarView.showAdoptKey)
+        let deadline = Date().addingTimeInterval(2)
+        while probe.selection == .library(.adopt), Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
+
+        XCTAssertEqual(probe.selection, .library(.installed))
+        window.contentView = NSView()
+        window.close()
+    }
+}
+
 final class TopBarViewTests: XCTestCase {
     private struct TopBarHarness: View {
         let isUpdatingAll: Bool

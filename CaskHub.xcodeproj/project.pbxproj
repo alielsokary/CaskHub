@@ -50,6 +50,7 @@
 		41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */; };
 		41DFD4A730028F7D00608C7A /* CaskCatalogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */; };
 		41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47830028F7D00608C7A /* SettingsView.swift */; };
+		41DFD4E230028F7D00608C7A /* AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4E130028F7D00608C7A /* AppearanceSettingsView.swift */; };
 		41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */; };
 		41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47B30028F7D00608C7A /* CaskCardView.swift */; };
 		41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47C30028F7D00608C7A /* CaskIconView.swift */; };
@@ -117,6 +118,7 @@
 		41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyAddedService.swift; sourceTree = "<group>"; };
 		41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModel.swift; sourceTree = "<group>"; };
 		41DFD47830028F7D00608C7A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		41DFD4E130028F7D00608C7A /* AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsView.swift; sourceTree = "<group>"; };
 		41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionAlerts.swift; sourceTree = "<group>"; };
 		41DFD47B30028F7D00608C7A /* CaskCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCardView.swift; sourceTree = "<group>"; };
 		41DFD47C30028F7D00608C7A /* CaskIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskIconView.swift; sourceTree = "<group>"; };
@@ -263,6 +265,7 @@
 		41DFD47930028F7D00608C7A /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				41DFD4E130028F7D00608C7A /* AppearanceSettingsView.swift */,
 				41DFD47830028F7D00608C7A /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -520,6 +523,7 @@
 				41AD10312F68D00200BEABB8 /* UpdaterService.swift in Sources */,
 				41DFD4A730028F7D00608C7A /* CaskCatalogViewModel.swift in Sources */,
 				41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */,
+				41DFD4E230028F7D00608C7A /* AppearanceSettingsView.swift in Sources */,
 				41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */,
 				41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */,
 				41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */,
@@ -707,7 +711,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.6.0;
+				MARKETING_VERSION = 0.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -745,7 +749,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.6.0;
+				MARKETING_VERSION = 0.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

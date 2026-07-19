@@ -5,17 +5,19 @@
 [![codecov](https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg)](https://codecov.io/gh/alielsokary/CaskHub)
 [![macOS](https://img.shields.io/badge/macOS-15.6%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub?include_prereleases)](https://github.com/alielsokary/CaskHub/releases)
+[![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub)](https://github.com/alielsokary/CaskHub/releases/latest)
 
-<img width="1700" height="500" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
+<img width="850" height="250" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
 
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
 CaskHub is 100% free and open source, no subscription, no premium tier, no ads, nothing.
 
+<img width="1492" height="962" alt="caskhub-dark" src="https://github.com/user-attachments/assets/d7899924-6ade-43cc-a3f9-dcabeac9229b" />
+
 ## Install
 
-<a href="https://github.com/alielsokary/CaskHub/releases/latest"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
+<a href="https://github.com/alielsokary/CaskHub/releases/download/0.6.1/CaskHub-0.6.1.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
 
 Or install with Homebrew:
 
@@ -37,6 +39,8 @@ brew install --cask alielsokary/tap/caskhub
 ### Manage
 
 - **Install / Update / Uninstall** with live progress states and cancellable downloads
+- **Adopt Apps** - bring apps you installed outside Homebrew (a downloaded DMG, another store) under brew management with one click, keeping the app in place
+- **Guided Homebrew setup** - walks you through installing Homebrew if it's missing, supports custom installation paths, and picks the native prefix on both Apple Silicon and Intel
 - **Smart update detection** - skips self-updating apps and normalizes packaging-suffix version differences, so the Updates badge only shows updates that matter
 - **Installed library** - detects what's already in your Caskroom, including apps installed from the command line
 - **Native password prompts** - pkg-based casks that need admin rights get a native macOS dialog instead of a terminal prompt
