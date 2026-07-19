@@ -16,13 +16,7 @@ struct AppearanceSettingsView: View {
             Section("App Theme") {
                 HStack(spacing: 16) {
                     ForEach(AppTheme.allCases) { option in
-                        selectionCard(
-                            image: option.previewImage,
-                            size: CGSize(width: 104, height: 67),
-                            title: option.rawValue,
-                            accessibilityLabel: "\(option.rawValue) theme",
-                            isSelected: selectedTheme == option.rawValue
-                        ) { selectedTheme = option.rawValue }
+                        selectionCard(for: option)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -36,20 +30,14 @@ struct AppearanceSettingsView: View {
         }
     }
 
-    private func selectionCard(
-        image: NSImage?,
-        size: CGSize,
-        title: String,
-        accessibilityLabel: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
+    private func selectionCard(for option: AppTheme) -> some View {
+        let isSelected = selectedTheme == option.rawValue
+        return Button { selectedTheme = option.rawValue } label: {
             VStack(spacing: 6) {
-                Image(nsImage: image ?? NSImage())
+                Image(nsImage: option.previewImage ?? NSImage())
                     .resizable()
                     .scaledToFit()
-                    .frame(width: size.width, height: size.height)
+                    .frame(width: 104, height: 67)
                     .padding(8)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
@@ -59,13 +47,13 @@ struct AppearanceSettingsView: View {
                         RoundedRectangle(cornerRadius: 14)
                             .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)
                     )
-                Text(title)
+                Text(option.rawValue)
                     .font(.callout)
                     .foregroundStyle(isSelected ? .primary : .secondary)
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel("\(option.rawValue) theme")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
