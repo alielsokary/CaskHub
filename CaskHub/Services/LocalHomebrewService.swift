@@ -169,12 +169,21 @@ final class LocalHomebrewService {
 
     private let fileManager: FileManager
     private let defaults: UserDefaults
+    private let applicationDirectories: [URL]
 
     private static let greedyKey = "greedyUpdates"
 
-    init(fileManager: FileManager = .default, defaults: UserDefaults = .standard) {
+    init(
+        fileManager: FileManager = .default,
+        defaults: UserDefaults = .standard,
+        applicationDirectories: [URL]? = nil
+    ) {
         self.fileManager = fileManager
         self.defaults = defaults
+        self.applicationDirectories = applicationDirectories ?? [
+            URL(fileURLWithPath: "/Applications"),
+            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
+        ]
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         customBrewPrefix = defaults.string(forKey: Self.customBrewPrefixKey)
 
@@ -318,19 +327,45 @@ final class LocalHomebrewService {
     }
 
     private func existingBundleURL(named names: [String]) -> URL? {
-        names.flatMap { name -> [URL] in
-            [
-                URL(fileURLWithPath: "/Applications").appendingPathComponent(name),
-                fileManager.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Applications")
-                    .appendingPathComponent(name)
-            ]
+        names.flatMap { name in
+            applicationDirectories.map { $0.appendingPathComponent(name) }
         }
         .first { fileManager.fileExists(atPath: $0.path) }
     }
 
     func install(token: String) async throws {
         try await runMutation(.installing, token: token, args: ["install", "--cask", token])
+    }
+
+    /// Preflight before `--adopt`: a declared binary missing from the on-disk
+    /// bundle makes brew fail *after* it has moved the app aside — and brew's
+    /// rollback then deletes the app entirely. Refuse locally and offer the
+    /// safe replace path instead.
+    func adopt(_ cask: Cask, bypassPermissionCheck: Bool = false) async throws {
+        if let missing = adoptBlockedByMissingBinary(cask) {
+            adoptReplaceOffers.insert(cask.token)
+            actionErrors[cask.token] = "Your installed copy of \(cask.displayName) is missing "
+                + "a component Homebrew's version includes (\(missing)), so it can't be "
+                + "adopted as-is. You can replace it with Homebrew's copy instead — "
+                + "your settings and data are kept."
+            return
+        }
+        try await adopt(token: cask.token, bypassPermissionCheck: bypassPermissionCheck)
+    }
+
+    /// Only paths inside the app bundle can be preflighted; staged-path binaries
+    /// don't exist until brew downloads the cask, so they're skipped.
+    func adoptBlockedByMissingBinary(_ cask: Cask) -> String? {
+        guard let appURL = existingBundleURL(named: cask.appArtifactNames) else { return nil }
+        let marker = "/\(appURL.lastPathComponent)/"
+        for path in cask.binarySourcePaths {
+            guard let range = path.range(of: marker) else { continue }
+            let resolved = appURL.appendingPathComponent(String(path[range.upperBound...]))
+            if !fileManager.fileExists(atPath: resolved.path) {
+                return URL(fileURLWithPath: path).lastPathComponent
+            }
+        }
+        return nil
     }
 
     func adopt(token: String, bypassPermissionCheck: Bool = false) async throws {

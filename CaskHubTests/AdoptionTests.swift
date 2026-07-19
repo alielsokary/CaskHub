@@ -102,6 +102,72 @@ final class AdoptionSurfaceTests: XCTestCase {
         XCTAssertTrue([.granted, .denied, .unknown].contains(status))
     }
 
+    func test_artifact_stanza_decodes_binary_source_paths() throws {
+        let json = Data("""
+        [{"app": ["Obsidian.app"]},
+         {"binary": ["/Applications/Obsidian.app/Contents/MacOS/obsidian-cli", {"target": "obsidian"}]}]
+        """.utf8)
+        let stanzas = try JSONDecoder().decode([ArtifactStanza].self, from: json)
+        XCTAssertEqual(
+            stanzas[1].binarySourcePaths,
+            ["/Applications/Obsidian.app/Contents/MacOS/obsidian-cli"]
+        )
+        XCTAssertEqual(stanzas[1].binaryNames, ["obsidian"])
+    }
+
+    @MainActor
+    func test_adopt_refuses_when_bundle_lacks_declared_binary() async throws {
+        let appsDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("adopt-preflight-\(UUID().uuidString)")
+        let macOSDir = appsDir.appendingPathComponent("Fake.app/Contents/MacOS")
+        try FileManager.default.createDirectory(at: macOSDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: appsDir) }
+
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("adopt-preflight"),
+            applicationDirectories: [appsDir]
+        )
+        service.permissionProbe = { .granted }
+        let cask = makeCask(
+            "caskhub-test-nonexistent-cask", appNames: ["Fake.app"],
+            binarySourcePaths: ["/Applications/Fake.app/Contents/MacOS/fake-cli"]
+        )
+
+        try await service.adopt(cask)
+
+        XCTAssertTrue(service.adoptReplaceOffers.contains(cask.token), "should offer the safe replace path")
+        XCTAssertTrue(
+            service.actionErrors[cask.token]?.contains("fake-cli") == true,
+            "error should name the missing component"
+        )
+        XCTAssertNil(service.inFlightActions[cask.token], "brew must never run")
+
+        FileManager.default.createFile(
+            atPath: macOSDir.appendingPathComponent("fake-cli").path, contents: Data()
+        )
+        XCTAssertNil(service.adoptBlockedByMissingBinary(cask), "present binary should clear the preflight")
+    }
+
+    @MainActor
+    func test_adopt_preflight_ignores_binaries_outside_the_bundle() throws {
+        let appsDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("adopt-staged-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(
+            at: appsDir.appendingPathComponent("Fake.app"), withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: appsDir) }
+
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("adopt-staged"),
+            applicationDirectories: [appsDir]
+        )
+        let cask = makeCask(
+            "fake", appNames: ["Fake.app"],
+            binarySourcePaths: ["$HOMEBREW_PREFIX/Caskroom/fake/1.0/fake-cli"]
+        )
+        XCTAssertNil(service.adoptBlockedByMissingBinary(cask))
+    }
+
     func test_artifact_stanza_round_trips_keys_through_codable() throws {
         let stanza = ArtifactStanza(keys: ["app", "zap"], appNames: ["X.app"])
         let data = try JSONEncoder().encode([stanza])

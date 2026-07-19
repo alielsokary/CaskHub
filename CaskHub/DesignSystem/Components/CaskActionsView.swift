@@ -36,7 +36,7 @@ struct CaskActionsView: View {
             HStack(spacing: 8) {
                 if isAdoptPage {
                     ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
-                        Task { try? await localHomebrew.adopt(token: cask.token) }
+                        Task { try? await localHomebrew.adopt(cask) }
                     }
                 } else {
                     ActionCapsuleButton(action: .open, fullWidth: fullWidth) {

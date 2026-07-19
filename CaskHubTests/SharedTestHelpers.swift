@@ -43,7 +43,8 @@ func makeCask(
     disabled: Bool = false,
     autoUpdates: Bool? = nil,
     appNames: [String]? = nil,
-    binaryNames: [String]? = nil
+    binaryNames: [String]? = nil,
+    binarySourcePaths: [String]? = nil
 ) -> Cask {
     var cask = Cask.preview(
         token: token,
@@ -56,7 +57,13 @@ func makeCask(
     )
     var artifacts: [ArtifactStanza] = []
     if let appNames { artifacts.append(ArtifactStanza(keys: ["app"], appNames: appNames)) }
-    if let binaryNames { artifacts.append(ArtifactStanza(keys: ["binary"], binaryNames: binaryNames)) }
+    if binaryNames != nil || binarySourcePaths != nil {
+        artifacts.append(ArtifactStanza(
+            keys: ["binary"],
+            binaryNames: binaryNames ?? [],
+            binarySourcePaths: binarySourcePaths ?? []
+        ))
+    }
     cask.artifacts = artifacts.isEmpty ? nil : artifacts
     return cask
 }
