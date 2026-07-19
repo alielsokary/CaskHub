@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-16",
-  "totalCasks": 3803,
+  "generatedDate": "2026-07-18",
+  "totalCasks": 3807,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -776,6 +776,10 @@
       "primary": "scienceEducation",
       "secondary": []
     },
+    "aphera": {
+      "primary": "designGraphics",
+      "secondary": []
+    },
     "apidog": {
       "primary": "developerTools",
       "secondary": []
@@ -896,6 +900,12 @@
       "primary": "browsers",
       "secondary": [
         "ai"
+      ]
+    },
+    "arcbox": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
       ]
     },
     "archaeology": {
@@ -7596,6 +7606,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "logseq-og": {
+      "primary": "productivity",
+      "secondary": [
+        "developerTools"
+      ]
+    },
     "lolgato": {
       "primary": "utilities",
       "secondary": []
@@ -10541,6 +10557,12 @@
     "permute": {
       "primary": "videoMedia",
       "secondary": []
+    },
+    "perplexity": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
     },
     "petrichor": {
       "primary": "audioMusic",
@@ -16395,5 +16417,5 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.07.17"
+  "releaseTag": "caskflow-v2026.07.18"
 }
