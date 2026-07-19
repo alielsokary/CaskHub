@@ -62,6 +62,7 @@
 		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
 		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
 		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
+		FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */; };
 		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -131,6 +132,7 @@
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewTests.swift; sourceTree = "<group>"; };
+		8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdoptionTests.swift; sourceTree = "<group>"; };
 		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -321,6 +323,7 @@
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
+				8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */,
 				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
 			);
 			path = CaskHubTests;
@@ -537,6 +540,7 @@
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
+				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
 				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
