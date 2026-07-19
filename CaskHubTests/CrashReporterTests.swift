@@ -78,9 +78,41 @@ final class CrashReporterTests: XCTestCase {
     func test_distinct_error_signatures_are_limited_independently() {
         for _ in 1...6 {
             CrashReporter.capture(URLError(.timedOut))
-            CrashReporter.capture(URLError(.notConnectedToInternet))
+            CrashReporter.capture(URLError(.cannotFindHost))
         }
         XCTAssertEqual(spy.capturedErrors.count, 10)
+    }
+
+    func test_offline_errors_are_never_captured() {
+        CrashReporter.capture(URLError(.notConnectedToInternet))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+    }
+
+    // MARK: - Fingerprinting
+
+    func test_brew_command_failures_fingerprint_by_subcommand() {
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "sequel-ace"], exitCode: 1, stderr: ""
+        )
+        XCTAssertEqual(SentryProvider.fingerprint(for: error), ["brewCommandFailed", "upgrade"])
+    }
+
+    func test_other_errors_keep_default_grouping() {
+        XCTAssertNil(SentryProvider.fingerprint(for: URLError(.timedOut)))
+        XCTAssertNil(SentryProvider.fingerprint(for: LocalHomebrewError.brewBinaryNotFound))
+    }
+
+    // MARK: - Tags
+
+    func test_tag_forwards_to_provider_when_enabled() {
+        CrashReporter.tag("brew.path", value: "/opt/homebrew/bin/brew")
+        XCTAssertEqual(spy.tags["brew.path"], "/opt/homebrew/bin/brew")
+    }
+
+    func test_tag_is_suppressed_when_opted_out() {
+        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.tag("brew.path", value: "/opt/homebrew/bin/brew")
+        XCTAssertTrue(spy.tags.isEmpty)
     }
 
     // MARK: - Breadcrumbs

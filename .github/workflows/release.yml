@@ -90,11 +90,18 @@ jobs:
           git config user.email "ali.elsokary.w@gmail.com"
           Scripts/release.sh "$VERSION"
 
+      - name: Save dSYMs as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dSYMs-${{ inputs.version }}
+          path: .build/release/CaskHub.xcarchive/dSYMs
+          if-no-files-found: error
+
       - name: Upload dSYMs to Sentry
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: caskhub
-          SENTRY_PROJECT: "4511720485224543" # numeric project id (slug works too)
+          SENTRY_PROJECT: apple-macos
         run: |
           curl -sL https://sentry.io/get-cli/ | bash
           Scripts/upload_dsyms.sh .build/release/CaskHub.xcarchive

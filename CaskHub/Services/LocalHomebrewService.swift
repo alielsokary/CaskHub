@@ -208,6 +208,9 @@ final class LocalHomebrewService {
         externalAppNames = appNames
         externalBinaryNames = binaryNames
 
+        CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
+        CrashReporter.tag("brew.caskroom", value: Self.locateCaskroom(fileManager: fm)?.path ?? "not found")
+
         switch result {
         case let .success(casks):
             installedCasks = casks
