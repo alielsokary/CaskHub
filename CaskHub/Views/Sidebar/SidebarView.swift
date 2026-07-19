@@ -8,7 +8,10 @@
 import SwiftUI
 
 struct SidebarView: View {
+    static let showAdoptKey = "showAdoptApps"
+
     @Binding var selection: SidebarSelection
+    @AppStorage(Self.showAdoptKey) private var showAdoptApps = true
     var categoryService: CategoryService
     var updatesCount: Int = 0
     var installedCount: Int = 0
@@ -32,7 +35,9 @@ struct SidebarView: View {
                     sectionHeader("LIBRARY")
                     row(.library(.installed), title: "Installed", icon: LibraryItem.installed.icon, count: installedCount)
                     row(.library(.updates), title: "Updates", icon: LibraryItem.updates.icon, badge: updatesCount)
-                    row(.library(.adopt), title: LibraryItem.adopt.rawValue, icon: LibraryItem.adopt.icon, count: adoptableCount)
+                    if showAdoptApps {
+                        row(.library(.adopt), title: LibraryItem.adopt.rawValue, icon: LibraryItem.adopt.icon, count: adoptableCount)
+                    }
 
                     sectionHeader("CATEGORIES")
                     ForEach(categoryService.orderedCategories, id: \.id) { entry in
@@ -49,6 +54,11 @@ struct SidebarView: View {
             .contentMargins(.bottom, 44, for: .scrollContent)
         }
         .ignoresSafeArea(.container, edges: .top)
+        .onChange(of: showAdoptApps) { _, shown in
+            if !shown, selection == .library(.adopt) {
+                selection = .library(.installed)
+            }
+        }
     }
 
     // MARK: - Rows

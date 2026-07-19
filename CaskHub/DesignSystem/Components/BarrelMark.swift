@@ -82,8 +82,8 @@ struct BrandWordmark: View {
             BarrelMark()
                 .frame(width: 30, height: 30)
             HStack(spacing: 0) {
-                Text("cask").foregroundStyle(Color.chTextTitle)
-                Text("hub").foregroundStyle(Color.chTextBrand)
+                Text("Cask").foregroundStyle(Color.chTextTitle)
+                Text("Hub").foregroundStyle(Color.chTextBrand)
             }
             .font(CHType.wordmark)
         }
