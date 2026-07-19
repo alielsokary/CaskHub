@@ -176,6 +176,100 @@ final class AdoptionSurfaceTests: XCTestCase {
     }
 }
 
+// MARK: - Zombie Caskroom entries
+
+/// A "zombie" is a Caskroom entry whose app was removed outside Homebrew
+/// (Pearcleaner, manual trash) or whose install metadata is gone — brew still
+/// lists it, but every open/upgrade against it is doomed.
+final class ZombieDetectionTests: XCTestCase {
+    private let fm = FileManager.default
+    private var root: URL!
+    private var caskroom: URL!
+    private var appsDir: URL!
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        root = fm.temporaryDirectory.appendingPathComponent("zombie-\(UUID().uuidString)")
+        caskroom = root.appendingPathComponent("Caskroom")
+        appsDir = root.appendingPathComponent("Applications")
+        try fm.createDirectory(at: caskroom, withIntermediateDirectories: true)
+        try fm.createDirectory(at: appsDir, withIntermediateDirectories: true)
+    }
+
+    override func tearDownWithError() throws {
+        try? fm.removeItem(at: root)
+        try super.tearDownWithError()
+    }
+
+    /// receiptApps nil = no INSTALL_RECEIPT.json at all.
+    @discardableResult
+    private func makeEntry(_ token: String, receiptApps: [String]?) throws -> URL {
+        let versionDir = caskroom.appendingPathComponent("\(token)/1.0")
+        try fm.createDirectory(at: versionDir, withIntermediateDirectories: true)
+        if let receiptApps {
+            let metadata = caskroom.appendingPathComponent("\(token)/.metadata")
+            try fm.createDirectory(at: metadata, withIntermediateDirectories: true)
+            let receipt: [String: Any] = ["uninstall_artifacts": [["app": receiptApps]]]
+            let data = try JSONSerialization.data(withJSONObject: receipt)
+            try data.write(to: metadata.appendingPathComponent("INSTALL_RECEIPT.json"))
+        }
+        return versionDir
+    }
+
+    private func scan() -> [String: LocalCaskInstallation] {
+        LocalHomebrewService.scanCaskroom(
+            at: caskroom, fileManager: fm, applicationDirectories: [appsDir]
+        )
+    }
+
+    func test_missing_app_with_dangling_symlink_is_zombie() throws {
+        let versionDir = try makeEntry("mole-app", receiptApps: ["Mole.app"])
+        try fm.createSymbolicLink(
+            at: versionDir.appendingPathComponent("Mole.app"),
+            withDestinationURL: appsDir.appendingPathComponent("Mole.app")
+        )
+        XCTAssertEqual(scan()["mole-app"]?.isZombie, true)
+    }
+
+    func test_app_present_in_applications_is_not_zombie() throws {
+        try makeEntry("chrome", receiptApps: ["Chrome.app"])
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("Chrome.app"), withIntermediateDirectories: true
+        )
+        XCTAssertEqual(scan()["chrome"]?.isZombie, false)
+    }
+
+    func test_real_app_parked_inside_caskroom_is_not_zombie() throws {
+        let versionDir = try makeEntry("tabby", receiptApps: ["Tabby.app"])
+        try fm.createDirectory(
+            at: versionDir.appendingPathComponent("Tabby.app"), withIntermediateDirectories: true
+        )
+        XCTAssertEqual(scan()["tabby"]?.isZombie, false)
+    }
+
+    func test_missing_receipt_is_zombie() throws {
+        try makeEntry("sequel-ace", receiptApps: nil)
+        XCTAssertEqual(scan()["sequel-ace"]?.isZombie, true)
+    }
+
+    func test_cli_cask_with_appless_receipt_is_not_zombie() throws {
+        try makeEntry("some-cli", receiptApps: [])
+        XCTAssertEqual(scan()["some-cli"]?.isZombie, false)
+    }
+
+    @MainActor
+    func test_zombies_never_offer_updates() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("zombie-updates"))
+        service.installedCasks["mole-app"] = LocalCaskInstallation(
+            token: "mole-app", installedVersion: "1.0", installedAt: nil,
+            appBundleNames: ["Mole.app"], isZombie: true
+        )
+        XCTAssertFalse(
+            service.hasAvailableUpdate(token: "mole-app", remoteVersion: "2.0", autoUpdates: nil)
+        )
+    }
+}
+
 // MARK: - View render smoke tests
 
 final class AdoptionViewRenderTests: XCTestCase {

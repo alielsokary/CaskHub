@@ -103,22 +103,44 @@ extension LocalHomebrewService {
 
     // MARK: - Filesystem Scanning
 
+    nonisolated static func defaultApplicationDirectories(_ fileManager: FileManager) -> [URL] {
+        [
+            URL(fileURLWithPath: "/Applications"),
+            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
+        ]
+    }
+
     /// A missing Caskroom isn't an error: fresh brew installs have none until
     /// the first cask lands, and machines without brew have nothing to scan.
     nonisolated static func scanCaskroom(
-        fileManager: FileManager
+        fileManager: FileManager,
+        applicationDirectories: [URL]? = nil
     ) -> [String: LocalCaskInstallation] {
-        guard let caskroomURL = locateCaskroom(fileManager: fileManager),
-              let entries = try? fileManager.contentsOfDirectory(
-                  at: caskroomURL,
-                  includingPropertiesForKeys: [.isDirectoryKey],
-                  options: [.skipsHiddenFiles]
-              )
-        else { return [:] }
+        guard let caskroomURL = locateCaskroom(fileManager: fileManager) else { return [:] }
+        return scanCaskroom(
+            at: caskroomURL,
+            fileManager: fileManager,
+            applicationDirectories: applicationDirectories
+                ?? defaultApplicationDirectories(fileManager)
+        )
+    }
+
+    nonisolated static func scanCaskroom(
+        at caskroomURL: URL,
+        fileManager: FileManager,
+        applicationDirectories: [URL]
+    ) -> [String: LocalCaskInstallation] {
+        guard let entries = try? fileManager.contentsOfDirectory(
+            at: caskroomURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else { return [:] }
 
         var result: [String: LocalCaskInstallation] = [:]
         for entry in entries {
-            if let installation = scanCaskEntry(entry, fileManager: fileManager) {
+            if let installation = scanCaskEntry(
+                entry, fileManager: fileManager, applicationDirectories: applicationDirectories
+            ) {
                 result[installation.token] = installation
             }
         }
@@ -129,7 +151,8 @@ extension LocalHomebrewService {
     /// which freezes at the original install and never updates after `brew upgrade`.
     private nonisolated static func scanCaskEntry(
         _ entry: URL,
-        fileManager: FileManager
+        fileManager: FileManager,
+        applicationDirectories: [URL]
     ) -> LocalCaskInstallation? {
         var isDir: ObjCBool = false
         guard fileManager.fileExists(atPath: entry.path, isDirectory: &isDir), isDir.boolValue,
@@ -150,8 +173,20 @@ extension LocalHomebrewService {
         let receiptURL = entry
             .appendingPathComponent(".metadata", isDirectory: true)
             .appendingPathComponent("INSTALL_RECEIPT.json")
-        let receipt = (try? Data(contentsOf: receiptURL))
-            .flatMap { try? InstallReceipt(jsonData: $0) }
+        let receiptExists = fileManager.fileExists(atPath: receiptURL.path)
+        let receipt = receiptExists
+            ? (try? Data(contentsOf: receiptURL)).flatMap { try? InstallReceipt(jsonData: $0) }
+            : nil
+
+        // No receipt: brew itself refuses to manage the entry ("Cask is not
+        // installed"). A receipt that exists but fails to parse is NOT a zombie —
+        // a future receipt format must not mass-flag healthy installs.
+        let isZombie = !receiptExists || appsGoneEverywhere(
+            appNames: receipt?.appBundleNames ?? [],
+            versionDir: versionDir,
+            fileManager: fileManager,
+            applicationDirectories: applicationDirectories
+        )
 
         return LocalCaskInstallation(
             token: entry.lastPathComponent,
@@ -159,8 +194,27 @@ extension LocalHomebrewService {
             installedAt: try? versionDir.resourceValues(
                 forKeys: [.contentModificationDateKey]
             ).contentModificationDate,
-            appBundleNames: receipt?.appBundleNames ?? []
+            appBundleNames: receipt?.appBundleNames ?? [],
+            isZombie: isZombie
         )
+    }
+
+    /// True when the receipt names app bundles and none survive — not in any
+    /// Applications folder, and no real copy parked in the Caskroom version dir
+    /// (fileExists follows symlinks, so a dangling link counts as gone).
+    private nonisolated static func appsGoneEverywhere(
+        appNames: [String],
+        versionDir: URL,
+        fileManager: FileManager,
+        applicationDirectories: [URL]
+    ) -> Bool {
+        guard !appNames.isEmpty else { return false }
+        let candidateDirs = applicationDirectories + [versionDir]
+        return !appNames.contains { name in
+            candidateDirs.contains {
+                fileManager.fileExists(atPath: $0.appendingPathComponent(name).path)
+            }
+        }
     }
 
     /// Executable names in the places CLI tools commonly install to. GUI apps

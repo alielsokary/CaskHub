@@ -17,6 +17,24 @@ struct LocalCaskInstallation: Hashable, Identifiable {
     let installedAt: Date?
     let appBundleNames: [String]
 
+    /// Brew still lists this cask, but its app was removed outside Homebrew
+    /// (or its install receipt is gone) — opens and upgrades are doomed.
+    let isZombie: Bool
+
+    init(
+        token: String,
+        installedVersion: String,
+        installedAt: Date?,
+        appBundleNames: [String],
+        isZombie: Bool = false
+    ) {
+        self.token = token
+        self.installedVersion = installedVersion
+        self.installedAt = installedAt
+        self.appBundleNames = appBundleNames
+        self.isZombie = isZombie
+    }
+
     var id: String {
         token
     }
@@ -180,10 +198,8 @@ final class LocalHomebrewService {
     ) {
         self.fileManager = fileManager
         self.defaults = defaults
-        self.applicationDirectories = applicationDirectories ?? [
-            URL(fileURLWithPath: "/Applications"),
-            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
-        ]
+        self.applicationDirectories = applicationDirectories
+            ?? Self.defaultApplicationDirectories(fileManager)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         customBrewPrefix = defaults.string(forKey: Self.customBrewPrefixKey)
 
@@ -231,9 +247,10 @@ final class LocalHomebrewService {
         if brewVersion == nil {
             brewVersion = await Self.fetchBrewVersion()
         }
+        let appDirs = applicationDirectories
         let (casks, appNames, binaryNames) = await Task.detached(priority: .userInitiated) {
             (
-                Self.scanCaskroom(fileManager: fm),
+                Self.scanCaskroom(fileManager: fm, applicationDirectories: appDirs),
                 Self.scanApplications(fileManager: fm),
                 Self.scanBinaryDirectories(fileManager: fm)
             )
@@ -272,7 +289,7 @@ final class LocalHomebrewService {
     }
 
     func isOutdated(token: String, remoteVersion: String) -> Bool {
-        guard let installation = installedCasks[token] else { return false }
+        guard let installation = installedCasks[token], !installation.isZombie else { return false }
         return Self.comparableVersion(installation.installedVersion)
             != Self.comparableVersion(remoteVersion)
     }
@@ -428,6 +445,14 @@ final class LocalHomebrewService {
 
     func uninstall(token: String) async throws {
         try await runMutation(.uninstalling, token: token, args: ["uninstall", "--cask", token])
+    }
+
+    /// Clears a zombie Caskroom entry — the app is already gone, `--force`
+    /// removes the leftover brew bookkeeping without complaining about it.
+    func repair(token: String) async throws {
+        try await runMutation(
+            .uninstalling, token: token, args: ["uninstall", "--cask", token, "--force"]
+        )
     }
 
     func upgrade(token: String) async throws {

@@ -68,6 +68,21 @@ struct CaskActionsView: View {
 
     @ViewBuilder
     private func installedActions(for installation: LocalCaskInstallation) -> some View {
+        if installation.isZombie {
+            ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
+                Task { try? await localHomebrew.repair(token: cask.token) }
+            }
+            .help("""
+            \(cask.displayName) was removed outside Homebrew, but Homebrew still \
+            has records for it. Clean Up removes the leftover data.
+            """)
+        } else {
+            managedActions(for: installation)
+        }
+    }
+
+    @ViewBuilder
+    private func managedActions(for installation: LocalCaskInstallation) -> some View {
         let showUpdate = localHomebrew.hasAvailableUpdate(
             token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates
         )
