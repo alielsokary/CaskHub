@@ -125,6 +125,7 @@ final class ContentViewTests: XCTestCase {
 final class TopBarViewTests: XCTestCase {
     private struct TopBarHarness: View {
         let isUpdatingAll: Bool
+        var greedyUpdates: Bool?
         let onAppear: () -> Void
         @FocusState private var searchFocused: Bool
 
@@ -137,7 +138,9 @@ final class TopBarViewTests: XCTestCase {
                 searchText: .constant(""),
                 searchFocus: $searchFocused,
                 onUpdateAll: {},
-                isUpdatingAll: isUpdatingAll
+                isUpdatingAll: isUpdatingAll,
+                greedyUpdates: greedyUpdates,
+                onToggleGreedy: { _ in }
             )
             .onAppear(perform: onAppear)
         }
@@ -149,7 +152,7 @@ final class TopBarViewTests: XCTestCase {
     }
 
     @MainActor
-    private func renderTopBar(isUpdatingAll: Bool) {
+    private func renderTopBar(isUpdatingAll: Bool, greedyUpdates: Bool? = nil) {
         let probe = RenderProbe()
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 900, height: 80),
@@ -159,7 +162,7 @@ final class TopBarViewTests: XCTestCase {
         )
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(
-            rootView: TopBarHarness(isUpdatingAll: isUpdatingAll) { probe.appeared = true }
+            rootView: TopBarHarness(isUpdatingAll: isUpdatingAll, greedyUpdates: greedyUpdates) { probe.appeared = true }
         )
         window.orderFrontRegardless()
 
@@ -181,5 +184,11 @@ final class TopBarViewTests: XCTestCase {
     @MainActor
     func test_update_all_chip_renders_updating_state() {
         renderTopBar(isUpdatingAll: true)
+    }
+
+    @MainActor
+    func test_greedy_chip_renders_on_and_off_states() {
+        renderTopBar(isUpdatingAll: false, greedyUpdates: true)
+        renderTopBar(isUpdatingAll: false, greedyUpdates: false)
     }
 }

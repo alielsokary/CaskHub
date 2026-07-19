@@ -294,7 +294,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
         CrashReporter.captureCounts = [:]
 
         let api = MockBrewAPIClient()
-        api.casksError = URLError(.notConnectedToInternet)
+        // Not .notConnectedToInternet: offline errors are deliberately never captured.
+        api.casksError = URLError(.timedOut)
         let vm = makeViewModel(api: api)
 
         await vm.fetchCasks()
