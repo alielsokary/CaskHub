@@ -24,12 +24,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Theme switching via NSApp.appearance instead of preferredColorScheme:
-    /// the window backdrop (containerBackground) and the dynamic NSColor tokens
-    /// then resolve against the same appearance. preferredColorScheme(nil)
-    /// left the two out of sync after a Light/Dark → System switch.
     static func apply(_ raw: String) {
-        // NSApplication.shared, not NSApp — NSApp is still nil during App.init().
         let app = NSApplication.shared
         switch AppTheme(rawValue: raw) ?? .system {
         case .system: app.appearance = nil

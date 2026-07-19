@@ -17,8 +17,11 @@ final class ImageCacheService {
     private var upgradeInFlight: Set<String> = []
     private let session: URLSession
 
-    /// How long a full-chain miss suppresses re-fetching. Misses re-try daily
-    /// so users pick up newly backfilled CaskFlow icons without launch chatter.
+    /// Manifest of tokens with an icon on the CaskFlow icons branch, from
+    /// categories.json — absent tokens are guaranteed 404s, never requested.
+    /// nil = manifest unknown (old category data) → fall back to probing.
+    var knownIconTokens: () -> Set<String>? = { nil }
+
     private static let missRetryInterval: TimeInterval = 24 * 60 * 60
 
     private static let cacheDirectory: URL = {
@@ -27,7 +30,6 @@ final class ImageCacheService {
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         } catch {
-            // Disk cache is dead for the session — icons fall back to memory-only.
             CrashReporter.capture(error)
         }
         return dir
@@ -42,41 +44,34 @@ final class ImageCacheService {
     func image(for cask: Cask) async -> NSImage? {
         let token = cask.token
 
-        // 1. Memory cache
         if let cached = memoryCache.object(forKey: token as NSString) {
             return cached
         }
 
-        // CLI casks: icons cached before the cutover may since have been
-        // retired by CaskFlow's curated CLI tier — drop and refetch once.
         if cask.isCLI {
             purgeStaleCLIIcon(token: token)
         }
 
-        // 2. Disk cache — fallback-tier hits also schedule a background
-        // CaskFlow upgrade check (at most daily), so icons cached from
-        // favicon/avatar before CaskFlow coverage arrived aren't pinned forever.
         if let diskImage = loadFromDisk(token: token) {
             memoryCache.setObject(diskImage, forKey: token as NSString)
             maybeUpgradeFallbackIcon(token: token)
             return diskImage
         }
 
-        // 3. Recent-miss cooldown: every tier failed with real HTTP responses
-        // within the last day — skip the whole chain until the cooldown lapses.
+        let inManifest = knownIconTokens()?.contains(token) ?? true
+        if cask.isCLI, !inManifest {
+            return nil
+        }
+
         if hasRecentMiss(token: token) {
             return nil
         }
 
-        // 4. Coalesce in-flight requests
         if let existing = inFlightTasks[token] {
             return await existing.value
         }
 
         let task = Task<NSImage?, Never> {
-            // Track whether any tier got an actual HTTP response: a miss is
-            // only recorded when servers answered (offline must not poison
-            // the cooldown for a day).
             var sawHTTPResponse = false
             func fetch(_ url: URL) async -> NSImage? {
                 let (image, responded) = await self.downloadImage(from: url)
@@ -84,19 +79,15 @@ final class ImageCacheService {
                 return image
             }
 
-            // Tier 0: CaskFlow original icon (our own extraction pipeline —
-            // jsDelivr CDN with raw.githubusercontent fallback, backfilling)
-            for url in CaskIconURL.caskFlowIconURLs(for: token) {
-                if let image = await fetch(url) {
-                    cache(image: image, token: token, fromCaskFlow: true)
-                    return image
+            if inManifest {
+                for url in CaskIconURL.caskFlowIconURLs(for: token) {
+                    if let image = await fetch(url) {
+                        cache(image: image, token: token, fromCaskFlow: true)
+                        return image
+                    }
                 }
             }
 
-            // Tier 1: App-Fair app icon (also original; frozen pre-2022 —
-            // covers some casks CaskFlow can't extract today). Skipped for
-            // CLI casks: their icon policy is CaskFlow's alone — anything
-            // else falls through to the app's CLI tile.
             if !cask.isCLI,
                let url = CaskIconURL.appFairIconURL(for: token),
                let image = await fetch(url) {
@@ -104,8 +95,6 @@ final class ImageCacheService {
                 return image
             }
 
-            // No generated fallbacks (favicons, avatars) — by design the
-            // placeholder shows until an original icon exists.
             if sawHTTPResponse {
                 markMiss(token: token)
             }
@@ -118,8 +107,6 @@ final class ImageCacheService {
         return result
     }
 
-    /// Wipes the in-memory and on-disk icon caches. Each icon re-downloads
-    /// through the normal CaskFlow → App-Fair chain the next time it's shown.
     func clearCache() {
         memoryCache.removeAllObjects()
         try? FileManager.default.removeItem(at: Self.cacheDirectory)
@@ -130,8 +117,6 @@ final class ImageCacheService {
 
     // MARK: - Private
 
-    /// gotResponse distinguishes "server said no" (404 etc.) from transport
-    /// failure (offline) — only real responses may arm the miss cooldown.
     private func downloadImage(from url: URL) async -> (image: NSImage?, gotResponse: Bool) {
         guard let (data, response) = try? await session.data(from: url),
               let httpResponse = response as? HTTPURLResponse
@@ -152,20 +137,14 @@ final class ImageCacheService {
         saveToDisk(image: image, token: token)
         try? FileManager.default.removeItem(at: missMarkerPath(for: token))
         if fromCaskFlow {
-            // Terminal quality — never re-checked.
             try? FileManager.default.removeItem(at: fallbackMarkerPath(for: token))
         } else {
-            // Fallback tier (App-Fair/favicon/avatar): upgrade-eligible.
-            // mtime = now, so the first CaskFlow re-check happens tomorrow —
-            // CaskFlow necessarily missed moments ago on this same chain run.
             try? Data().write(to: fallbackMarkerPath(for: token), options: .atomic)
         }
     }
 
     // MARK: - CLI cutover purge
 
-    /// 2026-07-09 12:00 UTC — CaskFlow's curated-CLI icon cleanup plus the
-    /// jsDelivr branch TTL that kept serving the retired files.
     private static let cliIconCutover = Date(timeIntervalSince1970: 1_783_598_400)
 
     private func purgeStaleCLIIcon(token: String) {
@@ -178,8 +157,6 @@ final class ImageCacheService {
         }
         try? FileManager.default.removeItem(at: path)
         try? FileManager.default.removeItem(at: fallbackMarkerPath(for: token))
-        // jsDelivr's long max-age would replay the retired icon's cached 200
-        // from URLCache — evict so the refetch hits the network.
         let urlCache = session.configuration.urlCache ?? .shared
         for url in CaskIconURL.caskFlowIconURLs(for: token) {
             urlCache.removeCachedResponse(for: URLRequest(url: url))
@@ -192,10 +169,10 @@ final class ImageCacheService {
         Self.cacheDirectory.appendingPathComponent("\(token).fallback")
     }
 
-    /// A disk-cached fallback icon is re-checked against CaskFlow at most once
-    /// per missRetryInterval — lazily, only when the cask is actually shown.
-    /// A hit permanently replaces the cached icon and retires the marker.
     private func maybeUpgradeFallbackIcon(token: String) {
+        if let known = knownIconTokens(), !known.contains(token) {
+            return
+        }
         let marker = fallbackMarkerPath(for: token)
         guard let mtime = try? FileManager.default
             .attributesOfItem(atPath: marker.path)[.modificationDate] as? Date,
@@ -214,7 +191,6 @@ final class ImageCacheService {
                     return
                 }
             }
-            // Still not on CaskFlow — reset the daily timer.
             try? FileManager.default.setAttributes(
                 [.modificationDate: Date()], ofItemAtPath: marker.path
             )
@@ -222,12 +198,6 @@ final class ImageCacheService {
         }
     }
 
-    /// One-time migration: purge cached icons that predate the original-only
-    /// chain. Anything carrying a fallback marker (or unmarked from before
-    /// tier tracking) may be a favicon/avatar — delete it and let the cask
-    /// refetch through CaskFlow → App-Fair. CaskFlow-tier caches are unmarked
-    /// only if fetched after tier tracking, so we key off the v1 flag:
-    /// pre-tracking installs purge everything marked or migrated.
     private nonisolated static func purgeGeneratedIconsIfNeeded() {
         Task.detached(priority: .utility) {
             let dir = await Self.cacheDirectory
@@ -243,7 +213,6 @@ final class ImageCacheService {
                 )
                 try? FileManager.default.removeItem(at: marker)
             }
-            // Retired artifacts from the avatar tier and the v1 migration.
             try? FileManager.default.removeItem(
                 at: dir.deletingLastPathComponent()
                     .appendingPathComponent("github_owner_types.json")

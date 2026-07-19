@@ -9,6 +9,7 @@ name: Release build
 #   NOTARY_KEY / NOTARY_KEY_ID / NOTARY_ISSUER_ID  App Store Connect API key
 #   SPARKLE_ED_PRIVATE_KEY                         from `generate_keys -x`
 #   TELEMETRYDECK_APP_ID / SENTRY_DSN              analytics (optional values)
+#   SENTRY_AUTH_TOKEN                              org token (org:ci) for dSYM upload
 
 on:
   workflow_dispatch:
@@ -88,3 +89,19 @@ jobs:
           git config user.name "Ali Elsokary"
           git config user.email "ali.elsokary.w@gmail.com"
           Scripts/release.sh "$VERSION"
+
+      - name: Save dSYMs as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dSYMs-${{ inputs.version }}
+          path: .build/release/CaskHub.xcarchive/dSYMs
+          if-no-files-found: error
+
+      - name: Upload dSYMs to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: caskhub
+          SENTRY_PROJECT: apple-macos
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          Scripts/upload_dsyms.sh .build/release/CaskHub.xcarchive

@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// Glass recipe: frosted tinted surface · white hairline (lit from the top) ·
-// soft shadow.
-
 private struct GlassPanelModifier: ViewModifier {
     var radius: CGFloat
     var surface: Color
@@ -47,8 +44,6 @@ extension View {
     }
 }
 
-/// Window backdrop: warm gradient, three glowing color blobs, halftone dot texture.
-/// The glass panels above blur these blobs — that's the whole liquid-glass effect.
 struct WindowBackdrop: View {
     var body: some View {
         GeometryReader { geo in
@@ -80,7 +75,6 @@ struct WindowBackdrop: View {
     }
 }
 
-/// Halftone dot grid (1px dots on a 9px grid), from tokens/surfaces.css.
 struct HalftoneTexture: View {
     var body: some View {
         // ponytail: O(w·h/81) dots per redraw; switch to a tiled image if resize ever stutters

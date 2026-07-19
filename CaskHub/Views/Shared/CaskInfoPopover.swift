@@ -93,10 +93,15 @@ struct CaskInfoPopover: View {
 
         let localInstallation = localHomebrew.installedCasks[cask.token]
 
-        result.append(InfoRow(
-            property: "Installed Version",
-            value: localInstallation?.installedVersion ?? "Not installed"
-        ))
+        let installedValue: String
+        if let version = localInstallation?.installedVersion {
+            installedValue = version
+        } else if let external = localHomebrew.externalAppVersion(for: cask) {
+            installedValue = "\(external) (not adopted)"
+        } else {
+            installedValue = "Not installed"
+        }
+        result.append(InfoRow(property: "Installed Version", value: installedValue))
 
         if let bundleVersion = cask.bundleVersion {
             result.append(InfoRow(property: "Bundle Version", value: bundleVersion))
@@ -132,9 +137,6 @@ private struct InfoRow {
     var link: URL?
 }
 
-/// Download size via HTTP headers — the brew API doesn't publish sizes.
-/// Cached (including failures) for the app's lifetime: cask URLs are
-/// version-pinned, so a size never changes under the same URL.
 /// ponytail: uses the API's default `url`; per-arch `variations` can differ.
 @MainActor
 enum DownloadSizeCache {
@@ -167,7 +169,6 @@ enum DownloadSizeCache {
             return response.expectedContentLength
         }
 
-        // Fallback: 1-byte ranged GET; total size arrives as "bytes 0-0/<total>".
         var ranged = URLRequest(url: url, timeoutInterval: 15)
         ranged.setValue("bytes=0-0", forHTTPHeaderField: "Range")
         guard let response = try? await URLSession.shared.data(for: ranged).1 as? HTTPURLResponse,
@@ -189,7 +190,6 @@ enum DownloadSizeCache {
             homepage: "https://1password.com/",
             url: "https://downloads.1password.com/mac/1Password-8.12.10-aarch64.zip",
             version: "8.12.10",
-            installed: nil,
             bundleVersion: nil,
             bundleShortVersion: nil,
             outdated: false,

@@ -14,7 +14,6 @@ enum CHType {
 
     // Display — wordmark, screen titles, section heads
     static let wordmark = Font.custom(displayFamily, size: 19).weight(.heavy)
-    static let screenTitle = Font.custom(displayFamily, size: 26).weight(.heavy)
     static let heroTitle = Font.custom(displayFamily, size: 28).weight(.heavy)
     static let section = Font.custom(displayFamily, size: 16).weight(.heavy)
 

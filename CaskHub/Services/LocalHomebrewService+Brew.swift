@@ -7,15 +7,9 @@
 
 import Foundation
 
-/// The nonisolated plumbing that talks to the Homebrew installation directly:
-/// process helpers, Caskroom scanning, and path discovery. No UI state here —
-/// everything is static and safe to call off the main actor.
 extension LocalHomebrewService {
     // MARK: - Process Helpers
 
-    /// Writes the SUDO_ASKPASS helper: re-execs this binary in `--askpass`
-    /// mode. Rewritten per mutation so the binary path (moves between dev
-    /// builds) and the token stay current.
     nonisolated static func ensureAskpassScript(token: String) -> URL? {
         guard let executablePath = Bundle.main.executableURL?.path else { return nil }
         // Interpolated into a shell script — keep only known-safe characters.
@@ -43,8 +37,6 @@ extension LocalHomebrewService {
         return url
     }
 
-    /// Sends `signal` to a process and all of its descendants (brew forks curl;
-    /// signalling only brew would leave curl downloading to a dead parent).
     nonisolated static func signalTree(pid: Int32, signal: Int32) {
         let pgrep = Process()
         pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
@@ -65,10 +57,6 @@ extension LocalHomebrewService {
         kill(pid, signal)
     }
 
-    /// Deletes downloads newer than `cutoff` from Homebrew's cache — the only
-    /// residue a download-phase cancel leaves behind. Covers both `*.incomplete`
-    /// partials and just-finished archives (cancel can land after the download
-    /// completed but before staging began).
     nonisolated static func cleanupIncompleteDownloads(since cutoff: Date) {
         let fm = FileManager.default
         let cacheURL: URL
@@ -89,7 +77,6 @@ extension LocalHomebrewService {
         }
     }
 
-    /// Runs `brew --version` and returns the bare version ("Homebrew 4.6.15" → "4.6.15").
     nonisolated static func fetchBrewVersion() async -> String? {
         guard let brewURL = locateBrewBinary() else { return nil }
         return await Task.detached(priority: .utility) {
@@ -116,7 +103,6 @@ extension LocalHomebrewService {
 
     // MARK: - Filesystem Scanning
 
-    /// Scans the Caskroom to build a map of locally-installed casks.
     nonisolated static func scanCaskroom(
         fileManager: FileManager
     ) -> Result<[String: LocalCaskInstallation], LocalHomebrewError> {
@@ -140,26 +126,14 @@ extension LocalHomebrewService {
         return .success(result)
     }
 
-    /// Builds the snapshot for one `Caskroom/<token>/` directory.
-    ///
-    /// **Version**: read from the version-directory NAME (e.g.
-    /// `Caskroom/finetune/1.4.1/`), NOT from `INSTALL_RECEIPT.json`'s
-    /// `source.version` which freezes at the original install and never
-    /// updates after `brew upgrade`. When several version directories exist,
-    /// the most recently modified one wins.
-    ///
-    /// **Date**: the version directory's modification date — when Homebrew
-    /// staged the files for that version.
-    ///
-    /// **App bundles**: extracted from the install receipt's
-    /// `uninstall_artifacts` — the app name rarely changes between versions.
+    /// Version comes from the version-directory name, not the receipt's `source.version`,
+    /// which freezes at the original install and never updates after `brew upgrade`.
     private nonisolated static func scanCaskEntry(
         _ entry: URL,
         fileManager: FileManager
     ) -> LocalCaskInstallation? {
         var isDir: ObjCBool = false
         guard fileManager.fileExists(atPath: entry.path, isDirectory: &isDir), isDir.boolValue,
-              // `.skipsHiddenFiles` also excludes the `.metadata/` directory.
               let subDirs = try? fileManager.contentsOfDirectory(
                   at: entry,
                   includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey],
@@ -190,6 +164,51 @@ extension LocalHomebrewService {
         )
     }
 
+    /// Executable names in the places CLI tools commonly install to. GUI apps
+    /// don't inherit the shell's PATH, so fixed locations beat consulting it.
+    nonisolated static func scanBinaryDirectories(fileManager: FileManager) -> Set<String> {
+        let home = fileManager.homeDirectoryForCurrentUser
+        let folders = [
+            URL(fileURLWithPath: "/usr/local/bin"),
+            home.appendingPathComponent(".local/bin"),
+            home.appendingPathComponent("bin")
+        ]
+        var names: Set<String> = []
+        for folder in folders {
+            guard let entries = try? fileManager.contentsOfDirectory(
+                at: folder,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles]
+            ) else { continue }
+            for entry in entries where fileManager.isExecutableFile(atPath: entry.path) {
+                names.insert(entry.lastPathComponent)
+            }
+        }
+        return names
+    }
+
+    nonisolated static func scanApplications(fileManager: FileManager) -> Set<String> {
+        let folders = [
+            URL(fileURLWithPath: "/Applications"),
+            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
+        ]
+        var names: Set<String> = []
+        for folder in folders {
+            guard let entries = try? fileManager.contentsOfDirectory(
+                at: folder,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles]
+            ) else { continue }
+            for entry in entries where entry.pathExtension == "app" {
+                // Mac App Store apps carry a receipt; adopting those would fight MAS updates.
+                let masReceipt = entry.appendingPathComponent("Contents/_MASReceipt/receipt")
+                guard !fileManager.fileExists(atPath: masReceipt.path) else { continue }
+                names.insert(entry.lastPathComponent)
+            }
+        }
+        return names
+    }
+
     private nonisolated static func modificationDate(of url: URL) -> Date {
         (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
             ?? .distantPast
@@ -197,20 +216,52 @@ extension LocalHomebrewService {
 
     // MARK: - Path Discovery
 
-    /// Candidate locations for `relativePath` under the Homebrew prefix:
-    /// `$HOMEBREW_PREFIX` first, then Apple Silicon, then Intel default.
+    nonisolated static let customBrewPrefixKey = "customBrewPrefix"
+
+    /// Machine architecture, not build architecture: `hw.optional.arm64` reports
+    /// Apple Silicon truthfully even for a process running under Rosetta.
+    nonisolated static let isAppleSilicon: Bool = {
+        var value: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        sysctlbyname("hw.optional.arm64", &value, &size, nil, 0)
+        return value == 1
+    }()
+
     private nonisolated static func brewPrefixCandidates(_ relativePath: String) -> [URL] {
         var candidates: [URL] = []
+        if let custom = UserDefaults.standard.string(forKey: customBrewPrefixKey), !custom.isEmpty {
+            candidates.append(URL(fileURLWithPath: custom).appendingPathComponent(relativePath))
+        }
         if let prefix = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"], !prefix.isEmpty {
             candidates.append(URL(fileURLWithPath: prefix).appendingPathComponent(relativePath))
         }
-        candidates.append(URL(fileURLWithPath: "/opt/homebrew").appendingPathComponent(relativePath))
-        candidates.append(URL(fileURLWithPath: "/usr/local").appendingPathComponent(relativePath))
+        let standardPrefixes = isAppleSilicon
+            ? ["/opt/homebrew", "/usr/local"]
+            : ["/usr/local", "/opt/homebrew"]
+        for prefix in standardPrefixes {
+            candidates.append(URL(fileURLWithPath: prefix).appendingPathComponent(relativePath))
+        }
         return candidates
     }
 
-    private nonisolated static func locateCaskroom(fileManager: FileManager) -> URL? {
+    nonisolated static func locateCaskroom(fileManager: FileManager) -> URL? {
         brewPrefixCandidates("Caskroom").first { fileManager.fileExists(atPath: $0.path) }
+    }
+
+    /// Resolves a user's picker selection to a brew prefix. Accepts the brew
+    /// binary itself, a prefix folder, or the bin folder inside it.
+    nonisolated static func brewPrefix(fromSelection url: URL) -> String? {
+        let fm = FileManager.default
+        if url.lastPathComponent == "brew", fm.isExecutableFile(atPath: url.path) {
+            return url.deletingLastPathComponent().deletingLastPathComponent().path
+        }
+        if fm.isExecutableFile(atPath: url.appendingPathComponent("bin/brew").path) {
+            return url.path
+        }
+        if fm.isExecutableFile(atPath: url.appendingPathComponent("brew").path) {
+            return url.deletingLastPathComponent().path
+        }
+        return nil
     }
 
     nonisolated static func locateBrewBinary() -> URL? {

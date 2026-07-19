@@ -23,12 +23,13 @@ struct TokenCategoryMapping: Codable, Hashable {
 struct CaskCategoryData: Codable {
     let version: Int
     let generatedDate: String
-    /// GitHub release tag (e.g. "caskflow-v2026.07.10"), stamped into the
-    /// asset by CaskFlow's release workflow. Absent in older data.
     let releaseTag: String?
     let totalCasks: Int
     let categories: [String: CategoryDefinition]
     let tokenToCategory: [String: TokenCategoryMapping]
+    /// Manifest of tokens with an icon on the CaskFlow icons branch, stamped
+    /// into the release asset. Absent in pre-2026.07 data → nil.
+    let iconTokens: [String]?
 }
 
 @MainActor
@@ -40,6 +41,7 @@ final class CategoryService {
     private(set) var version: Int = 0
     private(set) var generatedDate: String = ""
     private(set) var releaseTag: String?
+    private(set) var iconTokens: Set<String>?
 
     var orderedCategories: [(id: CategoryID, definition: CategoryDefinition)] {
         categoryDefinitions
@@ -61,9 +63,6 @@ final class CategoryService {
         applyData(catalog)
     }
 
-    /// Best-effort fetch of the latest categories.json from CaskFlow's GitHub Releases.
-    /// Silent on every failure path — bundled data remains in use.
-    /// Schema-version mismatches and older `generatedDate` values are also rejected.
     func refreshFromRemote() async {
         guard let remote = await CaskFlowReleases.fetch(CaskCategoryData.self, asset: "categories.json"),
               remote.version == version,
@@ -88,14 +87,13 @@ final class CategoryService {
         version = catalog.version
         generatedDate = catalog.generatedDate
         releaseTag = catalog.releaseTag
+        iconTokens = catalog.iconTokens.map(Set.init)
     }
 
-    /// Returns the primary category for a cask token.
     func category(for token: String) -> CategoryID? {
         tokenMappings[token]?.primary
     }
 
-    /// Returns all cask tokens in a category (includes both primary and secondary assignments).
     func tokens(in categoryID: CategoryID) -> Set<String> {
         categoryTokenSets[categoryID] ?? []
     }

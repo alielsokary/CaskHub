@@ -8,13 +8,10 @@
 import SwiftUI
 
 enum CHRadius {
-    static let window: CGFloat = 20
     static let hero: CGFloat = 20
     static let card: CGFloat = 18
     static let iconLg: CGFloat = 26 // hero app icon well
-    static let icon: CGFloat = 11 // card app icon well
     static let keycap: CGFloat = 5
-    static let badge: CGFloat = 9
     // fields, pills and buttons are capsules
 }
 
@@ -27,11 +24,8 @@ enum CHSize {
 }
 
 enum CHSpace {
-    static let s1: CGFloat = 4
-    static let s2: CGFloat = 8
     static let s3: CGFloat = 12
     static let s4: CGFloat = 16
     static let s5: CGFloat = 24
-    static let s6: CGFloat = 32
     static let gridGap: CGFloat = 14 // cask card grid gap
 }

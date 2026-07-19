@@ -20,10 +20,8 @@ struct CaskRowView: View {
             appInfo
             Spacer()
             metadata
-            // Fixed-width action column + reserved menu slot keep every
-            // capsule vertically aligned across rows.
             actionsControl
-                .frame(width: 130)
+                .frame(minWidth: 130, alignment: .trailing)
             menuSlot
                 .frame(width: 24)
         }
@@ -60,7 +58,7 @@ struct CaskRowView: View {
     // MARK: - Actions
 
     private var actionsControl: some View {
-        CaskActionsView(cask: cask)
+        CaskActionsView(cask: cask, fullWidth: false)
     }
 
     @ViewBuilder
@@ -93,24 +91,15 @@ struct CaskRowView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     List {
         CaskRowView(
-            cask: Cask(
+            cask: .preview(
                 token: "firefox",
-                fullToken: nil,
-                tap: nil,
-                name: ["Firefox"],
+                name: "Firefox",
                 desc: "Web browser developed by Mozilla Foundation",
-                homepage: "https://www.mozilla.org/firefox/",
-                url: nil,
                 version: "125.0",
-                installed: nil,
-                bundleVersion: nil,
-                bundleShortVersion: nil,
-                outdated: false,
-                deprecated: false,
-                disabled: false,
                 autoUpdates: true
             ),
             downloads: "1.2M"
@@ -120,3 +109,4 @@ struct CaskRowView: View {
     .environment(LocalHomebrewService())
     .environment(ImageCacheService())
 }
+#endif

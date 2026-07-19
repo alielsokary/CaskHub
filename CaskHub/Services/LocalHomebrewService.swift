@@ -11,7 +11,6 @@ import Observation
 
 // MARK: - Public Types
 
-/// Snapshot of one locally-installed cask, derived from its INSTALL_RECEIPT.json.
 struct LocalCaskInstallation: Hashable, Identifiable {
     let token: String
     let installedVersion: String
@@ -23,19 +22,19 @@ struct LocalCaskInstallation: Hashable, Identifiable {
     }
 }
 
-/// Which background action is currently running for a given cask, if any.
 enum CaskAction: Equatable {
     case opening
     case installing
+    case adopting
     case updating
     case uninstalling
-    /// In the Update All queue, not yet started.
     case queued
 
     var inProgressLabel: String {
         switch self {
         case .opening: return "Opening…"
         case .installing: return "Installing…"
+        case .adopting: return "Adopting…"
         case .updating: return "Updating…"
         case .uninstalling: return "Uninstalling…"
         case .queued: return "Queued…"
@@ -60,7 +59,16 @@ enum LocalHomebrewError: LocalizedError {
         case let .brewCommandFailed(args, code, stderr):
             let cmd = (["brew"] + args).joined(separator: " ")
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-            // "reports different checksum" = cask; "SHA256 mismatch" = formula dependency.
+            if Self.isAppManagementDenial(stderr: trimmed) {
+                return "macOS blocked CaskHub from modifying apps on your Mac. "
+                    + "Enable CaskHub under System Settings → Privacy & Security → "
+                    + "App Management, then try again."
+            }
+            if Self.isAdoptMismatch(args: args, stderr: trimmed) {
+                return "Your installed copy doesn't match the version Homebrew has on record, "
+                    + "so it can't be adopted as-is. You can replace it with Homebrew's copy "
+                    + "instead — your settings and data are kept."
+            }
             if trimmed.contains("reports different checksum") || trimmed.contains("SHA256 mismatch") {
                 return "The download doesn't match the checksum Homebrew has on record — "
                     + "the developer likely replaced the release file after it was published. "
@@ -72,69 +80,136 @@ enum LocalHomebrewError: LocalizedError {
                 : "`\(cmd)` failed (exit \(code)): \(trimmed)"
         }
     }
+
+    /// The App Management (TCC) permission gating modification of other apps' bundles.
+    static func isAppManagementDenial(stderr: String) -> Bool {
+        stderr.contains("Operation not permitted")
+    }
+
+    /// `brew install --adopt` refuses when the on-disk app differs from the cask's version.
+    static func isAdoptMismatch(args: [String], stderr: String) -> Bool {
+        args.contains("--adopt")
+            && (stderr.contains("different from the one being installed")
+                || stderr.contains("already an App at"))
+    }
 }
 
 // MARK: - LocalHomebrewService
 
-/// Single source of truth for *this Mac's* local Homebrew cask state.
-///
-/// - Detection is filesystem-only (reads `Caskroom/<token>/.metadata/INSTALL_RECEIPT.json`),
-///   so it's fast and doesn't require `brew` to be in PATH.
-/// - Mutations (`uninstall`, `upgrade`) shell out to the real `brew` binary so its
-///   bookkeeping stays consistent.
-/// - All public state is observed through `@Observable`; views auto-redraw on changes.
 @MainActor
 @Observable
 final class LocalHomebrewService {
-    /// Token → installation snapshot. Repopulated by `refresh()`.
     var installedCasks: [String: LocalCaskInstallation] = [:]
 
-    /// Token → currently-running action, used by views to show spinners and disable buttons.
+    /// Non-Mac-App-Store bundle names found in /Applications and ~/Applications.
+    var externalAppNames: Set<String> = []
+
+    /// Executable names found in common install locations (~/.local/bin, /usr/local/bin, …).
+    var externalBinaryNames: Set<String> = []
+
+    private(set) var adoptReplaceOffers: Set<String> = []
+
+    private(set) var appManagementDenials: Set<String> = []
+
+    /// Adoptions waiting for the App Management permission; value = retry with `--force`.
+    private(set) var permissionRequests: [String: Bool] = [:]
+
+    /// Test seam — the real probe hits TCC via the filesystem.
+    @ObservationIgnored var permissionProbe: @Sendable () -> AppManagementPermission.Status
+        = { AppManagementPermission.probe() }
+
+    @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
+
     private(set) var inFlightActions: [String: CaskAction] = [:]
 
-    /// Tokens whose install is still in the download phase — the only window
-    /// where cancelling is guaranteed residual-free (nothing staged yet).
     private(set) var cancellableDownloads: Set<String> = []
 
-    /// Tokens the user asked to cancel; cleared when the process exits.
     private(set) var cancelRequested: Set<String> = []
 
-    /// Token → live brew process, kept for cancellation. Not UI state.
     @ObservationIgnored private var runningProcesses: [String: Process] = [:]
 
-    /// Token → most recent error message from a failed action. Cleared on the next attempt.
     private(set) var actionErrors: [String: String] = [:]
 
-    /// True while `updateAll` is walking its queue; drives the Update All button.
     private(set) var isUpdatingAll = false
 
-    /// Last successful refresh timestamp; nil before the first scan completes.
     private(set) var lastRefresh: Date?
 
-    /// Most recent error from `refresh()` itself (e.g. Caskroom missing).
     private(set) var refreshError: LocalHomebrewError?
 
-    /// Installed Homebrew version ("4.6.15"), fetched once on first refresh.
     private(set) var brewVersion: String?
 
-    private let fileManager: FileManager
+    private(set) var customBrewPrefix: String?
 
-    init(fileManager: FileManager = .default) {
+    /// Include self-updating casks (`auto_updates: true`) in updates, via `brew upgrade --greedy`.
+    private(set) var greedyUpdates: Bool
+
+    private let fileManager: FileManager
+    private let defaults: UserDefaults
+
+    private static let greedyKey = "greedyUpdates"
+
+    init(fileManager: FileManager = .default, defaults: UserDefaults = .standard) {
         self.fileManager = fileManager
+        self.defaults = defaults
+        greedyUpdates = defaults.bool(forKey: Self.greedyKey)
+        customBrewPrefix = defaults.string(forKey: Self.customBrewPrefixKey)
+
+        // The permission-request alert tells the user to grant App Management and
+        // come back — returning to the app is the cue to finish those adoptions.
+        activationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.resumePendingAdoptions()
+                if self.brewVersion == nil {
+                    await self.refresh()
+                }
+            }
+        }
+    }
+
+    deinit {
+        if let activationObserver {
+            NotificationCenter.default.removeObserver(activationObserver)
+        }
+    }
+
+    func setGreedyUpdates(_ enabled: Bool) {
+        greedyUpdates = enabled
+        defaults.set(enabled, forKey: Self.greedyKey)
+    }
+
+    func setCustomBrewPrefix(_ prefix: String?) async {
+        customBrewPrefix = prefix
+        if let prefix, !prefix.isEmpty {
+            defaults.set(prefix, forKey: Self.customBrewPrefixKey)
+        } else {
+            defaults.removeObject(forKey: Self.customBrewPrefixKey)
+        }
+        brewVersion = nil
+        await refresh()
     }
 
     // MARK: - Detection
 
-    /// Re-scans the Caskroom directory and rebuilds `installedCasks`.
-    /// Cheap (~ms for typical installs) — safe to call after every action.
     func refresh() async {
         let fm = fileManager
         if brewVersion == nil {
             brewVersion = await Self.fetchBrewVersion()
         }
-        let result = await Task.detached(priority: .userInitiated) {
-            Self.scanCaskroom(fileManager: fm)
+        let (result, appNames, binaryNames) = await Task.detached(priority: .userInitiated) {
+            (
+                Self.scanCaskroom(fileManager: fm),
+                Self.scanApplications(fileManager: fm),
+                Self.scanBinaryDirectories(fileManager: fm)
+            )
         }.value
+        externalAppNames = appNames
+        externalBinaryNames = binaryNames
+
+        CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
+        CrashReporter.tag("brew.caskroom", value: Self.locateCaskroom(fileManager: fm)?.path ?? "not found")
 
         switch result {
         case let .success(casks):
@@ -151,15 +226,25 @@ final class LocalHomebrewService {
         installedCasks[token] != nil
     }
 
-    /// Clears the stored error for a token (called when the user dismisses the error alert).
-    func clearError(for token: String) {
-        actionErrors[token] = nil
+    /// The cask isn't brew-managed, but its app already sits in /Applications.
+    func isAdoptable(_ cask: Cask) -> Bool {
+        installedCasks[cask.token] == nil
+            && cask.appArtifactNames.contains(where: externalAppNames.contains)
     }
 
-    /// Compares versions with the packaging suffix stripped — cask versions
-    /// aren't semver (`125.0,build42` has a build suffix, `125.0_1` a cask
-    /// revision), so comparing normalized prefixes avoids flagging an update
-    /// when only the packaging changed.
+    /// A CLI cask whose tool is on the device via some other installer
+    /// (e.g. claude-code's native install script). Detected, not managed.
+    func isExternalCLI(_ cask: Cask) -> Bool {
+        installedCasks[cask.token] == nil
+            && cask.binaryArtifactNames.contains(where: externalBinaryNames.contains)
+    }
+
+    func clearError(for token: String) {
+        actionErrors[token] = nil
+        adoptReplaceOffers.remove(token)
+        appManagementDenials.remove(token)
+    }
+
     func isOutdated(token: String, remoteVersion: String) -> Bool {
         guard let installation = installedCasks[token] else { return false }
         return Self.comparableVersion(installation.installedVersion)
@@ -170,21 +255,12 @@ final class LocalHomebrewService {
         version.prefix { $0 != "," && $0 != "_" }
     }
 
-    /// Single source of truth for "should this cask show an Update button / appear
-    /// in the Updates sidebar?" Combines the version check with the auto-update
-    /// exclusion so every caller gets the same answer.
-    ///
-    /// Casks with `autoUpdates == true` (BetterDisplay, Wireshark, etc.) handle
-    /// their own updates outside Homebrew — matching `brew outdated --cask`
-    /// (non-greedy, the default) and Applite's default behavior.
     func hasAvailableUpdate(token: String, remoteVersion: String, autoUpdates: Bool?) -> Bool {
-        autoUpdates != true && isOutdated(token: token, remoteVersion: remoteVersion)
+        (greedyUpdates || autoUpdates != true) && isOutdated(token: token, remoteVersion: remoteVersion)
     }
 
     // MARK: - Actions
 
-    /// Launches the installed app via `NSWorkspace`. Errors are written to
-    /// `actionErrors[token]` so the view has one consistent error path.
     func openApp(token: String) {
         actionErrors[token] = nil
 
@@ -192,17 +268,27 @@ final class LocalHomebrewService {
             actionErrors[token] = LocalHomebrewError.appBundleNotFound(token: token).errorDescription
             return
         }
+        openBundle(named: installation.appBundleNames, token: token)
+    }
 
-        let candidates = installation.appBundleNames.flatMap { name -> [URL] in
-            [
-                URL(fileURLWithPath: "/Applications").appendingPathComponent(name),
-                fileManager.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Applications")
-                    .appendingPathComponent(name)
-            ]
-        }
+    /// Launches a not-yet-adopted app straight from its on-disk bundle.
+    func openExternalApp(cask: Cask) {
+        actionErrors[cask.token] = nil
+        openBundle(named: cask.appArtifactNames, token: cask.token)
+    }
 
-        guard let appURL = candidates.first(where: { fileManager.fileExists(atPath: $0.path) }) else {
+    /// Version of a not-yet-adopted app, read from its bundle's Info.plist.
+    func externalAppVersion(for cask: Cask) -> String? {
+        guard installedCasks[cask.token] == nil,
+              let appURL = existingBundleURL(named: cask.appArtifactNames),
+              let info = Bundle(url: appURL)?.infoDictionary
+        else { return nil }
+        return info["CFBundleShortVersionString"] as? String
+            ?? info["CFBundleVersion"] as? String
+    }
+
+    private func openBundle(named names: [String], token: String) {
+        guard let appURL = existingBundleURL(named: names) else {
             actionErrors[token] = LocalHomebrewError.appBundleNotFound(token: token).errorDescription
             return
         }
@@ -214,30 +300,93 @@ final class LocalHomebrewService {
         )
     }
 
-    /// Runs `brew install --cask <token>`. Refreshes local state on success.
+    private func existingBundleURL(named names: [String]) -> URL? {
+        names.flatMap { name -> [URL] in
+            [
+                URL(fileURLWithPath: "/Applications").appendingPathComponent(name),
+                fileManager.homeDirectoryForCurrentUser
+                    .appendingPathComponent("Applications")
+                    .appendingPathComponent(name)
+            ]
+        }
+        .first { fileManager.fileExists(atPath: $0.path) }
+    }
+
     func install(token: String) async throws {
         try await runMutation(.installing, token: token, args: ["install", "--cask", token])
     }
 
-    /// Runs `brew uninstall --cask <token>`. Refreshes local state on success.
+    func adopt(token: String, bypassPermissionCheck: Bool = false) async throws {
+        if !bypassPermissionCheck, await !permissionAllowsAdoption() {
+            permissionRequests[token] = false
+            return
+        }
+        do {
+            try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--adopt"])
+        } catch {
+            if case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error,
+               LocalHomebrewError.isAdoptMismatch(args: args, stderr: stderr) {
+                adoptReplaceOffers.insert(token)
+            }
+            throw error
+        }
+    }
+
+    /// Fallback when `--adopt` refuses: replace the on-disk app with Homebrew's copy.
+    /// Needs App Management even more than adopt — brew deletes the existing app,
+    /// and a TCC-denied delete makes brew escalate to a scary sudo password prompt.
+    func adoptReplacing(token: String, bypassPermissionCheck: Bool = false) async throws {
+        if !bypassPermissionCheck, await !permissionAllowsAdoption() {
+            permissionRequests[token] = true
+            return
+        }
+        adoptReplaceOffers.remove(token)
+        try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--force"])
+    }
+
+    func cancelPermissionRequest(token: String) {
+        permissionRequests[token] = nil
+    }
+
+    /// Called when the app becomes active: if the user granted App Management while
+    /// away (in System Settings), finish the adoptions that were waiting on it.
+    func resumePendingAdoptions() {
+        guard !permissionRequests.isEmpty else { return }
+        Task {
+            guard await permissionAllowsAdoption() else { return }
+            let pending = permissionRequests
+            permissionRequests.removeAll()
+            for (token, useForce) in pending {
+                if useForce {
+                    try? await adoptReplacing(token: token, bypassPermissionCheck: true)
+                } else {
+                    try? await adopt(token: token, bypassPermissionCheck: true)
+                }
+            }
+        }
+    }
+
+    /// `.unknown` passes through — only a confirmed denial blocks, so a failed
+    /// probe can never lock the user out of adopting.
+    private func permissionAllowsAdoption() async -> Bool {
+        let probe = permissionProbe
+        let status = await Task.detached(priority: .userInitiated) { probe() }.value
+        return status != .denied
+    }
+
     func uninstall(token: String) async throws {
         try await runMutation(.uninstalling, token: token, args: ["uninstall", "--cask", token])
     }
 
-    /// Runs `brew upgrade --cask <token>`. Refreshes local state on success.
     func upgrade(token: String) async throws {
-        try await runMutation(.updating, token: token, args: ["upgrade", "--cask", token])
+        let args = ["upgrade", "--cask", token] + (greedyUpdates ? ["--greedy"] : [])
+        try await runMutation(.updating, token: token, args: args)
     }
 
-    /// Upgrades every token, one at a time — concurrent brew processes contend
-    /// for Homebrew's locks. A failed upgrade lands in `actionErrors[token]`
-    /// (surfaced by that cask's alert) without stopping the rest of the queue.
     func updateAll(tokens: [String]) async {
         guard !isUpdatingAll else { return }
         isUpdatingAll = true
         defer { isUpdatingAll = false }
-        // Mark the whole queue up front: waiting cards show "Waiting…"
-        // instead of a tappable Update button that would race the queue.
         for token in tokens where inFlightActions[token] == nil {
             inFlightActions[token] = .queued
         }
@@ -246,10 +395,6 @@ final class LocalHomebrewService {
         }
     }
 
-    /// Cancels an in-flight install. Only honored during the download phase —
-    /// once brew starts staging files, cancelling could leave a broken install.
-    /// Sends SIGINT to brew and its children (curl); escalates to SIGTERM if
-    /// the tree hasn't exited after 5 seconds.
     func cancelInstall(token: String) {
         guard cancellableDownloads.contains(token),
               let process = runningProcesses[token] else { return }
@@ -267,8 +412,6 @@ final class LocalHomebrewService {
     // MARK: - Mutation Plumbing
 
     private func runMutation(_ action: CaskAction, token: String, args: [String]) async throws {
-        // .queued is a placeholder set by updateAll — its upgrade may proceed;
-        // anything else means a real action is already running.
         guard inFlightActions[token] == nil || inFlightActions[token] == .queued else { return }
         inFlightActions[token] = action
         actionErrors[token] = nil
@@ -288,8 +431,6 @@ final class LocalHomebrewService {
             await refresh()
         } catch {
             if cancelRequested.contains(token) {
-                // User cancelled — not an error. Remove the partial download
-                // brew left behind so nothing accumulates in its cache.
                 span.finish()
                 cancelRequested.remove(token)
                 Task.detached(priority: .utility) {
@@ -302,6 +443,10 @@ final class LocalHomebrewService {
             CrashReporter.capture(error)
             Analytics.caskActionFailed(action, token: token)
             if let error = error as? LocalHomebrewError {
+                if case let .brewCommandFailed(_, _, stderr) = error,
+                   LocalHomebrewError.isAppManagementDenial(stderr: stderr) {
+                    appManagementDenials.insert(token)
+                }
                 actionErrors[token] = error.errorDescription
             } else {
                 actionErrors[token] = error.localizedDescription
@@ -310,11 +455,6 @@ final class LocalHomebrewService {
         }
     }
 
-    /// Spawns `brew` attached to a pseudo-terminal and streams its output.
-    ///
-    /// The stream is watched for the `==> Installing Cask` marker that closes
-    /// the safe-to-cancel window. The output tail doubles as stderr for error
-    /// reporting.
     private func runBrewStreaming(token: String, args: [String], cancellable: Bool) async throws {
         guard let brewURL = Self.locateBrewBinary() else {
             throw LocalHomebrewError.brewBinaryNotFound
@@ -323,8 +463,6 @@ final class LocalHomebrewService {
         let process = Process()
         process.executableURL = brewURL
         process.arguments = args
-        // pkg-based casks run `sudo installer` internally; with no TTY sudo can't
-        // prompt. SUDO_ASKPASS makes brew pass `-A` so sudo asks via our GUI helper.
         if let askpass = Self.ensureAskpassScript(token: token) {
             var environment = ProcessInfo.processInfo.environment
             environment["SUDO_ASKPASS"] = askpass.path
@@ -335,27 +473,17 @@ final class LocalHomebrewService {
         process.standardError = pipe
         process.standardInput = FileHandle.nullDevice
 
+        let collector = BrewOutputCollector()
+        collector.attach(to: process, pipe: pipe) { [weak self] text in
+            guard text.contains("==> Installing Cask") else { return }
+            Task { @MainActor in self?.cancellableDownloads.remove(token) }
+        }
+
         try process.run()
         runningProcesses[token] = process
         if cancellable { cancellableDownloads.insert(token) }
 
-        let handle = pipe.fileHandleForReading
-        let outputTail = await Task.detached(priority: .userInitiated) { () -> String in
-            var tail = ""
-            while true {
-                let data = handle.availableData
-                guard !data.isEmpty else { break } // EOF
-                guard let text = String(data: data, encoding: .utf8) else { continue }
-                tail = String((tail + text).suffix(2000))
-
-                if text.contains("==> Installing Cask") {
-                    // Download finished — cancelling is no longer residual-free.
-                    Task { @MainActor in self.cancellableDownloads.remove(token) }
-                }
-            }
-            process.waitUntilExit()
-            return tail
-        }.value
+        let outputTail = await collector.output()
 
         if process.terminationStatus != 0 {
             throw LocalHomebrewError.brewCommandFailed(

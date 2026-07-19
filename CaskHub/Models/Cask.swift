@@ -7,10 +7,16 @@
 
 import Foundation
 
-/// One `artifacts` stanza from the brew API — heterogeneous single-key
-/// objects ({"app": [...]}, {"binary": [...]}); only the keys matter here.
 struct ArtifactStanza: Codable, Hashable {
     let keys: Set<String>
+    let appNames: [String]
+    let binaryNames: [String]
+
+    init(keys: Set<String>, appNames: [String] = [], binaryNames: [String] = []) {
+        self.keys = keys
+        self.appNames = appNames
+        self.binaryNames = binaryNames
+    }
 
     private struct AnyKey: CodingKey {
         var stringValue: String
@@ -27,10 +33,52 @@ struct ArtifactStanza: Codable, Hashable {
         }
     }
 
+    /// An `app` array element: a bundle name, or a `{"target": …}` rename dict.
+    /// Lenient so one odd entry can't zero out the whole array.
+    private struct AppEntry: Decodable {
+        let name: String?
+        let target: String?
+
+        init(from decoder: Decoder) throws {
+            if let string = try? decoder.singleValueContainer().decode(String.self) {
+                name = string
+                target = nil
+                return
+            }
+            name = nil
+            target = (try? decoder.container(keyedBy: AnyKey.self))
+                .flatMap { try? $0.decode(String.self, forKey: AnyKey(stringValue: "target")!) }
+        }
+    }
+
     init(from decoder: Decoder) throws {
-        // Lenient: a malformed stanza must not sink the whole catalog decode.
-        keys = Set((try? decoder.container(keyedBy: AnyKey.self))?
-            .allKeys.map(\.stringValue) ?? [])
+        guard let container = try? decoder.container(keyedBy: AnyKey.self) else {
+            keys = []
+            appNames = []
+            binaryNames = []
+            return
+        }
+        keys = Set(container.allKeys.map(\.stringValue))
+        appNames = Self.artifactNames(in: container, key: "app")
+        binaryNames = Self.artifactNames(in: container, key: "binary")
+    }
+
+    /// Entries can be names or staged paths, with `{"target": …}` rename dicts
+    /// following the entry they rename — the on-disk name is the target's basename.
+    private static func artifactNames(
+        in container: KeyedDecodingContainer<AnyKey>, key: String
+    ) -> [String] {
+        let entries = AnyKey(stringValue: key)
+            .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? []
+        var names: [String] = []
+        for entry in entries {
+            if let name = entry.name {
+                names.append(URL(fileURLWithPath: name).lastPathComponent)
+            } else if let target = entry.target, !names.isEmpty {
+                names[names.count - 1] = URL(fileURLWithPath: target).lastPathComponent
+            }
+        }
+        return names
     }
 
     func encode(to encoder: Encoder) throws {
@@ -50,7 +98,6 @@ struct Cask: Codable, Identifiable, Hashable {
     let homepage: String
     let url: String?
     let version: String
-    let installed: String?
     let bundleVersion: String?
     let bundleShortVersion: String?
     let outdated: Bool
@@ -63,16 +110,16 @@ struct Cask: Codable, Identifiable, Hashable {
         token
     }
 
-    /// Ships a command-line `binary` (or a `stage_only` payload like sqlcl)
-    /// and nothing GUI (no app/suite/pkg). The binary/stage requirement keeps
-    /// installer-app GUI casks (autodesk-fusion, logi-options+) off the CLI
-    /// treatment; pkg-based CLIs (git-credential-manager, ibm-cloud-cli)
-    /// stay non-CLI and keep their real icons.
-    ///
-    /// Drives only the placeholder: CLI casks show a terminal tile instead
-    /// of the window glyph. Which CLI casks get real icons anyway (Android
-    /// SDK tools, tuist, conda family) is CaskFlow's call — whatever its
-    /// icons branch serves wins over the tile.
+    /// Bundle names this cask installs into /Applications (e.g. "Google Chrome.app").
+    var appArtifactNames: [String] {
+        artifacts?.flatMap(\.appNames) ?? []
+    }
+
+    /// Executable names this cask links into the brew prefix (e.g. "claude").
+    var binaryArtifactNames: [String] {
+        artifacts?.flatMap(\.binaryNames) ?? []
+    }
+
     var isCLI: Bool {
         guard let artifacts, !artifacts.isEmpty else { return false }
         return artifacts.contains { !$0.keys.isDisjoint(with: ["binary", "stageOnly", "stage_only"]) }
@@ -92,11 +139,6 @@ struct Cask: Codable, Identifiable, Hashable {
         return numeric.isEmpty ? base : numeric
     }
 
-    var homepageDomain: String? {
-        URL(string: homepage)?.host
-    }
-
-    /// "↓ 1.2M · v125.0" — the downloads part is omitted when unknown.
     func metaLine(downloads: String?) -> String {
         var parts: [String] = []
         if let downloads { parts.append("↓ \(downloads)") }
@@ -104,3 +146,34 @@ struct Cask: Codable, Identifiable, Hashable {
         return parts.joined(separator: " · ")
     }
 }
+
+#if DEBUG
+extension Cask {
+    static func preview(
+        token: String,
+        name: String? = nil,
+        desc: String? = nil,
+        version: String = "1.0",
+        deprecated: Bool = false,
+        disabled: Bool = false,
+        autoUpdates: Bool? = nil
+    ) -> Cask {
+        Cask(
+            token: token,
+            fullToken: nil,
+            tap: nil,
+            name: [name ?? token],
+            desc: desc,
+            homepage: "https://example.com",
+            url: nil,
+            version: version,
+            bundleVersion: nil,
+            bundleShortVersion: nil,
+            outdated: false,
+            deprecated: deprecated,
+            disabled: disabled,
+            autoUpdates: autoUpdates
+        )
+    }
+}
+#endif

@@ -20,6 +20,10 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Appearance", systemImage: "paintbrush")
                 }
+            HomebrewSettingsView()
+                .tabItem {
+                    Label("Homebrew", systemImage: "shippingbox")
+                }
             PrivacySettingsView()
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")
@@ -78,6 +82,7 @@ struct GeneralSettingsView: View {
     @Environment(UpdaterService.self) private var updater
     @Environment(ImageCacheService.self) private var imageCache
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var appManagement: AppManagementPermission.Status = .unknown
 
     var body: some View {
         @Bindable var updater = updater
@@ -91,6 +96,25 @@ struct GeneralSettingsView: View {
             Section("Updates") {
                 Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
             }
+            Section("Permissions") {
+                LabeledContent("App Management") {
+                    HStack(spacing: 10) {
+                        permissionBadge
+                        if appManagement != .granted {
+                            Button("Open System Settings") {
+                                AppManagementPermission.openSystemSettings()
+                            }
+                        }
+                    }
+                }
+                Text("""
+                Needed to adopt or update apps whose casks modify the app bundle \
+                (macOS otherwise blocks CaskHub from modifying other apps). Enable \
+                CaskHub under System Settings → Privacy & Security → App Management.
+                """)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            }
             Section("Storage") {
                 LabeledContent("Clear cached app icons") {
                     Button("Clear Cache") { imageCache.clearCache() }
@@ -102,6 +126,40 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .task { refreshAppManagement() }
+        .onReceive(
+            NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
+        ) { _ in
+            // Re-probe when the user comes back from System Settings.
+            refreshAppManagement()
+        }
+    }
+
+    @ViewBuilder
+    private var permissionBadge: some View {
+        switch appManagement {
+        case .granted:
+            badge("Granted", icon: "checkmark.circle.fill", tint: .green)
+        case .denied:
+            badge("Not Granted", icon: "xmark.circle.fill", tint: .secondary)
+        case .unknown:
+            badge("Unknown", icon: "questionmark.circle", tint: .secondary)
+        }
+    }
+
+    private func badge(_ title: String, icon: String, tint: some ShapeStyle) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+            Text(title)
+        }
+        .foregroundStyle(tint)
+    }
+
+    private func refreshAppManagement() {
+        Task.detached(priority: .utility) {
+            let status = AppManagementPermission.probe()
+            await MainActor.run { appManagement = status }
+        }
     }
 
     private func setLaunchAtLogin(_ enabled: Bool) {
@@ -113,9 +171,119 @@ struct GeneralSettingsView: View {
             }
         } catch {
             CrashReporter.capture(error)
-            // Reflect the real state — the change didn't take.
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
+    }
+}
+
+struct HomebrewSettingsView: View {
+    @Environment(LocalHomebrewService.self) private var localHomebrew
+    @State private var invalidSelection = false
+    @State private var customPathField = ""
+
+    var body: some View {
+        Form {
+            Section("Status") {
+                LabeledContent("Homebrew") {
+                    if let version = localHomebrew.brewVersion {
+                        Label("Installed (\(version))", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        HStack(spacing: 10) {
+                            Label("Not Found", systemImage: "xmark.circle.fill")
+                                .foregroundStyle(.red)
+                            Button("Go to brew.sh") {
+                                NSWorkspace.shared.open(URL(string: "https://brew.sh")!)
+                            }
+                        }
+                    }
+                }
+                LabeledContent(
+                    "Architecture",
+                    value: LocalHomebrewService.isAppleSilicon ? "Apple Silicon" : "Intel"
+                )
+            }
+            Section("Paths") {
+                pathRow("Brew Binary", LocalHomebrewService.locateBrewBinary()?.path)
+                pathRow("Caskroom", LocalHomebrewService.locateCaskroom(fileManager: .default)?.path)
+            }
+            Section("Library") {
+                LabeledContent("Installed Casks", value: "\(localHomebrew.installedCasks.count)")
+                LabeledContent(
+                    "Last Scan",
+                    value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened) ?? "Never"
+                )
+            }
+            Section("Custom Location") {
+                LabeledContent("Custom Path") {
+                    HStack(spacing: 10) {
+                        TextField("", text: $customPathField, prompt: Text(""))
+                            .textFieldStyle(.roundedBorder)
+                            .frame(minWidth: 220)
+                            .onSubmit { applyTypedPath() }
+                        Button("Choose…") { chooseCustomPrefix() }
+                    }
+                }
+                Text("""
+                Point CaskHub at a Homebrew installed outside the standard locations \
+                (/opt/homebrew and /usr/local). Select the brew binary or its \
+                installation folder.
+                """)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+        .onAppear { customPathField = localHomebrew.customBrewPrefix ?? "" }
+        .onChange(of: localHomebrew.customBrewPrefix) { _, newValue in
+            customPathField = newValue ?? ""
+        }
+        .alert("No Homebrew There", isPresented: $invalidSelection) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The selected location doesn't contain a brew binary.")
+        }
+    }
+
+    private func applyTypedPath() {
+        let trimmed = customPathField.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            Task { await localHomebrew.setCustomBrewPrefix(nil) }
+            return
+        }
+        guard let prefix = LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: trimmed)) else {
+            invalidSelection = true
+            customPathField = localHomebrew.customBrewPrefix ?? ""
+            return
+        }
+        Task { await localHomebrew.setCustomBrewPrefix(prefix) }
+    }
+
+    private func pathRow(_ title: String, _ path: String?) -> some View {
+        LabeledContent(title) {
+            Text(path ?? "Not found")
+                .font(.callout.monospaced())
+                .foregroundStyle(path == nil ? .secondary : .primary)
+                .textSelection(.enabled)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+    }
+
+    private func chooseCustomPrefix() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.showsHiddenFiles = true
+        panel.message = "Select the brew binary or the Homebrew installation folder"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard let prefix = LocalHomebrewService.brewPrefix(fromSelection: url) else {
+            invalidSelection = true
+            return
+        }
+        Task { await localHomebrew.setCustomBrewPrefix(prefix) }
     }
 }
 
@@ -181,7 +349,6 @@ struct PrivacySettingsView: View {
         }
     }
 
-    /// Checkbox with its explanation underneath, indented to the checkbox title.
     private func checkboxRow(
         _ title: String,
         isOn: Binding<Bool>,
@@ -204,4 +371,5 @@ struct PrivacySettingsView: View {
     SettingsView()
         .environment(UpdaterService())
         .environment(ImageCacheService())
+        .environment(LocalHomebrewService())
 }

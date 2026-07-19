@@ -12,17 +12,16 @@ struct SidebarView: View {
     var categoryService: CategoryService
     var updatesCount: Int = 0
     var installedCount: Int = 0
+    var adoptableCount: Int = 0
     var categoryCounts: [String: Int] = [:]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             BrandWordmark()
                 .padding(.horizontal, 18)
-                .padding(.top, 38) // just below the traffic lights (hidden title bar)
+                .padding(.top, 38)
                 .padding(.bottom, 6)
 
-            // Custom rows instead of List selection: the terracotta capsule
-            // highlight must not turn gray when the sidebar loses focus.
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     sectionHeader("DISCOVER")
@@ -33,6 +32,7 @@ struct SidebarView: View {
                     sectionHeader("LIBRARY")
                     row(.library(.installed), title: "Installed", icon: LibraryItem.installed.icon, count: installedCount)
                     row(.library(.updates), title: "Updates", icon: LibraryItem.updates.icon, badge: updatesCount)
+                    row(.library(.adopt), title: LibraryItem.adopt.rawValue, icon: LibraryItem.adopt.icon, count: adoptableCount)
 
                     sectionHeader("CATEGORIES")
                     ForEach(categoryService.orderedCategories, id: \.id) { entry in

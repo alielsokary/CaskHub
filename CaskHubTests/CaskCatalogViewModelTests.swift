@@ -63,13 +63,13 @@ final class CaskCatalogViewModelTests: XCTestCase {
             makeCask("slack", name: "Slack")
         ])
 
-        vm.searchText = "browser" // description match
+        vm.searchText = "browser"
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
 
-        vm.searchText = "studio" // token + name match
+        vm.searchText = "studio"
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["visual-studio-code"])
 
-        vm.searchText = "SLACK" // case-insensitive
+        vm.searchText = "SLACK"
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["slack"])
 
         vm.searchText = ""
@@ -106,11 +106,12 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_installed_and_updates_pages_reflect_local_state() async {
-        let local = LocalHomebrewService()
+        // Scratch defaults: the host app's real prefs may have greedyUpdates on.
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("installed-updates"))
         local.installedCasks = [
-            "firefox": installation("firefox", version: "1.0"), // outdated
-            "slack": installation("slack", version: "2.0"),     // current
-            "chrome": installation("chrome", version: "1.0")    // outdated but auto-updates
+            "firefox": installation("firefox", version: "1.0"),
+            "slack": installation("slack", version: "2.0"),
+            "chrome": installation("chrome", version: "1.0")
         ]
         let (vm, _) = await makeSUT(
             casks: [
@@ -145,7 +146,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         vm.selectedSidebar = .discover(.recentlyAdded)
 
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["new-app"]) // default 30d window
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["new-app"])
         vm.selectRecentlyAddedWindow(.days90)
         XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["new-app"])
     }
@@ -174,7 +175,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
         vm.sortOption = .nameZA
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["charlie", "bravo", "alpha"])
 
-        vm.sortOption = .newest // undated casks sink to the end
+        vm.sortOption = .newest
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["bravo", "alpha", "charlie"])
 
         vm.sortOption = .oldest
@@ -203,13 +204,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         let sections = vm.browseSections
 
-        // "Recently Added" (no dates), "Developer Tools" (no casks) and
-        // "Other" (always) are dropped.
         XCTAssertEqual(sections.map(\.title), ["Most Popular", "Browsers"])
         XCTAssertEqual(sections[0].destination, .discover(.topCharts))
         XCTAssertEqual(sections[1].destination, .category("browsers"))
-        XCTAssertEqual(sections[0].casks.count, 8) // two grid rows max
-        XCTAssertEqual(sections[1].casks.first?.token, "browser-9") // top downloads first
+        XCTAssertEqual(sections[0].casks.count, 8)
+        XCTAssertEqual(sections[1].casks.first?.token, "browser-9")
     }
 
     @MainActor
@@ -264,7 +263,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(api.analyticsFetches, [.days365, .days30])
         XCTAssertEqual(vm.analyticsPeriod, .days30)
 
-        await vm.selectAnalyticsPeriod(.days30) // cached — no refetch
+        await vm.selectAnalyticsPeriod(.days30)
         XCTAssertEqual(api.analyticsFetches, [.days365, .days30])
     }
 
@@ -278,7 +277,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         vm.selectedSidebar = .discover(.topCharts)
         await vm.selectAnalyticsPeriod(.days30)
-        XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "5.0K")
+        XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "5K")
 
         vm.selectedSidebar = .discover(.browse)
         XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "100")
@@ -295,7 +294,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
         CrashReporter.captureCounts = [:]
 
         let api = MockBrewAPIClient()
-        api.casksError = URLError(.notConnectedToInternet)
+        // Not .notConnectedToInternet: offline errors are deliberately never captured.
+        api.casksError = URLError(.timedOut)
         let vm = makeViewModel(api: api)
 
         await vm.fetchCasks()
@@ -316,7 +316,6 @@ final class CaskCatalogViewModelTests: XCTestCase {
         await vm.selectAnalyticsPeriod(.days30)
         vm.selectRecentlyAddedWindow(.days90)
 
-        // "Relaunch": a fresh view model over the same defaults.
         let relaunched = makeViewModel(api: MockBrewAPIClient(), defaults: defaults)
         XCTAssertEqual(relaunched.analyticsPeriod, .days30)
         XCTAssertEqual(relaunched.recentlyAddedWindow, .days90)
@@ -330,7 +329,6 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(fresh.analyticsPeriod, .days365)
         XCTAssertEqual(fresh.recentlyAddedWindow, .days30)
 
-        // Unknown raw values (e.g. from a future version) fall back safely.
         defaults.set("14d", forKey: "analyticsPeriod")
         defaults.set(45, forKey: "recentlyAddedWindow")
         let garbled = makeViewModel(api: MockBrewAPIClient(), defaults: defaults)

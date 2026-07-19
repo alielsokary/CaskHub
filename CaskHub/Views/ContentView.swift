@@ -34,9 +34,9 @@ struct ContentView: View {
                 categoryService: categoryService,
                 updatesCount: viewModel.updatesCount,
                 installedCount: localHomebrew.installedCasks.count,
+                adoptableCount: viewModel.adoptableCasks.count,
                 categoryCounts: viewModel.categoryCounts
             )
-            // Min width sized so the longest category name never truncates.
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
         } detail: {
             VStack(spacing: 0) {
@@ -68,19 +68,20 @@ struct ContentView: View {
                         }
                         : nil,
                     isUpdatingAll: localHomebrew.isUpdatingAll,
-                    // Sections have a fixed popularity order; sorting is a no-op there.
+                    greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
+                    onToggleGreedy: { enabled in
+                        Analytics.greedyUpdatesChanged(enabled)
+                        localHomebrew.setGreedyUpdates(enabled)
+                    },
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
                     onSubmitSearch: {
                         searchFocused = false
                         showsResultsHeader = !viewModel.searchText.isEmpty
                     }
                 )
-                // Never wider than the card grid below it, centered to match.
                 .frame(maxWidth: CHSize.contentWidth)
                 .padding(.horizontal, CHSpace.s5)
                 .frame(maxWidth: .infinity)
-                // Bottom padding sits outside the scroll view, so scrolled
-                // cards clip 16pt below the bar instead of flush against it.
                 .padding(.vertical, CHSpace.s4)
 
                 if showsResultsHeader {
@@ -94,13 +95,11 @@ struct ContentView: View {
                 }
 
                 detailContent
+                    .environment(\.isAdoptPage, selectedSidebar == .library(.adopt))
             }
-            // The hidden title bar still reserves toolbar height as safe area;
-            // ignore it so the top bar sits 16pt from the window edge.
             .ignoresSafeArea(.container, edges: .top)
         }
         .overlay {
-            // Invisible ⌘F target: focuses the custom search field.
             Button("") { searchFocused = true }
                 .keyboardShortcut("f", modifiers: .command)
                 .opacity(0)
@@ -128,11 +127,8 @@ struct ContentView: View {
             Analytics.pageOpened(newValue)
             viewModel.selectedSidebar = newValue
             if newValue == .discover(.topCharts) {
-                // Fetch the current period's data if it hasn't loaded yet.
                 Task { await viewModel.selectAnalyticsPeriod(viewModel.analyticsPeriod) }
             }
-            // Recently Added defaults to Newest; its date sorts don't exist
-            // in other pages' menus, so drop back to Most Popular on leave.
             if newValue == .discover(.recentlyAdded) {
                 viewModel.sortOption = .newest
             } else if !SortOption.standard.contains(viewModel.sortOption) {
@@ -143,8 +139,6 @@ struct ContentView: View {
             Analytics.viewModeChanged(newValue)
         }
         .onChange(of: viewModel.searchText) { _, newValue in
-            // Results filter per keystroke (no Return needed), so the search
-            // signal fires when typing settles — not per key, not on submit.
             searchSignalTask?.cancel()
             if !newValue.isEmpty {
                 searchSignalTask = Task {
@@ -157,15 +151,11 @@ struct ContentView: View {
                 }
             }
             if newValue.isEmpty {
-                // Only drop focus when clearing a submitted search — while
-                // still composing (backspaced to empty), keep the field active.
                 if showsResultsHeader { searchFocused = false }
                 showsResultsHeader = false
             }
         }
         .onAppear {
-            // AppKit hands the window's initial key focus to the first text
-            // field; take it back so the search field only activates via ⌘F.
             DispatchQueue.main.async { searchFocused = false }
         }
         .modifier(ResignFocusOnOutsideClick(
@@ -203,14 +193,11 @@ struct ContentView: View {
         }
     }
 
-    /// House pick: shown on Browse when not searching.
     private var heroCask: Cask? {
         guard showsBrowseSections else { return nil }
         return viewModel.filteredCasks.first
     }
 
-    /// Browse shows titled shelves instead of the flat grid — unless searching,
-    /// where a flat result grid is more useful. List mode stays a flat list.
     private var showsBrowseSections: Bool {
         selectedSidebar == .discover(.browse)
             && viewModel.searchText.isEmpty
@@ -249,8 +236,6 @@ private extension ContentView {
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
-        // Recreate the scroll view per sidebar selection so navigating
-        // (View All, sidebar clicks) always lands at the top.
         .id(selectedSidebar)
     }
 
@@ -292,13 +277,18 @@ private extension ContentView {
     // MARK: - List View
 
     var listView: some View {
-        List(viewModel.filteredCasks) { cask in
-            CaskRowView(
-                cask: cask,
-                downloads: viewModel.formattedDownloads(for: cask.token)
-            )
+        List {
+            ForEach(viewModel.filteredCasks) { cask in
+                CaskRowView(
+                    cask: cask,
+                    downloads: viewModel.formattedDownloads(for: cask.token)
+                )
+            }
+            Color.clear
+                .frame(height: 30)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
         }
-        .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .id(selectedSidebar)
     }
@@ -322,11 +312,6 @@ private extension ContentView {
 
 // MARK: - Outside-Click Focus Handling
 
-/// Drops focus when a click lands anywhere outside the active field editor.
-/// A local monitor only observes — the event is returned untouched, so
-/// buttons and the field itself stay fully clickable. While a text field is
-/// focused, its text is edited by an NSTextView (the window's field editor),
-/// so clicks inside it keep focus.
 struct ResignFocusOnOutsideClick: ViewModifier {
     let isFocused: () -> Bool
     let resign: () -> Void
