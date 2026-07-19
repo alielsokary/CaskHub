@@ -258,6 +258,42 @@ final class ZombieDetectionTests: XCTestCase {
     }
 
     @MainActor
+    func test_stranded_app_failure_offers_repair_and_clear_removes_it() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("stranded-offer"))
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "tabby"], exitCode: 1,
+            stderr: "Error: tabby: It seems there is already an App at "
+                + "'/opt/homebrew/Caskroom/tabby/1.0.230/Tabby.app'."
+        )
+        service.noteFailure(token: "tabby", error: error)
+        XCTAssertTrue(service.repairOffers.contains("tabby"))
+
+        service.clearError(for: "tabby")
+        XCTAssertFalse(service.repairOffers.contains("tabby"))
+    }
+
+    @MainActor
+    func test_tcc_denial_is_recorded_via_note_failure() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("tcc-note"))
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "sourcetree", "--adopt"], exitCode: 1,
+            stderr: "chmod: Unable to change file mode: Operation not permitted"
+        )
+        service.noteFailure(token: "sourcetree", error: error)
+        XCTAssertTrue(service.appManagementDenials.contains("sourcetree"))
+        XCTAssertFalse(service.repairOffers.contains("sourcetree"))
+    }
+
+    func test_stranded_app_error_message_explains_repair() {
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "tabby"], exitCode: 1,
+            stderr: "Error: tabby: It seems there is already an App at "
+                + "'/opt/homebrew/Caskroom/tabby/1.0.230/Tabby.app'."
+        )
+        XCTAssertTrue(error.errorDescription?.contains("Repair") == true)
+    }
+
+    @MainActor
     func test_zombies_never_offer_updates() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("zombie-updates"))
         service.installedCasks["mole-app"] = LocalCaskInstallation(

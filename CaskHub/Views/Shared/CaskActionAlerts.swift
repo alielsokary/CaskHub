@@ -75,6 +75,11 @@ private struct CaskActionAlerts: ViewModifier {
                         Task { try? await localHomebrew.adoptReplacing(token: cask.token) }
                     }
                 }
+                if localHomebrew.repairOffers.contains(cask.token) {
+                    Button("Repair & Reinstall") {
+                        Task { try? await localHomebrew.repairReinstalling(token: cask.token) }
+                    }
+                }
                 if localHomebrew.appManagementDenials.contains(cask.token) {
                     Button("Open System Settings") {
                         AppManagementPermission.openSystemSettings()

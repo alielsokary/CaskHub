@@ -108,6 +108,12 @@ enum LocalHomebrewError: LocalizedError {
                     + "Enable CaskHub under System Settings → Privacy & Security → "
                     + "App Management, then try again."
             }
+            if Self.isStrandedApp(stderr: trimmed) {
+                return "A previous update left an old copy of the app inside Homebrew's "
+                    + "records, and Homebrew refuses every upgrade until it's cleared. "
+                    + "Repair removes the leftover copy and reinstalls the app fresh — "
+                    + "your settings and data are kept."
+            }
             if Self.isAdoptMismatch(args: args, stderr: trimmed) {
                 return "Your installed copy doesn't match the version Homebrew has on record, "
                     + "so it can't be adopted as-is. You can replace it with Homebrew's copy "
@@ -152,6 +158,10 @@ final class LocalHomebrewService {
     var externalBinaryNames: Set<String> = []
 
     private(set) var adoptReplaceOffers: Set<String> = []
+
+    /// Casks wedged by a stranded app copy inside the Caskroom; repair =
+    /// clear brew's records, then reinstall fresh.
+    private(set) var repairOffers: Set<String> = []
 
     private(set) var appManagementDenials: Set<String> = []
 
@@ -285,6 +295,7 @@ final class LocalHomebrewService {
     func clearError(for token: String) {
         actionErrors[token] = nil
         adoptReplaceOffers.remove(token)
+        repairOffers.remove(token)
         appManagementDenials.remove(token)
     }
 
@@ -394,7 +405,8 @@ final class LocalHomebrewService {
             try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--adopt"])
         } catch {
             if case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error,
-               LocalHomebrewError.isAdoptMismatch(args: args, stderr: stderr) {
+               LocalHomebrewError.isAdoptMismatch(args: args, stderr: stderr),
+               !LocalHomebrewError.isStrandedApp(stderr: stderr) {
                 adoptReplaceOffers.insert(token)
             }
             throw error
@@ -455,6 +467,17 @@ final class LocalHomebrewService {
         )
     }
 
+    /// A stranded copy inside the Caskroom wedges every upgrade: clear brew's
+    /// records (`--force` tolerates the mess), then install fresh. Settings
+    /// and user data live outside the bundle and survive.
+    func repairReinstalling(token: String) async throws {
+        repairOffers.remove(token)
+        try await runMutation(
+            .uninstalling, token: token, args: ["uninstall", "--cask", token, "--force"]
+        )
+        try await runMutation(.installing, token: token, args: ["install", "--cask", token])
+    }
+
     func upgrade(token: String) async throws {
         let args = ["upgrade", "--cask", token] + (greedyUpdates ? ["--greedy"] : [])
         try await runMutation(.updating, token: token, args: args)
@@ -488,6 +511,17 @@ final class LocalHomebrewService {
 
     // MARK: - Mutation Plumbing
 
+    /// Classifies a brew failure into the offer sets the alert UI reads.
+    func noteFailure(token: String, error: Error) {
+        guard case let LocalHomebrewError.brewCommandFailed(_, _, stderr) = error else { return }
+        if LocalHomebrewError.isAppManagementDenial(stderr: stderr) {
+            appManagementDenials.insert(token)
+        }
+        if LocalHomebrewError.isStrandedApp(stderr: stderr) {
+            repairOffers.insert(token)
+        }
+    }
+
     private func runMutation(_ action: CaskAction, token: String, args: [String]) async throws {
         guard inFlightActions[token] == nil || inFlightActions[token] == .queued else { return }
         inFlightActions[token] = action
@@ -519,11 +553,8 @@ final class LocalHomebrewService {
             span.finish(error: error)
             CrashReporter.capture(error)
             Analytics.caskActionFailed(action, token: token)
+            noteFailure(token: token, error: error)
             if let error = error as? LocalHomebrewError {
-                if case let .brewCommandFailed(_, _, stderr) = error,
-                   LocalHomebrewError.isAppManagementDenial(stderr: stderr) {
-                    appManagementDenials.insert(token)
-                }
                 actionErrors[token] = error.errorDescription
             } else {
                 actionErrors[token] = error.localizedDescription

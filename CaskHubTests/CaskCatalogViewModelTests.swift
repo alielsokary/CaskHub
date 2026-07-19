@@ -290,7 +290,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
         let crashSpy = SpyCrashReporterProvider()
         let originalCrash = CrashReporter.provider
         CrashReporter.provider = crashSpy
-        defer { CrashReporter.provider = originalCrash }
+        CrashReporter.isRunningTests = false
+        defer {
+            CrashReporter.provider = originalCrash
+            CrashReporter.isRunningTests = CrashReporter.detectsTestRun
+        }
         CrashReporter.captureCounts = [:]
 
         let api = MockBrewAPIClient()
