@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CaskHub: a native Mac app store for Homebrew casks</title>
+<meta name="description" content="Browse, search, install, update, and uninstall thousands of Mac apps distributed through Homebrew, in a clean native SwiftUI interface. 100% free and open source.">
+<link rel="canonical" href="https://caskhub.app/">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CaskHub: a native Mac app store for Homebrew casks">
+<meta property="og:description" content="Browse, install, update, and uninstall thousands of Mac apps from Homebrew, with one-click actions in a native SwiftUI app. Free and open source.">
+<meta property="og:url" content="https://caskhub.app/">
+<meta property="og:image" content="https://caskhub.app/assets/banner-dark.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=JetBrains+Mono:wght@400;500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #272231;
+    --bg-deep: #1e1a28;
+    --surface: #2f2940;
+    --surface-2: #363050;
+    --line: rgba(244, 234, 213, .09);
+    --cream: #f4ead5;
+    --coral: #d9705c;
+    --coral-bright: #e5836f;
+    --gold: #e5c17e;
+    --text: #c9c3da;
+    --text-dim: #a29bbd;
+    --ink: #333b54;
+    --radius: 20px;
+    --display: "Baloo 2", system-ui, sans-serif;
+    --body: "Nunito", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(900px 500px at 18% -8%, rgba(217, 112, 92, .16), transparent 60%),
+      radial-gradient(700px 420px at 85% -5%, rgba(229, 193, 126, .10), transparent 60%),
+      radial-gradient(800px 600px at 50% 115%, rgba(217, 112, 92, .07), transparent 60%);
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: .35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+  main, header, footer { position: relative; z-index: 1; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+  a { color: var(--gold); text-decoration: none; }
+  a:hover { color: var(--cream); }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+
+  /* Nav */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 0;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.35rem;
+  }
+  .brand img { width: 40px; height: 40px; border-radius: 10px; }
+  .brand .cask { color: var(--cream); }
+  .brand .hub { color: var(--coral); }
+  .nav-links { display: flex; align-items: center; gap: 26px; font-weight: 600; font-size: .95rem; }
+  .nav-links a { color: var(--text); }
+  .nav-links a:hover { color: var(--cream); }
+  .nav-links .gh {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 16px;
+    background: rgba(244, 234, 213, .04);
+  }
+
+  /* Hero */
+  .hero { text-align: center; padding-top: 64px; padding-bottom: 30px; }
+  .hero-icon {
+    width: 128px;
+    height: 128px;
+    border-radius: 30px;
+    box-shadow: 0 22px 60px rgba(217, 112, 92, .35), 0 6px 18px rgba(0, 0, 0, .4);
+    animation: float 7s ease-in-out infinite;
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1.12;
+    color: var(--cream);
+    margin: 30px auto 18px;
+    max-width: 17ch;
+    letter-spacing: -.01em;
+  }
+  .hero h1 em { font-style: normal; color: var(--coral); }
+  .hero p.lede {
+    max-width: 56ch;
+    margin: 0 auto 34px;
+    font-size: 1.13rem;
+  }
+  .cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .hero .cta-row { margin-top: 26px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 13px 28px;
+    border-radius: 999px;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .btn-primary {
+    background: var(--coral);
+    color: #2a1712;
+    box-shadow: 0 10px 30px rgba(217, 112, 92, .35);
+  }
+  .btn-primary:hover {
+    background: var(--coral-bright);
+    color: #2a1712;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(217, 112, 92, .45);
+  }
+  .btn-ghost { border: 1px solid var(--line); color: var(--cream); background: rgba(244, 234, 213, .04); }
+  .btn-ghost:hover { background: rgba(244, 234, 213, .09); color: var(--cream); transform: translateY(-2px); }
+  .hero .meta { margin-top: 22px; font-size: .9rem; color: var(--text-dim); font-weight: 600; }
+  .hero .meta span { margin: 0 6px; }
+
+  /* Terminal pill */
+  .terminal {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: fit-content;
+    max-width: 100%;
+    margin: 38px auto 0;
+    text-align: left;
+    background: var(--bg-deep);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 15px 26px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  .terminal .prompt { color: var(--coral); user-select: none; }
+  .terminal code { min-width: 0; color: var(--cream); overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .copy-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    color: var(--gold);
+    background: none;
+    border: 0;
+    padding: 4px;
+    cursor: pointer;
+    transition: color .15s ease, transform .15s ease;
+  }
+  .copy-btn:hover { color: var(--cream); transform: scale(1.1); }
+  .copy-btn .check { display: none; color: #58c142; }
+  .copy-btn.copied .check { display: block; }
+  .copy-btn.copied .dup { display: none; }
+
+  .app-shot {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 1032px;
+    margin: 64px auto 0;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    box-shadow: 0 40px 110px rgba(0, 0, 0, .55);
+  }
+
+  /* Sections */
+  section { padding-top: 100px; }
+  .kicker {
+    font-family: var(--mono);
+    font-size: .8rem;
+    font-weight: 500;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--coral);
+  }
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+    color: var(--cream);
+    margin: 10px 0 14px;
+    line-height: 1.2;
+  }
+  .section-head { max-width: 62ch; margin-bottom: 44px; }
+
+  /* Feature grid */
+  .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card {
+    background: linear-gradient(160deg, var(--surface), rgba(47, 41, 64, .55));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 26px;
+    transition: transform .2s ease, border-color .2s ease;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(229, 193, 126, .3); }
+  .card .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(217, 112, 92, .14);
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .card h3 { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--cream); margin-bottom: 6px; }
+  .card p { font-size: .95rem; }
+  .card p code { font-family: var(--mono); font-size: .85em; color: var(--gold); }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: step; }
+  .step {
+    background: linear-gradient(160deg, var(--surface), rgba(47, 41, 64, .55));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 30px 26px;
+  }
+  .step::before {
+    counter-increment: step;
+    content: counter(step, decimal-leading-zero);
+    display: block;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--coral);
+    opacity: .85;
+    margin-bottom: 12px;
+  }
+  .step h3 { font-family: var(--display); font-weight: 700; font-size: 1.12rem; color: var(--cream); margin-bottom: 6px; }
+  .step p { font-size: .95rem; }
+  .step p code { font-family: var(--mono); font-size: .85em; color: var(--gold); }
+
+  /* Themes */
+  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .themes img { width: 100%; height: auto; }
+
+  /* Trust strip */
+  .trust { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* FAQ */
+  .faq { display: grid; gap: 14px; max-width: 760px; margin: 0 auto; }
+  .section-head.center { text-align: center; margin-left: auto; margin-right: auto; }
+  .faq-item {
+    background: linear-gradient(160deg, var(--surface), rgba(47, 41, 64, .55));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 26px;
+  }
+  .faq-item h3 { font-family: var(--display); font-weight: 700; font-size: 1.08rem; color: var(--cream); margin-bottom: 4px; }
+  .faq-item p { font-size: .95rem; }
+
+  /* Footer CTA + footer */
+  .final {
+    text-align: center;
+    padding-top: 110px;
+    padding-bottom: 20px;
+  }
+  .final h2 { margin-bottom: 26px; }
+  footer {
+    margin-top: 90px;
+    border-top: 1px solid var(--line);
+    padding: 36px 0 44px;
+    font-size: .9rem;
+    color: var(--text-dim);
+  }
+  .foot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .foot-links { display: flex; gap: 22px; flex-wrap: wrap; font-weight: 600; }
+  .foot-links a { color: var(--text-dim); }
+  .foot-links a:hover { color: var(--cream); }
+  .foot-note { margin-top: 18px; font-size: .82rem; }
+
+  /* Motion */
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  .rise { opacity: 0; animation: rise .7s cubic-bezier(.2, .7, .2, 1) forwards; }
+  .d1 { animation-delay: .05s; } .d2 { animation-delay: .15s; } .d3 { animation-delay: .25s; }
+  .d4 { animation-delay: .35s; } .d5 { animation-delay: .45s; } .d6 { animation-delay: .55s; } .d7 { animation-delay: .7s; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-icon { animation: none; }
+    .rise { animation: none; opacity: 1; }
+    .btn, .card { transition: none; }
+  }
+
+  @media (max-width: 860px) {
+    .bento { grid-template-columns: 1fr; }
+    .steps, .trust, .themes { grid-template-columns: 1fr; }
+    .nav-links a:not(.gh) { display: none; }
+  }
+  @media (max-width: 520px) {
+    .terminal-body { font-size: .8rem; }
+    .hero { padding-top: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <nav aria-label="Main">
+    <a class="brand" href="#" aria-label="CaskHub home">
+      <img src="assets/icon.png" alt="" width="40" height="40">
+      <span><span class="cask">Cask</span><span class="hub">Hub</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a class="gh" href="https://github.com/alielsokary/CaskHub">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section class="hero wrap" aria-label="Introduction">
+    <img class="hero-icon rise d1" src="assets/icon.png" alt="CaskHub app icon, a barrel on a warm amber background" width="128" height="128">
+    <h1 class="rise d2">The Mac app store <em>Homebrew</em> never had.</h1>
+    <p class="lede rise d3">Browse, search, install, update, and uninstall thousands of Mac apps distributed through Homebrew, with original app icons, categories, popularity charts, and one-click actions, all in a clean native SwiftUI interface.</p>
+    <div class="terminal rise d4">
+      <span class="prompt" aria-hidden="true">$</span>
+      <code id="brew-cmd">brew install --cask alielsokary/tap/caskhub</code>
+      <button class="copy-btn" id="copy" aria-label="Copy install command">
+        <svg class="dup" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg>
+      </button>
+    </div>
+    <div class="cta-row rise d5">
+      <!-- releases/latest keeps this evergreen; release.sh only rewrites the README link -->
+      <a class="btn btn-primary" href="https://github.com/alielsokary/CaskHub/releases/latest">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg>
+        Download for macOS
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/alielsokary/CaskHub">View source</a>
+    </div>
+    <p class="meta rise d6">100% free &amp; open source <span>·</span> MIT licensed <span>·</span> macOS 15.6+</p>
+    <video class="app-shot rise d7" autoplay muted loop playsinline poster="assets/app-screenshot.webp" width="2064" height="1272" aria-label="CaskHub's Browse tab scrolling through curated shelves, Most Popular and Recently Added casks, and categories">
+      <source src="assets/app-demo.mp4" type="video/mp4">
+    </video>
+  </section>
+
+  <section id="features" class="wrap" aria-label="Features">
+    <div class="section-head">
+      <p class="kicker">Features</p>
+      <h2>Everything brew does, without the terminal.</h2>
+      <p>CaskHub runs everything through your real <code style="font-family: var(--mono); color: var(--gold); font-size: .9em;">brew</code> binary, so anything you install here can be managed from the command line, and vice versa.</p>
+    </div>
+    <div class="bento">
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+        <h3>Browse thousands of Mac apps</h3>
+        <p>Curated shelves, a rotating hero pick, a Featured top 100, and every cask classified into browsable categories.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
+        <h3>Top Charts, real install data</h3>
+        <p>The most-installed casks ranked by Homebrew's public analytics, with 30, 90, and 365-day windows.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+        <h3>Recently added</h3>
+        <p>New arrivals to Homebrew from the last 30-90 days, so you catch new apps early.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L18.5 10H12l1-8Z"/></svg></span>
+        <h3>One-click everything</h3>
+        <p>Install, update, and uninstall with live progress states and cancellable downloads. pkg installers get a native macOS password prompt.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></span>
+        <h3>Adopt existing apps</h3>
+        <p>Installed something from a DMG or another store? Bring it under brew management with one click. The app stays right where it is.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></span>
+        <h3>Updates that matter</h3>
+        <p>Smart detection skips self-updating apps and normalizes packaging quirks, so the Updates badge only shows real updates.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+        <h3>Instant search</h3>
+        <p>Search across names, tokens, and descriptions with ⌘F. Original app icons and rich metadata make results easy to scan.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-5-6-5"/><path d="M12 19h8"/></svg></span>
+        <h3>Fully compatible with the CLI</h3>
+        <p>CaskHub reads your real Caskroom and shells out to your real <code>brew</code>. It even detects apps you installed from the terminal.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-1.2 3-4.5 3.5-4.5 7a4.5 4.5 0 0 0 9 0c0-3.5-3.3-4-4.5-7Z"/><path d="M12 21a7 7 0 0 1-7-7c0-1 .2-2 .6-2.9"/><path d="M19 14a7 7 0 0 1-7 7"/></svg></span>
+        <h3>Native &amp; polished</h3>
+        <p>Grid and list views, flexible sorting, light and dark themes, and bundled category data, so browsing never blocks on the network.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="wrap" aria-label="How it works">
+    <div class="section-head">
+      <p class="kicker">How it works</p>
+      <h2>Three levels of Homebrew, one app.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <h3>Catalog &amp; analytics</h3>
+        <p>The catalog and install charts come from the public Homebrew API. No Homebrew installation is required just to browse.</p>
+      </div>
+      <div class="step">
+        <h3>Installed-app detection</h3>
+        <p>CaskHub reads install receipts directly from your Caskroom. Fast, offline, and no shelling out needed.</p>
+      </div>
+      <div class="step">
+        <h3>Real brew actions</h3>
+        <p>Installs, updates, and uninstalls run through your actual <code>brew</code> binary, staying fully compatible with the command line.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-label="Appearance">
+    <div class="section-head center">
+      <p class="kicker">Appearance</p>
+      <h2>Comes in light and dark.</h2>
+    </div>
+    <div class="themes">
+      <img src="assets/theme-light.webp" alt="CaskHub in light mode" width="1600" height="1032" loading="lazy">
+      <img src="assets/theme-dark.webp" alt="CaskHub in dark mode" width="1600" height="1032" loading="lazy">
+    </div>
+  </section>
+
+  <section class="wrap" aria-label="Privacy and open source">
+    <div class="trust">
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"/></svg></span>
+        <h3>Private by default</h3>
+        <p>Anonymous, privacy-first analytics with IDs salted and hashed on-device. No personal data ever leaves your Mac, and you can opt out of everything in Settings → Privacy.</p>
+      </div>
+      <div class="card">
+        <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 8-4 4 4 4"/><path d="m15 8 4 4-4 4"/></svg></span>
+        <h3>Free &amp; open source</h3>
+        <p>MIT licensed, built in the open with SwiftUI. No subscription, no premium tier, no ads. <a href="https://github.com/alielsokary/CaskHub">Read the source</a> or build it yourself.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="wrap" aria-label="Frequently asked questions">
+    <div class="section-head center">
+      <p class="kicker">FAQ</p>
+      <h2>Last call questions.</h2>
+    </div>
+    <div class="faq">
+      <div class="faq-item">
+        <h3>Do I need Homebrew?</h3>
+        <p>Only to install apps. Browsing works without it, and CaskHub walks you through the setup if it's missing.</p>
+      </div>
+      <div class="faq-item">
+        <h3>What does it cost?</h3>
+        <p>Nothing, ever. Free and MIT-licensed. No ads, no tiers, no subscriptions.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Which macOS?</h3>
+        <p>macOS 15.6 or later, on both Apple Silicon and Intel.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="final wrap" aria-label="Download">
+    <p class="kicker">Get started</p>
+    <h2>Your casks deserve a nicer home.</h2>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/alielsokary/CaskHub/releases/latest">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg>
+        Download for macOS
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <a class="brand" href="#" aria-label="Back to top">
+        <img src="assets/icon.png" alt="" width="32" height="32" style="width:32px;height:32px;">
+        <span style="font-size:1.1rem;"><span class="cask">Cask</span><span class="hub">Hub</span></span>
+      </a>
+      <div class="foot-links">
+        <a href="https://github.com/alielsokary/CaskHub">GitHub</a>
+        <a href="https://github.com/alielsokary/CaskHub/releases">Releases</a>
+        <a href="https://github.com/alielsokary/CaskHub/issues">Issues</a>
+        <a href="https://github.com/alielsokary/CaskHub/blob/master/LICENSE">License</a>
+        <a href="https://github.com/alielsokary/CaskFlow">CaskFlow</a>
+      </div>
+    </div>
+    <p class="foot-note">© 2026 Ali Elsokary <span aria-hidden="true">·</span> Made with ❤️ and SwiftUI. CaskHub is an independent project and is not affiliated with or endorsed by <a href="https://brew.sh">Homebrew</a>.</p>
+  </div>
+</footer>
+
+<script>
+  const demo = document.querySelector("video.app-shot");
+  demo.defaultPlaybackRate = demo.playbackRate = 0.75;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    demo.removeAttribute("autoplay");
+    demo.pause();
+  }
+  const copyBtn = document.getElementById("copy");
+  copyBtn.addEventListener("click", async () => {
+    await navigator.clipboard.writeText(document.getElementById("brew-cmd").textContent);
+    copyBtn.classList.add("copied");
+    setTimeout(() => copyBtn.classList.remove("copied"), 1600);
+  });
+</script>
+</body>
+</html>
