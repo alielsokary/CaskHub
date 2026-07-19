@@ -139,15 +139,20 @@ struct GeneralSettingsView: View {
     private var permissionBadge: some View {
         switch appManagement {
         case .granted:
-            Label("Granted", systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.green)
+            badge("Granted", icon: "checkmark.circle.fill", tint: .green)
         case .denied:
-            Label("Not Granted", systemImage: "xmark.circle.fill")
-                .foregroundStyle(.red)
+            badge("Not Granted", icon: "xmark.circle.fill", tint: .secondary)
         case .unknown:
-            Label("Unknown", systemImage: "questionmark.circle")
-                .foregroundStyle(.secondary)
+            badge("Unknown", icon: "questionmark.circle", tint: .secondary)
         }
+    }
+
+    private func badge(_ title: String, icon: String, tint: some ShapeStyle) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+            Text(title)
+        }
+        .foregroundStyle(tint)
     }
 
     private func refreshAppManagement() {
@@ -174,6 +179,7 @@ struct GeneralSettingsView: View {
 struct HomebrewSettingsView: View {
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var invalidSelection = false
+    @State private var customPathField = ""
 
     var body: some View {
         Form {
@@ -211,16 +217,11 @@ struct HomebrewSettingsView: View {
             Section("Custom Location") {
                 LabeledContent("Custom Path") {
                     HStack(spacing: 10) {
-                        Text(localHomebrew.customBrewPrefix ?? "Not set")
-                            .foregroundStyle(localHomebrew.customBrewPrefix == nil ? .secondary : .primary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+                        TextField("", text: $customPathField, prompt: Text(""))
+                            .textFieldStyle(.roundedBorder)
+                            .frame(minWidth: 220)
+                            .onSubmit { applyTypedPath() }
                         Button("Choose…") { chooseCustomPrefix() }
-                        if localHomebrew.customBrewPrefix != nil {
-                            Button("Reset") {
-                                Task { await localHomebrew.setCustomBrewPrefix(nil) }
-                            }
-                        }
                     }
                 }
                 Text("""
@@ -234,11 +235,29 @@ struct HomebrewSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .onAppear { customPathField = localHomebrew.customBrewPrefix ?? "" }
+        .onChange(of: localHomebrew.customBrewPrefix) { _, newValue in
+            customPathField = newValue ?? ""
+        }
         .alert("No Homebrew There", isPresented: $invalidSelection) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("The selected location doesn't contain a brew binary.")
         }
+    }
+
+    private func applyTypedPath() {
+        let trimmed = customPathField.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            Task { await localHomebrew.setCustomBrewPrefix(nil) }
+            return
+        }
+        guard let prefix = LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: trimmed)) else {
+            invalidSelection = true
+            customPathField = localHomebrew.customBrewPrefix ?? ""
+            return
+        }
+        Task { await localHomebrew.setCustomBrewPrefix(prefix) }
     }
 
     private func pathRow(_ title: String, _ path: String?) -> some View {
