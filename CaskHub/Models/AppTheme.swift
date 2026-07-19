@@ -24,6 +24,10 @@ enum AppTheme: String, CaseIterable, Identifiable {
         }
     }
 
+    var previewImage: NSImage? {
+        NSImage(named: "ThemePreview-\(rawValue.lowercased())")
+    }
+
     static func apply(_ raw: String) {
         let app = NSApplication.shared
         switch AppTheme(rawValue: raw) ?? .system {
