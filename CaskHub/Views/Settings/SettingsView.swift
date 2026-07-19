@@ -287,27 +287,6 @@ struct HomebrewSettingsView: View {
     }
 }
 
-struct AppearanceSettingsView: View {
-    @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
-
-    var body: some View {
-        Form {
-            Picker("Theme", selection: $selectedTheme) {
-                ForEach(AppTheme.allCases) { option in
-                    Label(option.rawValue, systemImage: option.iconName)
-                        .tag(option.rawValue)
-                }
-            }
-            .pickerStyle(.radioGroup)
-        }
-        .formStyle(.grouped)
-        .padding()
-        .onChange(of: selectedTheme) { _, newValue in
-            Analytics.themeChanged(newValue)
-        }
-    }
-}
-
 struct PrivacySettingsView: View {
     @AppStorage(Analytics.enabledKey) private var analyticsEnabled = true
     @AppStorage(CrashReporter.enabledKey) private var crashReportingEnabled = true
