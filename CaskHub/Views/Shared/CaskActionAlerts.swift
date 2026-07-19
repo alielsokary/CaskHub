@@ -5,6 +5,7 @@
 //  Created by Ali Elsokary on 10/07/2026.
 //
 
+import AppKit
 import SwiftUI
 
 private struct CaskActionAlerts: ViewModifier {
@@ -56,6 +57,18 @@ private struct CaskActionAlerts: ViewModifier {
             } message: {
                 Text("This will run `brew uninstall --cask \(cask.token)`.")
             }
+            .alert("Homebrew Not Found", isPresented: hasBrewMissingError) {
+                Button("Go to brew.sh") {
+                    NSWorkspace.shared.open(URL(string: "https://brew.sh")!)
+                }
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("""
+                CaskHub uses Homebrew to install and manage apps, and it doesn't \
+                seem to be installed on this Mac. Install it from brew.sh, then \
+                come back. CaskHub will pick it up automatically.
+                """)
+            }
             .alert("Error", isPresented: hasActionError) {
                 if localHomebrew.adoptReplaceOffers.contains(cask.token) {
                     Button("Replace with Homebrew Version") {
@@ -73,9 +86,20 @@ private struct CaskActionAlerts: ViewModifier {
             }
     }
 
+    private var brewIsMissing: Bool {
+        localHomebrew.brewVersion == nil
+    }
+
+    private var hasBrewMissingError: Binding<Bool> {
+        Binding(
+            get: { localHomebrew.actionErrors[cask.token] != nil && brewIsMissing },
+            set: { if !$0 { localHomebrew.clearError(for: cask.token) } }
+        )
+    }
+
     private var hasActionError: Binding<Bool> {
         Binding(
-            get: { localHomebrew.actionErrors[cask.token] != nil },
+            get: { localHomebrew.actionErrors[cask.token] != nil && !brewIsMissing },
             set: { if !$0 { localHomebrew.clearError(for: cask.token) } }
         )
     }

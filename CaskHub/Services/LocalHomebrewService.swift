@@ -156,7 +156,13 @@ final class LocalHomebrewService {
         activationObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.resumePendingAdoptions() }
+            Task { @MainActor in
+                guard let self else { return }
+                self.resumePendingAdoptions()
+                if self.brewVersion == nil {
+                    await self.refresh()
+                }
+            }
         }
     }
 
