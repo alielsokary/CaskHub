@@ -127,6 +127,7 @@
     font-size: 1.13rem;
   }
   .cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .hero .cta-row { margin-top: 26px; }
   .btn {
     display: inline-flex;
     align-items: center;
@@ -273,7 +274,8 @@
   .trust { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
   /* FAQ */
-  .faq { display: grid; gap: 14px; max-width: 760px; }
+  .faq { display: grid; gap: 14px; max-width: 760px; margin: 0 auto; }
+  .section-head.center { text-align: center; margin-left: auto; margin-right: auto; }
   .faq-item {
     background: linear-gradient(160deg, var(--surface), rgba(47, 41, 64, .55));
     border: 1px solid var(--line);
@@ -471,7 +473,7 @@
   </section>
 
   <section id="faq" class="wrap" aria-label="Frequently asked questions">
-    <div class="section-head">
+    <div class="section-head center">
       <p class="kicker">FAQ</p>
       <h2>Last call questions.</h2>
     </div>
@@ -523,10 +525,11 @@
 </footer>
 
 <script>
+  const demo = document.querySelector("video.app-shot");
+  demo.defaultPlaybackRate = demo.playbackRate = 0.75;
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const v = document.querySelector("video.app-shot");
-    v.removeAttribute("autoplay");
-    v.pause();
+    demo.removeAttribute("autoplay");
+    demo.pause();
   }
   const copyBtn = document.getElementById("copy");
   copyBtn.addEventListener("click", async () => {
