@@ -192,6 +192,10 @@ struct HomebrewSettingsView: View {
                         }
                     }
                 }
+                LabeledContent(
+                    "Architecture",
+                    value: LocalHomebrewService.isAppleSilicon ? "Apple Silicon" : "Intel"
+                )
             }
             Section("Paths") {
                 pathRow("Brew Binary", localHomebrew.resolvedBrewPath)

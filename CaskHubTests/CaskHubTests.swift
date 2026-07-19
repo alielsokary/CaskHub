@@ -111,6 +111,13 @@ final class CaskHubTests: XCTestCase {
         XCTAssertFalse(service.isExternalCLI(other))
     }
 
+    func test_apple_silicon_detection_matches_native_build_arch() {
+        #if arch(arm64)
+        XCTAssertTrue(LocalHomebrewService.isAppleSilicon)
+        #endif
+        // An x86_64 build can run on either machine (Rosetta), so no assertion there.
+    }
+
     func test_brew_prefix_resolves_from_binary_prefix_and_bin_folder() throws {
         let brew = "/opt/homebrew/bin/brew"
         try XCTSkipUnless(FileManager.default.isExecutableFile(atPath: brew), "needs Homebrew at /opt/homebrew")

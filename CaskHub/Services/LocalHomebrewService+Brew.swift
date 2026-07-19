@@ -218,6 +218,15 @@ extension LocalHomebrewService {
 
     nonisolated static let customBrewPrefixKey = "customBrewPrefix"
 
+    /// Machine architecture, not build architecture: `hw.optional.arm64` reports
+    /// Apple Silicon truthfully even for a process running under Rosetta.
+    nonisolated static let isAppleSilicon: Bool = {
+        var value: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        sysctlbyname("hw.optional.arm64", &value, &size, nil, 0)
+        return value == 1
+    }()
+
     private nonisolated static func brewPrefixCandidates(_ relativePath: String) -> [URL] {
         var candidates: [URL] = []
         if let custom = UserDefaults.standard.string(forKey: customBrewPrefixKey), !custom.isEmpty {
@@ -226,8 +235,12 @@ extension LocalHomebrewService {
         if let prefix = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"], !prefix.isEmpty {
             candidates.append(URL(fileURLWithPath: prefix).appendingPathComponent(relativePath))
         }
-        candidates.append(URL(fileURLWithPath: "/opt/homebrew").appendingPathComponent(relativePath))
-        candidates.append(URL(fileURLWithPath: "/usr/local").appendingPathComponent(relativePath))
+        let standardPrefixes = isAppleSilicon
+            ? ["/opt/homebrew", "/usr/local"]
+            : ["/usr/local", "/opt/homebrew"]
+        for prefix in standardPrefixes {
+            candidates.append(URL(fileURLWithPath: prefix).appendingPathComponent(relativePath))
+        }
         return candidates
     }
 
