@@ -284,9 +284,6 @@ private extension ContentView {
                     downloads: viewModel.formattedDownloads(for: cask.token)
                 )
             }
-            // NSTableView-backed List ignores contentMargins/safe-area insets on macOS;
-            // a spacer row keeps the last cask clear of the overlaid status bar.
-            // 30 + the row chrome around it ≈ the grid's 44pt bottom margin.
             Color.clear
                 .frame(height: 30)
                 .listRowInsets(EdgeInsets())
