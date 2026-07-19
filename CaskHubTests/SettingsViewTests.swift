@@ -27,6 +27,10 @@ final class SettingsViewTests: XCTestCase {
                 .environment(UpdaterService())
                 .environment(ImageCacheService())
         )
+        render(
+            HomebrewSettingsView()
+                .environment(LocalHomebrewService())
+        )
     }
 
     @MainActor

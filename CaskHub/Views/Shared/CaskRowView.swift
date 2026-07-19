@@ -91,6 +91,7 @@ struct CaskRowView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     List {
         CaskRowView(
@@ -108,3 +109,4 @@ struct CaskRowView: View {
     .environment(LocalHomebrewService())
     .environment(ImageCacheService())
 }
+#endif

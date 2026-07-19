@@ -69,6 +69,16 @@ final class AnalyticsTests: XCTestCase {
 
     // MARK: - Cask action events
 
+    func test_adopt_completion_and_greedy_toggle_send_signals() {
+        Analytics.caskActionCompleted(.adopting, token: "chrome")
+        Analytics.greedyUpdatesChanged(true)
+
+        XCTAssertEqual(spy.signals[0].name, "Cask.adopted")
+        XCTAssertEqual(spy.signals[0].parameters["cask"], "chrome")
+        XCTAssertEqual(spy.signals[1].name, "Filter.greedyChanged")
+        XCTAssertEqual(spy.signals[1].parameters["enabled"], "true")
+    }
+
     func test_cask_action_completed_maps_actions_to_past_tense_signals() {
         Analytics.caskActionCompleted(.installing, token: "firefox")
         Analytics.caskActionCompleted(.uninstalling, token: "firefox")

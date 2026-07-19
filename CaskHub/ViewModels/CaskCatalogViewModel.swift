@@ -99,6 +99,10 @@ final class CaskCatalogViewModel {
         updatableCasks.count
     }
 
+    var adoptableCasks: [Cask] {
+        casks.filter { [localHomebrew] in localHomebrew.isAdoptable($0) }
+    }
+
     var categoryCounts: [String: Int] {
         let catalogTokens = Set(casks.map(\.token))
         return categoryService.categoryTokenSets.mapValues {
@@ -168,6 +172,9 @@ final class CaskCatalogViewModel {
 
         case .library(.updates):
             return updatableCasks
+
+        case .library(.adopt):
+            return adoptableCasks
 
         case let .category(categoryID):
             let tokens = categoryService.tokens(in: categoryID)

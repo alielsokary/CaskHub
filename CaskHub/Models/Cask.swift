@@ -9,6 +9,14 @@ import Foundation
 
 struct ArtifactStanza: Codable, Hashable {
     let keys: Set<String>
+    let appNames: [String]
+    let binaryNames: [String]
+
+    init(keys: Set<String>, appNames: [String] = [], binaryNames: [String] = []) {
+        self.keys = keys
+        self.appNames = appNames
+        self.binaryNames = binaryNames
+    }
 
     private struct AnyKey: CodingKey {
         var stringValue: String
@@ -25,9 +33,52 @@ struct ArtifactStanza: Codable, Hashable {
         }
     }
 
+    /// An `app` array element: a bundle name, or a `{"target": …}` rename dict.
+    /// Lenient so one odd entry can't zero out the whole array.
+    private struct AppEntry: Decodable {
+        let name: String?
+        let target: String?
+
+        init(from decoder: Decoder) throws {
+            if let string = try? decoder.singleValueContainer().decode(String.self) {
+                name = string
+                target = nil
+                return
+            }
+            name = nil
+            target = (try? decoder.container(keyedBy: AnyKey.self))
+                .flatMap { try? $0.decode(String.self, forKey: AnyKey(stringValue: "target")!) }
+        }
+    }
+
     init(from decoder: Decoder) throws {
-        keys = Set((try? decoder.container(keyedBy: AnyKey.self))?
-            .allKeys.map(\.stringValue) ?? [])
+        guard let container = try? decoder.container(keyedBy: AnyKey.self) else {
+            keys = []
+            appNames = []
+            binaryNames = []
+            return
+        }
+        keys = Set(container.allKeys.map(\.stringValue))
+        appNames = Self.artifactNames(in: container, key: "app")
+        binaryNames = Self.artifactNames(in: container, key: "binary")
+    }
+
+    /// Entries can be names or staged paths, with `{"target": …}` rename dicts
+    /// following the entry they rename — the on-disk name is the target's basename.
+    private static func artifactNames(
+        in container: KeyedDecodingContainer<AnyKey>, key: String
+    ) -> [String] {
+        let entries = AnyKey(stringValue: key)
+            .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? []
+        var names: [String] = []
+        for entry in entries {
+            if let name = entry.name {
+                names.append(URL(fileURLWithPath: name).lastPathComponent)
+            } else if let target = entry.target, !names.isEmpty {
+                names[names.count - 1] = URL(fileURLWithPath: target).lastPathComponent
+            }
+        }
+        return names
     }
 
     func encode(to encoder: Encoder) throws {
@@ -57,6 +108,16 @@ struct Cask: Codable, Identifiable, Hashable {
 
     var id: String {
         token
+    }
+
+    /// Bundle names this cask installs into /Applications (e.g. "Google Chrome.app").
+    var appArtifactNames: [String] {
+        artifacts?.flatMap(\.appNames) ?? []
+    }
+
+    /// Executable names this cask links into the brew prefix (e.g. "claude").
+    var binaryArtifactNames: [String] {
+        artifacts?.flatMap(\.binaryNames) ?? []
     }
 
     var isCLI: Bool {

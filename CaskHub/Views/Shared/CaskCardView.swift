@@ -99,6 +99,7 @@ struct CaskCardView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ZStack {
         WindowBackdrop()
@@ -131,3 +132,4 @@ struct CaskCardView: View {
     .environment(LocalHomebrewService())
     .environment(ImageCacheService())
 }
+#endif

@@ -31,6 +31,8 @@ struct CaskHubApp: App {
     @State private var catalog: CaskCatalogViewModel
 
     init() {
+        // Tooltip delay in ms; registered (not set) so it never persists to prefs.
+        UserDefaults.standard.register(defaults: ["NSInitialToolTipDelay": 500])
         BrandFonts.register()
         CrashReporter.start()
         Analytics.start()
@@ -78,6 +80,7 @@ struct CaskHubApp: App {
             SettingsView()
                 .environment(updaterService)
                 .environment(imageCache)
+                .environment(localHomebrew)
         }
     }
 }

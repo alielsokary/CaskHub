@@ -43,6 +43,8 @@
 		41DFD4A130028F7D00608C7A /* CategoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46F30028F7D00608C7A /* CategoryService.swift */; };
 		41DFD4A230028F7D00608C7A /* ImageCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47030028F7D00608C7A /* ImageCacheService.swift */; };
 		41DFD4A330028F7D00608C7A /* InstallReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47130028F7D00608C7A /* InstallReceipt.swift */; };
+		7FFA89946C514C00BF5496DB /* BrewOutputCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */; };
+		D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */; };
 		41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */; };
 		41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */; };
 		41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */; };
@@ -60,6 +62,7 @@
 		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
 		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
 		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
+		FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */; };
 		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -107,6 +110,8 @@
 		41DFD46F30028F7D00608C7A /* CategoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryService.swift; sourceTree = "<group>"; };
 		41DFD47030028F7D00608C7A /* ImageCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheService.swift; sourceTree = "<group>"; };
 		41DFD47130028F7D00608C7A /* InstallReceipt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallReceipt.swift; sourceTree = "<group>"; };
+		5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewOutputCollector.swift; sourceTree = "<group>"; };
+		41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppManagementPermission.swift; sourceTree = "<group>"; };
 		41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewService.swift; sourceTree = "<group>"; };
 		41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Brew.swift"; sourceTree = "<group>"; };
 		41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyAddedService.swift; sourceTree = "<group>"; };
@@ -127,6 +132,7 @@
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewTests.swift; sourceTree = "<group>"; };
+		8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdoptionTests.swift; sourceTree = "<group>"; };
 		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -236,6 +242,8 @@
 				41DFD46F30028F7D00608C7A /* CategoryService.swift */,
 				41DFD47030028F7D00608C7A /* ImageCacheService.swift */,
 				41DFD47130028F7D00608C7A /* InstallReceipt.swift */,
+				5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */,
+				41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */,
 				41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */,
 				41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */,
 				41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */,
@@ -315,6 +323,7 @@
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
+				8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */,
 				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
 			);
 			path = CaskHubTests;
@@ -503,6 +512,8 @@
 				41DFD4A130028F7D00608C7A /* CategoryService.swift in Sources */,
 				41DFD4A230028F7D00608C7A /* ImageCacheService.swift in Sources */,
 				41DFD4A330028F7D00608C7A /* InstallReceipt.swift in Sources */,
+				7FFA89946C514C00BF5496DB /* BrewOutputCollector.swift in Sources */,
+				D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */,
 				41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */,
 				41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */,
 				41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */,
@@ -529,6 +540,7 @@
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
+				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
 				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

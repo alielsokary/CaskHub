@@ -34,6 +34,7 @@ struct ContentView: View {
                 categoryService: categoryService,
                 updatesCount: viewModel.updatesCount,
                 installedCount: localHomebrew.installedCasks.count,
+                adoptableCount: viewModel.adoptableCasks.count,
                 categoryCounts: viewModel.categoryCounts
             )
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
@@ -67,6 +68,11 @@ struct ContentView: View {
                         }
                         : nil,
                     isUpdatingAll: localHomebrew.isUpdatingAll,
+                    greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
+                    onToggleGreedy: { enabled in
+                        Analytics.greedyUpdatesChanged(enabled)
+                        localHomebrew.setGreedyUpdates(enabled)
+                    },
                     showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
                     onSubmitSearch: {
                         searchFocused = false
@@ -89,6 +95,7 @@ struct ContentView: View {
                 }
 
                 detailContent
+                    .environment(\.isAdoptPage, selectedSidebar == .library(.adopt))
             }
             .ignoresSafeArea(.container, edges: .top)
         }

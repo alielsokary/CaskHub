@@ -21,6 +21,8 @@ struct TopBarView: View {
     var onSelectWindow: ((RecentlyAddedWindow) -> Void)?
     var onUpdateAll: (() -> Void)?
     var isUpdatingAll = false
+    var greedyUpdates: Bool?
+    var onToggleGreedy: ((Bool) -> Void)?
     var showsSort = true
     var onSubmitSearch: (() -> Void)?
 
@@ -39,6 +41,9 @@ struct TopBarView: View {
 
             Spacer(minLength: 10)
 
+            if let greedyUpdates {
+                greedyChip(isOn: greedyUpdates)
+            }
             if onUpdateAll != nil {
                 updateAllChip
             }
@@ -87,6 +92,31 @@ struct TopBarView: View {
         }
         .buttonStyle(.plain)
         .disabled(isUpdatingAll)
+    }
+
+    // MARK: - Greedy updates chip
+
+    private func greedyChip(isOn: Bool) -> some View {
+        Button {
+            onToggleGreedy?(!isOn)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 10, weight: .bold))
+                Text("Greedy")
+                    .font(CHType.button)
+            }
+            .foregroundStyle(isOn ? Color.chActionUpdateFg : Color.chTextTitle)
+            .padding(.vertical, 5)
+            .padding(.horizontal, 14)
+            .background(Capsule().fill(isOn ? Color.chActionUpdateBg : Color.chSurfaceField))
+            .overlay(Capsule().strokeBorder(
+                isOn ? Color.chActionUpdateBorder : Color.chHairlineStrong, lineWidth: 1
+            ))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help("Also list apps that update themselves (brew upgrade --greedy)")
     }
 
     // MARK: - Sort chip

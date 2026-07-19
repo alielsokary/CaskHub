@@ -106,7 +106,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
     @MainActor
     func test_installed_and_updates_pages_reflect_local_state() async {
-        let local = LocalHomebrewService()
+        // Scratch defaults: the host app's real prefs may have greedyUpdates on.
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("installed-updates"))
         local.installedCasks = [
             "firefox": installation("firefox", version: "1.0"),
             "slack": installation("slack", version: "2.0"),
@@ -293,7 +294,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
         CrashReporter.captureCounts = [:]
 
         let api = MockBrewAPIClient()
-        api.casksError = URLError(.notConnectedToInternet)
+        // Not .notConnectedToInternet: offline errors are deliberately never captured.
+        api.casksError = URLError(.timedOut)
         let vm = makeViewModel(api: api)
 
         await vm.fetchCasks()
