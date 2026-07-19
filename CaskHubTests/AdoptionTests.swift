@@ -9,12 +9,16 @@
 import SwiftUI
 import XCTest
 
+final class NoFilesFileManager: FileManager {
+    override func fileExists(atPath _: String) -> Bool { false }
+    override func fileExists(atPath _: String, isDirectory _: UnsafeMutablePointer<ObjCBool>?) -> Bool { false }
+}
+
 // MARK: - Adoption error surfaces & scans
 
 final class AdoptionSurfaceTests: XCTestCase {
     func test_error_descriptions_cover_every_case() {
         XCTAssertNotNil(LocalHomebrewError.brewBinaryNotFound.errorDescription)
-        XCTAssertNotNil(LocalHomebrewError.caskroomNotFound.errorDescription)
         XCTAssertTrue(
             LocalHomebrewError.appBundleNotFound(token: "ghost").errorDescription?.contains("ghost") == true
         )
@@ -57,6 +61,10 @@ final class AdoptionSurfaceTests: XCTestCase {
         service.openExternalApp(cask: external)
         XCTAssertNotNil(service.actionErrors["ghost2"])
         XCTAssertNil(service.externalAppVersion(for: external))
+    }
+
+    func test_missing_caskroom_scans_as_no_installed_casks() {
+        XCTAssertEqual(LocalHomebrewService.scanCaskroom(fileManager: NoFilesFileManager()).count, 0)
     }
 
     @MainActor

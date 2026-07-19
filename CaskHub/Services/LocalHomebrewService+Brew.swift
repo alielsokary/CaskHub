@@ -103,19 +103,18 @@ extension LocalHomebrewService {
 
     // MARK: - Filesystem Scanning
 
+    /// A missing Caskroom isn't an error: fresh brew installs have none until
+    /// the first cask lands, and machines without brew have nothing to scan.
     nonisolated static func scanCaskroom(
         fileManager: FileManager
-    ) -> Result<[String: LocalCaskInstallation], LocalHomebrewError> {
-        guard let caskroomURL = locateCaskroom(fileManager: fileManager) else {
-            return .failure(.caskroomNotFound)
-        }
-        guard let entries = try? fileManager.contentsOfDirectory(
-            at: caskroomURL,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return .success([:])
-        }
+    ) -> [String: LocalCaskInstallation] {
+        guard let caskroomURL = locateCaskroom(fileManager: fileManager),
+              let entries = try? fileManager.contentsOfDirectory(
+                  at: caskroomURL,
+                  includingPropertiesForKeys: [.isDirectoryKey],
+                  options: [.skipsHiddenFiles]
+              )
+        else { return [:] }
 
         var result: [String: LocalCaskInstallation] = [:]
         for entry in entries {
@@ -123,7 +122,7 @@ extension LocalHomebrewService {
                 result[installation.token] = installation
             }
         }
-        return .success(result)
+        return result
     }
 
     /// Version comes from the version-directory name, not the receipt's `source.version`,

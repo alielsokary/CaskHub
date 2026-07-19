@@ -44,16 +44,42 @@ enum CaskAction: Equatable {
 
 enum LocalHomebrewError: LocalizedError {
     case brewBinaryNotFound
-    case caskroomNotFound
     case appBundleNotFound(token: String)
     case brewCommandFailed(args: [String], exitCode: Int32, stderr: String)
+
+    /// Machine states (no Homebrew installed), not bugs — never worth a Sentry event.
+    var isEnvironmental: Bool {
+        if case .brewBinaryNotFound = self { return true }
+        return false
+    }
+
+    /// Coarse classes for Sentry grouping — one issue per way brew fails, not per cask.
+    static func failureClass(stderr: String) -> String {
+        if isStrandedApp(stderr: stderr) { return "stranded-caskroom-app" }
+        if stderr.contains("is not there") { return "missing-artifact-source" }
+        if stderr.contains("different from the one being installed") { return "adopt-version-mismatch" }
+        if stderr.contains("Operation not permitted") { return "permission-denied" }
+        if stderr.contains("No Cask with this name exists") || stderr.contains("No casks found") {
+            return "unknown-cask"
+        }
+        if stderr.contains("is not installed") { return "not-installed" }
+        if stderr.contains("reports different checksum") || stderr.contains("SHA256 mismatch") {
+            return "checksum-mismatch"
+        }
+        if stderr.contains("already an App at") { return "app-conflict" }
+        return "uncategorized"
+    }
+
+    /// A previous interrupted operation parked the real .app inside the Caskroom
+    /// version directory; every upgrade then fails until the copy is cleared.
+    static func isStrandedApp(stderr: String) -> Bool {
+        stderr.contains("already an App at") && stderr.contains("Caskroom")
+    }
 
     var errorDescription: String? {
         switch self {
         case .brewBinaryNotFound:
             return "Couldn't locate the brew binary. Is Homebrew installed?"
-        case .caskroomNotFound:
-            return "Couldn't locate the Homebrew Caskroom."
         case let .appBundleNotFound(token):
             return "Couldn't find an installed app for \(token)."
         case let .brewCommandFailed(args, code, stderr):
@@ -134,8 +160,6 @@ final class LocalHomebrewService {
 
     private(set) var lastRefresh: Date?
 
-    private(set) var refreshError: LocalHomebrewError?
-
     private(set) var brewVersion: String?
 
     private(set) var customBrewPrefix: String?
@@ -198,7 +222,7 @@ final class LocalHomebrewService {
         if brewVersion == nil {
             brewVersion = await Self.fetchBrewVersion()
         }
-        let (result, appNames, binaryNames) = await Task.detached(priority: .userInitiated) {
+        let (casks, appNames, binaryNames) = await Task.detached(priority: .userInitiated) {
             (
                 Self.scanCaskroom(fileManager: fm),
                 Self.scanApplications(fileManager: fm),
@@ -211,14 +235,7 @@ final class LocalHomebrewService {
         CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
         CrashReporter.tag("brew.caskroom", value: Self.locateCaskroom(fileManager: fm)?.path ?? "not found")
 
-        switch result {
-        case let .success(casks):
-            installedCasks = casks
-            refreshError = nil
-        case let .failure(error):
-            refreshError = error
-            CrashReporter.capture(error)
-        }
+        installedCasks = casks
         lastRefresh = .now
     }
 
