@@ -45,4 +45,11 @@ final class SettingsViewTests: XCTestCase {
         XCTAssertTrue(contents.allSatisfy { $0.hasPrefix(".") },
                       "expected no cached icons, found: \(contents)")
     }
+
+    @MainActor
+    func test_theme_preview_assets_are_bundled() {
+        for theme in AppTheme.allCases {
+            XCTAssertNotNil(theme.previewImage, "missing theme preview for \(theme.rawValue)")
+        }
+    }
 }
