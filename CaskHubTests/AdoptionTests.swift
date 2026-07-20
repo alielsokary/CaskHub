@@ -25,6 +25,7 @@ final class StubBrewProcessRunner: BrewProcessRunning {
 
     var queuedResults: [BrewProcessResult] = []
     var thrownError: Error?
+    var onRequest: ((Request) throws -> Void)?
     private(set) var requests: [Request] = []
 
     func run(
@@ -37,12 +38,14 @@ final class StubBrewProcessRunner: BrewProcessRunning {
         let askpassContents = environment["SUDO_ASKPASS"].flatMap {
             try? String(contentsOfFile: $0, encoding: .utf8)
         }
-        requests.append(Request(
+        let request = Request(
             executableURL: executableURL,
             arguments: arguments,
             environment: environment,
             askpassContents: askpassContents
-        ))
+        )
+        requests.append(request)
+        try onRequest?(request)
         if let thrownError { throw thrownError }
         return queuedResults.isEmpty
             ? BrewProcessResult(exitCode: 0, output: "")
@@ -155,6 +158,12 @@ final class AdoptionSurfaceTests: XCTestCase {
             ["install", "--cask", "firefox"]
         ])
         XCTAssertTrue(runner.requests.allSatisfy { $0.executableURL.path == "/test/bin/brew" })
+        XCTAssertEqual(
+            runner.requests[1].environment["HOMEBREW_NO_AUTOREMOVE"], "1",
+            "repair must not remove unrelated orphaned formulae"
+        )
+        XCTAssertNil(runner.requests[0].environment["HOMEBREW_NO_AUTOREMOVE"])
+        XCTAssertNil(runner.requests[2].environment["HOMEBREW_NO_AUTOREMOVE"])
     }
 
     func test_askpass_scripts_are_unique_shell_safe_and_removable() throws {

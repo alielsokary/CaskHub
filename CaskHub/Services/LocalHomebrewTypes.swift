@@ -47,6 +47,7 @@ enum CaskAction: Equatable {
     case adopting
     case updating
     case uninstalling
+    case repairing
     case queued
 
     var inProgressLabel: String {
@@ -56,9 +57,16 @@ enum CaskAction: Equatable {
         case .adopting: return "Adopting…"
         case .updating: return "Updating…"
         case .uninstalling: return "Uninstalling…"
+        case .repairing: return "Repairing…"
         case .queued: return "Queued…"
         }
     }
+}
+
+enum CaskActionOrigin: String {
+    case individual
+    case updateAll
+    case repair
 }
 
 enum LocalHomebrewError: LocalizedError {
@@ -106,7 +114,8 @@ enum LocalHomebrewError: LocalizedError {
         "adopt-version-mismatch",
         "checksum-mismatch",
         "network-failure",
-        "permission-denied"
+        "permission-denied",
+        "stranded-caskroom-app"
     ]
 
     /// A previous interrupted operation parked the real .app inside the Caskroom

@@ -128,6 +128,8 @@ final class CrashReporterTests: XCTestCase {
     func test_recoverable_brew_failures_are_never_captured() {
         let failures = [
             "It seems the existing App is different from the one being installed.",
+            "Error: zed: It seems there is already an App at "
+                + "'/opt/homebrew/Caskroom/zed/1.10.3/Zed.app'.",
             "chmod: /Applications/Example.app/Contents/MacOS/example: Operation not permitted",
             "SHA256 mismatch",
             "Download failed: curl: (6) Could not resolve host: example.com"
