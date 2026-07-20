@@ -1,7 +1,7 @@
 name: Release freshness
 
-# Release gate: PRs into master must ship a bundled categories.json at least
-# as new as CaskFlow's latest data release. Fix is one command:
+# Release gate: PRs into master must ship bundled CaskFlow data at least as
+# new as the latest data release. Fix is one command:
 #   ./Scripts/sync_bundled_categories.sh && git commit -am "Sync bundled categories"
 on:
   pull_request:
@@ -21,17 +21,26 @@ jobs:
           set -euo pipefail
           curl -fsSL -o /tmp/latest.json \
             "https://github.com/alielsokary/CaskFlow/releases/latest/download/categories.json"
+          curl -fsSL -o /tmp/latest-added-dates.json \
+            "https://github.com/alielsokary/CaskFlow/releases/latest/download/added_dates.json"
           python3 - << 'EOF'
           import json, sys
 
-          bundled = json.load(open("CaskHub/Resources/categories.json"))
-          latest = json.load(open("/tmp/latest.json"))
-          b, l = bundled["generatedDate"], latest["generatedDate"]
-          print(f"bundled: {b} ({bundled['totalCasks']} casks)")
-          print(f"latest:  {l} ({latest['totalCasks']} casks)")
-          if b < l:
-              print("\n::error::Bundled categories.json is stale. Run "
-                    "Scripts/sync_bundled_categories.sh and commit before releasing.")
+          checks = [
+              ("categories.json", "CaskHub/Resources/categories.json", "/tmp/latest.json"),
+              ("added_dates.json", "CaskHub/Resources/added_dates.json", "/tmp/latest-added-dates.json"),
+          ]
+          stale = []
+          for name, bundled_path, latest_path in checks:
+              bundled = json.load(open(bundled_path))
+              latest = json.load(open(latest_path))
+              b, l = bundled["generatedDate"], latest["generatedDate"]
+              print(f"{name}: bundled {b}, latest {l}")
+              if b < l:
+                  stale.append(name)
+          if stale:
+              print("\n::error::Bundled CaskFlow data is stale: " + ", ".join(stale))
+              print("Run Scripts/sync_bundled_categories.sh and commit before releasing.")
               sys.exit(1)
           print("bundled data is current ✓")
           EOF

@@ -15,8 +15,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
     func test_fetch_casks_excludes_deprecated_disabled_versioned_and_font_casks() async {
         let (vm, _) = await makeSUT(casks: [
             makeCask("firefox"),
-            makeCask("legacy-app", deprecated: true),
-            makeCask("dead-app", disabled: true),
+            makeCask("legacy-app", lifecycle: .deprecated),
+            makeCask("dead-app", lifecycle: .disabled),
             makeCask("node@18"),
             makeCask("font-fira-code")
         ])
@@ -117,7 +117,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
             casks: [
                 makeCask("firefox", version: "2.0"),
                 makeCask("slack", version: "2.0"),
-                makeCask("chrome", version: "3.0", autoUpdates: true),
+                makeCask("chrome", version: "3.0", lifecycle: .autoUpdating),
                 makeCask("iterm2", version: "9.9")
             ],
             localHomebrew: local
@@ -268,6 +268,49 @@ final class CaskCatalogViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func test_failed_period_selection_keeps_loaded_period_and_never_relabels_annual_data() async {
+        let defaults = makeScratchDefaults()
+        let api = MockBrewAPIClient()
+        api.casks = [makeCask("firefox")]
+        api.analyticsResponses[.days365] = analyticsResponse([("firefox", "100")])
+        let vm = makeViewModel(api: api, defaults: defaults)
+        await vm.fetchCasks()
+        vm.selectedSidebar = .discover(.topCharts)
+        api.analyticsError = URLError(.timedOut)
+
+        await vm.selectAnalyticsPeriod(.days30)
+
+        XCTAssertEqual(vm.analyticsPeriod, .days365)
+        XCTAssertEqual(vm.formattedDownloads(for: "firefox"), "100")
+        XCTAssertEqual(defaults.string(forKey: "analyticsPeriod"), AnalyticsPeriod.days365.rawValue)
+    }
+
+    @MainActor
+    func test_persisted_unloaded_period_does_not_fall_back_to_annual_counts() async {
+        let defaults = makeScratchDefaults()
+        defaults.set(AnalyticsPeriod.days30.rawValue, forKey: "analyticsPeriod")
+        let api = MockBrewAPIClient()
+        api.casks = [makeCask("firefox")]
+        api.analyticsResponses[.days365] = analyticsResponse([("firefox", "100")])
+        let vm = makeViewModel(api: api, defaults: defaults)
+        await vm.fetchCasks()
+        vm.selectedSidebar = .discover(.topCharts)
+
+        XCTAssertEqual(vm.analyticsPeriod, .days30)
+        XCTAssertNil(vm.formattedDownloads(for: "firefox"))
+    }
+
+    @MainActor
+    func test_recently_added_loads_bundled_offline_snapshot() {
+        let recent = RecentlyAddedService()
+
+        recent.loadBundledDates()
+
+        XCTAssertFalse(recent.addedDates.isEmpty)
+        XCTAssertFalse(recent.generatedDate.isEmpty)
+    }
+
+    @MainActor
     func test_top_charts_uses_selected_period_while_other_pages_stay_on_year() async {
         let (vm, api) = await makeSUT(
             casks: [makeCask("firefox")],
@@ -290,7 +333,11 @@ final class CaskCatalogViewModelTests: XCTestCase {
         let crashSpy = SpyCrashReporterProvider()
         let originalCrash = CrashReporter.provider
         CrashReporter.provider = crashSpy
-        defer { CrashReporter.provider = originalCrash }
+        CrashReporter.isRunningTests = false
+        defer {
+            CrashReporter.provider = originalCrash
+            CrashReporter.isRunningTests = CrashReporter.detectsTestRun
+        }
         CrashReporter.captureCounts = [:]
 
         let api = MockBrewAPIClient()

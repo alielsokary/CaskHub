@@ -18,12 +18,14 @@ final class CrashReporterTests: XCTestCase {
         originalProvider = CrashReporter.provider
         CrashReporter.provider = spy
         CrashReporter.captureCounts = [:]
+        CrashReporter.isRunningTests = false
         UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
     }
 
     override func tearDown() {
         CrashReporter.provider = originalProvider
         CrashReporter.captureCounts = [:]
+        CrashReporter.isRunningTests = CrashReporter.detectsTestRun
         UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
         super.tearDown()
     }
@@ -88,13 +90,66 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
+    // MARK: - Test-run and environmental suppression
+
+    func test_xctest_runs_are_detected() {
+        XCTAssertTrue(CrashReporter.detectsTestRun)
+    }
+
+    func test_capture_is_suppressed_during_test_runs() {
+        CrashReporter.isRunningTests = true
+        CrashReporter.capture(URLError(.timedOut))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+    }
+
+    func test_start_is_inert_during_test_runs() {
+        CrashReporter.isRunningTests = true
+        CrashReporter.start()
+        CrashReporter.refresh()
+        XCTAssertTrue(spy.startedWith.isEmpty)
+        XCTAssertTrue(spy.enabledChanges.isEmpty)
+    }
+
+    func test_environmental_errors_are_never_captured() {
+        CrashReporter.capture(LocalHomebrewError.brewBinaryNotFound)
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+    }
+
     // MARK: - Fingerprinting
 
-    func test_brew_command_failures_fingerprint_by_subcommand() {
-        let error = LocalHomebrewError.brewCommandFailed(
-            args: ["upgrade", "--cask", "sequel-ace"], exitCode: 1, stderr: ""
+    func test_brew_failures_fingerprint_by_subcommand_and_failure_class() {
+        let stranded = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "tabby"], exitCode: 1,
+            stderr: "Error: tabby: It seems there is already an App at "
+                + "'/opt/homebrew/Caskroom/tabby/1.0.230/Tabby.app'."
         )
-        XCTAssertEqual(SentryProvider.fingerprint(for: error), ["brewCommandFailed", "upgrade"])
+        XCTAssertEqual(
+            SentryProvider.fingerprint(for: stranded),
+            ["brewCommandFailed", "upgrade", "stranded-caskroom-app"]
+        )
+
+        let missingBinary = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "obsidian", "--adopt"], exitCode: 1,
+            stderr: "Error: It seems the symlink source "
+                + "'/Applications/Obsidian.app/Contents/MacOS/obsidian-cli' is not there."
+        )
+        XCTAssertEqual(
+            SentryProvider.fingerprint(for: missingBinary),
+            ["brewCommandFailed", "install", "missing-artifact-source"]
+        )
+    }
+
+    func test_failure_classes_cover_observed_brew_errors() {
+        func cls(_ stderr: String) -> String {
+            LocalHomebrewError.failureClass(stderr: stderr)
+        }
+        XCTAssertEqual(cls("Warning: Cask 'x' is unavailable: No Cask with this name exists."), "unknown-cask")
+        XCTAssertEqual(cls("Error: Cask 'sequel-ace' is not installed."), "not-installed")
+        XCTAssertEqual(cls("chmod: Unable to change file mode: Operation not permitted"), "permission-denied")
+        XCTAssertEqual(cls("It seems the existing App is different from the one being installed."), "adopt-version-mismatch")
+        XCTAssertEqual(cls("SHA256 mismatch"), "checksum-mismatch")
+        XCTAssertEqual(cls("It seems there is already an App at '/Applications/X.app'."), "app-conflict")
+        XCTAssertEqual(cls("something novel"), "uncategorized")
     }
 
     func test_other_errors_keep_default_grouping() {

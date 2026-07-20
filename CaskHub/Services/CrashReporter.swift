@@ -30,20 +30,30 @@ enum CrashReporter {
     static var captureCounts: [String: Int] = [:]
     private static let captureLimit = 5
 
+    /// Unit-test runs launch the host app — without a guard their brew failures,
+    /// hangs, and transactions land in Sentry looking like production events.
+    static let detectsTestRun = NSClassFromString("XCTestCase") != nil
+    static var isRunningTests = detectsTestRun
+
     static var isEnabled: Bool {
         UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
     }
 
     static func start() {
+        guard !isRunningTests else { return }
         provider.start(enabled: isEnabled)
     }
 
     static func refresh() {
+        guard !isRunningTests else { return }
         provider.setEnabled(isEnabled)
     }
 
     static func capture(_ error: Error) {
-        guard isEnabled else { return }
+        guard isEnabled, !isRunningTests else { return }
+        if let localError = error as? LocalHomebrewError, localError.isEnvironmental {
+            return
+        }
         let nsError = error as NSError
         if nsError.domain == NSURLErrorDomain, nsError.code == URLError.notConnectedToInternet.rawValue {
             return
@@ -115,11 +125,13 @@ final class SentryProvider: CrashReporterProvider {
         }
     }
 
-    /// Groups brew failures per subcommand instead of NSError domain+code.
+    /// Groups brew failures per subcommand and failure class instead of NSError
+    /// domain+code — one issue per way brew fails, so a rare destructive failure
+    /// can't hide inside a busy catch-all group.
     static func fingerprint(for error: Error) -> [String]? {
-        guard case let LocalHomebrewError.brewCommandFailed(args, _, _) = error,
+        guard case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error,
               let subcommand = args.first else { return nil }
-        return ["brewCommandFailed", subcommand]
+        return ["brewCommandFailed", subcommand, LocalHomebrewError.failureClass(stderr: stderr)]
     }
 
     func setTag(_ key: String, value: String) {

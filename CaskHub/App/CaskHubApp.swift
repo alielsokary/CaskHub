@@ -41,6 +41,7 @@ struct CaskHubApp: App {
         let categories = CategoryService()
         categories.loadCategories()
         let recent = RecentlyAddedService()
+        recent.loadBundledDates()
         let homebrew = LocalHomebrewService()
         let images = ImageCacheService()
         images.knownIconTokens = { categories.iconTokens }

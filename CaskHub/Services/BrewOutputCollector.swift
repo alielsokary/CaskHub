@@ -11,7 +11,7 @@ import Foundation
 /// Resolves on EOF — or shortly after exit when a grandchild inherited the pipe's
 /// write end and kept it open (brew's helpers do this), which would otherwise
 /// leave the UI spinning forever.
-final class BrewOutputCollector: @unchecked Sendable {
+nonisolated final class BrewOutputCollector: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.caskhub.brew-output")
     private var tail = ""
     private var sawEOF = false
