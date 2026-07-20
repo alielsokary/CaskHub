@@ -7,6 +7,11 @@
 
 import Foundation
 
+nonisolated struct ExternalApplicationScan: Sendable {
+    let adoptableNames: Set<String>
+    let macAppStoreNames: Set<String>
+}
+
 struct LocalCaskInstallation: Hashable, Identifiable {
     let token: String
     let installedVersion: String
@@ -61,15 +66,22 @@ enum LocalHomebrewError: LocalizedError {
     case appBundleNotFound(token: String)
     case brewCommandFailed(args: [String], exitCode: Int32, stderr: String)
 
-    /// Machine states (no Homebrew installed), not bugs — never worth a Sentry event.
-    var isEnvironmental: Bool {
-        if case .brewBinaryNotFound = self { return true }
-        return false
+    /// Failures with a complete in-app recovery path are user state, not defects.
+    var shouldReport: Bool {
+        switch self {
+        case .brewBinaryNotFound:
+            return false
+        case .appBundleNotFound:
+            return true
+        case let .brewCommandFailed(_, _, stderr):
+            return !Self.recoverableFailureClasses.contains(Self.failureClass(stderr: stderr))
+        }
     }
 
     /// Coarse classes for Sentry grouping — one issue per way brew fails, not per cask.
     static func failureClass(stderr: String) -> String {
         if isStrandedApp(stderr: stderr) { return "stranded-caskroom-app" }
+        if isAppManagementDenial(stderr: stderr) { return "permission-denied" }
         return failurePatterns.first { stderr.contains($0.fragment) }?.classification
             ?? "uncategorized"
     }
@@ -77,13 +89,24 @@ enum LocalHomebrewError: LocalizedError {
     private static let failurePatterns: [(fragment: String, classification: String)] = [
         ("is not there", "missing-artifact-source"),
         ("different from the one being installed", "adopt-version-mismatch"),
-        ("Operation not permitted", "permission-denied"),
         ("No Cask with this name exists", "unknown-cask"),
         ("No casks found", "unknown-cask"),
         ("is not installed", "not-installed"),
         ("reports different checksum", "checksum-mismatch"),
         ("SHA256 mismatch", "checksum-mismatch"),
+        ("curl: (5)", "network-failure"),
+        ("curl: (6)", "network-failure"),
+        ("curl: (7)", "network-failure"),
+        ("curl: (28)", "network-failure"),
+        ("already a Binary at", "binary-conflict"),
         ("already an App at", "app-conflict")
+    ]
+
+    private static let recoverableFailureClasses: Set<String> = [
+        "adopt-version-mismatch",
+        "checksum-mismatch",
+        "network-failure",
+        "permission-denied"
     ]
 
     /// A previous interrupted operation parked the real .app inside the Caskroom
@@ -131,7 +154,11 @@ enum LocalHomebrewError: LocalizedError {
 
     /// The App Management (TCC) permission gating modification of other apps' bundles.
     static func isAppManagementDenial(stderr: String) -> Bool {
-        stderr.contains("Operation not permitted")
+        stderr.components(separatedBy: .newlines).contains { line in
+            line.contains("Operation not permitted")
+                && line.contains("/Applications/")
+                && line.contains(".app")
+        }
     }
 
     /// `brew install --adopt` refuses when the on-disk app differs from the cask's version.

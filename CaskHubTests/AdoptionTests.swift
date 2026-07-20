@@ -307,7 +307,7 @@ final class AdoptionViewRenderTests: XCTestCase {
     func test_cask_actions_render_every_external_state() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-actions"))
         service.externalAppNames = ["Chrome.app"]
-        service.externalBinaryNames = ["claude"]
+        service.externalBinaryPaths = ["claude": URL(fileURLWithPath: "/usr/local/bin/claude")]
         service.installedCasks["managed"] = LocalCaskInstallation(
             token: "managed", installedVersion: "1.0", installedAt: nil, appBundleNames: ["Managed.app"]
         )

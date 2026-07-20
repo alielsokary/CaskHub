@@ -19,16 +19,19 @@ final class LocalHomebrewService {
     /// Non-Mac-App-Store bundle names found in /Applications and ~/Applications.
     var externalAppNames: Set<String> = []
 
-    /// Executable names found in common install locations (~/.local/bin, /usr/local/bin, …).
-    var externalBinaryNames: Set<String> = []
+    /// Mac App Store bundles that must be shown as installed but never adopted.
+    var macAppStoreAppNames: Set<String> = []
+
+    /// Executables found in common install locations (~/.local/bin, /usr/local/bin, …).
+    var externalBinaryPaths: [String: URL] = [:]
 
     var adoptReplaceOffers: Set<String> = []
 
     /// Casks wedged by a stranded app copy inside the Caskroom; repair =
     /// clear brew's records, then reinstall fresh.
-    private(set) var repairOffers: Set<String> = []
+    var repairOffers: Set<String> = []
 
-    private(set) var appManagementDenials: Set<String> = []
+    var appManagementDenials: Set<String> = []
 
     /// Adoptions waiting for the App Management permission; value = retry with `--force`.
     var permissionRequests: [String: Bool] = [:]
@@ -143,28 +146,22 @@ final class LocalHomebrewService {
             brewVersion = await brewVersionProvider()
         }
         let appDirs = applicationDirectories
-        let (casks, appNames, binaryNames) = await Task.detached(priority: .userInitiated) {
+        let (casks, applications, binaryPaths) = await Task.detached(priority: .userInitiated) {
             (
                 Self.scanCaskroom(fileManager: fm, applicationDirectories: appDirs),
                 Self.scanApplications(fileManager: fm),
                 Self.scanBinaryDirectories(fileManager: fm)
             )
         }.value
-        externalAppNames = appNames
-        externalBinaryNames = binaryNames
+        externalAppNames = applications.adoptableNames
+        macAppStoreAppNames = applications.macAppStoreNames
+        externalBinaryPaths = binaryPaths
 
         CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
         CrashReporter.tag("brew.caskroom", value: Self.locateCaskroom(fileManager: fm)?.path ?? "not found")
 
         installedCasks = casks
         lastRefresh = .now
-    }
-
-    func clearError(for token: String) {
-        actionErrors[token] = nil
-        adoptReplaceOffers.remove(token)
-        repairOffers.remove(token)
-        appManagementDenials.remove(token)
     }
 
     // MARK: - Actions

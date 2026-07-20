@@ -245,33 +245,48 @@ extension LocalHomebrewService {
 
     /// Executable names in the places CLI tools commonly install to. GUI apps
     /// don't inherit the shell's PATH, so fixed locations beat consulting it.
-    nonisolated static func scanBinaryDirectories(fileManager: FileManager) -> Set<String> {
+    nonisolated static func scanBinaryDirectories(
+        fileManager: FileManager,
+        directories: [URL]? = nil
+    ) -> [String: URL] {
         let home = fileManager.homeDirectoryForCurrentUser
-        let folders = [
-            URL(fileURLWithPath: "/usr/local/bin"),
-            home.appendingPathComponent(".local/bin"),
-            home.appendingPathComponent("bin")
-        ]
-        var names: Set<String> = []
+        let folders = directories ?? (
+            brewPrefixCandidates("bin") + [
+                home.appendingPathComponent(".local/bin"),
+                home.appendingPathComponent("bin")
+            ]
+        )
+        var paths: [String: URL] = [:]
         for folder in folders {
             guard let entries = try? fileManager.contentsOfDirectory(
                 at: folder,
-                includingPropertiesForKeys: nil,
+                includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey],
                 options: [.skipsHiddenFiles]
             ) else { continue }
             for entry in entries where fileManager.isExecutableFile(atPath: entry.path) {
-                names.insert(entry.lastPathComponent)
+                guard let values = try? entry.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey]),
+                      values.isDirectory != true,
+                      let fileSize = values.fileSize,
+                      fileSize > 0
+                else { continue }
+                if paths[entry.lastPathComponent] == nil {
+                    paths[entry.lastPathComponent] = entry
+                }
             }
         }
-        return names
+        return paths
     }
 
-    nonisolated static func scanApplications(fileManager: FileManager) -> Set<String> {
-        let folders = [
+    nonisolated static func scanApplications(
+        fileManager: FileManager,
+        directories: [URL]? = nil
+    ) -> ExternalApplicationScan {
+        let folders = directories ?? [
             URL(fileURLWithPath: "/Applications"),
             fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
         ]
-        var names: Set<String> = []
+        var adoptableNames: Set<String> = []
+        var macAppStoreNames: Set<String> = []
         for folder in folders {
             guard let entries = try? fileManager.contentsOfDirectory(
                 at: folder,
@@ -281,11 +296,17 @@ extension LocalHomebrewService {
             for entry in entries where entry.pathExtension == "app" {
                 // Mac App Store apps carry a receipt; adopting those would fight MAS updates.
                 let masReceipt = entry.appendingPathComponent("Contents/_MASReceipt/receipt")
-                guard !fileManager.fileExists(atPath: masReceipt.path) else { continue }
-                names.insert(entry.lastPathComponent)
+                if fileManager.fileExists(atPath: masReceipt.path) {
+                    macAppStoreNames.insert(entry.lastPathComponent)
+                } else {
+                    adoptableNames.insert(entry.lastPathComponent)
+                }
             }
         }
-        return names
+        return ExternalApplicationScan(
+            adoptableNames: adoptableNames,
+            macAppStoreNames: macAppStoreNames
+        )
     }
 
     private nonisolated static func modificationDate(of url: URL) -> Date {

@@ -8,6 +8,13 @@
 import Foundation
 
 extension LocalHomebrewService {
+    func clearError(for token: String) {
+        actionErrors[token] = nil
+        adoptReplaceOffers.remove(token)
+        repairOffers.remove(token)
+        appManagementDenials.remove(token)
+    }
+
     func isInstalled(token: String) -> Bool {
         installedCasks[token] != nil
     }
@@ -18,11 +25,17 @@ extension LocalHomebrewService {
             && cask.appArtifactNames.contains(where: externalAppNames.contains)
     }
 
+    /// Mac App Store apps are present, but adopting them would break Store updates.
+    func isMacAppStoreInstalled(_ cask: Cask) -> Bool {
+        installedCasks[cask.token] == nil
+            && cask.appArtifactNames.contains(where: macAppStoreAppNames.contains)
+    }
+
     /// A CLI cask whose tool is on the device via some other installer
     /// (e.g. claude-code's native install script). Detected, not managed.
-    func isExternalCLI(_ cask: Cask) -> Bool {
-        installedCasks[cask.token] == nil
-            && cask.binaryArtifactNames.contains(where: externalBinaryNames.contains)
+    func externalCLIPath(_ cask: Cask) -> URL? {
+        guard installedCasks[cask.token] == nil else { return nil }
+        return cask.binaryArtifactNames.lazy.compactMap { self.externalBinaryPaths[$0] }.first
     }
 
     func isOutdated(token: String, remoteVersion: String) -> Bool {
