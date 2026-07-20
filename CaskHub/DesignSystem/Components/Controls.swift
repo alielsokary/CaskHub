@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum CaskActionStyle {
-    case install, adopt, update, open, installed
+    case install, adopt, update, open, installed, cleanup
 
     var title: String {
         switch self {
@@ -17,6 +17,7 @@ enum CaskActionStyle {
         case .update: return "Update"
         case .open: return "Open"
         case .installed: return "Installed"
+        case .cleanup: return "Clean Up"
         }
     }
 
@@ -27,6 +28,7 @@ enum CaskActionStyle {
         case .update: return "arrow.clockwise"
         case .open: return "play.fill"
         case .installed: return "circle.fill"
+        case .cleanup: return "trash"
         }
     }
 
@@ -34,14 +36,14 @@ enum CaskActionStyle {
         switch self {
         case .installed: return 6.5
         case .open: return 9
-        case .install, .adopt, .update: return 10.5
+        case .install, .adopt, .update, .cleanup: return 10.5
         }
     }
 
     var background: Color {
         switch self {
         case .install, .adopt: return .chActionInstallBg
-        case .update: return .chActionUpdateBg
+        case .update, .cleanup: return .chActionUpdateBg
         case .open, .installed: return .chActionDoneBg
         }
     }
@@ -49,7 +51,7 @@ enum CaskActionStyle {
     var border: Color {
         switch self {
         case .install, .adopt: return .chActionInstallBorder
-        case .update: return .chActionUpdateBorder
+        case .update, .cleanup: return .chActionUpdateBorder
         case .open, .installed: return .chActionDoneBorder
         }
     }
@@ -57,7 +59,7 @@ enum CaskActionStyle {
     var foreground: Color {
         switch self {
         case .install, .adopt: return .chActionInstallFg
-        case .update: return .chActionUpdateFg
+        case .update, .cleanup: return .chActionUpdateFg
         case .open, .installed: return .chActionDoneFg
         }
     }

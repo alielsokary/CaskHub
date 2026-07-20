@@ -36,7 +36,7 @@ struct CaskActionsView: View {
             HStack(spacing: 8) {
                 if isAdoptPage {
                     ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
-                        Task { try? await localHomebrew.adopt(token: cask.token) }
+                        Task { try? await localHomebrew.adopt(cask) }
                     }
                 } else {
                     ActionCapsuleButton(action: .open, fullWidth: fullWidth) {
@@ -68,6 +68,21 @@ struct CaskActionsView: View {
 
     @ViewBuilder
     private func installedActions(for installation: LocalCaskInstallation) -> some View {
+        if localHomebrew.isZombie(cask) {
+            ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
+                Task { try? await localHomebrew.repair(token: cask.token) }
+            }
+            .help("""
+            \(cask.displayName) was removed outside Homebrew, but Homebrew still \
+            has records for it. Clean Up removes the leftover data.
+            """)
+        } else {
+            managedActions(for: installation)
+        }
+    }
+
+    @ViewBuilder
+    private func managedActions(for installation: LocalCaskInstallation) -> some View {
         let showUpdate = localHomebrew.hasAvailableUpdate(
             token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates
         )
@@ -76,7 +91,7 @@ struct CaskActionsView: View {
         HStack(spacing: 8) {
             if canOpen {
                 ActionCapsuleButton(action: .open, fullWidth: fullWidth && !showUpdate) {
-                    localHomebrew.openApp(token: cask.token)
+                    localHomebrew.open(cask)
                 }
             }
             if showUpdate {

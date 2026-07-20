@@ -12,10 +12,20 @@ struct ArtifactStanza: Codable, Hashable {
     let appNames: [String]
     let binaryNames: [String]
 
-    init(keys: Set<String>, appNames: [String] = [], binaryNames: [String] = []) {
+    /// Raw source paths of `binary` entries (e.g. a path inside the .app bundle).
+    /// Needed to verify a bundle actually contains what the cask declares.
+    let binarySourcePaths: [String]
+
+    init(
+        keys: Set<String>,
+        appNames: [String] = [],
+        binaryNames: [String] = [],
+        binarySourcePaths: [String] = []
+    ) {
         self.keys = keys
         self.appNames = appNames
         self.binaryNames = binaryNames
+        self.binarySourcePaths = binarySourcePaths
     }
 
     private struct AnyKey: CodingKey {
@@ -56,11 +66,16 @@ struct ArtifactStanza: Codable, Hashable {
             keys = []
             appNames = []
             binaryNames = []
+            binarySourcePaths = []
             return
         }
         keys = Set(container.allKeys.map(\.stringValue))
         appNames = Self.artifactNames(in: container, key: "app")
         binaryNames = Self.artifactNames(in: container, key: "binary")
+        binarySourcePaths = (AnyKey(stringValue: "binary")
+            .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? [])
+            .compactMap(\.name)
+            .filter { $0.contains("/") }
     }
 
     /// Entries can be names or staged paths, with `{"target": …}` rename dicts
@@ -118,6 +133,11 @@ struct Cask: Codable, Identifiable, Hashable {
     /// Executable names this cask links into the brew prefix (e.g. "claude").
     var binaryArtifactNames: [String] {
         artifacts?.flatMap(\.binaryNames) ?? []
+    }
+
+    /// Raw source paths of declared `binary` artifacts.
+    var binarySourcePaths: [String] {
+        artifacts?.flatMap(\.binarySourcePaths) ?? []
     }
 
     var isCLI: Bool {
