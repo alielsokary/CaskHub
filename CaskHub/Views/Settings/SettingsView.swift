@@ -84,6 +84,7 @@ struct GeneralSettingsView: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var appManagement: AppManagementPermission.Status = .unknown
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
+    @AppStorage(UpdaterService.showUpdatePromptKey) private var showUpdatePrompt = true
 
     var body: some View {
         @Bindable var updater = updater
@@ -96,6 +97,14 @@ struct GeneralSettingsView: View {
             }
             Section("Updates") {
                 Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
+                Toggle("Show update notification at launch", isOn: $showUpdatePrompt)
+                Text("""
+                Updates always download in the background. When this is off, they \
+                install silently the next time you quit CaskHub instead of showing \
+                what's new first.
+                """)
+                .font(.callout)
+                .foregroundStyle(.secondary)
             }
             Section("Sidebar") {
                 Toggle("Show Adopt Apps", isOn: $showAdoptApps)
