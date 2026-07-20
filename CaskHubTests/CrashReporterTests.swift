@@ -58,13 +58,13 @@ final class CrashReporterTests: XCTestCase {
     // MARK: - Capture + consent
 
     func test_capture_forwards_error_when_enabled() {
-        CrashReporter.capture(URLError(.timedOut))
+        CrashReporter.capture(URLError(.badServerResponse))
         XCTAssertEqual(spy.capturedErrors.count, 1)
     }
 
     func test_capture_is_suppressed_when_opted_out() {
         UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
-        CrashReporter.capture(URLError(.timedOut))
+        CrashReporter.capture(URLError(.badServerResponse))
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
@@ -72,21 +72,31 @@ final class CrashReporterTests: XCTestCase {
 
     func test_capture_stops_after_five_identical_errors() {
         for _ in 1...6 {
-            CrashReporter.capture(URLError(.timedOut))
+            CrashReporter.capture(URLError(.badServerResponse))
         }
         XCTAssertEqual(spy.capturedErrors.count, 5)
     }
 
     func test_distinct_error_signatures_are_limited_independently() {
         for _ in 1...6 {
-            CrashReporter.capture(URLError(.timedOut))
-            CrashReporter.capture(URLError(.cannotFindHost))
+            CrashReporter.capture(URLError(.badServerResponse))
+            CrashReporter.capture(URLError(.cannotDecodeRawData))
         }
         XCTAssertEqual(spy.capturedErrors.count, 10)
     }
 
-    func test_offline_errors_are_never_captured() {
-        CrashReporter.capture(URLError(.notConnectedToInternet))
+    func test_transient_network_errors_are_never_captured() {
+        let codes: [URLError.Code] = [
+            .notConnectedToInternet,
+            .timedOut,
+            .networkConnectionLost,
+            .cannotFindHost,
+            .cannotConnectToHost,
+            .dnsLookupFailed
+        ]
+        for code in codes {
+            CrashReporter.capture(URLError(code))
+        }
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
@@ -113,6 +123,31 @@ final class CrashReporterTests: XCTestCase {
     func test_environmental_errors_are_never_captured() {
         CrashReporter.capture(LocalHomebrewError.brewBinaryNotFound)
         XCTAssertTrue(spy.capturedErrors.isEmpty)
+    }
+
+    func test_recoverable_brew_failures_are_never_captured() {
+        let failures = [
+            "It seems the existing App is different from the one being installed.",
+            "chmod: Operation not permitted",
+            "SHA256 mismatch"
+        ]
+        for stderr in failures {
+            CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+                args: ["install", "--cask", "x", "--adopt"],
+                exitCode: 1,
+                stderr: stderr
+            ))
+        }
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+    }
+
+    func test_unexpected_brew_conflicts_remain_reportable() {
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "x"],
+            exitCode: 1,
+            stderr: "It seems there is already a Binary at '/opt/homebrew/bin/x'."
+        ))
+        XCTAssertEqual(spy.capturedErrors.count, 1)
     }
 
     // MARK: - Fingerprinting
@@ -148,6 +183,7 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(cls("chmod: Unable to change file mode: Operation not permitted"), "permission-denied")
         XCTAssertEqual(cls("It seems the existing App is different from the one being installed."), "adopt-version-mismatch")
         XCTAssertEqual(cls("SHA256 mismatch"), "checksum-mismatch")
+        XCTAssertEqual(cls("It seems there is already a Binary at '/opt/homebrew/bin/x'."), "binary-conflict")
         XCTAssertEqual(cls("It seems there is already an App at '/Applications/X.app'."), "app-conflict")
         XCTAssertEqual(cls("something novel"), "uncategorized")
     }

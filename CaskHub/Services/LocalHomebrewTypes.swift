@@ -7,6 +7,11 @@
 
 import Foundation
 
+nonisolated struct ExternalApplicationScan: Sendable {
+    let adoptableNames: Set<String>
+    let macAppStoreNames: Set<String>
+}
+
 struct LocalCaskInstallation: Hashable, Identifiable {
     let token: String
     let installedVersion: String
@@ -61,10 +66,16 @@ enum LocalHomebrewError: LocalizedError {
     case appBundleNotFound(token: String)
     case brewCommandFailed(args: [String], exitCode: Int32, stderr: String)
 
-    /// Machine states (no Homebrew installed), not bugs — never worth a Sentry event.
-    var isEnvironmental: Bool {
-        if case .brewBinaryNotFound = self { return true }
-        return false
+    /// Failures with a complete in-app recovery path are user state, not defects.
+    var shouldReport: Bool {
+        switch self {
+        case .brewBinaryNotFound:
+            return false
+        case .appBundleNotFound:
+            return true
+        case let .brewCommandFailed(_, _, stderr):
+            return !Self.recoverableFailureClasses.contains(Self.failureClass(stderr: stderr))
+        }
     }
 
     /// Coarse classes for Sentry grouping — one issue per way brew fails, not per cask.
@@ -83,7 +94,14 @@ enum LocalHomebrewError: LocalizedError {
         ("is not installed", "not-installed"),
         ("reports different checksum", "checksum-mismatch"),
         ("SHA256 mismatch", "checksum-mismatch"),
+        ("already a Binary at", "binary-conflict"),
         ("already an App at", "app-conflict")
+    ]
+
+    private static let recoverableFailureClasses: Set<String> = [
+        "adopt-version-mismatch",
+        "checksum-mismatch",
+        "permission-denied"
     ]
 
     /// A previous interrupted operation parked the real .app inside the Caskroom

@@ -245,13 +245,17 @@ extension LocalHomebrewService {
 
     /// Executable names in the places CLI tools commonly install to. GUI apps
     /// don't inherit the shell's PATH, so fixed locations beat consulting it.
-    nonisolated static func scanBinaryDirectories(fileManager: FileManager) -> Set<String> {
+    nonisolated static func scanBinaryDirectories(
+        fileManager: FileManager,
+        directories: [URL]? = nil
+    ) -> Set<String> {
         let home = fileManager.homeDirectoryForCurrentUser
-        let folders = [
-            URL(fileURLWithPath: "/usr/local/bin"),
-            home.appendingPathComponent(".local/bin"),
-            home.appendingPathComponent("bin")
-        ]
+        let folders = directories ?? (
+            brewPrefixCandidates("bin") + [
+                home.appendingPathComponent(".local/bin"),
+                home.appendingPathComponent("bin")
+            ]
+        )
         var names: Set<String> = []
         for folder in folders {
             guard let entries = try? fileManager.contentsOfDirectory(
@@ -266,12 +270,16 @@ extension LocalHomebrewService {
         return names
     }
 
-    nonisolated static func scanApplications(fileManager: FileManager) -> Set<String> {
-        let folders = [
+    nonisolated static func scanApplications(
+        fileManager: FileManager,
+        directories: [URL]? = nil
+    ) -> ExternalApplicationScan {
+        let folders = directories ?? [
             URL(fileURLWithPath: "/Applications"),
             fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
         ]
-        var names: Set<String> = []
+        var adoptableNames: Set<String> = []
+        var macAppStoreNames: Set<String> = []
         for folder in folders {
             guard let entries = try? fileManager.contentsOfDirectory(
                 at: folder,
@@ -281,11 +289,17 @@ extension LocalHomebrewService {
             for entry in entries where entry.pathExtension == "app" {
                 // Mac App Store apps carry a receipt; adopting those would fight MAS updates.
                 let masReceipt = entry.appendingPathComponent("Contents/_MASReceipt/receipt")
-                guard !fileManager.fileExists(atPath: masReceipt.path) else { continue }
-                names.insert(entry.lastPathComponent)
+                if fileManager.fileExists(atPath: masReceipt.path) {
+                    macAppStoreNames.insert(entry.lastPathComponent)
+                } else {
+                    adoptableNames.insert(entry.lastPathComponent)
+                }
             }
         }
-        return names
+        return ExternalApplicationScan(
+            adoptableNames: adoptableNames,
+            macAppStoreNames: macAppStoreNames
+        )
     }
 
     private nonisolated static func modificationDate(of url: URL) -> Date {

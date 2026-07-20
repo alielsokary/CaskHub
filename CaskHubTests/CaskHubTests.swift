@@ -87,6 +87,37 @@ final class CaskHubTests: XCTestCase {
         XCTAssertFalse(service.isAdoptable(cli))
     }
 
+    @MainActor
+    func test_mac_app_store_app_is_installed_but_not_adoptable() {
+        let service = LocalHomebrewService()
+        service.macAppStoreAppNames = ["Canva.app"]
+        let canva = makeCask("canva", appNames: ["Canva.app"])
+
+        XCTAssertTrue(service.isMacAppStoreInstalled(canva))
+        XCTAssertFalse(service.isAdoptable(canva))
+    }
+
+    func test_application_scan_separates_mac_app_store_bundles() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("application-scan-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let directApp = root.appendingPathComponent("Direct.app")
+        let storeReceipt = root.appendingPathComponent("Store.app/Contents/_MASReceipt/receipt")
+        try FileManager.default.createDirectory(at: directApp, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: storeReceipt.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: storeReceipt.path, contents: Data())
+
+        let scan = LocalHomebrewService.scanApplications(
+            fileManager: FileManager.default,
+            directories: [root]
+        )
+        XCTAssertEqual(scan.adoptableNames, ["Direct.app"])
+        XCTAssertEqual(scan.macAppStoreNames, ["Store.app"])
+    }
+
     func test_artifact_stanza_decodes_binary_names_from_paths() throws {
         let json = """
         [{"binary": ["claude"], "target": "/opt/homebrew/bin/claude"},
@@ -110,6 +141,27 @@ final class CaskHubTests: XCTestCase {
 
         let other = makeCask("some-tool", binaryNames: ["some-tool"])
         XCTAssertFalse(service.isExternalCLI(other))
+    }
+
+    func test_binary_scan_detects_executables_in_homebrew_prefix() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("binary-scan-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+
+        let executable = root.appendingPathComponent("copilot")
+        FileManager.default.createFile(atPath: executable.path, contents: Data())
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755], ofItemAtPath: executable.path
+        )
+
+        XCTAssertEqual(
+            LocalHomebrewService.scanBinaryDirectories(
+                fileManager: FileManager.default,
+                directories: [root]
+            ),
+            ["copilot"]
+        )
     }
 
     func test_apple_silicon_detection_matches_native_build_arch() {

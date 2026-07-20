@@ -45,6 +45,9 @@ struct CaskActionsView: View {
                 }
                 disabledUninstallHint
             }
+        } else if localHomebrew.isMacAppStoreInstalled(cask) {
+            ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
+                .help("Installed from the Mac App Store. CaskHub won't replace or adopt it.")
         } else if localHomebrew.isExternalCLI(cask) {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
                 .help("Installed on this Mac outside Homebrew. CaskHub can't manage it.")

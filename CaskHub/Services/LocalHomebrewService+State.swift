@@ -8,6 +8,13 @@
 import Foundation
 
 extension LocalHomebrewService {
+    func clearError(for token: String) {
+        actionErrors[token] = nil
+        adoptReplaceOffers.remove(token)
+        repairOffers.remove(token)
+        appManagementDenials.remove(token)
+    }
+
     func isInstalled(token: String) -> Bool {
         installedCasks[token] != nil
     }
@@ -16,6 +23,12 @@ extension LocalHomebrewService {
     func isAdoptable(_ cask: Cask) -> Bool {
         installedCasks[cask.token] == nil
             && cask.appArtifactNames.contains(where: externalAppNames.contains)
+    }
+
+    /// Mac App Store apps are present, but adopting them would break Store updates.
+    func isMacAppStoreInstalled(_ cask: Cask) -> Bool {
+        installedCasks[cask.token] == nil
+            && cask.appArtifactNames.contains(where: macAppStoreAppNames.contains)
     }
 
     /// A CLI cask whose tool is on the device via some other installer
