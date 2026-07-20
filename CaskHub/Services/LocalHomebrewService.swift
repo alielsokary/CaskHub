@@ -172,6 +172,16 @@ final class LocalHomebrewService {
     @ObservationIgnored var permissionProbe: @Sendable () -> AppManagementPermission.Status
         = { AppManagementPermission.probe() }
 
+    /// Test seam — launching a real bundle from unit tests raises Finder's
+    /// "file can't be found" dialog on fixture apps.
+    @ObservationIgnored var appLauncher: (URL) -> Void = { url in
+        NSWorkspace.shared.openApplication(
+            at: url,
+            configuration: NSWorkspace.OpenConfiguration(),
+            completionHandler: nil
+        )
+    }
+
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
 
     private(set) var inFlightActions: [String: CaskAction] = [:]
@@ -366,12 +376,7 @@ final class LocalHomebrewService {
             actionErrors[token] = LocalHomebrewError.appBundleNotFound(token: token).errorDescription
             return
         }
-
-        NSWorkspace.shared.openApplication(
-            at: appURL,
-            configuration: NSWorkspace.OpenConfiguration(),
-            completionHandler: nil
-        )
+        appLauncher(appURL)
     }
 
     private func existingBundleURL(named names: [String]) -> URL? {
@@ -400,8 +405,25 @@ final class LocalHomebrewService {
     /// A stranded copy inside the Caskroom wedges every upgrade: clear brew's
     /// records (`--force` tolerates the mess), then install fresh. Settings
     /// and user data live outside the bundle and survive.
+    /// The download comes FIRST: a failed fetch after the uninstall would
+    /// leave the user with no app at all, and `brew fetch` exits non-zero on
+    /// download failure, so it's a reliable gate.
     func repairReinstalling(token: String) async throws {
+        guard inFlightActions[token] == nil else { return }
         repairOffers.remove(token)
+        inFlightActions[token] = .queued
+        do {
+            try await runBrewStreaming(token: token, args: ["fetch", "--cask", token], cancellable: false)
+            inFlightActions[token] = nil
+            runningProcesses[token] = nil
+        } catch {
+            inFlightActions[token] = nil
+            runningProcesses[token] = nil
+            CrashReporter.capture(error)
+            actionErrors[token] = (error as? LocalHomebrewError)?.errorDescription
+                ?? error.localizedDescription
+            throw error
+        }
         try await runMutation(
             .uninstalling, token: token, args: ["uninstall", "--cask", token, "--force"]
         )
@@ -442,14 +464,22 @@ final class LocalHomebrewService {
     // MARK: - Mutation Plumbing
 
     /// Classifies a brew failure into the offer sets the alert UI reads.
+    /// Stranded detection also consults the filesystem — brew can reword its
+    /// errors, but a real .app parked in the Caskroom can't be misread.
     func noteFailure(token: String, error: Error) {
-        guard case let LocalHomebrewError.brewCommandFailed(_, _, stderr) = error else { return }
+        guard case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error else { return }
         if LocalHomebrewError.isAppManagementDenial(stderr: stderr) {
             appManagementDenials.insert(token)
         }
-        if LocalHomebrewError.isStrandedApp(stderr: stderr) {
+        if LocalHomebrewError.isStrandedApp(stderr: stderr)
+            || (args.first == "upgrade" && hasStrandedCopy(token: token)) {
             repairOffers.insert(token)
         }
+    }
+
+    private func hasStrandedCopy(token: String) -> Bool {
+        guard let caskroom = Self.locateCaskroom(fileManager: fileManager) else { return false }
+        return Self.strandedCopyExists(in: caskroom, token: token, fileManager: fileManager)
     }
 
     private func runMutation(_ action: CaskAction, token: String, args: [String]) async throws {

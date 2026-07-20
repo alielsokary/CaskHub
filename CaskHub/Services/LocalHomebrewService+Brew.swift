@@ -199,6 +199,35 @@ extension LocalHomebrewService {
         )
     }
 
+    /// Filesystem truth for the stranded state: a real .app directory (not the
+    /// artifact symlink) parked inside any version dir of the cask's entry.
+    nonisolated static func strandedCopyExists(
+        in caskroomURL: URL, token: String, fileManager: FileManager
+    ) -> Bool {
+        let entry = caskroomURL.appendingPathComponent(token)
+        guard let versionDirs = try? fileManager.contentsOfDirectory(
+            at: entry, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
+        ) else { return false }
+
+        for versionDir in versionDirs {
+            guard let items = try? fileManager.contentsOfDirectory(
+                at: versionDir, includingPropertiesForKeys: [.isSymbolicLinkKey], options: []
+            ) else { continue }
+            for item in items where item.pathExtension == "app" {
+                let isSymlink = (try? item.resourceValues(
+                    forKeys: [.isSymbolicLinkKey]
+                ).isSymbolicLink) == true
+                var isDir: ObjCBool = false
+                if !isSymlink,
+                   fileManager.fileExists(atPath: item.path, isDirectory: &isDir),
+                   isDir.boolValue {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     /// True when the receipt names app bundles and none survive — not in any
     /// Applications folder, and no real copy parked in the Caskroom version dir
     /// (fileExists follows symlinks, so a dangling link counts as gone).

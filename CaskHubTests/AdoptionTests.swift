@@ -293,6 +293,65 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertTrue(error.errorDescription?.contains("Repair") == true)
     }
 
+    func test_stranded_copy_detection_reads_the_filesystem() throws {
+        let versionDir = try makeEntry("tabby", receiptApps: ["Tabby.app"])
+        XCTAssertFalse(
+            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "tabby", fileManager: fm),
+            "empty version dir has no stranded copy"
+        )
+
+        try fm.createSymbolicLink(
+            at: versionDir.appendingPathComponent("Tabby.app"),
+            withDestinationURL: appsDir.appendingPathComponent("Tabby.app")
+        )
+        XCTAssertFalse(
+            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "tabby", fileManager: fm),
+            "the artifact symlink — dangling or not — is not a stranded copy"
+        )
+
+        try fm.createDirectory(
+            at: versionDir.appendingPathComponent("Tabby Old.app"), withIntermediateDirectories: true
+        )
+        XCTAssertTrue(
+            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "tabby", fileManager: fm)
+        )
+        XCTAssertFalse(
+            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "other", fileManager: fm)
+        )
+    }
+
+    @MainActor
+    func test_upgrade_failure_offers_repair_on_filesystem_evidence_alone() throws {
+        let versionDir = try makeEntry("tabby", receiptApps: ["Tabby.app"])
+        try fm.createDirectory(
+            at: versionDir.appendingPathComponent("Tabby.app"), withIntermediateDirectories: true
+        )
+        UserDefaults.standard.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
+        defer { UserDefaults.standard.removeObject(forKey: LocalHomebrewService.customBrewPrefixKey) }
+
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("stranded-fs"))
+        let rewordedUpgrade = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "tabby"], exitCode: 1,
+            stderr: "some future brew wording our strings don't match"
+        )
+        service.noteFailure(token: "tabby", error: rewordedUpgrade)
+        XCTAssertTrue(
+            service.repairOffers.contains("tabby"),
+            "a parked copy on disk should back up the offer even if brew rewords its error"
+        )
+
+        service.clearError(for: "tabby")
+        let rewordedInstall = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "tabby"], exitCode: 1,
+            stderr: "some future brew wording our strings don't match"
+        )
+        service.noteFailure(token: "tabby", error: rewordedInstall)
+        XCTAssertFalse(
+            service.repairOffers.contains("tabby"),
+            "filesystem evidence only backs upgrade failures"
+        )
+    }
+
     /// The Codex→ChatGPT rename: receipt says Codex.app (gone), but the cask's
     /// current artifact ChatGPT.app is alive on disk. Never offer deletion then.
     @MainActor
@@ -353,11 +412,14 @@ final class ZombieDetectionTests: XCTestCase {
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true
         )
+        var launched: URL?
+        service.appLauncher = { launched = $0 }
         service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
         XCTAssertNil(
             service.actionErrors["chatgpt"],
             "stale receipt name should fall back to the cask's current artifact"
         )
+        XCTAssertEqual(launched?.lastPathComponent, "ChatGPT.app")
     }
 
     @MainActor
