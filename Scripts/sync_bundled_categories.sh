@@ -16,7 +16,7 @@ for asset in categories.json added_dates.json; do
     destination="$RESOURCE_DIR/$asset"
     temporary="$destination.download"
     echo "Fetching $BASE_URL/$asset"
-    curl -fsSL "$BASE_URL/$asset" -o "$temporary"
+    curl -fsSL --connect-timeout 20 --max-time 120 "$BASE_URL/$asset" -o "$temporary"
     mv "$temporary" "$destination"
     echo "Updated $destination"
 done
