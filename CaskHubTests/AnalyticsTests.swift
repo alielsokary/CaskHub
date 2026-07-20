@@ -88,7 +88,18 @@ final class AnalyticsTests: XCTestCase {
             spy.signals.map(\.name),
             ["Cask.installed", "Cask.uninstalled", "Cask.updated"]
         )
-        XCTAssertEqual(lastSignal?.parameters, ["cask": "firefox"])
+        XCTAssertEqual(lastSignal?.parameters, ["cask": "firefox", "origin": "individual"])
+    }
+
+    func test_cask_action_started_records_action_token_and_origin() {
+        Analytics.caskActionStarted(.updating, token: "zoom", origin: .updateAll)
+
+        XCTAssertEqual(lastSignal?.name, "Cask.actionStarted")
+        XCTAssertEqual(lastSignal?.parameters, [
+            "action": "update",
+            "cask": "zoom",
+            "origin": "updateAll"
+        ])
     }
 
     func test_cask_action_completed_ignores_app_launches() {
@@ -99,7 +110,22 @@ final class AnalyticsTests: XCTestCase {
     func test_cask_action_failed_sends_base_verb_and_token() {
         Analytics.caskActionFailed(.updating, token: "iterm2")
         XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
-        XCTAssertEqual(lastSignal?.parameters, ["action": "update", "cask": "iterm2"])
+        XCTAssertEqual(lastSignal?.parameters, [
+            "action": "update",
+            "cask": "iterm2",
+            "origin": "individual"
+        ])
+    }
+
+    func test_cask_action_recovered_records_repair_postcondition() {
+        Analytics.caskActionRecovered(.uninstalling, token: "zed", origin: .repair)
+
+        XCTAssertEqual(lastSignal?.name, "Cask.actionRecovered")
+        XCTAssertEqual(lastSignal?.parameters, [
+            "action": "uninstall",
+            "cask": "zed",
+            "origin": "repair"
+        ])
     }
 
     func test_cask_action_failed_ignores_app_launches() {
@@ -108,6 +134,7 @@ final class AnalyticsTests: XCTestCase {
     }
 
     func test_cask_action_events_ignore_queued_state() {
+        Analytics.caskActionStarted(.queued, token: "firefox", origin: .updateAll)
         Analytics.caskActionCompleted(.queued, token: "firefox")
         Analytics.caskActionFailed(.queued, token: "firefox")
         XCTAssertTrue(spy.signals.isEmpty)

@@ -14,20 +14,60 @@ import Foundation
 extension Analytics {
     // MARK: - Cask actions
 
-    static func caskActionCompleted(_ action: CaskAction, token: String) {
+    static func caskActionStarted(
+        _ action: CaskAction,
+        token: String,
+        origin: CaskActionOrigin
+    ) {
         guard let verb = action.analyticsVerb else { return }
-        send("Cask.\(verb.past)", parameters: ["cask": token])
+        send("Cask.actionStarted", parameters: actionParameters(
+            verb: verb.base, token: token, origin: origin
+        ))
     }
 
-    static func caskActionFailed(_ action: CaskAction, token: String) {
+    static func caskActionCompleted(
+        _ action: CaskAction,
+        token: String,
+        origin: CaskActionOrigin = .individual
+    ) {
         guard let verb = action.analyticsVerb else { return }
-        send("Cask.actionFailed", parameters: ["action": verb.base, "cask": token])
+        send("Cask.\(verb.past)", parameters: ["cask": token, "origin": origin.rawValue])
+    }
+
+    static func caskActionFailed(
+        _ action: CaskAction,
+        token: String,
+        origin: CaskActionOrigin = .individual
+    ) {
+        guard let verb = action.analyticsVerb else { return }
+        send("Cask.actionFailed", parameters: actionParameters(
+            verb: verb.base, token: token, origin: origin
+        ))
+    }
+
+    static func caskActionRecovered(
+        _ action: CaskAction,
+        token: String,
+        origin: CaskActionOrigin
+    ) {
+        guard let verb = action.analyticsVerb else { return }
+        send("Cask.actionRecovered", parameters: actionParameters(
+            verb: verb.base, token: token, origin: origin
+        ))
     }
 
     /// The Updates page "Update All" tap; each cask in the queue then emits
     /// its own `Cask.updated` / `Cask.actionFailed` signal as usual.
     static func updateAllTapped(count: Int) {
         send("Cask.updateAllTapped", parameters: ["count": "\(count)"])
+    }
+
+    private static func actionParameters(
+        verb: String,
+        token: String,
+        origin: CaskActionOrigin
+    ) -> [String: String] {
+        ["action": verb, "cask": token, "origin": origin.rawValue]
     }
 
     // MARK: - Navigation
@@ -109,6 +149,7 @@ private extension CaskAction {
         case .adopting: return ("adopt", "adopted")
         case .uninstalling: return ("uninstall", "uninstalled")
         case .updating: return ("update", "updated")
+        case .repairing: return ("repair", "repaired")
         case .opening, .queued: return nil
         }
     }

@@ -52,16 +52,16 @@ final class LocalHomebrewService {
 
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
 
-    private(set) var inFlightActions: [String: CaskAction] = [:]
+    var inFlightActions: [String: CaskAction] = [:]
 
-    private(set) var cancellableDownloads: Set<String> = []
+    var cancellableDownloads: Set<String> = []
 
-    private(set) var cancelRequested: Set<String> = []
+    var cancelRequested: Set<String> = []
 
-    @ObservationIgnored private var runningProcesses: [String: Process] = [:]
+    @ObservationIgnored var runningProcesses: [String: Process] = [:]
 
-    @ObservationIgnored private let processRunner: any BrewProcessRunning
-    @ObservationIgnored private let brewBinaryProvider: () -> URL?
+    @ObservationIgnored let processRunner: any BrewProcessRunning
+    @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
 
     var actionErrors: [String: String] = [:]
@@ -166,19 +166,26 @@ final class LocalHomebrewService {
 
     // MARK: - Actions
 
-    func install(token: String) async throws {
-        try await runMutation(.installing, token: token, args: ["install", "--cask", token])
+    func install(token: String, origin: CaskActionOrigin = .individual) async throws {
+        try await runMutation(
+            .installing, token: token, args: ["install", "--cask", token], origin: origin
+        )
     }
 
-    func uninstall(token: String) async throws {
-        try await runMutation(.uninstalling, token: token, args: ["uninstall", "--cask", token])
+    func uninstall(token: String, origin: CaskActionOrigin = .individual) async throws {
+        try await runMutation(
+            .uninstalling, token: token, args: ["uninstall", "--cask", token], origin: origin
+        )
     }
 
     /// Clears a zombie Caskroom entry — the app is already gone, `--force`
     /// removes the leftover brew bookkeeping without complaining about it.
     func repair(token: String) async throws {
         try await runMutation(
-            .uninstalling, token: token, args: ["uninstall", "--cask", token, "--force"]
+            .uninstalling,
+            token: token,
+            args: ["uninstall", "--cask", token, "--force"],
+            origin: .repair
         )
     }
 
@@ -191,7 +198,11 @@ final class LocalHomebrewService {
     func repairReinstalling(token: String) async throws {
         guard inFlightActions[token] == nil else { return }
         repairOffers.remove(token)
-        inFlightActions[token] = .queued
+        let caskroomEntry = Self.locateCaskroom(fileManager: fileManager)?
+            .appendingPathComponent(token)
+        let appBundleNames = installedCasks[token]?.appBundleNames ?? []
+        Analytics.caskActionStarted(.repairing, token: token, origin: .repair)
+        inFlightActions[token] = .repairing
         do {
             try await runBrewStreaming(token: token, args: ["fetch", "--cask", token], cancellable: false)
             inFlightActions[token] = nil
@@ -200,19 +211,41 @@ final class LocalHomebrewService {
             inFlightActions[token] = nil
             runningProcesses[token] = nil
             CrashReporter.capture(error)
+            Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
             actionErrors[token] = (error as? LocalHomebrewError)?.errorDescription
                 ?? error.localizedDescription
             throw error
         }
-        try await runMutation(
-            .uninstalling, token: token, args: ["uninstall", "--cask", token, "--force"]
-        )
-        try await runMutation(.installing, token: token, args: ["install", "--cask", token])
+        do {
+            try await runMutation(
+                .uninstalling,
+                token: token,
+                args: ["uninstall", "--cask", token, "--force"],
+                origin: .repair,
+                environmentOverrides: ["HOMEBREW_NO_AUTOREMOVE": "1"],
+                recoverIf: { [self] in
+                    repairRemovalSatisfied(
+                        caskroomEntry: caskroomEntry,
+                        appBundleNames: appBundleNames
+                    )
+                }
+            )
+            try await runMutation(
+                .installing,
+                token: token,
+                args: ["install", "--cask", token],
+                origin: .repair
+            )
+            Analytics.caskActionCompleted(.repairing, token: token, origin: .repair)
+        } catch {
+            Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
+            throw error
+        }
     }
 
-    func upgrade(token: String) async throws {
+    func upgrade(token: String, origin: CaskActionOrigin = .individual) async throws {
         let args = ["upgrade", "--cask", token] + (greedyUpdates ? ["--greedy"] : [])
-        try await runMutation(.updating, token: token, args: args)
+        try await runMutation(.updating, token: token, args: args, origin: origin)
     }
 
     func updateAll(tokens: [String]) async {
@@ -223,7 +256,7 @@ final class LocalHomebrewService {
             inFlightActions[token] = .queued
         }
         for token in tokens {
-            try? await upgrade(token: token)
+            try? await upgrade(token: token, origin: .updateAll)
         }
     }
 
@@ -241,102 +274,4 @@ final class LocalHomebrewService {
         }
     }
 
-    // MARK: - Mutation Plumbing
-
-    /// Classifies a brew failure into the offer sets the alert UI reads.
-    /// Stranded detection also consults the filesystem — brew can reword its
-    /// errors, but a real .app parked in the Caskroom can't be misread.
-    func noteFailure(token: String, error: Error) {
-        guard case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error else { return }
-        if LocalHomebrewError.isAppManagementDenial(stderr: stderr) {
-            appManagementDenials.insert(token)
-        }
-        if LocalHomebrewError.isStrandedApp(stderr: stderr)
-            || (args.first == "upgrade" && hasStrandedCopy(token: token)) {
-            repairOffers.insert(token)
-        }
-    }
-
-    private func hasStrandedCopy(token: String) -> Bool {
-        guard let caskroom = Self.locateCaskroom(fileManager: fileManager) else { return false }
-        return Self.strandedCopyExists(in: caskroom, token: token, fileManager: fileManager)
-    }
-
-    func runMutation(_ action: CaskAction, token: String, args: [String]) async throws {
-        guard inFlightActions[token] == nil || inFlightActions[token] == .queued else { return }
-        inFlightActions[token] = action
-        actionErrors[token] = nil
-        defer {
-            inFlightActions[token] = nil
-            cancellableDownloads.remove(token)
-            runningProcesses[token] = nil
-        }
-
-        let span = CrashReporter.span(name: args.first ?? "brew", operation: "brew")
-        do {
-            try await runBrewStreaming(token: token, args: args, cancellable: action == .installing)
-            span.finish()
-            cancelRequested.remove(token)
-            Analytics.caskActionCompleted(action, token: token)
-            await refresh()
-        } catch {
-            if cancelRequested.contains(token) {
-                span.finish()
-                cancelRequested.remove(token)
-                // Homebrew owns its cache and safely resumes partial downloads.
-                // Never sweep the shared cache: another brew process may be using it.
-                await refresh()
-                return
-            }
-            span.finish(error: error)
-            CrashReporter.capture(error)
-            Analytics.caskActionFailed(action, token: token)
-            noteFailure(token: token, error: error)
-            if let error = error as? LocalHomebrewError {
-                actionErrors[token] = error.errorDescription
-            } else {
-                actionErrors[token] = error.localizedDescription
-            }
-            throw error
-        }
-    }
-
-    private func runBrewStreaming(token: String, args: [String], cancellable: Bool) async throws {
-        guard let brewURL = brewBinaryProvider() else {
-            throw LocalHomebrewError.brewBinaryNotFound
-        }
-
-        let askpass = Self.ensureAskpassScript(token: token)
-        defer {
-            if let askpass { Self.removeAskpassScript(at: askpass) }
-        }
-
-        var environment = ProcessInfo.processInfo.environment
-        if let askpass {
-            environment["SUDO_ASKPASS"] = askpass.path
-        }
-
-        let result = try await processRunner.run(
-            executableURL: brewURL,
-            arguments: args,
-            environment: environment,
-            onStart: { [weak self] process in
-                self?.runningProcesses[token] = process
-                if cancellable { self?.cancellableDownloads.insert(token) }
-            },
-            onChunk: { [weak self] text in
-                guard text.contains("==> Installing Cask") else { return }
-                guard let self else { return }
-                Task { @MainActor in self.cancellableDownloads.remove(token) }
-            }
-        )
-
-        if result.exitCode != 0 {
-            throw LocalHomebrewError.brewCommandFailed(
-                args: args,
-                exitCode: result.exitCode,
-                stderr: result.output.components(separatedBy: "\n").suffix(6).joined(separator: "\n")
-            )
-        }
-    }
 }

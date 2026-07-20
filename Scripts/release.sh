@@ -32,6 +32,14 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 
+# Stale-notes guard: CHANGELOG.md's top entry must be for THIS version.
+CHANGELOG="$REPO_ROOT/CHANGELOG.md"
+case "$(grep -m1 '^## ' "$CHANGELOG" 2>/dev/null)" in
+    "## $VERSION"|"## $VERSION "*) ;;
+    *) echo "error: CHANGELOG.md top entry is not $VERSION — add '## $VERSION — $(date +%Y-%m-%d)' (see .claude/skills/release-notes)" >&2
+       exit 1 ;;
+esac
+
 echo "==> Syncing bundled categories"
 Scripts/sync_bundled_categories.sh
 if [[ -n "$(git status --porcelain CaskHub/Resources/categories.json CaskHub/Resources/added_dates.json)" ]]; then
@@ -114,7 +122,12 @@ if [[ -z "$GENERATE_APPCAST" ]]; then
 fi
 
 echo "==> Generating appcast"
-APPCAST_ARGS=(--download-url-prefix "$DOWNLOAD_URL_PREFIX")
+# Top changelog entry, sans its version header: becomes the Sparkle dialog
+# notes (embedded markdown) and the GitHub release body.
+NOTES="$WORK/release-notes.md"
+awk '/^## /{n++} n==1' "$CHANGELOG" | tail -n +2 > "$NOTES"
+cp "$NOTES" "$WORK/updates/CaskHub-$VERSION.md"
+APPCAST_ARGS=(--download-url-prefix "$DOWNLOAD_URL_PREFIX" --embed-release-notes)
 if [[ -n "${SPARKLE_ED_KEY_FILE:-}" ]]; then
     APPCAST_ARGS+=(--ed-key-file "$SPARKLE_ED_KEY_FILE")
 fi
@@ -125,7 +138,7 @@ cp "$WORK/updates/appcast.xml" "$REPO_ROOT/appcast.xml"
 # Draft: nothing is public (no release, no tag) until the release PR merges to
 # master and .github/workflows/publish-release.yml flips the draft live.
 echo "==> Creating draft GitHub release $VERSION"
-gh release create "$VERSION" "$ZIP" --title "$VERSION" --generate-notes \
+gh release create "$VERSION" "$ZIP" --title "$VERSION" --notes-file "$NOTES" \
     --draft --target "$(git rev-parse HEAD)"
 
 echo "==> Committing appcast"
