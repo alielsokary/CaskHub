@@ -293,6 +293,73 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertTrue(error.errorDescription?.contains("Repair") == true)
     }
 
+    /// The Codex→ChatGPT rename: receipt says Codex.app (gone), but the cask's
+    /// current artifact ChatGPT.app is alive on disk. Never offer deletion then.
+    @MainActor
+    func test_zombie_verdict_clears_when_current_cask_app_exists() throws {
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        )
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("zombie-crosscheck"),
+            applicationDirectories: [appsDir]
+        )
+        service.installedCasks["chatgpt"] = LocalCaskInstallation(
+            token: "chatgpt", installedVersion: "26.623", installedAt: nil,
+            appBundleNames: ["Codex.app"], isZombie: true
+        )
+        XCTAssertFalse(service.isZombie(makeCask("chatgpt", appNames: ["ChatGPT.app"])))
+    }
+
+    @MainActor
+    func test_zombie_verdict_holds_when_current_cask_app_is_gone_too() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("zombie-holds"),
+            applicationDirectories: [appsDir]
+        )
+        service.installedCasks["mole-app"] = LocalCaskInstallation(
+            token: "mole-app", installedVersion: "1.0", installedAt: nil,
+            appBundleNames: ["Mole.app"], isZombie: true
+        )
+        XCTAssertTrue(service.isZombie(makeCask("mole-app", appNames: ["Mole.app"])))
+    }
+
+    @MainActor
+    func test_zombie_verdict_is_conservative_without_artifact_data() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("zombie-no-artifacts"),
+            applicationDirectories: [appsDir]
+        )
+        service.installedCasks["mystery"] = LocalCaskInstallation(
+            token: "mystery", installedVersion: "1.0", installedAt: nil,
+            appBundleNames: ["Mystery.app"], isZombie: true
+        )
+        XCTAssertFalse(
+            service.isZombie(makeCask("mystery")),
+            "no artifact data to verify against → never offer deletion"
+        )
+    }
+
+    @MainActor
+    func test_open_falls_back_to_current_cask_artifact_name() throws {
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        )
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("open-fallback"),
+            applicationDirectories: [appsDir]
+        )
+        service.installedCasks["chatgpt"] = LocalCaskInstallation(
+            token: "chatgpt", installedVersion: "26.623", installedAt: nil,
+            appBundleNames: ["Codex.app"], isZombie: true
+        )
+        service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
+        XCTAssertNil(
+            service.actionErrors["chatgpt"],
+            "stale receipt name should fall back to the cask's current artifact"
+        )
+    }
+
     @MainActor
     func test_zombies_never_offer_updates() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("zombie-updates"))

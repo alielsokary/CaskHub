@@ -68,7 +68,7 @@ struct CaskActionsView: View {
 
     @ViewBuilder
     private func installedActions(for installation: LocalCaskInstallation) -> some View {
-        if installation.isZombie {
+        if localHomebrew.isZombie(cask) {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
                 Task { try? await localHomebrew.repair(token: cask.token) }
             }
@@ -91,7 +91,7 @@ struct CaskActionsView: View {
         HStack(spacing: 8) {
             if canOpen {
                 ActionCapsuleButton(action: .open, fullWidth: fullWidth && !showUpdate) {
-                    localHomebrew.openApp(token: cask.token)
+                    localHomebrew.open(cask)
                 }
             }
             if showUpdate {
