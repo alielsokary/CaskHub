@@ -37,6 +37,36 @@ final class SettingsViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_staged_update_not_pending_when_prompt_disabled() {
+        var gate = StagedUpdateGate()
+        gate.updateStaged(showPromptEnabled: false)
+
+        XCTAssertFalse(gate.pending)
+        XCTAssertFalse(gate.consumeResume(canCheck: true))
+    }
+
+    @MainActor
+    func test_staged_update_resumes_once_after_session_ends() {
+        var gate = StagedUpdateGate()
+        gate.updateStaged(showPromptEnabled: true)
+
+        XCTAssertTrue(gate.pending)
+        // Session still in progress: checkForUpdates() would be a no-op, so hold.
+        XCTAssertFalse(gate.consumeResume(canCheck: false))
+        // Session ended: resume exactly once.
+        XCTAssertTrue(gate.consumeResume(canCheck: true))
+        XCTAssertFalse(gate.consumeResume(canCheck: true))
+        XCTAssertFalse(gate.pending)
+    }
+
+    @MainActor
+    func test_no_resume_without_a_staged_update() {
+        var gate = StagedUpdateGate()
+
+        XCTAssertFalse(gate.consumeResume(canCheck: true))
+    }
+
+    @MainActor
     private func render(_ view: some View) {
         let hosting = NSHostingView(rootView: AnyView(view))
         hosting.frame = NSRect(x: 0, y: 0, width: 460, height: 480)

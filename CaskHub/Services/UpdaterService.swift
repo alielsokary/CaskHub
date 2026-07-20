@@ -16,6 +16,26 @@ protocol BackgroundUpdateChecking {
 
 extension SPUUpdater: BackgroundUpdateChecking {}
 
+// Tracks an update Sparkle silently staged in the background so it can be
+// surfaced as a user-facing prompt once the update session ends. Pure state,
+// so the resume decision is testable without a live SPUUpdater.
+struct StagedUpdateGate {
+    private(set) var pending = false
+
+    // Called when a background check staged an update for install-on-quit.
+    mutating func updateStaged(showPromptEnabled: Bool) {
+        if showPromptEnabled { pending = true }
+    }
+
+    // checkForUpdates() is a no-op mid-session, so we wait for canCheck to flip
+    // true. Returns true exactly once per staged update, then clears.
+    mutating func consumeResume(canCheck: Bool) -> Bool {
+        guard canCheck, pending else { return false }
+        pending = false
+        return true
+    }
+}
+
 @Observable
 final class UpdaterService: NSObject, SPUUpdaterDelegate {
     static let showUpdatePromptKey = "showUpdatePromptAtLaunch"
@@ -23,7 +43,7 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
     private var controller: SPUStandardUpdaterController!
     private(set) var canCheckForUpdates = false
     @ObservationIgnored private var cancellable: AnyCancellable?
-    @ObservationIgnored private var stagedUpdatePending = false
+    @ObservationIgnored private var stagedUpdate = StagedUpdateGate()
 
     override init() {
         super.init()
@@ -39,10 +59,9 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
             .sink { [weak self] canCheck in
                 guard let self else { return }
                 canCheckForUpdates = canCheck
-                if canCheck, stagedUpdatePending {
-                    stagedUpdatePending = false
-                    // Resume the staged update as a user-facing check: shows the
-                    // ready-to-install prompt with release notes, no re-download.
+                // Resume the staged update as a user-facing check: shows the
+                // ready-to-install prompt with release notes, no re-download.
+                if stagedUpdate.consumeResume(canCheck: canCheck) {
                     controller.updater.checkForUpdates()
                 }
             }
@@ -74,9 +93,9 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
     ) -> Bool {
         // Sparkle calls delegate methods on the main thread.
         MainActor.assumeIsolated {
-            if UserDefaults.standard.bool(forKey: Self.showUpdatePromptKey) {
-                stagedUpdatePending = true
-            }
+            stagedUpdate.updateStaged(
+                showPromptEnabled: UserDefaults.standard.bool(forKey: Self.showUpdatePromptKey)
+            )
         }
         return false
     }
