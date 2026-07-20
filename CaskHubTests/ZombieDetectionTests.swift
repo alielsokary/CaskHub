@@ -109,7 +109,7 @@ final class ZombieDetectionTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("tcc-note"))
         let error = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "sourcetree", "--adopt"], exitCode: 1,
-            stderr: "chmod: Unable to change file mode: Operation not permitted"
+            stderr: "chmod: /Applications/SourceTree.app: Unable to change file mode: Operation not permitted"
         )
         service.noteFailure(token: "sourcetree", error: error)
         XCTAssertTrue(service.appManagementDenials.contains("sourcetree"))

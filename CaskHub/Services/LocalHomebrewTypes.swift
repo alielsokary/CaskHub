@@ -81,6 +81,7 @@ enum LocalHomebrewError: LocalizedError {
     /// Coarse classes for Sentry grouping — one issue per way brew fails, not per cask.
     static func failureClass(stderr: String) -> String {
         if isStrandedApp(stderr: stderr) { return "stranded-caskroom-app" }
+        if isAppManagementDenial(stderr: stderr) { return "permission-denied" }
         return failurePatterns.first { stderr.contains($0.fragment) }?.classification
             ?? "uncategorized"
     }
@@ -88,7 +89,6 @@ enum LocalHomebrewError: LocalizedError {
     private static let failurePatterns: [(fragment: String, classification: String)] = [
         ("is not there", "missing-artifact-source"),
         ("different from the one being installed", "adopt-version-mismatch"),
-        ("Operation not permitted", "permission-denied"),
         ("No Cask with this name exists", "unknown-cask"),
         ("No casks found", "unknown-cask"),
         ("is not installed", "not-installed"),
@@ -154,7 +154,11 @@ enum LocalHomebrewError: LocalizedError {
 
     /// The App Management (TCC) permission gating modification of other apps' bundles.
     static func isAppManagementDenial(stderr: String) -> Bool {
-        stderr.contains("Operation not permitted")
+        stderr.components(separatedBy: .newlines).contains { line in
+            line.contains("Operation not permitted")
+                && line.contains("/Applications/")
+                && line.contains(".app")
+        }
     }
 
     /// `brew install --adopt` refuses when the on-disk app differs from the cask's version.

@@ -22,8 +22,8 @@ final class LocalHomebrewService {
     /// Mac App Store bundles that must be shown as installed but never adopted.
     var macAppStoreAppNames: Set<String> = []
 
-    /// Executable names found in common install locations (~/.local/bin, /usr/local/bin, …).
-    var externalBinaryNames: Set<String> = []
+    /// Executables found in common install locations (~/.local/bin, /usr/local/bin, …).
+    var externalBinaryPaths: [String: URL] = [:]
 
     var adoptReplaceOffers: Set<String> = []
 
@@ -146,7 +146,7 @@ final class LocalHomebrewService {
             brewVersion = await brewVersionProvider()
         }
         let appDirs = applicationDirectories
-        let (casks, applications, binaryNames) = await Task.detached(priority: .userInitiated) {
+        let (casks, applications, binaryPaths) = await Task.detached(priority: .userInitiated) {
             (
                 Self.scanCaskroom(fileManager: fm, applicationDirectories: appDirs),
                 Self.scanApplications(fileManager: fm),
@@ -155,7 +155,7 @@ final class LocalHomebrewService {
         }.value
         externalAppNames = applications.adoptableNames
         macAppStoreAppNames = applications.macAppStoreNames
-        externalBinaryNames = binaryNames
+        externalBinaryPaths = binaryPaths
 
         CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
         CrashReporter.tag("brew.caskroom", value: Self.locateCaskroom(fileManager: fm)?.path ?? "not found")

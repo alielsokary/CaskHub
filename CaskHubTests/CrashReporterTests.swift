@@ -128,7 +128,7 @@ final class CrashReporterTests: XCTestCase {
     func test_recoverable_brew_failures_are_never_captured() {
         let failures = [
             "It seems the existing App is different from the one being installed.",
-            "chmod: Operation not permitted",
+            "chmod: /Applications/Example.app/Contents/MacOS/example: Operation not permitted",
             "SHA256 mismatch",
             "Download failed: curl: (6) Could not resolve host: example.com"
         ]
@@ -181,7 +181,10 @@ final class CrashReporterTests: XCTestCase {
         }
         XCTAssertEqual(cls("Warning: Cask 'x' is unavailable: No Cask with this name exists."), "unknown-cask")
         XCTAssertEqual(cls("Error: Cask 'sequel-ace' is not installed."), "not-installed")
-        XCTAssertEqual(cls("chmod: Unable to change file mode: Operation not permitted"), "permission-denied")
+        XCTAssertEqual(
+            cls("chmod: /Applications/Example.app: Unable to change file mode: Operation not permitted"),
+            "permission-denied"
+        )
         XCTAssertEqual(cls("It seems the existing App is different from the one being installed."), "adopt-version-mismatch")
         XCTAssertEqual(cls("SHA256 mismatch"), "checksum-mismatch")
         XCTAssertEqual(cls("curl: (6) Could not resolve host: example.com"), "network-failure")
