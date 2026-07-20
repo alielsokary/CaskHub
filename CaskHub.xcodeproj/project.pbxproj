@@ -51,6 +51,8 @@
 		A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000001 /* LocalHomebrewTypes.swift */; };
 		A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000002 /* LocalHomebrewService+State.swift */; };
 		A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */; };
+		C13000000000000000000001 /* LocalHomebrewService+Mutations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */; };
+		C13000000000000000000002 /* MutationRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13000000000000000000002 /* MutationRecoveryTests.swift */; };
 		41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */; };
 		41DFD4A730028F7D00608C7A /* CaskCatalogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */; };
 		41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47830028F7D00608C7A /* SettingsView.swift */; };
@@ -126,6 +128,8 @@
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
+		D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Mutations.swift"; sourceTree = "<group>"; };
+		D13000000000000000000002 /* MutationRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutationRecoveryTests.swift; sourceTree = "<group>"; };
 		41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyAddedService.swift; sourceTree = "<group>"; };
 		41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModel.swift; sourceTree = "<group>"; };
 		41DFD47830028F7D00608C7A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -268,6 +272,7 @@
 				B12000000000000000000001 /* LocalHomebrewTypes.swift */,
 				B12000000000000000000002 /* LocalHomebrewService+State.swift */,
 				B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */,
+				D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */,
 				41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */,
 				41AD10302F68D00100BEABB8 /* UpdaterService.swift */,
 			);
@@ -347,6 +352,7 @@
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
 				8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */,
+				D13000000000000000000002 /* MutationRecoveryTests.swift */,
 				B12000000000000000000004 /* ZombieDetectionTests.swift */,
 				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
 			);
@@ -546,6 +552,7 @@
 				A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */,
 				A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */,
 				A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */,
+				C13000000000000000000001 /* LocalHomebrewService+Mutations.swift in Sources */,
 				41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */,
 				41AD10312F68D00200BEABB8 /* UpdaterService.swift in Sources */,
 				41DFD4A730028F7D00608C7A /* CaskCatalogViewModel.swift in Sources */,
@@ -572,6 +579,7 @@
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
 				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
+				C13000000000000000000002 /* MutationRecoveryTests.swift in Sources */,
 				A12000000000000000000004 /* ZombieDetectionTests.swift in Sources */,
 				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
 			);
