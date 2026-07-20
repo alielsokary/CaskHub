@@ -9,7 +9,33 @@
 import SwiftUI
 import XCTest
 
+@MainActor
+private final class BackgroundUpdateCheckerSpy: BackgroundUpdateChecking {
+    let automaticallyChecksForUpdates: Bool
+    private(set) var checkCount = 0
+
+    init(automaticallyChecksForUpdates: Bool) {
+        self.automaticallyChecksForUpdates = automaticallyChecksForUpdates
+    }
+
+    func checkForUpdatesInBackground() {
+        checkCount += 1
+    }
+}
+
 final class SettingsViewTests: XCTestCase {
+    @MainActor
+    func test_launch_check_respects_automatic_update_preference() {
+        let enabled = BackgroundUpdateCheckerSpy(automaticallyChecksForUpdates: true)
+        let disabled = BackgroundUpdateCheckerSpy(automaticallyChecksForUpdates: false)
+
+        UpdaterService.checkForUpdatesOnLaunch(using: enabled)
+        UpdaterService.checkForUpdatesOnLaunch(using: disabled)
+
+        XCTAssertEqual(enabled.checkCount, 1)
+        XCTAssertEqual(disabled.checkCount, 0)
+    }
+
     @MainActor
     private func render(_ view: some View) {
         let hosting = NSHostingView(rootView: AnyView(view))
