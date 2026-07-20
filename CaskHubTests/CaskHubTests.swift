@@ -87,6 +87,37 @@ final class CaskHubTests: XCTestCase {
         XCTAssertFalse(service.isAdoptable(cli))
     }
 
+    @MainActor
+    func test_mac_app_store_app_is_installed_but_not_adoptable() {
+        let service = LocalHomebrewService()
+        service.macAppStoreAppNames = ["Canva.app"]
+        let canva = makeCask("canva", appNames: ["Canva.app"])
+
+        XCTAssertTrue(service.isMacAppStoreInstalled(canva))
+        XCTAssertFalse(service.isAdoptable(canva))
+    }
+
+    func test_application_scan_separates_mac_app_store_bundles() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("application-scan-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let directApp = root.appendingPathComponent("Direct.app")
+        let storeReceipt = root.appendingPathComponent("Store.app/Contents/_MASReceipt/receipt")
+        try FileManager.default.createDirectory(at: directApp, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: storeReceipt.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: storeReceipt.path, contents: Data())
+
+        let scan = LocalHomebrewService.scanApplications(
+            fileManager: FileManager.default,
+            directories: [root]
+        )
+        XCTAssertEqual(scan.adoptableNames, ["Direct.app"])
+        XCTAssertEqual(scan.macAppStoreNames, ["Store.app"])
+    }
+
     func test_artifact_stanza_decodes_binary_names_from_paths() throws {
         let json = """
         [{"binary": ["claude"], "target": "/opt/homebrew/bin/claude"},
@@ -100,16 +131,40 @@ final class CaskHubTests: XCTestCase {
     @MainActor
     func test_external_cli_detection_requires_binary_on_disk_and_no_brew_install() {
         let service = LocalHomebrewService()
-        service.externalBinaryNames = ["claude"]
+        let externalPath = URL(fileURLWithPath: "/usr/local/bin/claude")
+        service.externalBinaryPaths = ["claude": externalPath]
 
         let claudeCode = makeCask("claude-code", binaryNames: ["claude"])
-        XCTAssertTrue(service.isExternalCLI(claudeCode))
+        XCTAssertEqual(service.externalCLIPath(claudeCode), externalPath)
 
         service.installedCasks["claude-code"] = installation("claude-code", version: "2.0")
-        XCTAssertFalse(service.isExternalCLI(claudeCode), "brew-installed wins over external detection")
+        XCTAssertNil(service.externalCLIPath(claudeCode), "brew-installed wins over external detection")
 
         let other = makeCask("some-tool", binaryNames: ["some-tool"])
-        XCTAssertFalse(service.isExternalCLI(other))
+        XCTAssertNil(service.externalCLIPath(other))
+    }
+
+    func test_binary_scan_detects_executables_in_homebrew_prefix() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("binary-scan-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+
+        let executable = root.appendingPathComponent("copilot")
+        FileManager.default.createFile(atPath: executable.path, contents: Data("#!/bin/sh\n".utf8))
+        let emptyExecutable = root.appendingPathComponent("stale-tool")
+        FileManager.default.createFile(atPath: emptyExecutable.path, contents: Data())
+        for path in [executable.path, emptyExecutable.path] {
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
+        }
+
+        let scan = LocalHomebrewService.scanBinaryDirectories(
+            fileManager: FileManager.default,
+            directories: [root]
+        )
+        XCTAssertEqual(Set(scan.keys), ["copilot"])
+        XCTAssertEqual(scan["copilot"]?.lastPathComponent, executable.lastPathComponent)
+        XCTAssertNil(scan["stale-tool"], "zero-byte executable artifacts must be ignored")
     }
 
     func test_apple_silicon_detection_matches_native_build_arch() {
@@ -180,6 +235,19 @@ final class CaskHubTests: XCTestCase {
         )
         XCTAssertTrue(error.errorDescription?.contains("App Management") == true)
 
+        let unrelated = "chmod: /opt/homebrew/bin/tool: Operation not permitted"
+        XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: unrelated))
+        XCTAssertFalse(
+            LocalHomebrewError.isAppManagementDenial(
+                stderr: "Inspecting /Applications/Example.app\n\(unrelated)"
+            )
+        )
+        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: unrelated), "uncategorized")
+        XCTAssertTrue(
+            LocalHomebrewError.brewCommandFailed(
+                args: ["install", "--cask", "tool"], exitCode: 1, stderr: unrelated
+            ).shouldReport
+        )
         XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: "curl: (6) Could not resolve host"))
     }
 

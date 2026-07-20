@@ -277,18 +277,23 @@ private extension ContentView {
     // MARK: - List View
 
     var listView: some View {
-        List {
-            ForEach(viewModel.filteredCasks) { cask in
-                CaskRowView(
-                    cask: cask,
-                    downloads: viewModel.formattedDownloads(for: cask.token)
-                )
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(viewModel.filteredCasks) { cask in
+                    CaskRowView(
+                        cask: cask,
+                        downloads: viewModel.formattedDownloads(for: cask.token)
+                    )
+                    .padding(.vertical, 6)
+
+                    Color.chHairline
+                        .frame(height: 1)
+                }
             }
-            Color.clear
-                .frame(height: 30)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
+            .frame(width: CHSize.contentWidth)
+            .frame(maxWidth: .infinity)
         }
+        .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .id(selectedSidebar)
     }

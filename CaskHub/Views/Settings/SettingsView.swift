@@ -124,7 +124,9 @@ struct GeneralSettingsView: View {
             }
             Section("Storage") {
                 LabeledContent("Clear cached app icons") {
-                    Button("Clear Cache") { imageCache.clearCache() }
+                    Button("Clear Cache") {
+                        Task { await imageCache.clearCache() }
+                    }
                 }
                 Text("Removes cached app icons. They re-download the next time each app is shown.")
                     .font(.callout)

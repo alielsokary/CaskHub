@@ -45,9 +45,15 @@ struct CaskActionsView: View {
                 }
                 disabledUninstallHint
             }
-        } else if localHomebrew.isExternalCLI(cask) {
+        } else if localHomebrew.isMacAppStoreInstalled(cask) {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
-                .help("Installed on this Mac outside Homebrew. CaskHub can't manage it.")
+                .help("Installed from the Mac App Store. CaskHub won't replace or adopt it.")
+        } else if let externalPath = localHomebrew.externalCLIPath(cask) {
+            ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
+                .help(
+                    "Installed outside Homebrew at \(externalPath.path). "
+                        + "Remove or move that file manually before installing the Homebrew version."
+                )
         } else {
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
                 Task { try? await localHomebrew.install(token: cask.token) }

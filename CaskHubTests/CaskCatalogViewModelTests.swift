@@ -341,8 +341,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
         CrashReporter.captureCounts = [:]
 
         let api = MockBrewAPIClient()
-        // Not .notConnectedToInternet: offline errors are deliberately never captured.
-        api.casksError = URLError(.timedOut)
+        // Transport failures are deliberately ignored; malformed server responses are reportable.
+        api.casksError = URLError(.badServerResponse)
         let vm = makeViewModel(api: api)
 
         await vm.fetchCasks()

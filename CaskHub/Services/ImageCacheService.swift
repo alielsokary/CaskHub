@@ -16,6 +16,7 @@ final class ImageCacheService {
     private var inFlightTasks: [String: Task<NSImage?, Never>] = [:]
     private var upgradeInFlight: Set<String> = []
     private let session: URLSession
+    private let diskCache: IconDiskCache
 
     /// Manifest of tokens with an icon on the CaskFlow icons branch, from
     /// categories.json — absent tokens are guaranteed 404s, never requested.
@@ -24,21 +25,17 @@ final class ImageCacheService {
 
     private static let missRetryInterval: TimeInterval = 24 * 60 * 60
 
-    private static let cacheDirectory: URL = {
-        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let dir = caches.appendingPathComponent("CaskHub/icons", isDirectory: true)
-        do {
-            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        } catch {
-            CrashReporter.capture(error)
-        }
-        return dir
-    }()
-
-    init(session: URLSession = .shared) {
+    init(session: URLSession = .shared, diskCache: IconDiskCache = .shared) {
         self.session = session
+        self.diskCache = diskCache
         memoryCache.countLimit = 500
-        Self.purgeGeneratedIconsIfNeeded()
+        Task {
+            do {
+                try await diskCache.purgeGeneratedIconsIfNeeded()
+            } catch {
+                CrashReporter.capture(error)
+            }
+        }
     }
 
     func image(for cask: Cask) async -> NSImage? {
@@ -47,14 +44,17 @@ final class ImageCacheService {
         if let cached = memoryCache.object(forKey: token as NSString) {
             return cached
         }
+        let generation = await diskCache.currentGeneration()
 
         if cask.isCLI {
-            purgeStaleCLIIcon(token: token)
+            await purgeStaleCLIIcon(token: token)
         }
 
-        if let diskImage = loadFromDisk(token: token) {
+        if let data = await diskCache.loadData(token: token),
+           let diskImage = NSImage(data: data),
+           diskImage.isValid {
             memoryCache.setObject(diskImage, forKey: token as NSString)
-            maybeUpgradeFallbackIcon(token: token)
+            await maybeUpgradeFallbackIcon(token: token, generation: generation)
             return diskImage
         }
 
@@ -63,7 +63,10 @@ final class ImageCacheService {
             return nil
         }
 
-        if hasRecentMiss(token: token) {
+        if await diskCache.hasRecentMiss(
+            token: token,
+            retryInterval: Self.missRetryInterval
+        ) {
             return nil
         }
 
@@ -71,7 +74,13 @@ final class ImageCacheService {
             return await existing.value
         }
 
-        let task = Task { await fetchImage(for: cask, inManifest: inManifest) }
+        let task = Task {
+            await fetchImage(
+                for: cask,
+                inManifest: inManifest,
+                generation: generation
+            )
+        }
 
         inFlightTasks[token] = task
         let result = await task.value
@@ -79,17 +88,28 @@ final class ImageCacheService {
         return result
     }
 
-    func clearCache() {
+    func clearCache() async {
+        inFlightTasks.values.forEach { $0.cancel() }
+        inFlightTasks.removeAll()
+        upgradeInFlight.removeAll()
         memoryCache.removeAllObjects()
-        try? FileManager.default.removeItem(at: Self.cacheDirectory)
-        try? FileManager.default.createDirectory(
-            at: Self.cacheDirectory, withIntermediateDirectories: true
-        )
+        do {
+            try await diskCache.clear()
+        } catch {
+            CrashReporter.capture(error)
+        }
+        // A task already returning to the main actor may have populated memory
+        // while the disk actor was clearing. The generation check rejects its write.
+        memoryCache.removeAllObjects()
     }
 
     // MARK: - Private
 
-    private func fetchImage(for cask: Cask, inManifest: Bool) async -> NSImage? {
+    private func fetchImage(
+        for cask: Cask,
+        inManifest: Bool,
+        generation: UInt64
+    ) async -> NSImage? {
         let token = cask.token
         var sawHTTPResponse = false
         func fetch(_ url: URL) async -> NSImage? {
@@ -101,7 +121,12 @@ final class ImageCacheService {
         if inManifest {
             for url in CaskIconURL.caskFlowIconURLs(for: token) {
                 if let image = await fetch(url) {
-                    cache(image: image, token: token, fromCaskFlow: true)
+                    await cache(
+                        image: image,
+                        token: token,
+                        generation: generation,
+                        fromCaskFlow: true
+                    )
                     return image
                 }
             }
@@ -110,12 +135,16 @@ final class ImageCacheService {
         if !cask.isCLI,
            let url = CaskIconURL.appFairIconURL(for: token),
            let image = await fetch(url) {
-            cache(image: image, token: token)
+            await cache(image: image, token: token, generation: generation)
             return image
         }
 
         if sawHTTPResponse {
-            markMiss(token: token)
+            do {
+                try await diskCache.recordMiss(token: token, generation: generation)
+            } catch {
+                CrashReporter.capture(error)
+            }
         }
         return nil
     }
@@ -135,14 +164,24 @@ final class ImageCacheService {
         return (image, true)
     }
 
-    private func cache(image: NSImage, token: String, fromCaskFlow: Bool = false) {
+    private func cache(
+        image: NSImage,
+        token: String,
+        generation: UInt64,
+        fromCaskFlow: Bool = false
+    ) async {
+        guard await diskCache.isCurrent(generation) else { return }
         memoryCache.setObject(image, forKey: token as NSString)
-        saveToDisk(image: image, token: token)
-        try? FileManager.default.removeItem(at: missMarkerPath(for: token))
-        if fromCaskFlow {
-            try? FileManager.default.removeItem(at: fallbackMarkerPath(for: token))
-        } else {
-            try? Data().write(to: fallbackMarkerPath(for: token), options: .atomic)
+        guard let pngData = await Self.pngData(for: image) else { return }
+        do {
+            try await diskCache.store(
+                pngData,
+                token: token,
+                generation: generation,
+                fromCaskFlow: fromCaskFlow
+            )
+        } catch {
+            CrashReporter.capture(error)
         }
     }
 
@@ -150,16 +189,11 @@ final class ImageCacheService {
 
     private static let cliIconCutover = Date(timeIntervalSince1970: 1_783_598_400)
 
-    private func purgeStaleCLIIcon(token: String) {
-        let path = diskPath(for: token)
-        guard let mtime = try? FileManager.default
-            .attributesOfItem(atPath: path.path)[.modificationDate] as? Date,
-            mtime < Self.cliIconCutover
-        else {
-            return
-        }
-        try? FileManager.default.removeItem(at: path)
-        try? FileManager.default.removeItem(at: fallbackMarkerPath(for: token))
+    private func purgeStaleCLIIcon(token: String) async {
+        guard await diskCache.purgeStaleCLIIcon(
+            token: token,
+            before: Self.cliIconCutover
+        ) else { return }
         let urlCache = session.configuration.urlCache ?? .shared
         for url in CaskIconURL.caskFlowIconURLs(for: token) {
             urlCache.removeCachedResponse(for: URLRequest(url: url))
@@ -168,18 +202,14 @@ final class ImageCacheService {
 
     // MARK: - Fallback upgrade
 
-    private func fallbackMarkerPath(for token: String) -> URL {
-        Self.cacheDirectory.appendingPathComponent("\(token).fallback")
-    }
-
-    private func maybeUpgradeFallbackIcon(token: String) {
+    private func maybeUpgradeFallbackIcon(token: String, generation: UInt64) async {
         if let known = knownIconTokens(), !known.contains(token) {
             return
         }
-        let marker = fallbackMarkerPath(for: token)
-        guard let mtime = try? FileManager.default
-            .attributesOfItem(atPath: marker.path)[.modificationDate] as? Date,
-            Date().timeIntervalSince(mtime) >= Self.missRetryInterval,
+        guard await diskCache.fallbackNeedsUpgrade(
+            token: token,
+            retryInterval: Self.missRetryInterval
+        ),
             !upgradeInFlight.contains(token)
         else {
             return
@@ -189,93 +219,30 @@ final class ImageCacheService {
             for url in CaskIconURL.caskFlowIconURLs(for: token) {
                 let (image, _) = await downloadImage(from: url)
                 if let image {
-                    cache(image: image, token: token, fromCaskFlow: true)
+                    await cache(
+                        image: image,
+                        token: token,
+                        generation: generation,
+                        fromCaskFlow: true
+                    )
                     upgradeInFlight.remove(token)
                     return
                 }
             }
-            try? FileManager.default.setAttributes(
-                [.modificationDate: Date()], ofItemAtPath: marker.path
-            )
+            try? await diskCache.touchFallback(token: token, generation: generation)
             upgradeInFlight.remove(token)
         }
     }
 
-    private nonisolated static func purgeGeneratedIconsIfNeeded() {
-        Task.detached(priority: .utility) {
-            let dir = await Self.cacheDirectory
-            let flag = dir.appendingPathComponent(".generated-purge-done")
-            guard !FileManager.default.fileExists(atPath: flag.path) else { return }
-            let files = (try? FileManager.default.contentsOfDirectory(
-                at: dir, includingPropertiesForKeys: nil
-            )) ?? []
-            for marker in files where marker.pathExtension == "fallback" {
-                let token = marker.deletingPathExtension().lastPathComponent
-                try? FileManager.default.removeItem(
-                    at: dir.appendingPathComponent("\(token).png")
-                )
-                try? FileManager.default.removeItem(at: marker)
-            }
-            try? FileManager.default.removeItem(
-                at: dir.deletingLastPathComponent()
-                    .appendingPathComponent("github_owner_types.json")
-            )
-            try? FileManager.default.removeItem(
-                at: dir.appendingPathComponent(".tier-migration-done")
-            )
-            try? Data().write(to: flag, options: .atomic)
-        }
-    }
-
-    // MARK: - Miss cooldown
-
-    private func missMarkerPath(for token: String) -> URL {
-        Self.cacheDirectory.appendingPathComponent("\(token).miss")
-    }
-
-    private func hasRecentMiss(token: String) -> Bool {
-        let path = missMarkerPath(for: token)
-        guard let mtime = try? FileManager.default
-            .attributesOfItem(atPath: path.path)[.modificationDate] as? Date
-        else {
-            return false
-        }
-        return Date().timeIntervalSince(mtime) < Self.missRetryInterval
-    }
-
-    private func markMiss(token: String) {
-        try? Data().write(to: missMarkerPath(for: token), options: .atomic)
-    }
-
-    private func diskPath(for token: String) -> URL {
-        Self.cacheDirectory.appendingPathComponent("\(token).png")
-    }
-
-    private func loadFromDisk(token: String) -> NSImage? {
-        let path = diskPath(for: token)
-        guard FileManager.default.fileExists(atPath: path.path),
-              let image = NSImage(contentsOf: path),
-              image.isValid
-        else {
-            return nil
-        }
-        return image
-    }
-
-    private nonisolated func saveToDisk(image: NSImage, token: String) {
-        Task.detached(priority: .utility) {
+    private nonisolated static func pngData(for image: NSImage) async -> Data? {
+        await Task.detached(priority: .utility) {
             guard let tiffData = image.tiffRepresentation,
                   let bitmap = NSBitmapImageRep(data: tiffData),
                   let pngData = bitmap.representation(using: .png, properties: [:])
             else {
-                return
+                return nil
             }
-            let path = await Self.cacheDirectory.appendingPathComponent("\(token).png")
-            do {
-                try pngData.write(to: path, options: .atomic)
-            } catch {
-                await CrashReporter.capture(error)
-            }
-        }
+            return pngData
+        }.value
     }
 }

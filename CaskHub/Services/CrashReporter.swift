@@ -29,6 +29,14 @@ enum CrashReporter {
 
     static var captureCounts: [String: Int] = [:]
     private static let captureLimit = 5
+    private static let ignoredURLErrorCodes: Set<Int> = [
+        URLError.notConnectedToInternet.rawValue,
+        URLError.timedOut.rawValue,
+        URLError.networkConnectionLost.rawValue,
+        URLError.cannotFindHost.rawValue,
+        URLError.cannotConnectToHost.rawValue,
+        URLError.dnsLookupFailed.rawValue
+    ]
 
     /// Unit-test runs launch the host app — without a guard their brew failures,
     /// hangs, and transactions land in Sentry looking like production events.
@@ -51,11 +59,11 @@ enum CrashReporter {
 
     static func capture(_ error: Error) {
         guard isEnabled, !isRunningTests else { return }
-        if let localError = error as? LocalHomebrewError, localError.isEnvironmental {
+        if let localError = error as? LocalHomebrewError, !localError.shouldReport {
             return
         }
         let nsError = error as NSError
-        if nsError.domain == NSURLErrorDomain, nsError.code == URLError.notConnectedToInternet.rawValue {
+        if nsError.domain == NSURLErrorDomain, ignoredURLErrorCodes.contains(nsError.code) {
             return
         }
         let signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"

@@ -9,6 +9,13 @@ import Combine
 import Sparkle
 import SwiftUI
 
+protocol BackgroundUpdateChecking {
+    var automaticallyChecksForUpdates: Bool { get }
+    func checkForUpdatesInBackground()
+}
+
+extension SPUUpdater: BackgroundUpdateChecking {}
+
 @Observable
 final class UpdaterService {
     private let controller: SPUStandardUpdaterController
@@ -21,10 +28,17 @@ final class UpdaterService {
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
+        // Sparkle allows a forced launch check here, before its scheduled cycle starts.
+        Self.checkForUpdatesOnLaunch(using: controller.updater)
         cancellable = controller.updater.publisher(for: \.canCheckForUpdates)
             .sink { [weak self] canCheck in
                 self?.canCheckForUpdates = canCheck
             }
+    }
+
+    static func checkForUpdatesOnLaunch(using updater: some BackgroundUpdateChecking) {
+        guard updater.automaticallyChecksForUpdates else { return }
+        updater.checkForUpdatesInBackground()
     }
 
     func checkForUpdates() {
