@@ -33,7 +33,7 @@ Each release adds one entry at the top of `CHANGELOG.md`:
 - Bullet per user-visible fix
 ```
 
-- The top `## ` header MUST be the version being cut — `release.sh` aborts on
+- The top `##` header MUST be the version being cut — `release.sh` aborts on
   mismatch, so forgetting to add the new entry fails loudly.
 - Omit any section that would be empty. A patch release may be Bug Fixes only.
 - Never rewrite past entries; only add the new one on top.
