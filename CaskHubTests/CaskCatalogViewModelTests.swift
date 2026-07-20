@@ -15,8 +15,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
     func test_fetch_casks_excludes_deprecated_disabled_versioned_and_font_casks() async {
         let (vm, _) = await makeSUT(casks: [
             makeCask("firefox"),
-            makeCask("legacy-app", deprecated: true),
-            makeCask("dead-app", disabled: true),
+            makeCask("legacy-app", lifecycle: .deprecated),
+            makeCask("dead-app", lifecycle: .disabled),
             makeCask("node@18"),
             makeCask("font-fira-code")
         ])
@@ -117,7 +117,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
             casks: [
                 makeCask("firefox", version: "2.0"),
                 makeCask("slack", version: "2.0"),
-                makeCask("chrome", version: "3.0", autoUpdates: true),
+                makeCask("chrome", version: "3.0", lifecycle: .autoUpdating),
                 makeCask("iterm2", version: "9.9")
             ],
             localHomebrew: local

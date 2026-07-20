@@ -33,15 +33,24 @@ final class MockBrewAPIClient: BrewAPIClientProtocol {
 
 // MARK: - Factories
 
+struct TestCaskLifecycle {
+    let deprecated: Bool
+    let disabled: Bool
+    let autoUpdates: Bool?
+
+    static let current = Self(deprecated: false, disabled: false, autoUpdates: nil)
+    static let deprecated = Self(deprecated: true, disabled: false, autoUpdates: nil)
+    static let disabled = Self(deprecated: false, disabled: true, autoUpdates: nil)
+    static let autoUpdating = Self(deprecated: false, disabled: false, autoUpdates: true)
+}
+
 @MainActor
 func makeCask(
     _ token: String,
     name: String? = nil,
     desc: String? = nil,
     version: String = "1.0",
-    deprecated: Bool = false,
-    disabled: Bool = false,
-    autoUpdates: Bool? = nil,
+    lifecycle: TestCaskLifecycle = .current,
     appNames: [String]? = nil,
     binaryNames: [String]? = nil,
     binarySourcePaths: [String]? = nil
@@ -51,9 +60,9 @@ func makeCask(
         name: name,
         desc: desc,
         version: version,
-        deprecated: deprecated,
-        disabled: disabled,
-        autoUpdates: autoUpdates
+        deprecated: lifecycle.deprecated,
+        disabled: lifecycle.disabled,
+        autoUpdates: lifecycle.autoUpdates
     )
     var artifacts: [ArtifactStanza] = []
     if let appNames { artifacts.append(ArtifactStanza(keys: ["app"], appNames: appNames)) }

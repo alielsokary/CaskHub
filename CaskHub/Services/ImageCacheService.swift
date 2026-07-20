@@ -71,35 +71,7 @@ final class ImageCacheService {
             return await existing.value
         }
 
-        let task = Task<NSImage?, Never> {
-            var sawHTTPResponse = false
-            func fetch(_ url: URL) async -> NSImage? {
-                let (image, responded) = await self.downloadImage(from: url)
-                sawHTTPResponse = sawHTTPResponse || responded
-                return image
-            }
-
-            if inManifest {
-                for url in CaskIconURL.caskFlowIconURLs(for: token) {
-                    if let image = await fetch(url) {
-                        cache(image: image, token: token, fromCaskFlow: true)
-                        return image
-                    }
-                }
-            }
-
-            if !cask.isCLI,
-               let url = CaskIconURL.appFairIconURL(for: token),
-               let image = await fetch(url) {
-                cache(image: image, token: token)
-                return image
-            }
-
-            if sawHTTPResponse {
-                markMiss(token: token)
-            }
-            return nil
-        }
+        let task = Task { await fetchImage(for: cask, inManifest: inManifest) }
 
         inFlightTasks[token] = task
         let result = await task.value
@@ -116,6 +88,37 @@ final class ImageCacheService {
     }
 
     // MARK: - Private
+
+    private func fetchImage(for cask: Cask, inManifest: Bool) async -> NSImage? {
+        let token = cask.token
+        var sawHTTPResponse = false
+        func fetch(_ url: URL) async -> NSImage? {
+            let (image, responded) = await downloadImage(from: url)
+            sawHTTPResponse = sawHTTPResponse || responded
+            return image
+        }
+
+        if inManifest {
+            for url in CaskIconURL.caskFlowIconURLs(for: token) {
+                if let image = await fetch(url) {
+                    cache(image: image, token: token, fromCaskFlow: true)
+                    return image
+                }
+            }
+        }
+
+        if !cask.isCLI,
+           let url = CaskIconURL.appFairIconURL(for: token),
+           let image = await fetch(url) {
+            cache(image: image, token: token)
+            return image
+        }
+
+        if sawHTTPResponse {
+            markMiss(token: token)
+        }
+        return nil
+    }
 
     private func downloadImage(from url: URL) async -> (image: NSImage?, gotResponse: Bool) {
         guard let (data, response) = try? await session.data(from: url),
