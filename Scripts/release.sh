@@ -34,8 +34,8 @@ fi
 
 echo "==> Syncing bundled categories"
 Scripts/sync_bundled_categories.sh
-if [[ -n "$(git status --porcelain CaskHub/Resources/categories.json)" ]]; then
-    echo "error: categories.json was stale. Commit the refreshed copy, then rerun." >&2
+if [[ -n "$(git status --porcelain CaskHub/Resources/categories.json CaskHub/Resources/added_dates.json)" ]]; then
+    echo "error: bundled CaskFlow data was stale. Commit the refreshed copies, then rerun." >&2
     exit 1
 fi
 

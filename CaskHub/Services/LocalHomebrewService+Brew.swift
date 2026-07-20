@@ -10,23 +10,32 @@ import Foundation
 extension LocalHomebrewService {
     // MARK: - Process Helpers
 
-    nonisolated static func ensureAskpassScript(token: String) -> URL? {
-        guard let executablePath = Bundle.main.executableURL?.path else { return nil }
+    nonisolated static func ensureAskpassScript(
+        token: String,
+        directory: URL? = nil,
+        executableURL: URL? = Bundle.main.executableURL
+    ) -> URL? {
+        guard let executablePath = executableURL?.path else { return nil }
         // Interpolated into a shell script — keep only known-safe characters.
         let safeToken = token.filter { $0.isLetter || $0.isNumber || "-_+@.".contains($0) }
         let script = """
         #!/bin/sh
-        exec "\(executablePath)" --askpass "\(safeToken)"
+        exec \(shellQuoted(executablePath)) --askpass \(shellQuoted(safeToken))
         """
         let fm = FileManager.default
-        guard let base = try? fm.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        ) else { return nil }
-        let dir = base.appendingPathComponent("CaskHub", isDirectory: true)
-        let url = dir.appendingPathComponent("askpass.sh")
+        let dir: URL
+        if let directory {
+            dir = directory
+        } else {
+            guard let base = try? fm.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            ) else { return nil }
+            dir = base.appendingPathComponent("CaskHub", isDirectory: true)
+        }
+        let url = dir.appendingPathComponent("askpass-\(UUID().uuidString).sh")
         do {
             try fm.createDirectory(at: dir, withIntermediateDirectories: true)
             try script.write(to: url, atomically: true, encoding: .utf8)
@@ -35,6 +44,14 @@ extension LocalHomebrewService {
             return nil
         }
         return url
+    }
+
+    nonisolated static func removeAskpassScript(at url: URL) {
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private nonisolated static func shellQuoted(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\"'\"'") + "'"
     }
 
     nonisolated static func signalTree(pid: Int32, signal: Int32) {
@@ -55,26 +72,6 @@ extension LocalHomebrewService {
             }
         }
         kill(pid, signal)
-    }
-
-    nonisolated static func cleanupIncompleteDownloads(since cutoff: Date) {
-        let fm = FileManager.default
-        let cacheURL: URL
-        if let override = ProcessInfo.processInfo.environment["HOMEBREW_CACHE"], !override.isEmpty {
-            cacheURL = URL(fileURLWithPath: override)
-        } else {
-            cacheURL = fm.homeDirectoryForCurrentUser
-                .appendingPathComponent("Library/Caches/Homebrew")
-        }
-        let downloadsURL = cacheURL.appendingPathComponent("downloads", isDirectory: true)
-        guard let files = try? fm.contentsOfDirectory(
-            at: downloadsURL,
-            includingPropertiesForKeys: [.contentModificationDateKey]
-        ) else { return }
-
-        for file in files where modificationDate(of: file) >= cutoff {
-            try? fm.removeItem(at: file)
-        }
     }
 
     nonisolated static func fetchBrewVersion() async -> String? {

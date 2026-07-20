@@ -40,6 +40,7 @@ final class CaskCatalogViewModel {
     private(set) var errorMessage: String?
     private var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:]
     private(set) var analyticsPeriod: AnalyticsPeriod = .days365
+    private var analyticsRequestID = UUID()
     var searchText = ""
 
     private static let periodKey = "analyticsPeriod"
@@ -49,9 +50,8 @@ final class CaskCatalogViewModel {
         guard selectedSidebar == .discover(.topCharts) else {
             return analyticsByPeriod[.days365] ?? [:]
         }
-        return analyticsByPeriod[analyticsPeriod]
-            ?? analyticsByPeriod[.days365]
-            ?? [:]
+        // Never label annual data as a shorter period while that period loads or fails.
+        return analyticsByPeriod[analyticsPeriod] ?? [:]
     }
 
     var sortOption: SortOption = .mostPopular
@@ -253,12 +253,28 @@ final class CaskCatalogViewModel {
     }
 
     func selectAnalyticsPeriod(_ period: AnalyticsPeriod) async {
+        if analyticsByPeriod[period] != nil {
+            commitAnalyticsPeriod(period)
+            return
+        }
+
+        let requestID = UUID()
+        analyticsRequestID = requestID
+        do {
+            let analytics = try await apiClient.fetchAnalytics(period: period)
+            analyticsByPeriod[period] = Self.countsByToken(from: analytics)
+            guard analyticsRequestID == requestID else { return }
+            commitAnalyticsPeriod(period)
+        } catch {
+            guard analyticsRequestID == requestID else { return }
+            let fallback = analyticsByPeriod[analyticsPeriod] != nil ? analyticsPeriod : .days365
+            commitAnalyticsPeriod(fallback)
+        }
+    }
+
+    private func commitAnalyticsPeriod(_ period: AnalyticsPeriod) {
         analyticsPeriod = period
         defaults.set(period.rawValue, forKey: Self.periodKey)
-        guard analyticsByPeriod[period] == nil else { return }
-        if let analytics = try? await apiClient.fetchAnalytics(period: period) {
-            analyticsByPeriod[period] = Self.countsByToken(from: analytics)
-        }
     }
 
     private static func countsByToken(from analytics: CaskAnalyticsResponse) -> [String: Int] {

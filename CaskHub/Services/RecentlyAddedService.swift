@@ -34,13 +34,25 @@ final class RecentlyAddedService {
     private static let schemaVersion = 1
 
     var addedDates: [String: String] = [:]
+    private(set) var generatedDate = ""
+
+    func loadBundledDates(bundle: Bundle = .main) {
+        guard let url = bundle.url(forResource: "added_dates", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let bundled = try? JSONDecoder().decode(AddedDatesData.self, from: data),
+              bundled.version == Self.schemaVersion
+        else { return }
+
+        apply(bundled)
+    }
 
     func refreshFromRemote() async {
         guard let remote = await CaskFlowReleases.fetch(AddedDatesData.self, asset: "added_dates.json"),
-              remote.version == Self.schemaVersion
+              remote.version == Self.schemaVersion,
+              remote.generatedDate > generatedDate
         else { return }
 
-        addedDates = remote.tokenAddedDates
+        apply(remote)
     }
 
     func recentTokens(within days: Int) -> Set<String> {
@@ -55,5 +67,10 @@ final class RecentlyAddedService {
     private static func dateString(daysAgo: Int) -> String {
         let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: .now) ?? .now
         return date.formatted(.iso8601.year().month().day())
+    }
+
+    private func apply(_ data: AddedDatesData) {
+        addedDates = data.tokenAddedDates
+        generatedDate = data.generatedDate
     }
 }

@@ -57,6 +57,10 @@ final class LocalHomebrewService {
 
     @ObservationIgnored private var runningProcesses: [String: Process] = [:]
 
+    @ObservationIgnored private let processRunner: any BrewProcessRunning
+    @ObservationIgnored private let brewBinaryProvider: () -> URL?
+    @ObservationIgnored private let brewVersionProvider: () async -> String?
+
     var actionErrors: [String: String] = [:]
 
     private(set) var isUpdatingAll = false
@@ -79,12 +83,18 @@ final class LocalHomebrewService {
     init(
         fileManager: FileManager = .default,
         defaults: UserDefaults = .standard,
-        applicationDirectories: [URL]? = nil
+        applicationDirectories: [URL]? = nil,
+        processRunner: (any BrewProcessRunning)? = nil,
+        brewBinaryProvider: @escaping () -> URL? = { LocalHomebrewService.locateBrewBinary() },
+        brewVersionProvider: @escaping () async -> String? = { await LocalHomebrewService.fetchBrewVersion() }
     ) {
         self.fileManager = fileManager
         self.defaults = defaults
         self.applicationDirectories = applicationDirectories
             ?? Self.defaultApplicationDirectories(fileManager)
+        self.processRunner = processRunner ?? SystemBrewProcessRunner()
+        self.brewBinaryProvider = brewBinaryProvider
+        self.brewVersionProvider = brewVersionProvider
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         customBrewPrefix = defaults.string(forKey: Self.customBrewPrefixKey)
 
@@ -130,7 +140,7 @@ final class LocalHomebrewService {
     func refresh() async {
         let fm = fileManager
         if brewVersion == nil {
-            brewVersion = await Self.fetchBrewVersion()
+            brewVersion = await brewVersionProvider()
         }
         let appDirs = applicationDirectories
         let (casks, appNames, binaryNames) = await Task.detached(priority: .userInitiated) {
@@ -259,7 +269,6 @@ final class LocalHomebrewService {
         guard inFlightActions[token] == nil || inFlightActions[token] == .queued else { return }
         inFlightActions[token] = action
         actionErrors[token] = nil
-        let startedAt = Date.now
         defer {
             inFlightActions[token] = nil
             cancellableDownloads.remove(token)
@@ -277,9 +286,8 @@ final class LocalHomebrewService {
             if cancelRequested.contains(token) {
                 span.finish()
                 cancelRequested.remove(token)
-                Task.detached(priority: .utility) {
-                    Self.cleanupIncompleteDownloads(since: startedAt)
-                }
+                // Homebrew owns its cache and safely resumes partial downloads.
+                // Never sweep the shared cache: another brew process may be using it.
                 await refresh()
                 return
             }
@@ -297,41 +305,40 @@ final class LocalHomebrewService {
     }
 
     private func runBrewStreaming(token: String, args: [String], cancellable: Bool) async throws {
-        guard let brewURL = Self.locateBrewBinary() else {
+        guard let brewURL = brewBinaryProvider() else {
             throw LocalHomebrewError.brewBinaryNotFound
         }
 
-        let process = Process()
-        process.executableURL = brewURL
-        process.arguments = args
-        if let askpass = Self.ensureAskpassScript(token: token) {
-            var environment = ProcessInfo.processInfo.environment
+        let askpass = Self.ensureAskpassScript(token: token)
+        defer {
+            if let askpass { Self.removeAskpassScript(at: askpass) }
+        }
+
+        var environment = ProcessInfo.processInfo.environment
+        if let askpass {
             environment["SUDO_ASKPASS"] = askpass.path
-            process.environment = environment
-        }
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        process.standardInput = FileHandle.nullDevice
-
-        let collector = BrewOutputCollector()
-        collector.attach(to: process, pipe: pipe) { [weak self] text in
-            guard text.contains("==> Installing Cask") else { return }
-            guard let self else { return }
-            Task { @MainActor in self.cancellableDownloads.remove(token) }
         }
 
-        try process.run()
-        runningProcesses[token] = process
-        if cancellable { cancellableDownloads.insert(token) }
+        let result = try await processRunner.run(
+            executableURL: brewURL,
+            arguments: args,
+            environment: environment,
+            onStart: { [weak self] process in
+                self?.runningProcesses[token] = process
+                if cancellable { self?.cancellableDownloads.insert(token) }
+            },
+            onChunk: { [weak self] text in
+                guard text.contains("==> Installing Cask") else { return }
+                guard let self else { return }
+                Task { @MainActor in self.cancellableDownloads.remove(token) }
+            }
+        )
 
-        let outputTail = await collector.output()
-
-        if process.terminationStatus != 0 {
+        if result.exitCode != 0 {
             throw LocalHomebrewError.brewCommandFailed(
                 args: args,
-                exitCode: process.terminationStatus,
-                stderr: outputTail.components(separatedBy: "\n").suffix(6).joined(separator: "\n")
+                exitCode: result.exitCode,
+                stderr: result.output.components(separatedBy: "\n").suffix(6).joined(separator: "\n")
             )
         }
     }

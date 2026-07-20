@@ -14,9 +14,56 @@ final class NoFilesFileManager: FileManager {
     override func fileExists(atPath _: String, isDirectory _: UnsafeMutablePointer<ObjCBool>?) -> Bool { false }
 }
 
+@MainActor
+final class StubBrewProcessRunner: BrewProcessRunning {
+    struct Request {
+        let executableURL: URL
+        let arguments: [String]
+        let environment: [String: String]
+        let askpassContents: String?
+    }
+
+    var queuedResults: [BrewProcessResult] = []
+    var thrownError: Error?
+    private(set) var requests: [Request] = []
+
+    func run(
+        executableURL: URL,
+        arguments: [String],
+        environment: [String: String],
+        onStart _: @escaping (Process) -> Void,
+        onChunk _: @escaping @Sendable (String) -> Void
+    ) async throws -> BrewProcessResult {
+        let askpassContents = environment["SUDO_ASKPASS"].flatMap {
+            try? String(contentsOfFile: $0, encoding: .utf8)
+        }
+        requests.append(Request(
+            executableURL: executableURL,
+            arguments: arguments,
+            environment: environment,
+            askpassContents: askpassContents
+        ))
+        if let thrownError { throw thrownError }
+        return queuedResults.isEmpty
+            ? BrewProcessResult(exitCode: 0, output: "")
+            : queuedResults.removeFirst()
+    }
+}
+
 // MARK: - Adoption error surfaces & scans
 
 final class AdoptionSurfaceTests: XCTestCase {
+    @MainActor
+    private func makeMutationService(runner: StubBrewProcessRunner) -> LocalHomebrewService {
+        LocalHomebrewService(
+            fileManager: NoFilesFileManager(),
+            defaults: makeScratchDefaults("mutation-runner-\(UUID().uuidString)"),
+            processRunner: runner,
+            brewBinaryProvider: { URL(fileURLWithPath: "/test/bin/brew") },
+            brewVersionProvider: { "test" }
+        )
+    }
+
     func test_error_descriptions_cover_every_case() {
         XCTAssertNotNil(LocalHomebrewError.brewBinaryNotFound.errorDescription)
         XCTAssertTrue(
@@ -65,6 +112,77 @@ final class AdoptionSurfaceTests: XCTestCase {
 
     func test_missing_caskroom_scans_as_no_installed_casks() {
         XCTAssertEqual(LocalHomebrewService.scanCaskroom(fileManager: NoFilesFileManager()).count, 0)
+    }
+
+    @MainActor
+    func test_mutations_use_injected_runner_and_map_nonzero_exit() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(exitCode: 7, output: "simulated failure")]
+        let service = makeMutationService(runner: runner)
+
+        do {
+            try await service.install(token: "firefox")
+            XCTFail("expected the simulated brew failure")
+        } catch let error as LocalHomebrewError {
+            guard case let .brewCommandFailed(args, exitCode, stderr) = error else {
+                return XCTFail("unexpected LocalHomebrewError: \(error)")
+            }
+            XCTAssertEqual(args, ["install", "--cask", "firefox"])
+            XCTAssertEqual(exitCode, 7)
+            XCTAssertEqual(stderr, "simulated failure")
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+
+        XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "firefox"]])
+        let askpassPath = try? XCTUnwrap(runner.requests.first?.environment["SUDO_ASKPASS"])
+        XCTAssertNotNil(runner.requests.first?.askpassContents)
+        XCTAssertFalse(askpassPath.map(FileManager.default.fileExists(atPath:)) ?? true)
+        XCTAssertNotNil(service.actionErrors["firefox"])
+        XCTAssertNil(service.inFlightActions["firefox"])
+    }
+
+    @MainActor
+    func test_repair_reinstall_runs_fetch_uninstall_and_install_through_runner() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeMutationService(runner: runner)
+
+        try await service.repairReinstalling(token: "firefox")
+
+        XCTAssertEqual(runner.requests.map(\.arguments), [
+            ["fetch", "--cask", "firefox"],
+            ["uninstall", "--cask", "firefox", "--force"],
+            ["install", "--cask", "firefox"]
+        ])
+        XCTAssertTrue(runner.requests.allSatisfy { $0.executableURL.path == "/test/bin/brew" })
+    }
+
+    func test_askpass_scripts_are_unique_shell_safe_and_removable() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("askpass-tests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let executable = URL(fileURLWithPath: "/Applications/Cask Hub's.app/Contents/MacOS/CaskHub")
+
+        let first = try XCTUnwrap(LocalHomebrewService.ensureAskpassScript(
+            token: "first; unsafe", directory: directory, executableURL: executable
+        ))
+        let second = try XCTUnwrap(LocalHomebrewService.ensureAskpassScript(
+            token: "second", directory: directory, executableURL: executable
+        ))
+
+        XCTAssertNotEqual(first, second)
+        XCTAssertTrue(first.lastPathComponent.hasPrefix("askpass-"))
+        let script = try String(contentsOf: first, encoding: .utf8)
+        XCTAssertTrue(script.contains("'firstunsafe'"))
+        XCTAssertTrue(script.contains("Cask Hub'\"'\"'s.app"))
+        let permissions = try FileManager.default.attributesOfItem(atPath: first.path)[.posixPermissions] as? Int
+        XCTAssertEqual(permissions, 0o700)
+
+        LocalHomebrewService.removeAskpassScript(at: first)
+        LocalHomebrewService.removeAskpassScript(at: second)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: first.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: second.path))
     }
 
     @MainActor
