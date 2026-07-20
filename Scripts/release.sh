@@ -32,12 +32,13 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 
-# Stale-notes guard: the file must be written for THIS version.
-NOTES="$REPO_ROOT/RELEASE_NOTES.md"
-if ! head -1 "$NOTES" 2>/dev/null | grep -qF "<!-- release: $VERSION -->"; then
-    echo "error: RELEASE_NOTES.md first line must be '<!-- release: $VERSION -->' — see .claude/skills/release-notes" >&2
-    exit 1
-fi
+# Stale-notes guard: CHANGELOG.md's top entry must be for THIS version.
+CHANGELOG="$REPO_ROOT/CHANGELOG.md"
+case "$(grep -m1 '^## ' "$CHANGELOG" 2>/dev/null)" in
+    "## $VERSION"|"## $VERSION "*) ;;
+    *) echo "error: CHANGELOG.md top entry is not $VERSION — add '## $VERSION — $(date +%Y-%m-%d)' (see .claude/skills/release-notes)" >&2
+       exit 1 ;;
+esac
 
 echo "==> Syncing bundled categories"
 Scripts/sync_bundled_categories.sh
@@ -121,8 +122,11 @@ if [[ -z "$GENERATE_APPCAST" ]]; then
 fi
 
 echo "==> Generating appcast"
-# Guard line stripped: Sparkle renders the rest as markdown in the update dialog
-tail -n +2 "$NOTES" > "$WORK/updates/CaskHub-$VERSION.md"
+# Top changelog entry, sans its version header: becomes the Sparkle dialog
+# notes (embedded markdown) and the GitHub release body.
+NOTES="$WORK/release-notes.md"
+awk '/^## /{n++} n==1' "$CHANGELOG" | tail -n +2 > "$NOTES"
+cp "$NOTES" "$WORK/updates/CaskHub-$VERSION.md"
 APPCAST_ARGS=(--download-url-prefix "$DOWNLOAD_URL_PREFIX" --embed-release-notes)
 if [[ -n "${SPARKLE_ED_KEY_FILE:-}" ]]; then
     APPCAST_ARGS+=(--ed-key-file "$SPARKLE_ED_KEY_FILE")

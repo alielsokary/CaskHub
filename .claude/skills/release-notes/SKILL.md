@@ -1,40 +1,42 @@
 ---
 name: release-notes
-description: Use when cutting a CaskHub release, writing or reviewing RELEASE_NOTES.md, or drafting the GitHub release body / Sparkle appcast description
+description: Use when cutting a CaskHub release, adding a CHANGELOG.md entry, or drafting the GitHub release body / Sparkle appcast description
 ---
 
 # CaskHub Release Notes
 
 ## Overview
 
-One file — `RELEASE_NOTES.md` at the repo root — is the single source for both
-the GitHub release body and the Sparkle update dialog. `Scripts/release.sh`
-embeds it into `appcast.xml` (Sparkle renders the markdown) and passes it to
-`gh release create --notes-file`. PR descriptions are NOT covered by this
-standard: keep them as detailed as you like.
+`CHANGELOG.md` at the repo root (Keep a Changelog style: cumulative, newest
+first) is the single source. `Scripts/release.sh` extracts the TOP entry and
+uses it as both the GitHub release body and the Sparkle update dialog notes
+(embedded into `appcast.xml`, rendered as markdown). PR descriptions are NOT
+covered by this standard: keep them as detailed as you like.
 
 ## Format
 
+Each release adds one entry at the top of `CHANGELOG.md`:
+
 ```markdown
-<!-- release: x.y.z -->
-## What's New
+## x.y.z — YYYY-MM-DD
+
+### What's New
 
 - Bullet per user-visible feature
 
-## Improvements
+### Improvements
 
 - Bullet per enhancement to something that already existed
 
-## Bug Fixes
+### Bug Fixes
 
 - Bullet per user-visible fix
 ```
 
-- The first line MUST be `<!-- release: x.y.z -->` with the exact version being
-  cut — `release.sh` greps for it and aborts on mismatch, so a stale file from
-  the previous release fails loudly. The comment is invisible on GitHub and is
-  stripped before the appcast embed.
+- The top `## ` header MUST be the version being cut — `release.sh` aborts on
+  mismatch, so forgetting to add the new entry fails loudly.
 - Omit any section that would be empty. A patch release may be Bug Fixes only.
+- Never rewrite past entries; only add the new one on top.
 
 ## Writing the bullets
 
@@ -53,19 +55,20 @@ merged PR titles/descriptions since the last release.
   under Improvements ("Under-the-hood stability improvements") rather than
   padding.
 
-## Example
+## Example entry
 
 ```markdown
-<!-- release: 0.7.0 -->
-## What's New
+## 0.7.0 — 2026-08-02
+
+### What's New
 
 - Added import and export for your installed app list
 
-## Improvements
+### Improvements
 
 - Faster cask search while typing
 
-## Bug Fixes
+### Bug Fixes
 
 - Fixed Homebrew repair getting stuck after relaunch
 - Fixed update badge showing for already-updated casks
