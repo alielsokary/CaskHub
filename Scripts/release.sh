@@ -32,6 +32,13 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 
+# Stale-notes guard: the file must be written for THIS version.
+NOTES="$REPO_ROOT/RELEASE_NOTES.md"
+if ! head -1 "$NOTES" 2>/dev/null | grep -qF "<!-- release: $VERSION -->"; then
+    echo "error: RELEASE_NOTES.md first line must be '<!-- release: $VERSION -->' — see .claude/skills/release-notes" >&2
+    exit 1
+fi
+
 echo "==> Syncing bundled categories"
 Scripts/sync_bundled_categories.sh
 if [[ -n "$(git status --porcelain CaskHub/Resources/categories.json CaskHub/Resources/added_dates.json)" ]]; then
@@ -114,7 +121,9 @@ if [[ -z "$GENERATE_APPCAST" ]]; then
 fi
 
 echo "==> Generating appcast"
-APPCAST_ARGS=(--download-url-prefix "$DOWNLOAD_URL_PREFIX")
+# Guard line stripped: Sparkle renders the rest as markdown in the update dialog
+tail -n +2 "$NOTES" > "$WORK/updates/CaskHub-$VERSION.md"
+APPCAST_ARGS=(--download-url-prefix "$DOWNLOAD_URL_PREFIX" --embed-release-notes)
 if [[ -n "${SPARKLE_ED_KEY_FILE:-}" ]]; then
     APPCAST_ARGS+=(--ed-key-file "$SPARKLE_ED_KEY_FILE")
 fi
@@ -125,7 +134,7 @@ cp "$WORK/updates/appcast.xml" "$REPO_ROOT/appcast.xml"
 # Draft: nothing is public (no release, no tag) until the release PR merges to
 # master and .github/workflows/publish-release.yml flips the draft live.
 echo "==> Creating draft GitHub release $VERSION"
-gh release create "$VERSION" "$ZIP" --title "$VERSION" --generate-notes \
+gh release create "$VERSION" "$ZIP" --title "$VERSION" --notes-file "$NOTES" \
     --draft --target "$(git rev-parse HEAD)"
 
 echo "==> Committing appcast"
