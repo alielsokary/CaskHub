@@ -3,12 +3,23 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.6.3</title>
-            <pubDate>Mon, 20 Jul 2026 18:13:15 +0000</pubDate>
-            <sparkle:version>275</sparkle:version>
-            <sparkle:shortVersionString>0.6.3</sparkle:shortVersionString>
+            <title>0.6.4</title>
+            <pubDate>Mon, 20 Jul 2026 23:14:32 +0000</pubDate>
+            <sparkle:version>290</sparkle:version>
+            <sparkle:shortVersionString>0.6.4</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.3/CaskHub-0.6.3.zip" length="5011849" type="application/octet-stream" sparkle:edSignature="l+gDxeUJVYCw1v5xxIYRHaHku9m4r58NiVA9uEgSe9+PGInMaadJyfu7fy2AYGKYuKV9TpQ1VOnlJ/raPvwRAQ=="/>
+            <description sparkle:format="markdown"><![CDATA[
+### What's New
+
+- Update notifications now appear at launch so you can see what's new before installing
+- Added a setting to turn the launch notification off and keep updates fully silent
+
+### Bug Fixes
+
+- Fixed Repair stopping before reinstalling when Homebrew failed during cleanup after the app was already removed
+- Fixed Repair uninstalls removing unrelated dependencies
+]]></description>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.4/CaskHub-0.6.4.zip" length="5030424" type="application/octet-stream" sparkle:edSignature="BuQiiPkFnjL+hkKsJjTEPw7fawCkPx9oG5/PxiE67HqAuvfSNut8frYhZe/X4K5DPtNShVVCHl4hOes3c/eUDQ=="/>
         </item>
     </channel>
 </rss>
