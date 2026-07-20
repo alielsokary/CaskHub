@@ -129,7 +129,8 @@ final class CrashReporterTests: XCTestCase {
         let failures = [
             "It seems the existing App is different from the one being installed.",
             "chmod: Operation not permitted",
-            "SHA256 mismatch"
+            "SHA256 mismatch",
+            "Download failed: curl: (6) Could not resolve host: example.com"
         ]
         for stderr in failures {
             CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
@@ -183,6 +184,7 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(cls("chmod: Unable to change file mode: Operation not permitted"), "permission-denied")
         XCTAssertEqual(cls("It seems the existing App is different from the one being installed."), "adopt-version-mismatch")
         XCTAssertEqual(cls("SHA256 mismatch"), "checksum-mismatch")
+        XCTAssertEqual(cls("curl: (6) Could not resolve host: example.com"), "network-failure")
         XCTAssertEqual(cls("It seems there is already a Binary at '/opt/homebrew/bin/x'."), "binary-conflict")
         XCTAssertEqual(cls("It seems there is already an App at '/Applications/X.app'."), "app-conflict")
         XCTAssertEqual(cls("something novel"), "uncategorized")

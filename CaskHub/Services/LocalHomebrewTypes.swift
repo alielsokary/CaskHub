@@ -94,6 +94,10 @@ enum LocalHomebrewError: LocalizedError {
         ("is not installed", "not-installed"),
         ("reports different checksum", "checksum-mismatch"),
         ("SHA256 mismatch", "checksum-mismatch"),
+        ("curl: (5)", "network-failure"),
+        ("curl: (6)", "network-failure"),
+        ("curl: (7)", "network-failure"),
+        ("curl: (28)", "network-failure"),
         ("already a Binary at", "binary-conflict"),
         ("already an App at", "app-conflict")
     ]
@@ -101,6 +105,7 @@ enum LocalHomebrewError: LocalizedError {
     private static let recoverableFailureClasses: Set<String> = [
         "adopt-version-mismatch",
         "checksum-mismatch",
+        "network-failure",
         "permission-denied"
     ]
 
