@@ -1,16 +1,9 @@
-# Project coverage fluctuates ±0.1% between identical runs (timing-dependent
-# async paths), and codecov's default 0% threshold fails no-code PRs on that
-# noise. 1% absorbs it while still catching real regressions.
 coverage:
   status:
     project:
       default:
         threshold: 1%
-    # Default patch target is `auto` (= project coverage), which fails PRs whose
-    # new lines are thin platform glue that can't be unit-tested — e.g. Sparkle
-    # delegate callbacks and effects that only fire inside a live update session.
-    # Testable decision logic is extracted and covered (see StagedUpdateGate);
-    # 80% still enforces meaningful patch coverage on real logic.
+
     patch:
       default:
         target: 80%
