@@ -10,8 +10,9 @@ description: Use when cutting a CaskHub release, adding a CHANGELOG.md entry, or
 `CHANGELOG.md` at the repo root (Keep a Changelog style: cumulative, newest
 first) is the single source. `Scripts/release.sh` extracts the TOP entry and
 uses it as both the GitHub release body and the Sparkle update dialog notes
-(embedded into `appcast.xml`, rendered as markdown). PR descriptions are NOT
-covered by this standard: keep them as detailed as you like.
+(embedded into `appcast.xml`, rendered as markdown). Feature-PR descriptions are
+not covered by this standard — keep them as detailed as you like. The release PR
+is the exception (see Release PR description below).
 
 ## Format
 
@@ -54,6 +55,18 @@ merged PR titles/descriptions since the last release.
 - If literally everything in the range is internal, write one honest bullet
   under Improvements ("Under-the-hood stability improvements") rather than
   padding.
+
+## Release PR description
+
+The `release/x.y.z → master` PR body is two parts, in order, and nothing else:
+
+1. **Changelog** — the version's What's New / Improvements / Bug Fixes bullets
+   (the same content that ships as the release notes).
+2. **Release artifacts** — a short list of what the build produced: the
+   notarized zip and build number, the appcast update, the README bump, dSYMs.
+
+Merging behavior lives in the runbook and the publish-release.yml /
+sync-develop.yml workflows, not in the PR body.
 
 ## Example entry
 
