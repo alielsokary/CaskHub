@@ -17,6 +17,9 @@ private struct CaskActionAlerts: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .caskPackageAdoptionAlert(
+                cask: cask, service: localHomebrew, isPresented: hasPackageAdoptionRequest
+            )
             .caskPermissionAlert(
                 cask: cask, service: localHomebrew, isPresented: $showPermissionRequest
             )
@@ -40,6 +43,15 @@ private struct CaskActionAlerts: ViewModifier {
         )
     }
 
+    private var hasPackageAdoptionRequest: Binding<Bool> {
+        Binding(
+            get: { localHomebrew.packageAdoptionRequests.contains(cask.token) },
+            set: {
+                if !$0 { localHomebrew.cancelPackageAdoptionRequest(token: cask.token) }
+            }
+        )
+    }
+
     private var hasActionError: Binding<Bool> {
         Binding(
             get: { localHomebrew.actionErrors[cask.token] != nil && !brewIsMissing },
@@ -49,6 +61,28 @@ private struct CaskActionAlerts: ViewModifier {
 }
 
 private extension View {
+    func caskPackageAdoptionAlert(
+        cask: Cask,
+        service: LocalHomebrewService,
+        isPresented: Binding<Bool>
+    ) -> some View {
+        alert("Adopt \(cask.displayName)?", isPresented: isPresented) {
+            Button("Cancel", role: .cancel) {
+                service.cancelPackageAdoptionRequest(token: cask.token)
+            }
+            Button("Adopt") {
+                Task { try? await service.adoptPackage(token: cask.token) }
+            }
+        } message: {
+            Text("""
+            \(cask.displayName) was installed using a package outside Homebrew. \
+            Adopting it will download and run Homebrew's package installer again, \
+            which may replace the existing application. After it finishes, \
+            Homebrew will manage the installation.
+            """)
+        }
+    }
+
     func caskPermissionAlert(
         cask: Cask,
         service: LocalHomebrewService,

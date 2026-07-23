@@ -8,6 +8,26 @@
 import Foundation
 
 extension LocalHomebrewService {
+    func requestPackageAdoption(token: String) {
+        packageAdoptionRequests.insert(token)
+    }
+
+    func cancelPackageAdoptionRequest(token: String) {
+        packageAdoptionRequests.remove(token)
+    }
+
+    /// Package artifacts do not support Homebrew's `--adopt` semantics. Running
+    /// the package installer again is the supported path that creates Homebrew's
+    /// Caskroom records and transfers future management to Homebrew.
+    func adoptPackage(token: String) async throws {
+        packageAdoptionRequests.remove(token)
+        try await runMutation(
+            .adopting,
+            token: token,
+            args: ["install", "--cask", token]
+        )
+    }
+
     /// Preflight before `--adopt`: a declared binary missing from the on-disk
     /// bundle makes brew fail *after* it has moved the app aside — and brew's
     /// rollback then deletes the app entirely. Refuse locally and offer the

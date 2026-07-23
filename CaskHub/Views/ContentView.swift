@@ -33,7 +33,7 @@ struct ContentView: View {
                 selection: $selectedSidebar,
                 categoryService: categoryService,
                 updatesCount: viewModel.updatesCount,
-                installedCount: localHomebrew.installedCasks.count,
+                installedCount: viewModel.installedCount,
                 adoptableCount: viewModel.adoptableCasks.count,
                 categoryCounts: viewModel.categoryCounts
             )

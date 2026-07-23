@@ -30,24 +30,36 @@ struct CaskActionsView: View {
     var body: some View {
         if let inFlight = localHomebrew.inFlightActions[cask.token] {
             inFlightCapsule(for: inFlight)
-        } else if let installation = localHomebrew.installedCasks[cask.token] {
-            installedActions(for: installation)
+        } else if localHomebrew.installedCasks[cask.token] != nil {
+            installedActions
         } else if localHomebrew.isAdoptable(cask) {
             HStack(spacing: 8) {
                 if isAdoptPage {
                     ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
-                        Task { try? await localHomebrew.adopt(cask) }
+                        if localHomebrew.isExternalPackageInstalled(cask) {
+                            localHomebrew.requestPackageAdoption(token: cask.token)
+                        } else {
+                            Task { try? await localHomebrew.adopt(cask) }
+                        }
                     }
                 } else {
                     ActionCapsuleButton(action: .open, fullWidth: fullWidth) {
                         localHomebrew.openExternalApp(cask: cask)
                     }
                 }
-                disabledUninstallHint
+                DisabledUninstallControl(
+                    message: "Adopt this app first so CaskHub can manage/uninstall it."
+                )
             }
         } else if localHomebrew.isMacAppStoreInstalled(cask) {
-            ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
-                .help("Installed from the Mac App Store. CaskHub won't replace or adopt it.")
+            HStack(spacing: 8) {
+                ActionCapsuleButton(action: .open, fullWidth: fullWidth) {
+                    localHomebrew.openExternalApp(cask: cask)
+                }
+                DisabledUninstallControl(
+                    message: "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
+                )
+            }
         } else if let externalPath = localHomebrew.externalCLIPath(cask) {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
                 .help(
@@ -61,19 +73,8 @@ struct CaskActionsView: View {
         }
     }
 
-    /// Plain image, not a disabled Button — macOS suppresses tooltips on disabled controls.
-    private var disabledUninstallHint: some View {
-        Image(systemName: "trash")
-            .font(.caption)
-            .foregroundStyle(Color.chTextFaint)
-            .padding(7)
-            .background(Circle().fill(Color.chSurfaceField.opacity(0.5)))
-            .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
-            .help("Adopt this app first so CaskHub can manage/uninstall it.")
-    }
-
     @ViewBuilder
-    private func installedActions(for installation: LocalCaskInstallation) -> some View {
+    private var installedActions: some View {
         if localHomebrew.isZombie(cask) {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
                 Task { try? await localHomebrew.repair(token: cask.token) }
@@ -83,16 +84,16 @@ struct CaskActionsView: View {
             has records for it. Clean Up removes the leftover data.
             """)
         } else {
-            managedActions(for: installation)
+            managedActions
         }
     }
 
     @ViewBuilder
-    private func managedActions(for installation: LocalCaskInstallation) -> some View {
+    private var managedActions: some View {
         let showUpdate = localHomebrew.hasAvailableUpdate(
             token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates
         )
-        let canOpen = !installation.appBundleNames.isEmpty
+        let canOpen = localHomebrew.canOpen(cask)
 
         HStack(spacing: 8) {
             if canOpen {
@@ -159,5 +160,51 @@ struct CaskActionsView: View {
         .padding(.horizontal, 16)
         .background(Capsule().fill(Color.chSurfaceField))
         .overlay(Capsule().strokeBorder(Color.chHairline, lineWidth: 1))
+    }
+}
+
+/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
+/// pointer remains over the view. This hint follows hover state directly, so it
+/// stays visible until the pointer actually leaves the disabled control.
+private struct DisabledUninstallControl: View {
+    let message: String
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Image(systemName: "trash")
+            .font(.caption)
+            .foregroundStyle(Color.chTextFaint)
+            .padding(7)
+            .background(Circle().fill(Color.chSurfaceField.opacity(0.5)))
+            .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
+            .contentShape(Circle())
+            .onHover { isHovering = $0 }
+            .overlay(alignment: .topTrailing) {
+                if isHovering {
+                    Text(message)
+                        .font(CHType.bodySm)
+                        .foregroundStyle(Color.chTextTitle)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(width: 220, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.chSurfaceToolbar)
+                                .shadow(color: Color.chShadowCard, radius: 8, y: 3)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
+                        )
+                        .offset(y: -48)
+                        .allowsHitTesting(false)
+                }
+            }
+            .zIndex(isHovering ? 10 : 0)
+            .accessibilityLabel("Uninstall")
+            .accessibilityHint(message)
     }
 }

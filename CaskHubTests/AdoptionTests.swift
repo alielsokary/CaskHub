@@ -10,8 +10,13 @@ import SwiftUI
 import XCTest
 
 final class NoFilesFileManager: FileManager {
-    override func fileExists(atPath _: String) -> Bool { false }
-    override func fileExists(atPath _: String, isDirectory _: UnsafeMutablePointer<ObjCBool>?) -> Bool { false }
+    override func fileExists(atPath _: String) -> Bool {
+        false
+    }
+
+    override func fileExists(atPath _: String, isDirectory _: UnsafeMutablePointer<ObjCBool>?) -> Bool {
+        false
+    }
 }
 
 @MainActor
@@ -146,6 +151,21 @@ final class AdoptionSurfaceTests: XCTestCase {
     }
 
     @MainActor
+    func test_package_adoption_confirms_then_reinstalls_without_adopt_flag() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeMutationService(runner: runner)
+
+        service.requestPackageAdoption(token: "zoom")
+        XCTAssertTrue(service.packageAdoptionRequests.contains("zoom"))
+
+        try await service.adoptPackage(token: "zoom")
+
+        XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "zoom"]])
+        XCTAssertFalse(service.packageAdoptionRequests.contains("zoom"))
+        XCTAssertNil(service.inFlightActions["zoom"])
+    }
+
+    @MainActor
     func test_repair_reinstall_runs_fetch_uninstall_and_install_through_runner() async throws {
         let runner = StubBrewProcessRunner()
         let service = makeMutationService(runner: runner)
@@ -246,8 +266,10 @@ final class AdoptionSurfaceTests: XCTestCase {
     func test_adopt_refuses_when_bundle_lacks_declared_binary() async throws {
         let appsDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("adopt-preflight-\(UUID().uuidString)")
-        let macOSDir = appsDir.appendingPathComponent("Fake.app/Contents/MacOS")
-        try FileManager.default.createDirectory(at: macOSDir, withIntermediateDirectories: true)
+        let app = try makeApplicationBundle(
+            in: appsDir, named: "Fake.app", bundleIdentifier: "com.example.fake"
+        )
+        let macOSDir = app.appendingPathComponent("Contents/MacOS")
         defer { try? FileManager.default.removeItem(at: appsDir) }
 
         let service = LocalHomebrewService(
@@ -302,6 +324,7 @@ final class AdoptionSurfaceTests: XCTestCase {
         XCTAssertEqual(decoded[0].keys, ["app", "zap"])
     }
 }
+
 // MARK: - View render smoke tests
 
 final class AdoptionViewRenderTests: XCTestCase {
@@ -316,6 +339,7 @@ final class AdoptionViewRenderTests: XCTestCase {
     func test_cask_actions_render_every_external_state() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-actions"))
         service.externalAppNames = ["Chrome.app"]
+        service.macAppStoreAppNames = ["Store.app"]
         service.externalBinaryPaths = ["claude": URL(fileURLWithPath: "/usr/local/bin/claude")]
         service.installedCasks["managed"] = LocalCaskInstallation(
             token: "managed", installedVersion: "1.0", installedAt: nil, appBundleNames: ["Managed.app"]
@@ -324,6 +348,7 @@ final class AdoptionViewRenderTests: XCTestCase {
         let adoptable = makeCask("chrome", appNames: ["Chrome.app"])
         render(CaskActionsView(cask: adoptable).environment(service).environment(\.isAdoptPage, true))
         render(CaskActionsView(cask: adoptable).environment(service))
+        render(CaskActionsView(cask: makeCask("store", appNames: ["Store.app"])).environment(service))
         render(CaskActionsView(cask: makeCask("claude-code", binaryNames: ["claude"])).environment(service))
         render(CaskActionsView(cask: makeCask("plain")).environment(service))
         render(
