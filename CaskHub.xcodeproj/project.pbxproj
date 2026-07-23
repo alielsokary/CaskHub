@@ -48,6 +48,7 @@
 		D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */; };
 		41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */; };
 		41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */; };
+		C15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift */; };
 		A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000001 /* LocalHomebrewTypes.swift */; };
 		A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000002 /* LocalHomebrewService+State.swift */; };
 		A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */; };
@@ -66,6 +67,7 @@
 		41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48230028F7D00608C7A /* ContentView.swift */; };
 		41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */; };
 		41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B130028F9F00608C7A /* CaskHubTests.swift */; };
+		C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000001 /* ExternalInstallationTests.swift */; };
 		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
 		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
 		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
@@ -125,6 +127,7 @@
 		41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppManagementPermission.swift; sourceTree = "<group>"; };
 		41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewService.swift; sourceTree = "<group>"; };
 		41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Brew.swift"; sourceTree = "<group>"; };
+		D15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+ExternalApps.swift"; sourceTree = "<group>"; };
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
@@ -144,6 +147,7 @@
 		41DFD48430028F7D00608C7A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 		41DFD4B130028F9F00608C7A /* CaskHubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubTests.swift; sourceTree = "<group>"; };
+		D15000000000000000000001 /* ExternalInstallationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalInstallationTests.swift; sourceTree = "<group>"; };
 		41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModelTests.swift; sourceTree = "<group>"; };
 		41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestHelpers.swift; sourceTree = "<group>"; };
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -269,6 +273,7 @@
 				41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */,
 				41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */,
 				41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */,
+				D15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift */,
 				B12000000000000000000001 /* LocalHomebrewTypes.swift */,
 				B12000000000000000000002 /* LocalHomebrewService+State.swift */,
 				B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */,
@@ -348,6 +353,7 @@
 				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
 				41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */,
 				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
+				D15000000000000000000001 /* ExternalInstallationTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
@@ -549,6 +555,7 @@
 				D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */,
 				41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */,
 				41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */,
+				C15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift in Sources */,
 				A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */,
 				A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */,
 				A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */,
@@ -575,6 +582,7 @@
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
 				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
 				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,
+				C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */,
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,

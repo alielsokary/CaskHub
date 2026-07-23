@@ -188,8 +188,8 @@ final class ZombieDetectionTests: XCTestCase {
     /// current artifact ChatGPT.app is alive on disk. Never offer deletion then.
     @MainActor
     func test_zombie_verdict_clears_when_current_cask_app_exists() throws {
-        try fm.createDirectory(
-            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        try makeApplicationBundle(
+            in: appsDir, named: "ChatGPT.app", bundleIdentifier: "com.openai.chat"
         )
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("zombie-crosscheck"),
@@ -233,8 +233,8 @@ final class ZombieDetectionTests: XCTestCase {
 
     @MainActor
     func test_open_falls_back_to_current_cask_artifact_name() throws {
-        try fm.createDirectory(
-            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        try makeApplicationBundle(
+            in: appsDir, named: "ChatGPT.app", bundleIdentifier: "com.openai.chat"
         )
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("open-fallback"),

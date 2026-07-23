@@ -99,6 +99,14 @@ final class CaskCatalogViewModel {
         updatableCasks.count
     }
 
+    var installedCasks: [Cask] {
+        casks.filter { [localHomebrew] in localHomebrew.isPresent($0) }
+    }
+
+    var installedCount: Int {
+        installedCasks.count
+    }
+
     var adoptableCasks: [Cask] {
         casks.filter { [localHomebrew] in localHomebrew.isAdoptable($0) }
     }
@@ -168,7 +176,7 @@ final class CaskCatalogViewModel {
             return casks.filter { recentTokens.contains($0.token) }
 
         case .library(.installed):
-            return casks.filter { localHomebrew.isInstalled(token: $0.token) }
+            return installedCasks
 
         case .library(.updates):
             return updatableCasks
@@ -233,6 +241,7 @@ final class CaskCatalogViewModel {
                     && !cask.token.contains("@")
                     && !cask.token.hasPrefix("font-")
             }
+            await localHomebrew.updatePackageCatalog(casks)
 
             if let analytics = try? await analyticsRequest {
                 analyticsByPeriod[.days365] = Self.countsByToken(from: analytics)
