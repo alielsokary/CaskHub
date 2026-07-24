@@ -4,8 +4,8 @@
         <title>CaskHub</title>
         <item>
             <title>0.6.5</title>
-            <pubDate>Fri, 24 Jul 2026 17:03:14 +0000</pubDate>
-            <sparkle:version>303</sparkle:version>
+            <pubDate>Fri, 24 Jul 2026 17:16:34 +0000</pubDate>
+            <sparkle:version>305</sparkle:version>
             <sparkle:shortVersionString>0.6.5</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
@@ -27,7 +27,7 @@
 - Fixed external apps in localized or nested application folders not being recognized
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.5/CaskHub-0.6.5.zip" length="5217771" type="application/octet-stream" sparkle:edSignature="X+Z9b+LCjXKIZQ9/hzivY9TroC9rq+ZdK8Ih7tHsuZolGB3dPX74NTsKXCcego8gbnOlxi8uki9C8sPfXW7uCQ=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.5/CaskHub-0.6.5.zip" length="5217799" type="application/octet-stream" sparkle:edSignature="dKrTBfh+a8E3GoD2b6gTrW78CYNwYAqNTA1S8iLHMEq7W5DyuD5G87cMrJ0JmfMkOZI/Gm0RU5IVzpac1gB6Aw=="/>
         </item>
     </channel>
 </rss>
