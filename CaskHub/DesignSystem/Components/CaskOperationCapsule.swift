@@ -27,8 +27,8 @@ struct CaskOperationCapsule: View {
             }
 
             if let byteProgress = downloadingByteProgress {
-                Text("Downloading ·")
-                    .font(CHType.downloadProgress)
+                Text("Downloading")
+                    .font(CHType.downloadLabel)
                     .foregroundStyle(Color.chTextBody)
                     .lineLimit(1)
                     .fixedSize()
