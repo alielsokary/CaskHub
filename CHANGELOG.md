@@ -4,6 +4,25 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.6.5 — 2026-07-24
+
+### What's New
+
+- Added live download progress with downloaded and total sizes to install, adopt, and update controls
+- Added passive operation status for individual, concurrent, and Update All tasks
+- Added detection and safe adoption for apps installed through the App Store, installer packages, or outside Homebrew
+- Added Recently Installed sorting for installed apps and made it the default
+
+### Improvements
+
+- Improved Adopt and Updates ordering to default to Name A–Z
+- Improved download progress with clear phase transitions, stable text, and smoother movement
+
+### Bug Fixes
+
+- Fixed same-named apps showing incorrect Adopt actions by resolving ownership through bundle identity
+- Fixed external apps in localized or nested application folders not being recognized
+
 ## 0.6.4 — 2026-07-21
 
 ### What's New
