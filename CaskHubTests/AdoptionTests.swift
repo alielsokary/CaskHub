@@ -29,6 +29,7 @@ final class StubBrewProcessRunner: BrewProcessRunning {
     }
 
     var queuedResults: [BrewProcessResult] = []
+    var queuedChunks: [[String]] = []
     var thrownError: Error?
     var onRequest: ((Request) throws -> Void)?
     private(set) var requests: [Request] = []
@@ -38,7 +39,7 @@ final class StubBrewProcessRunner: BrewProcessRunning {
         arguments: [String],
         environment: [String: String],
         onStart _: @escaping (Process) -> Void,
-        onChunk _: @escaping @Sendable (String) -> Void
+        onChunk: @escaping @MainActor @Sendable (String) -> Void
     ) async throws -> BrewProcessResult {
         let askpassContents = environment["SUDO_ASKPASS"].flatMap {
             try? String(contentsOfFile: $0, encoding: .utf8)
@@ -52,6 +53,9 @@ final class StubBrewProcessRunner: BrewProcessRunning {
         requests.append(request)
         try onRequest?(request)
         if let thrownError { throw thrownError }
+        if !queuedChunks.isEmpty {
+            queuedChunks.removeFirst().forEach(onChunk)
+        }
         return queuedResults.isEmpty
             ? BrewProcessResult(exitCode: 0, output: "")
             : queuedResults.removeFirst()

@@ -21,6 +21,7 @@ enum CHSize {
     static let cardWidth: CGFloat = 261
     static let cardHeight: CGFloat = 176
     static let heroHeight: CGFloat = 180
+    static let actionCapsuleHeight: CGFloat = 28
 }
 
 enum CHSpace {

@@ -29,6 +29,7 @@ enum CHType {
     static let bodySm = Font.custom(uiFamily, size: 11).weight(.semibold)
     static let body = Font.custom(uiFamily, size: 13).weight(.semibold)
     static let button = Font.custom(uiFamily, size: 12).weight(.heavy)
+    static let downloadProgress = Font.custom(uiFamily, size: 9).weight(.semibold)
     static let label = Font.custom(uiFamily, size: 10).weight(.heavy) // + .kerning(trackingLabel), uppercase
 
     // Mono — versions, counts, keycaps, status bar

@@ -70,9 +70,17 @@ final class LocalHomebrewService {
 
     var inFlightActions: [String: CaskAction] = [:]
 
+    var operationProgress: [String: CaskOperationProgress] = [:]
+
+    var updateAllProgress: CaskUpdateAllProgress?
+
     var cancellableDownloads: Set<String> = []
 
     var cancelRequested: Set<String> = []
+
+    @ObservationIgnored var caskDisplayNames: [String: String] = [:]
+    @ObservationIgnored var brewOutputBuffers: [String: String] = [:]
+    @ObservationIgnored var lastProgressUpdates: [String: Date] = [:]
 
     @ObservationIgnored var runningProcesses: [String: Process] = [:]
 
@@ -195,6 +203,9 @@ final class LocalHomebrewService {
     /// The catalog provides the package receipt identifiers needed to associate
     /// system package records with Homebrew casks.
     func updatePackageCatalog(_ casks: [Cask]) async {
+        caskDisplayNames = casks.reduce(into: [:]) { names, cask in
+            names[cask.token] = cask.displayName
+        }
         packageCaskSignatures = casks.compactMap { cask in
             guard cask.hasPackageArtifact, !cask.packageIdentifiers.isEmpty else { return nil }
             return PackageCaskSignature(
@@ -231,9 +242,11 @@ final class LocalHomebrewService {
             externalPackageInstallations = packages
         }
     }
+}
 
-    // MARK: - Actions
+// MARK: - Actions
 
+extension LocalHomebrewService {
     func install(token: String, origin: CaskActionOrigin = .individual) async throws {
         try await runMutation(
             .installing, token: token, args: ["install", "--cask", token], origin: origin
@@ -270,14 +283,12 @@ final class LocalHomebrewService {
             .appendingPathComponent(token)
         let appBundleNames = installedCasks[token]?.appBundleNames ?? []
         Analytics.caskActionStarted(.repairing, token: token, origin: .repair)
-        inFlightActions[token] = .repairing
+        beginOperation(.repairing, token: token)
         do {
             try await runBrewStreaming(token: token, args: ["fetch", "--cask", token], cancellable: false)
-            inFlightActions[token] = nil
-            runningProcesses[token] = nil
+            clearOperation(token: token)
         } catch {
-            inFlightActions[token] = nil
-            runningProcesses[token] = nil
+            clearOperation(token: token)
             CrashReporter.capture(error)
             Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
             actionErrors[token] = (error as? LocalHomebrewError)?.errorDescription
@@ -319,11 +330,20 @@ final class LocalHomebrewService {
     func updateAll(tokens: [String]) async {
         guard !isUpdatingAll else { return }
         isUpdatingAll = true
-        defer { isUpdatingAll = false }
+        defer {
+            updateAllProgress = nil
+            isUpdatingAll = false
+        }
         for token in tokens where inFlightActions[token] == nil {
             inFlightActions[token] = .queued
         }
-        for token in tokens {
+        for (index, token) in tokens.enumerated() {
+            updateAllProgress = CaskUpdateAllProgress(
+                currentIndex: index + 1,
+                totalCount: tokens.count,
+                currentToken: token,
+                currentDisplayName: displayName(for: token)
+            )
             try? await upgrade(token: token, origin: .updateAll)
         }
     }
@@ -333,6 +353,10 @@ final class LocalHomebrewService {
               let process = runningProcesses[token] else { return }
         cancelRequested.insert(token)
         cancellableDownloads.remove(token)
+        if var progress = operationProgress[token] {
+            progress.phase = .canceling
+            operationProgress[token] = progress
+        }
 
         let pid = process.processIdentifier
         Task.detached(priority: .userInitiated) {
@@ -340,5 +364,16 @@ final class LocalHomebrewService {
             try? await Task.sleep(for: .seconds(5))
             if process.isRunning { process.terminate() }
         }
+    }
+
+    var statusBarOperation: CaskOperationStatus? {
+        CaskOperationStatus.make(
+            operations: Array(operationProgress.values),
+            updateAll: updateAllProgress
+        )
+    }
+
+    func displayName(for token: String) -> String {
+        caskDisplayNames[token] ?? token
     }
 }

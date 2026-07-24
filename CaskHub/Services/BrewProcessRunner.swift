@@ -5,6 +5,7 @@
 //  Created by Ali Elsokary on 20/07/2026.
 //
 
+import Darwin
 import Foundation
 
 struct BrewProcessResult: Sendable {
@@ -21,7 +22,7 @@ protocol BrewProcessRunning {
         arguments: [String],
         environment: [String: String],
         onStart: @escaping (Process) -> Void,
-        onChunk: @escaping @Sendable (String) -> Void
+        onChunk: @escaping @MainActor @Sendable (String) -> Void
     ) async throws -> BrewProcessResult
 }
 
@@ -32,28 +33,83 @@ final class SystemBrewProcessRunner: BrewProcessRunning {
         arguments: [String],
         environment: [String: String],
         onStart: @escaping (Process) -> Void,
-        onChunk: @escaping @Sendable (String) -> Void
+        onChunk: @escaping @MainActor @Sendable (String) -> Void
     ) async throws -> BrewProcessResult {
         let process = Process()
         process.executableURL = executableURL
         process.arguments = arguments
-        process.environment = environment
-
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
         process.standardInput = FileHandle.nullDevice
 
-        let collector = BrewOutputCollector()
-        collector.attach(to: process, pipe: pipe, onChunk: onChunk)
+        let terminal = BrewPseudoTerminal()
+        let readHandle: FileHandle
+        if let terminal {
+            var terminalEnvironment = environment
+            terminalEnvironment["TERM"] = "xterm-256color"
+            process.environment = terminalEnvironment
+            process.standardOutput = terminal.childHandle
+            process.standardError = terminal.childHandle
+            readHandle = terminal.outputHandle
+        } else {
+            process.environment = environment
+            let pipe = Pipe()
+            process.standardOutput = pipe
+            process.standardError = pipe
+            readHandle = pipe.fileHandleForReading
+        }
 
-        try process.run()
+        let (chunkStream, chunkContinuation) = AsyncStream<String>.makeStream()
+        let deliveryTask = Task { @MainActor in
+            for await chunk in chunkStream {
+                onChunk(chunk)
+            }
+        }
+
+        let collector = BrewOutputCollector()
+        collector.attach(to: process, readHandle: readHandle) { chunk in
+            chunkContinuation.yield(chunk)
+        }
+
+        do {
+            try process.run()
+        } catch {
+            chunkContinuation.finish()
+            await deliveryTask.value
+            throw error
+        }
+        terminal?.childHandle.closeFile()
         onStart(process)
 
         let output = await collector.output()
+        chunkContinuation.finish()
+        await deliveryTask.value
         return BrewProcessResult(
             exitCode: process.terminationStatus,
             output: output
         )
+    }
+}
+
+private struct BrewPseudoTerminal {
+    let outputHandle: FileHandle
+    let childHandle: FileHandle
+
+    init?() {
+        var outputDescriptor: Int32 = -1
+        var childDescriptor: Int32 = -1
+        var size = winsize()
+        size.ws_row = 24
+        size.ws_col = 180
+
+        guard openpty(
+            &outputDescriptor,
+            &childDescriptor,
+            nil,
+            nil,
+            &size
+        ) == 0 else {
+            return nil
+        }
+        outputHandle = FileHandle(fileDescriptor: outputDescriptor, closeOnDealloc: true)
+        childHandle = FileHandle(fileDescriptor: childDescriptor, closeOnDealloc: true)
     }
 }

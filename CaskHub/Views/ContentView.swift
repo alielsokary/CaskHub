@@ -109,7 +109,8 @@ struct ContentView: View {
             StatusBarView(
                 caskCount: viewModel.casks.count,
                 brewVersion: localHomebrew.brewVersion,
-                caskFlowRelease: categoryService.releaseTag
+                caskFlowRelease: categoryService.releaseTag,
+                operation: localHomebrew.statusBarOperation
             )
         }
         .containerBackground(for: .window) {
