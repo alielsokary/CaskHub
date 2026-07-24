@@ -3,23 +3,31 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.6.4</title>
-            <pubDate>Mon, 20 Jul 2026 23:14:32 +0000</pubDate>
-            <sparkle:version>290</sparkle:version>
-            <sparkle:shortVersionString>0.6.4</sparkle:shortVersionString>
+            <title>0.6.5</title>
+            <pubDate>Fri, 24 Jul 2026 17:03:14 +0000</pubDate>
+            <sparkle:version>303</sparkle:version>
+            <sparkle:shortVersionString>0.6.5</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Update notifications now appear at launch so you can see what's new before installing
-- Added a setting to turn the launch notification off and keep updates fully silent
+- Added live download progress with downloaded and total sizes to install, adopt, and update controls
+- Added passive operation status for individual, concurrent, and Update All tasks
+- Added detection and safe adoption for apps installed through the App Store, installer packages, or outside Homebrew
+- Added Recently Installed sorting for installed apps and made it the default
+
+### Improvements
+
+- Improved Adopt and Updates ordering to default to Name A–Z
+- Improved download progress with clear phase transitions, stable text, and smoother movement
 
 ### Bug Fixes
 
-- Fixed Repair stopping before reinstalling when Homebrew failed during cleanup after the app was already removed
-- Fixed Repair uninstalls removing unrelated dependencies
+- Fixed same-named apps showing incorrect Adopt actions by resolving ownership through bundle identity
+- Fixed external apps in localized or nested application folders not being recognized
+
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.4/CaskHub-0.6.4.zip" length="5030424" type="application/octet-stream" sparkle:edSignature="BuQiiPkFnjL+hkKsJjTEPw7fawCkPx9oG5/PxiE67HqAuvfSNut8frYhZe/X4K5DPtNShVVCHl4hOes3c/eUDQ=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.5/CaskHub-0.6.5.zip" length="5217771" type="application/octet-stream" sparkle:edSignature="X+Z9b+LCjXKIZQ9/hzivY9TroC9rq+ZdK8Ih7tHsuZolGB3dPX74NTsKXCcego8gbnOlxi8uki9C8sPfXW7uCQ=="/>
         </item>
     </channel>
 </rss>
