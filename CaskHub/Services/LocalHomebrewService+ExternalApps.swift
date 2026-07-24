@@ -239,8 +239,7 @@ extension LocalHomebrewService {
                     + packageNameMatchScore(appName, displayName: signature.displayName)
             }.max() ?? 0
             candidates.append(PackageInstallationCandidate(
-                signature: signature,
-                receiptIdentifiers: matchingReceipts,
+                signature: signature, receiptIdentifiers: matchingReceipts,
                 appBundleNames: existingApps,
                 score: score
             ))
