@@ -22,6 +22,7 @@ enum SortOption: String, CaseIterable, Identifiable {
     case mostPopular = "Most Popular"
     case nameAZ = "Name (A→Z)"
     case nameZA = "Name (Z→A)"
+    case recentlyInstalled = "Recently Installed"
     case newest = "Newest"
     case oldest = "Oldest"
 
@@ -30,6 +31,7 @@ enum SortOption: String, CaseIterable, Identifiable {
     }
 
     static let standard: [SortOption] = [.mostPopular, .nameAZ, .nameZA]
+    static let installed: [SortOption] = [.recentlyInstalled] + standard
 }
 
 @MainActor
@@ -55,7 +57,23 @@ final class CaskCatalogViewModel {
     }
 
     var sortOption: SortOption = .mostPopular
-    var selectedSidebar: SidebarSelection = .discover(.browse)
+    var selectedSidebar: SidebarSelection = .discover(.browse) {
+        didSet {
+            guard oldValue != selectedSidebar else { return }
+            switch selectedSidebar {
+            case .library(.installed):
+                sortOption = .recentlyInstalled
+            case .library(.updates), .library(.adopt):
+                sortOption = .nameAZ
+            case .discover(.recentlyAdded):
+                sortOption = .newest
+            default:
+                if !SortOption.standard.contains(sortOption) {
+                    sortOption = .mostPopular
+                }
+            }
+        }
+    }
 
     private(set) var recentlyAddedWindow: RecentlyAddedWindow = .days30
 
@@ -97,6 +115,14 @@ final class CaskCatalogViewModel {
 
     var updatesCount: Int {
         updatableCasks.count
+    }
+
+    var installedCasks: [Cask] {
+        casks.filter { [localHomebrew] in localHomebrew.isPresent($0) }
+    }
+
+    var installedCount: Int {
+        installedCasks.count
     }
 
     var adoptableCasks: [Cask] {
@@ -168,7 +194,7 @@ final class CaskCatalogViewModel {
             return casks.filter { recentTokens.contains($0.token) }
 
         case .library(.installed):
-            return casks.filter { localHomebrew.isInstalled(token: $0.token) }
+            return installedCasks
 
         case .library(.updates):
             return updatableCasks
@@ -200,6 +226,19 @@ final class CaskCatalogViewModel {
         source.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "") > (recentlyAdded.addedDate(for: $1.token) ?? "") }
     }
 
+    private func sortedByRecentlyInstalled(_ source: [Cask]) -> [Cask] {
+        source.sorted { lhs, rhs in
+            let lhsDate = localHomebrew.installedCasks[lhs.token]?.installedAt
+            let rhsDate = localHomebrew.installedCasks[rhs.token]?.installedAt
+            if lhsDate != rhsDate {
+                if let lhsDate, let rhsDate { return lhsDate > rhsDate }
+                return lhsDate != nil
+            }
+            return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
+                == .orderedAscending
+        }
+    }
+
     private func applySort(to casks: [Cask]) -> [Cask] {
         switch sortOption {
         case .mostPopular:
@@ -208,6 +247,8 @@ final class CaskCatalogViewModel {
             return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
         case .nameZA:
             return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending }
+        case .recentlyInstalled:
+            return sortedByRecentlyInstalled(casks)
         case .newest:
             return sortedByNewest(casks)
         case .oldest:
@@ -233,6 +274,7 @@ final class CaskCatalogViewModel {
                     && !cask.token.contains("@")
                     && !cask.token.hasPrefix("font-")
             }
+            await localHomebrew.updatePackageCatalog(casks)
 
             if let analytics = try? await analyticsRequest {
                 analyticsByPeriod[.days365] = Self.countsByToken(from: analytics)

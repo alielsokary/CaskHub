@@ -53,7 +53,10 @@ func makeCask(
     lifecycle: TestCaskLifecycle = .current,
     appNames: [String]? = nil,
     binaryNames: [String]? = nil,
-    binarySourcePaths: [String]? = nil
+    binarySourcePaths: [String]? = nil,
+    packageIdentifiers: [String]? = nil,
+    packageAppNames: [String]? = nil,
+    applicationBundleIdentifiers: [String]? = nil
 ) -> Cask {
     var cask = Cask.preview(
         token: token,
@@ -71,6 +74,15 @@ func makeCask(
             keys: ["binary"],
             binaryNames: binaryNames ?? [],
             binarySourcePaths: binarySourcePaths ?? []
+        ))
+    }
+    if packageIdentifiers != nil || packageAppNames != nil
+        || applicationBundleIdentifiers != nil {
+        artifacts.append(ArtifactStanza(
+            keys: ["pkg", "uninstall"],
+            packageIdentifiers: packageIdentifiers ?? [],
+            deletedAppNames: packageAppNames ?? [],
+            applicationBundleIdentifiers: applicationBundleIdentifiers ?? []
         ))
     }
     cask.artifacts = artifacts.isEmpty ? nil : artifacts
@@ -99,6 +111,44 @@ func installation(_ token: String, version: String) -> LocalCaskInstallation {
 func dateString(daysAgo: Int) -> String {
     let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: .now)!
     return date.formatted(.iso8601.year().month().day())
+}
+
+@discardableResult
+func makeApplicationBundle(
+    in directory: URL,
+    named name: String,
+    bundleIdentifier: String,
+    macAppStoreReceipt: Bool = false
+) throws -> URL {
+    let fileManager = FileManager.default
+    let appURL = directory.appendingPathComponent(name)
+    let executableName = URL(fileURLWithPath: name).deletingPathExtension().lastPathComponent
+    let contentsURL = appURL.appendingPathComponent("Contents")
+    let executableURL = contentsURL.appendingPathComponent("MacOS/\(executableName)")
+    try fileManager.createDirectory(
+        at: executableURL.deletingLastPathComponent(), withIntermediateDirectories: true
+    )
+    let info: [String: Any] = [
+        "CFBundleIdentifier": bundleIdentifier,
+        "CFBundleExecutable": executableName,
+        "CFBundleName": executableName,
+        "CFBundlePackageType": "APPL"
+    ]
+    let infoData = try PropertyListSerialization.data(
+        fromPropertyList: info, format: .xml, options: 0
+    )
+    try infoData.write(to: contentsURL.appendingPathComponent("Info.plist"))
+    try Data("#!/bin/sh\nexit 0\n".utf8).write(to: executableURL)
+    try fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executableURL.path)
+
+    if macAppStoreReceipt {
+        let receiptURL = contentsURL.appendingPathComponent("_MASReceipt/receipt")
+        try fileManager.createDirectory(
+            at: receiptURL.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        try Data().write(to: receiptURL)
+    }
+    return appURL
 }
 
 @MainActor
@@ -169,7 +219,10 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
 final class SpyCrashSpan: CrashSpan {
     var finished = false
     var finishedError: Error?
-    func finish() { finished = true }
+    func finish() {
+        finished = true
+    }
+
     func finish(error: Error) {
         finished = true
         finishedError = error
@@ -190,13 +243,26 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
     var tags: [String: String] = [:]
     var spans: [SpanRecord] = []
 
-    func start(enabled: Bool) { startedWith.append(enabled) }
-    func setEnabled(_ enabled: Bool) { enabledChanges.append(enabled) }
-    func capture(_ error: Error) { capturedErrors.append(error) }
-    func setTag(_ key: String, value: String) { tags[key] = value }
+    func start(enabled: Bool) {
+        startedWith.append(enabled)
+    }
+
+    func setEnabled(_ enabled: Bool) {
+        enabledChanges.append(enabled)
+    }
+
+    func capture(_ error: Error) {
+        capturedErrors.append(error)
+    }
+
+    func setTag(_ key: String, value: String) {
+        tags[key] = value
+    }
+
     func addBreadcrumb(_ message: String, data: [String: String]) {
         breadcrumbs.append((message, data))
     }
+
     func startSpan(name: String, operation: String) -> CrashSpan {
         let span = SpyCrashSpan()
         spans.append(SpanRecord(name: name, operation: operation, span: span))

@@ -7,9 +7,74 @@
 
 import Foundation
 
-nonisolated struct ExternalApplicationScan: Sendable {
-    let adoptableNames: Set<String>
-    let macAppStoreNames: Set<String>
+nonisolated struct ApplicationBundleMetadata {
+    let bundleIdentifier: String?
+}
+
+nonisolated struct DetectedApplication: Hashable, Sendable {
+    let url: URL
+    let bundleName: String
+    let bundleIdentifier: String?
+    let isMacAppStore: Bool
+    let isDirectlyInApplicationDirectory: Bool
+}
+
+nonisolated struct ExternalApplicationScan {
+    let applications: [DetectedApplication]
+
+    var adoptableNames: Set<String> {
+        Set(applications.lazy.filter {
+            !$0.isMacAppStore && $0.isDirectlyInApplicationDirectory
+        }.map(\.bundleName))
+    }
+
+    var nonStoreNames: Set<String> {
+        Set(applications.lazy.filter { !$0.isMacAppStore }.map(\.bundleName))
+    }
+
+    var macAppStoreNames: Set<String> {
+        Set(applications.lazy.filter(\.isMacAppStore).map(\.bundleName))
+    }
+
+    var macAppStoreBundleIdentifiers: [String: Set<String>] {
+        applications.lazy.filter(\.isMacAppStore).reduce(into: [:]) { result, application in
+            guard let bundleIdentifier = application.bundleIdentifier else { return }
+            result[application.bundleName, default: []].insert(bundleIdentifier)
+        }
+    }
+}
+
+nonisolated struct ApplicationCaskSignature {
+    let token: String
+    let appBundleNames: Set<String>
+    let bundleIdentifiers: Set<String>
+}
+
+nonisolated struct PackageCaskSignature {
+    let token: String
+    let displayName: String
+    let receiptPatterns: [String]
+    let appNameCandidates: [String]
+}
+
+nonisolated struct PackageInstallationCandidate {
+    let signature: PackageCaskSignature
+    let receiptIdentifiers: Set<String>
+    let appBundleNames: Set<String>
+    let score: Int
+}
+
+struct ExternalPackageInstallation: Hashable {
+    let receiptIdentifiers: Set<String>
+    let appBundleNames: [String]
+}
+
+enum CaskInstallationSource: String, Equatable {
+    case homebrew = "Homebrew"
+    case macAppStore = "Mac App Store"
+    case externalApplication = "External application"
+    case packageInstaller = "Package installer"
+    case externalExecutable = "External executable"
 }
 
 struct LocalCaskInstallation: Hashable, Identifiable {

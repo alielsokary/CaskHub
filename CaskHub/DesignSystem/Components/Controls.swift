@@ -79,7 +79,7 @@ struct ActionCapsuleLabel: View {
         .foregroundStyle(action.foreground)
         .lineLimit(1)
         .frame(maxWidth: fullWidth ? .infinity : nil)
-        .padding(.vertical, 6)
+        .frame(height: CHSize.actionCapsuleHeight)
         .padding(.horizontal, fullWidth ? 4 : 22)
         .background(Capsule().fill(action.background))
         .overlay(Capsule().strokeBorder(action.border, lineWidth: 1))

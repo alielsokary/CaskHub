@@ -277,38 +277,6 @@ extension LocalHomebrewService {
         return paths
     }
 
-    nonisolated static func scanApplications(
-        fileManager: FileManager,
-        directories: [URL]? = nil
-    ) -> ExternalApplicationScan {
-        let folders = directories ?? [
-            URL(fileURLWithPath: "/Applications"),
-            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
-        ]
-        var adoptableNames: Set<String> = []
-        var macAppStoreNames: Set<String> = []
-        for folder in folders {
-            guard let entries = try? fileManager.contentsOfDirectory(
-                at: folder,
-                includingPropertiesForKeys: nil,
-                options: [.skipsHiddenFiles]
-            ) else { continue }
-            for entry in entries where entry.pathExtension == "app" {
-                // Mac App Store apps carry a receipt; adopting those would fight MAS updates.
-                let masReceipt = entry.appendingPathComponent("Contents/_MASReceipt/receipt")
-                if fileManager.fileExists(atPath: masReceipt.path) {
-                    macAppStoreNames.insert(entry.lastPathComponent)
-                } else {
-                    adoptableNames.insert(entry.lastPathComponent)
-                }
-            }
-        }
-        return ExternalApplicationScan(
-            adoptableNames: adoptableNames,
-            macAppStoreNames: macAppStoreNames
-        )
-    }
-
     private nonisolated static func modificationDate(of url: URL) -> Date {
         (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
             ?? .distantPast
@@ -346,6 +314,17 @@ extension LocalHomebrewService {
 
     nonisolated static func locateCaskroom(fileManager: FileManager) -> URL? {
         brewPrefixCandidates("Caskroom").first { fileManager.fileExists(atPath: $0.path) }
+    }
+
+    func configuredCaskroomURL() -> URL? {
+        if let customBrewPrefix, !customBrewPrefix.isEmpty {
+            let configured = URL(fileURLWithPath: customBrewPrefix)
+                .appendingPathComponent("Caskroom")
+            if fileManager.fileExists(atPath: configured.path) {
+                return configured
+            }
+        }
+        return Self.locateCaskroom(fileManager: fileManager)
     }
 
     /// Resolves a user's picker selection to a brew prefix. Accepts the brew

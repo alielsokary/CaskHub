@@ -11,6 +11,9 @@ struct ArtifactStanza: Codable, Hashable {
     let keys: Set<String>
     let appNames: [String]
     let binaryNames: [String]
+    let packageIdentifiers: [String]
+    let deletedAppNames: [String]
+    let applicationBundleIdentifiers: [String]
 
     /// Raw source paths of `binary` entries (e.g. a path inside the .app bundle).
     /// Needed to verify a bundle actually contains what the cask declares.
@@ -20,12 +23,18 @@ struct ArtifactStanza: Codable, Hashable {
         keys: Set<String>,
         appNames: [String] = [],
         binaryNames: [String] = [],
-        binarySourcePaths: [String] = []
+        binarySourcePaths: [String] = [],
+        packageIdentifiers: [String] = [],
+        deletedAppNames: [String] = [],
+        applicationBundleIdentifiers: [String] = []
     ) {
         self.keys = keys
         self.appNames = appNames
         self.binaryNames = binaryNames
         self.binarySourcePaths = binarySourcePaths
+        self.packageIdentifiers = packageIdentifiers
+        self.deletedAppNames = deletedAppNames
+        self.applicationBundleIdentifiers = applicationBundleIdentifiers
     }
 
     private struct AnyKey: CodingKey {
@@ -61,12 +70,43 @@ struct ArtifactStanza: Codable, Hashable {
         }
     }
 
+    private struct UninstallEntry: Decodable {
+        let packageIdentifiers: [String]
+        let deletedPaths: [String]
+        let applicationBundleIdentifiers: [String]
+
+        init(from decoder: Decoder) throws {
+            guard let container = try? decoder.container(keyedBy: AnyKey.self) else {
+                packageIdentifiers = []
+                deletedPaths = []
+                applicationBundleIdentifiers = []
+                return
+            }
+            packageIdentifiers = Self.strings(in: container, key: "pkgutil")
+            deletedPaths = Self.strings(in: container, key: "delete")
+            applicationBundleIdentifiers = Self.strings(in: container, key: "quit")
+        }
+
+        private static func strings(
+            in container: KeyedDecodingContainer<AnyKey>, key: String
+        ) -> [String] {
+            guard let codingKey = AnyKey(stringValue: key) else { return [] }
+            if let value = try? container.decode(String.self, forKey: codingKey) {
+                return [value]
+            }
+            return (try? container.decode([String].self, forKey: codingKey)) ?? []
+        }
+    }
+
     init(from decoder: Decoder) throws {
         guard let container = try? decoder.container(keyedBy: AnyKey.self) else {
             keys = []
             appNames = []
             binaryNames = []
             binarySourcePaths = []
+            packageIdentifiers = []
+            deletedAppNames = []
+            applicationBundleIdentifiers = []
             return
         }
         keys = Set(container.allKeys.map(\.stringValue))
@@ -76,6 +116,15 @@ struct ArtifactStanza: Codable, Hashable {
             .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? [])
             .compactMap(\.name)
             .filter { $0.contains("/") }
+        let uninstallEntries = (AnyKey(stringValue: "uninstall")
+            .flatMap { try? container.decode([UninstallEntry].self, forKey: $0) } ?? [])
+        packageIdentifiers = uninstallEntries.flatMap(\.packageIdentifiers)
+        applicationBundleIdentifiers = uninstallEntries
+            .flatMap(\.applicationBundleIdentifiers)
+        deletedAppNames = uninstallEntries
+            .flatMap(\.deletedPaths)
+            .map { URL(fileURLWithPath: $0).lastPathComponent }
+            .filter { $0.hasSuffix(".app") }
     }
 
     /// Entries can be names or staged paths, with `{"target": …}` rename dicts
@@ -140,6 +189,37 @@ struct Cask: Codable, Identifiable, Hashable {
         artifacts?.flatMap(\.binarySourcePaths) ?? []
     }
 
+    /// Package receipts removed by the cask's uninstall stanza.
+    var packageIdentifiers: [String] {
+        artifacts?.flatMap(\.packageIdentifiers) ?? []
+    }
+
+    /// Bundle IDs Homebrew asks to quit before uninstalling. Unlike pkgutil
+    /// receipts, these identify the application itself and can safely relate
+    /// App Store and direct-download variants of the same product family.
+    var applicationBundleIdentifiers: [String] {
+        artifacts?.flatMap(\.applicationBundleIdentifiers) ?? []
+    }
+
+    /// Application bundles installed indirectly by a package artifact.
+    var deletedAppNames: [String] {
+        artifacts?.flatMap(\.deletedAppNames) ?? []
+    }
+
+    var hasPackageArtifact: Bool {
+        artifacts?.contains { $0.keys.contains("pkg") } == true
+    }
+
+    /// Conservative bundle-name candidates for package casks whose API metadata
+    /// does not expose a normal `app` artifact.
+    var packageAppNameCandidates: [String] {
+        guard hasPackageArtifact else { return [] }
+        var seen: Set<String> = []
+        return (appArtifactNames + deletedAppNames + ["\(displayName).app"]).filter {
+            seen.insert($0).inserted
+        }
+    }
+
     var isCLI: Bool {
         guard let artifacts, !artifacts.isEmpty else { return false }
         return artifacts.contains { !$0.keys.isDisjoint(with: ["binary", "stageOnly", "stage_only"]) }
@@ -168,32 +248,32 @@ struct Cask: Codable, Identifiable, Hashable {
 }
 
 #if DEBUG
-extension Cask {
-    static func preview(
-        token: String,
-        name: String? = nil,
-        desc: String? = nil,
-        version: String = "1.0",
-        deprecated: Bool = false,
-        disabled: Bool = false,
-        autoUpdates: Bool? = nil
-    ) -> Cask {
-        Cask(
-            token: token,
-            fullToken: nil,
-            tap: nil,
-            name: [name ?? token],
-            desc: desc,
-            homepage: "https://example.com",
-            url: nil,
-            version: version,
-            bundleVersion: nil,
-            bundleShortVersion: nil,
-            outdated: false,
-            deprecated: deprecated,
-            disabled: disabled,
-            autoUpdates: autoUpdates
-        )
+    extension Cask {
+        static func preview(
+            token: String,
+            name: String? = nil,
+            desc: String? = nil,
+            version: String = "1.0",
+            deprecated: Bool = false,
+            disabled: Bool = false,
+            autoUpdates: Bool? = nil
+        ) -> Cask {
+            Cask(
+                token: token,
+                fullToken: nil,
+                tap: nil,
+                name: [name ?? token],
+                desc: desc,
+                homepage: "https://example.com",
+                url: nil,
+                version: version,
+                bundleVersion: nil,
+                bundleShortVersion: nil,
+                outdated: false,
+                deprecated: deprecated,
+                disabled: disabled,
+                autoUpdates: autoUpdates
+            )
+        }
     }
-}
 #endif

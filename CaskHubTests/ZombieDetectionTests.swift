@@ -158,10 +158,10 @@ final class ZombieDetectionTests: XCTestCase {
         try fm.createDirectory(
             at: versionDir.appendingPathComponent("Tabby.app"), withIntermediateDirectories: true
         )
-        UserDefaults.standard.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
-        defer { UserDefaults.standard.removeObject(forKey: LocalHomebrewService.customBrewPrefixKey) }
+        let defaults = makeScratchDefaults("stranded-fs")
+        defaults.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
 
-        let service = LocalHomebrewService(defaults: makeScratchDefaults("stranded-fs"))
+        let service = LocalHomebrewService(defaults: defaults)
         let rewordedUpgrade = LocalHomebrewError.brewCommandFailed(
             args: ["upgrade", "--cask", "tabby"], exitCode: 1,
             stderr: "some future brew wording our strings don't match"
@@ -188,8 +188,8 @@ final class ZombieDetectionTests: XCTestCase {
     /// current artifact ChatGPT.app is alive on disk. Never offer deletion then.
     @MainActor
     func test_zombie_verdict_clears_when_current_cask_app_exists() throws {
-        try fm.createDirectory(
-            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        try makeApplicationBundle(
+            in: appsDir, named: "ChatGPT.app", bundleIdentifier: "com.openai.chat"
         )
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("zombie-crosscheck"),
@@ -233,8 +233,8 @@ final class ZombieDetectionTests: XCTestCase {
 
     @MainActor
     func test_open_falls_back_to_current_cask_artifact_name() throws {
-        try fm.createDirectory(
-            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        try makeApplicationBundle(
+            in: appsDir, named: "ChatGPT.app", bundleIdentifier: "com.openai.chat"
         )
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("open-fallback"),
