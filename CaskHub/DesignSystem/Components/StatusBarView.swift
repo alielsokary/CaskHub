@@ -11,6 +11,7 @@ struct StatusBarView: View {
     var caskCount: Int
     var brewVersion: String?
     var caskFlowRelease: String?
+    var operation: CaskOperationStatus?
 
     var body: some View {
         HStack(spacing: 16) {
@@ -20,6 +21,11 @@ struct StatusBarView: View {
             Text(statusLine)
                 .font(CHType.statusMono)
                 .foregroundStyle(Color.chTextBody)
+
+            if let operation {
+                operationView(operation)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+            }
 
             Spacer()
 
@@ -40,6 +46,27 @@ struct StatusBarView: View {
         .overlay(alignment: .top) {
             Rectangle().fill(Color.chHairline).frame(height: 1)
         }
+        .animation(.snappy(duration: 0.28), value: operation != nil)
+    }
+
+    private func operationView(_ operation: CaskOperationStatus) -> some View {
+        HStack(spacing: 8) {
+            Rectangle()
+                .fill(Color.chHairlineStrong)
+                .frame(width: 1, height: 13)
+
+            ProgressView()
+                .controlSize(.mini)
+                .tint(Color.chTextBrand)
+
+            Text(operation.message)
+                .font(CHType.statusMono)
+                .monospacedDigit()
+                .foregroundStyle(Color.chTextBody)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(operation.message)
     }
 
     private var statusLine: String {
@@ -55,7 +82,17 @@ struct StatusBarView: View {
 #Preview {
     ZStack(alignment: .bottom) {
         WindowBackdrop()
-        StatusBarView(caskCount: 3781, caskFlowRelease: "caskflow-v2026.07.10")
+        StatusBarView(
+            caskCount: 3781,
+            caskFlowRelease: "caskflow-v2026.07.10",
+            operation: CaskOperationStatus(
+                label: "Downloading Docker Desktop",
+                byteProgress: CaskByteProgress(
+                    completedBytes: 84_000_000,
+                    totalBytes: 245_000_000
+                )
+            )
+        )
     }
     .frame(width: 700, height: 200)
 }

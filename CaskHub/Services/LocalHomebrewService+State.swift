@@ -34,8 +34,13 @@ extension LocalHomebrewService {
     }
 
     func isAdoptableApplication(_ cask: Cask) -> Bool {
-        installedCasks[cask.token] == nil
-            && cask.appArtifactNames.contains(where: externalAppNames.contains)
+        guard installedCasks[cask.token] == nil else { return false }
+        if !applicationCaskSignatures.isEmpty {
+            return externalApplicationOwners[cask.token] != nil
+        }
+
+        // Catalog-less fallback for previews and isolated state injection.
+        return cask.appArtifactNames.contains(where: externalAppNames.contains)
     }
 
     func isExternalPackageInstalled(_ cask: Cask) -> Bool {
@@ -137,6 +142,10 @@ extension LocalHomebrewService {
             appLauncher(application.url)
             return
         }
+        if let application = externalApplicationOwners[cask.token] {
+            appLauncher(application.url)
+            return
+        }
         openBundle(named: externalBundleNameCandidates(for: cask), token: cask.token)
     }
 
@@ -145,6 +154,7 @@ extension LocalHomebrewService {
         guard installedCasks[cask.token] == nil,
               installationSource(for: cask) != nil,
               let appURL = macAppStoreApplication(for: cask)?.url
+                ?? externalApplicationOwners[cask.token]?.url
                 ?? existingBundleURL(named: externalBundleNameCandidates(for: cask)),
               let info = Bundle(url: appURL)?.infoDictionary
         else { return nil }

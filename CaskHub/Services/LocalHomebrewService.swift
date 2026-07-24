@@ -19,6 +19,10 @@ final class LocalHomebrewService {
     /// Non-Mac-App-Store bundle names found in /Applications and ~/Applications.
     var externalAppNames: Set<String> = []
 
+    /// Directly installed applications resolved to one catalog cask. A token is
+    /// absent when a shared bundle name cannot be disambiguated safely.
+    var externalApplicationOwners: [String: DetectedApplication] = [:]
+
     /// Mac App Store bundles that must be shown as installed but never adopted.
     var macAppStoreAppNames: Set<String> = []
 
@@ -35,11 +39,13 @@ final class LocalHomebrewService {
     /// Package-installed apps matched to cask receipt metadata.
     var externalPackageInstallations: [String: ExternalPackageInstallation] = [:]
 
+    @ObservationIgnored var applicationCaskSignatures: [ApplicationCaskSignature] = []
+
     /// Package adoptions awaiting the user's reinstall confirmation.
     var packageAdoptionRequests: Set<String> = []
 
     @ObservationIgnored var packageCaskSignatures: [PackageCaskSignature] = []
-    @ObservationIgnored private var packageCatalogGeneration = 0
+    @ObservationIgnored var packageCatalogGeneration = 0
 
     var adoptReplaceOffers: Set<String> = []
 
@@ -70,9 +76,17 @@ final class LocalHomebrewService {
 
     var inFlightActions: [String: CaskAction] = [:]
 
+    var operationProgress: [String: CaskOperationProgress] = [:]
+
+    var updateAllProgress: CaskUpdateAllProgress?
+
     var cancellableDownloads: Set<String> = []
 
     var cancelRequested: Set<String> = []
+
+    @ObservationIgnored var caskDisplayNames: [String: String] = [:]
+    @ObservationIgnored var brewOutputBuffers: [String: String] = [:]
+    @ObservationIgnored var lastProgressUpdates: [String: Date] = [:]
 
     @ObservationIgnored var runningProcesses: [String: Process] = [:]
 
@@ -162,12 +176,17 @@ final class LocalHomebrewService {
             brewVersion = await brewVersionProvider()
         }
         let appDirs = applicationDirectories
+        let caskroom = configuredCaskroomURL()
         let packageSignatures = packageCaskSignatures
         let packageGeneration = packageCatalogGeneration
         let (casks, applications, binaryPaths, packages) = await Task.detached(priority: .userInitiated) {
             let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
             return (
-                Self.scanCaskroom(fileManager: fm, applicationDirectories: appDirs),
+                caskroom.map {
+                    Self.scanCaskroom(
+                        at: $0, fileManager: fm, applicationDirectories: appDirs
+                    )
+                } ?? [:],
                 applications,
                 Self.scanBinaryDirectories(fileManager: fm),
                 Self.scanExternalPackageInstallations(
@@ -176,64 +195,32 @@ final class LocalHomebrewService {
                 )
             )
         }.value
+        installedCasks = casks
         externalAppNames = applications.adoptableNames
         macAppStoreAppNames = applications.macAppStoreNames
         macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
         detectedApplications = applications.applications
+        externalApplicationOwners = Self.resolveExternalApplicationOwners(
+            signatures: applicationCaskSignatures,
+            applications: applications.applications,
+            installedCasks: casks
+        )
         externalBinaryPaths = binaryPaths
         if packageGeneration == packageCatalogGeneration {
             externalPackageInstallations = packages
         }
 
         CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
-        CrashReporter.tag("brew.caskroom", value: Self.locateCaskroom(fileManager: fm)?.path ?? "not found")
+        CrashReporter.tag("brew.caskroom", value: caskroom?.path ?? "not found")
 
-        installedCasks = casks
         lastRefresh = .now
     }
 
-    /// The catalog provides the package receipt identifiers needed to associate
-    /// system package records with Homebrew casks.
-    func updatePackageCatalog(_ casks: [Cask]) async {
-        packageCaskSignatures = casks.compactMap { cask in
-            guard cask.hasPackageArtifact, !cask.packageIdentifiers.isEmpty else { return nil }
-            return PackageCaskSignature(
-                token: cask.token,
-                displayName: cask.displayName,
-                receiptPatterns: cask.packageIdentifiers,
-                appNameCandidates: cask.packageAppNameCandidates
-            )
-        }
-        packageCatalogGeneration &+= 1
-        let packageGeneration = packageCatalogGeneration
-        guard !packageCaskSignatures.isEmpty else {
-            externalPackageInstallations = [:]
-            return
-        }
+}
 
-        let signatures = packageCaskSignatures
-        let fm = fileManager
-        let appDirs = applicationDirectories
-        let applications = await Task.detached(priority: .userInitiated) {
-            Self.scanApplications(fileManager: fm, directories: appDirs)
-        }.value
-        externalAppNames = applications.adoptableNames
-        macAppStoreAppNames = applications.macAppStoreNames
-        macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
-        detectedApplications = applications.applications
-        let packages = await Task.detached(priority: .userInitiated) {
-            Self.scanExternalPackageInstallations(
-                signatures: signatures,
-                availableAppNames: applications.nonStoreNames
-            )
-        }.value
-        if packageGeneration == packageCatalogGeneration {
-            externalPackageInstallations = packages
-        }
-    }
+// MARK: - Actions
 
-    // MARK: - Actions
-
+extension LocalHomebrewService {
     func install(token: String, origin: CaskActionOrigin = .individual) async throws {
         try await runMutation(
             .installing, token: token, args: ["install", "--cask", token], origin: origin
@@ -266,18 +253,16 @@ final class LocalHomebrewService {
     func repairReinstalling(token: String) async throws {
         guard inFlightActions[token] == nil else { return }
         repairOffers.remove(token)
-        let caskroomEntry = Self.locateCaskroom(fileManager: fileManager)?
+        let caskroomEntry = configuredCaskroomURL()?
             .appendingPathComponent(token)
         let appBundleNames = installedCasks[token]?.appBundleNames ?? []
         Analytics.caskActionStarted(.repairing, token: token, origin: .repair)
-        inFlightActions[token] = .repairing
+        beginOperation(.repairing, token: token)
         do {
             try await runBrewStreaming(token: token, args: ["fetch", "--cask", token], cancellable: false)
-            inFlightActions[token] = nil
-            runningProcesses[token] = nil
+            clearOperation(token: token)
         } catch {
-            inFlightActions[token] = nil
-            runningProcesses[token] = nil
+            clearOperation(token: token)
             CrashReporter.capture(error)
             Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
             actionErrors[token] = (error as? LocalHomebrewError)?.errorDescription
@@ -319,11 +304,20 @@ final class LocalHomebrewService {
     func updateAll(tokens: [String]) async {
         guard !isUpdatingAll else { return }
         isUpdatingAll = true
-        defer { isUpdatingAll = false }
+        defer {
+            updateAllProgress = nil
+            isUpdatingAll = false
+        }
         for token in tokens where inFlightActions[token] == nil {
             inFlightActions[token] = .queued
         }
-        for token in tokens {
+        for (index, token) in tokens.enumerated() {
+            updateAllProgress = CaskUpdateAllProgress(
+                currentIndex: index + 1,
+                totalCount: tokens.count,
+                currentToken: token,
+                currentDisplayName: displayName(for: token)
+            )
             try? await upgrade(token: token, origin: .updateAll)
         }
     }
@@ -333,6 +327,10 @@ final class LocalHomebrewService {
               let process = runningProcesses[token] else { return }
         cancelRequested.insert(token)
         cancellableDownloads.remove(token)
+        if var progress = operationProgress[token] {
+            progress.phase = .canceling
+            operationProgress[token] = progress
+        }
 
         let pid = process.processIdentifier
         Task.detached(priority: .userInitiated) {
@@ -340,5 +338,16 @@ final class LocalHomebrewService {
             try? await Task.sleep(for: .seconds(5))
             if process.isRunning { process.terminate() }
         }
+    }
+
+    var statusBarOperation: CaskOperationStatus? {
+        CaskOperationStatus.make(
+            operations: Array(operationProgress.values),
+            updateAll: updateAllProgress
+        )
+    }
+
+    func displayName(for token: String) -> String {
+        caskDisplayNames[token] ?? token
     }
 }

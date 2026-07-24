@@ -316,6 +316,17 @@ extension LocalHomebrewService {
         brewPrefixCandidates("Caskroom").first { fileManager.fileExists(atPath: $0.path) }
     }
 
+    func configuredCaskroomURL() -> URL? {
+        if let customBrewPrefix, !customBrewPrefix.isEmpty {
+            let configured = URL(fileURLWithPath: customBrewPrefix)
+                .appendingPathComponent("Caskroom")
+            if fileManager.fileExists(atPath: configured.path) {
+                return configured
+            }
+        }
+        return Self.locateCaskroom(fileManager: fileManager)
+    }
+
     /// Resolves a user's picker selection to a brew prefix. Accepts the brew
     /// binary itself, a prefix folder, or the bin folder inside it.
     nonisolated static func brewPrefix(fromSelection url: URL) -> String? {

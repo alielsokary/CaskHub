@@ -129,37 +129,15 @@ struct CaskActionsView: View {
         let token = cask.token
         let isCanceling = localHomebrew.cancelRequested.contains(token)
         let canCancel = localHomebrew.cancellableDownloads.contains(token) && !isCanceling
-        let label = isCanceling
-            ? "Canceling…"
-            : (canCancel ? "Downloading…" : action.inProgressLabel)
 
-        return HStack(spacing: 6) {
-            ProgressView().controlSize(.small)
-            Text(label)
-                .font(CHType.bodySm)
-                .foregroundStyle(Color.chTextBody)
-            if canCancel {
-                Spacer(minLength: 0)
-                Button {
-                    localHomebrew.cancelInstall(token: token)
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(Color.chTextBody)
-                        .padding(4)
-                        .background(Circle().fill(Color.chSurfaceField))
-                        .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .help("Cancel download")
-            }
-        }
-        .frame(maxWidth: fullWidth ? .infinity : nil)
-        .padding(.vertical, 5)
-        .padding(.horizontal, 16)
-        .background(Capsule().fill(Color.chSurfaceField))
-        .overlay(Capsule().strokeBorder(Color.chHairline, lineWidth: 1))
+        return CaskOperationCapsule(
+            action: action,
+            progress: localHomebrew.operationProgress[token],
+            isCanceling: isCanceling,
+            canCancel: canCancel,
+            fullWidth: fullWidth,
+            onCancel: { localHomebrew.cancelInstall(token: token) }
+        )
     }
 }
 

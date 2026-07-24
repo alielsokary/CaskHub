@@ -44,6 +44,12 @@ nonisolated struct ExternalApplicationScan {
     }
 }
 
+nonisolated struct ApplicationCaskSignature {
+    let token: String
+    let appBundleNames: Set<String>
+    let bundleIdentifiers: Set<String>
+}
+
 nonisolated struct PackageCaskSignature {
     let token: String
     let displayName: String

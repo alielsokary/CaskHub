@@ -21,8 +21,19 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
 
     /// Must be called before `process.run()` so a fast-exiting process can't
     /// slip past the termination handler.
-    func attach(to process: Process, pipe: Pipe, onChunk: @escaping @Sendable (String) -> Void) {
-        let handle = pipe.fileHandleForReading
+    func attach(
+        to process: Process,
+        pipe: Pipe,
+        onChunk: @escaping @Sendable (String) -> Void
+    ) {
+        attach(to: process, readHandle: pipe.fileHandleForReading, onChunk: onChunk)
+    }
+
+    func attach(
+        to process: Process,
+        readHandle handle: FileHandle,
+        onChunk: @escaping @Sendable (String) -> Void
+    ) {
         handle.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
             if data.isEmpty { handle.readabilityHandler = nil }
@@ -32,8 +43,11 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
                     self.sawEOF = true
                     if self.exited { self.finish() }
                 } else if let text = String(data: data, encoding: .utf8) {
-                    self.tail = String((self.tail + text).suffix(2000))
-                    onChunk(text)
+                    let plainText = Self.plainText(text)
+                    self.tail = String((self.tail + plainText).suffix(2000))
+                    if !plainText.isEmpty {
+                        onChunk(plainText)
+                    }
                 }
             }
         }
@@ -69,5 +83,15 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
         finished = true
         continuation?.resume(returning: tail)
         continuation = nil
+    }
+
+    private static func plainText(_ text: String) -> String {
+        text
+            .replacingOccurrences(
+                of: "\u{001B}\\[[0-?]*[ -/]*[@-~]",
+                with: "",
+                options: .regularExpression
+            )
+            .replacingOccurrences(of: "\r", with: "\n")
     }
 }

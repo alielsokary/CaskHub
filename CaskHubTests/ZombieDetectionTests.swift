@@ -158,10 +158,10 @@ final class ZombieDetectionTests: XCTestCase {
         try fm.createDirectory(
             at: versionDir.appendingPathComponent("Tabby.app"), withIntermediateDirectories: true
         )
-        UserDefaults.standard.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
-        defer { UserDefaults.standard.removeObject(forKey: LocalHomebrewService.customBrewPrefixKey) }
+        let defaults = makeScratchDefaults("stranded-fs")
+        defaults.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
 
-        let service = LocalHomebrewService(defaults: makeScratchDefaults("stranded-fs"))
+        let service = LocalHomebrewService(defaults: defaults)
         let rewordedUpgrade = LocalHomebrewError.brewCommandFailed(
             args: ["upgrade", "--cask", "tabby"], exitCode: 1,
             stderr: "some future brew wording our strings don't match"

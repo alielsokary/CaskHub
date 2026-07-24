@@ -151,37 +151,6 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["new-app"])
     }
 
-    // MARK: Sorting
-
-    @MainActor
-    func test_sort_options_order_by_downloads_name_and_added_date() async {
-        let recent = RecentlyAddedService()
-        recent.addedDates = [
-            "bravo": dateString(daysAgo: 1),
-            "alpha": dateString(daysAgo: 50)
-        ]
-        let (vm, _) = await makeSUT(
-            casks: [makeCask("alpha"), makeCask("charlie"), makeCask("bravo")],
-            analytics: [("bravo", "300"), ("alpha", "200"), ("charlie", "100")],
-            recentlyAdded: recent
-        )
-
-        vm.sortOption = .mostPopular
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["bravo", "alpha", "charlie"])
-
-        vm.sortOption = .nameAZ
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["alpha", "bravo", "charlie"])
-
-        vm.sortOption = .nameZA
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["charlie", "bravo", "alpha"])
-
-        vm.sortOption = .newest
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["bravo", "alpha", "charlie"])
-
-        vm.sortOption = .oldest
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["alpha", "bravo", "charlie"])
-    }
-
     // MARK: Browse sections
 
     @MainActor

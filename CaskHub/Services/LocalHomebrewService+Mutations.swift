@@ -31,14 +31,10 @@ extension LocalHomebrewService {
         recoverIf: (() -> Bool)? = nil
     ) async throws {
         guard inFlightActions[token] == nil || inFlightActions[token] == .queued else { return }
-        inFlightActions[token] = action
+        beginOperation(action, token: token)
         actionErrors[token] = nil
         Analytics.caskActionStarted(action, token: token, origin: origin)
-        defer {
-            inFlightActions[token] = nil
-            cancellableDownloads.remove(token)
-            runningProcesses[token] = nil
-        }
+        defer { clearOperation(token: token) }
 
         let span = CrashReporter.span(name: args.first ?? "brew", operation: "brew")
         do {
@@ -84,7 +80,7 @@ extension LocalHomebrewService {
     }
 
     private func hasStrandedCopy(token: String) -> Bool {
-        guard let caskroom = Self.locateCaskroom(fileManager: fileManager) else { return false }
+        guard let caskroom = configuredCaskroomURL() else { return false }
         return Self.strandedCopyExists(in: caskroom, token: token, fileManager: fileManager)
     }
 
@@ -109,18 +105,17 @@ extension LocalHomebrewService {
             environment["SUDO_ASKPASS"] = askpass.path
         }
 
+        let service = self
         let result = try await processRunner.run(
             executableURL: brewURL,
             arguments: args,
             environment: environment,
-            onStart: { [weak self] process in
-                self?.runningProcesses[token] = process
-                if cancellable { self?.cancellableDownloads.insert(token) }
+            onStart: { process in
+                service.runningProcesses[token] = process
+                if cancellable { service.cancellableDownloads.insert(token) }
             },
-            onChunk: { [weak self] text in
-                guard text.contains("==> Installing Cask") else { return }
-                guard let self else { return }
-                Task { @MainActor in self.cancellableDownloads.remove(token) }
+            onChunk: { text in
+                service.consumeBrewOutput(text, token: token)
             }
         )
 
@@ -131,6 +126,57 @@ extension LocalHomebrewService {
                 stderr: Self.diagnosticOutput(from: result.output)
             )
         }
+    }
+
+    func beginOperation(_ action: CaskAction, token: String) {
+        inFlightActions[token] = action
+        brewOutputBuffers[token] = nil
+        lastProgressUpdates[token] = nil
+        operationProgress[token] = CaskOperationProgress(
+            token: token,
+            displayName: displayName(for: token),
+            action: action,
+            phase: action == .uninstalling ? .performing : .preparing
+        )
+    }
+
+    func clearOperation(token: String) {
+        inFlightActions[token] = nil
+        operationProgress[token] = nil
+        cancellableDownloads.remove(token)
+        brewOutputBuffers[token] = nil
+        lastProgressUpdates[token] = nil
+        runningProcesses[token] = nil
+    }
+
+    func consumeBrewOutput(_ output: String, token: String) {
+        guard var progress = operationProgress[token],
+              progress.phase != .canceling
+        else { return }
+
+        let buffered = String(((brewOutputBuffers[token] ?? "") + output).suffix(6_000))
+        brewOutputBuffers[token] = buffered
+
+        if let bytes = BrewProgressParser.byteProgress(in: buffered) {
+            let now = Date()
+            let shouldPublish = lastProgressUpdates[token].map {
+                now.timeIntervalSince($0) >= 0.10
+            } ?? true
+            if shouldPublish || bytes.completed >= bytes.total {
+                progress.phase = .downloading
+                progress.completedBytes = bytes.completed
+                progress.totalBytes = bytes.total
+                lastProgressUpdates[token] = now
+            }
+        }
+        if let phase = BrewProgressParser.latestPhase(in: buffered) {
+            progress.phase = phase
+            if phase == .performing {
+                cancellableDownloads.remove(token)
+            }
+        }
+
+        operationProgress[token] = progress
     }
 
     func repairRemovalSatisfied(
