@@ -80,7 +80,7 @@ extension LocalHomebrewService {
     }
 
     private func hasStrandedCopy(token: String) -> Bool {
-        guard let caskroom = Self.locateCaskroom(fileManager: fileManager) else { return false }
+        guard let caskroom = configuredCaskroomURL() else { return false }
         return Self.strandedCopyExists(in: caskroom, token: token, fileManager: fileManager)
     }
 

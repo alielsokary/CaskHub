@@ -6,6 +6,57 @@
 import Foundation
 
 extension LocalHomebrewService {
+    /// The catalog provides app identity and package receipt metadata needed to
+    /// associate software already on the Mac with exactly one Homebrew cask.
+    func updatePackageCatalog(_ casks: [Cask]) async {
+        caskDisplayNames = casks.reduce(into: [:]) { names, cask in
+            names[cask.token] = cask.displayName
+        }
+        applicationCaskSignatures = casks.compactMap { cask in
+            guard !cask.appArtifactNames.isEmpty else { return nil }
+            return ApplicationCaskSignature(
+                token: cask.token,
+                appBundleNames: Set(cask.appArtifactNames),
+                bundleIdentifiers: Set(cask.applicationBundleIdentifiers)
+            )
+        }
+        packageCaskSignatures = casks.compactMap { cask in
+            guard cask.hasPackageArtifact, !cask.packageIdentifiers.isEmpty else { return nil }
+            return PackageCaskSignature(
+                token: cask.token,
+                displayName: cask.displayName,
+                receiptPatterns: cask.packageIdentifiers,
+                appNameCandidates: cask.packageAppNameCandidates
+            )
+        }
+        packageCatalogGeneration &+= 1
+        let packageGeneration = packageCatalogGeneration
+
+        let packageSignatures = packageCaskSignatures
+        let fm = fileManager
+        let appDirs = applicationDirectories
+        let (applications, packages) = await Task.detached(priority: .userInitiated) {
+            let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
+            let packages = packageSignatures.isEmpty ? [:] : Self.scanExternalPackageInstallations(
+                signatures: packageSignatures,
+                availableAppNames: applications.nonStoreNames
+            )
+            return (applications, packages)
+        }.value
+        guard packageGeneration == packageCatalogGeneration else { return }
+
+        externalAppNames = applications.adoptableNames
+        macAppStoreAppNames = applications.macAppStoreNames
+        macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
+        detectedApplications = applications.applications
+        externalApplicationOwners = Self.resolveExternalApplicationOwners(
+            signatures: applicationCaskSignatures,
+            applications: applications.applications,
+            installedCasks: installedCasks
+        )
+        externalPackageInstallations = packages
+    }
+
     nonisolated static func scanApplications(
         fileManager: FileManager,
         directories: [URL]? = nil
@@ -46,6 +97,64 @@ extension LocalHomebrewService {
             }
         }
         return ExternalApplicationScan(applications: applications)
+    }
+
+    /// Assigns each directly installed application to at most one cask.
+    /// Bundle names identify ordinary apps; shared names require one exact
+    /// bundle-identifier match. Installed Homebrew casks claim their bundles
+    /// before external applications are considered.
+    nonisolated static func resolveExternalApplicationOwners(
+        signatures: [ApplicationCaskSignature],
+        applications: [DetectedApplication],
+        installedCasks: [String: LocalCaskInstallation]
+    ) -> [String: DetectedApplication] {
+        guard !signatures.isEmpty else { return [:] }
+
+        let signaturesByToken = Dictionary(
+            signatures.map { ($0.token, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let installedBundleNames = Set(installedCasks.values.flatMap { installation in
+            let catalogNames = signaturesByToken[installation.token]?.appBundleNames ?? []
+            return installation.appBundleNames + Array(catalogNames)
+        }.map { normalizedApplicationName($0) })
+
+        var owners: [String: DetectedApplication] = [:]
+        for application in applications where
+            !application.isMacAppStore && application.isDirectlyInApplicationDirectory {
+            let normalizedName = normalizedApplicationName(application.bundleName)
+            guard !installedBundleNames.contains(normalizedName) else { continue }
+
+            let candidates = signatures.filter { signature in
+                signature.appBundleNames.contains {
+                    normalizedApplicationName($0) == normalizedName
+                } && !installedCasks.keys.contains(signature.token)
+            }
+            guard let owner = externalApplicationOwner(
+                for: application, candidates: candidates
+            ) else { continue }
+            owners[owner.token] = application
+        }
+        return owners
+    }
+
+    private nonisolated static func externalApplicationOwner(
+        for application: DetectedApplication,
+        candidates: [ApplicationCaskSignature]
+    ) -> ApplicationCaskSignature? {
+        if candidates.count == 1 { return candidates[0] }
+        guard candidates.count > 1,
+              let identifier = application.bundleIdentifier?.lowercased()
+        else { return nil }
+
+        let exactMatches = candidates.filter { signature in
+            signature.bundleIdentifiers.contains { $0.lowercased() == identifier }
+        }
+        return exactMatches.count == 1 ? exactMatches[0] : nil
+    }
+
+    private nonisolated static func normalizedApplicationName(_ name: String) -> String {
+        name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 
     /// A directory ending in `.app` is not necessarily launchable. Partial

@@ -70,7 +70,9 @@
 		41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */; };
 		41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B130028F9F00608C7A /* CaskHubTests.swift */; };
 		C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000001 /* ExternalInstallationTests.swift */; };
+		C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */; };
 		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
+		F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25000000000000000000001 /* CaskCatalogSortTests.swift */; };
 		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
 		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
 		FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */; };
@@ -154,7 +156,9 @@
 		41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 		41DFD4B130028F9F00608C7A /* CaskHubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubTests.swift; sourceTree = "<group>"; };
 		D15000000000000000000001 /* ExternalInstallationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalInstallationTests.swift; sourceTree = "<group>"; };
+		D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalApplicationOwnershipTests.swift; sourceTree = "<group>"; };
 		41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModelTests.swift; sourceTree = "<group>"; };
+		E25000000000000000000001 /* CaskCatalogSortTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogSortTests.swift; sourceTree = "<group>"; };
 		41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestHelpers.swift; sourceTree = "<group>"; };
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -363,6 +367,8 @@
 				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
 				41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */,
 				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
+				E25000000000000000000001 /* CaskCatalogSortTests.swift */,
+				D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */,
 				D15000000000000000000001 /* ExternalInstallationTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
@@ -596,6 +602,8 @@
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
 				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
 				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,
+				F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */,
+				C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */,
 				C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */,
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,

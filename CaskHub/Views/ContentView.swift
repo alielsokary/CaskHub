@@ -44,9 +44,7 @@ struct ContentView: View {
                     title: sectionName,
                     caskCount: viewModel.filteredCasks.count,
                     sortOption: $viewModel.sortOption,
-                    sortOptions: selectedSidebar == .discover(.recentlyAdded)
-                        ? SortOption.standard + [.oldest, .newest]
-                        : SortOption.standard,
+                    sortOptions: sortOptions,
                     viewMode: $viewMode,
                     searchText: $viewModel.searchText,
                     searchFocus: $searchFocused,
@@ -130,11 +128,6 @@ struct ContentView: View {
             if newValue == .discover(.topCharts) {
                 Task { await viewModel.selectAnalyticsPeriod(viewModel.analyticsPeriod) }
             }
-            if newValue == .discover(.recentlyAdded) {
-                viewModel.sortOption = .newest
-            } else if !SortOption.standard.contains(viewModel.sortOption) {
-                viewModel.sortOption = .mostPopular
-            }
         }
         .onChange(of: viewMode) { _, newValue in
             Analytics.viewModeChanged(newValue)
@@ -203,6 +196,17 @@ struct ContentView: View {
         selectedSidebar == .discover(.browse)
             && viewModel.searchText.isEmpty
             && viewMode == .grid
+    }
+
+    private var sortOptions: [SortOption] {
+        switch selectedSidebar {
+        case .library(.installed):
+            return SortOption.installed
+        case .discover(.recentlyAdded):
+            return SortOption.standard + [.oldest, .newest]
+        default:
+            return SortOption.standard
+        }
     }
 
     private func categoryInfo(for cask: Cask) -> (id: String, name: String)? {

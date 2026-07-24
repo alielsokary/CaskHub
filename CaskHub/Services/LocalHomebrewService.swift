@@ -19,6 +19,10 @@ final class LocalHomebrewService {
     /// Non-Mac-App-Store bundle names found in /Applications and ~/Applications.
     var externalAppNames: Set<String> = []
 
+    /// Directly installed applications resolved to one catalog cask. A token is
+    /// absent when a shared bundle name cannot be disambiguated safely.
+    var externalApplicationOwners: [String: DetectedApplication] = [:]
+
     /// Mac App Store bundles that must be shown as installed but never adopted.
     var macAppStoreAppNames: Set<String> = []
 
@@ -35,11 +39,13 @@ final class LocalHomebrewService {
     /// Package-installed apps matched to cask receipt metadata.
     var externalPackageInstallations: [String: ExternalPackageInstallation] = [:]
 
+    @ObservationIgnored var applicationCaskSignatures: [ApplicationCaskSignature] = []
+
     /// Package adoptions awaiting the user's reinstall confirmation.
     var packageAdoptionRequests: Set<String> = []
 
     @ObservationIgnored var packageCaskSignatures: [PackageCaskSignature] = []
-    @ObservationIgnored private var packageCatalogGeneration = 0
+    @ObservationIgnored var packageCatalogGeneration = 0
 
     var adoptReplaceOffers: Set<String> = []
 
@@ -170,12 +176,17 @@ final class LocalHomebrewService {
             brewVersion = await brewVersionProvider()
         }
         let appDirs = applicationDirectories
+        let caskroom = configuredCaskroomURL()
         let packageSignatures = packageCaskSignatures
         let packageGeneration = packageCatalogGeneration
         let (casks, applications, binaryPaths, packages) = await Task.detached(priority: .userInitiated) {
             let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
             return (
-                Self.scanCaskroom(fileManager: fm, applicationDirectories: appDirs),
+                caskroom.map {
+                    Self.scanCaskroom(
+                        at: $0, fileManager: fm, applicationDirectories: appDirs
+                    )
+                } ?? [:],
                 applications,
                 Self.scanBinaryDirectories(fileManager: fm),
                 Self.scanExternalPackageInstallations(
@@ -184,64 +195,27 @@ final class LocalHomebrewService {
                 )
             )
         }.value
+        installedCasks = casks
         externalAppNames = applications.adoptableNames
         macAppStoreAppNames = applications.macAppStoreNames
         macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
         detectedApplications = applications.applications
+        externalApplicationOwners = Self.resolveExternalApplicationOwners(
+            signatures: applicationCaskSignatures,
+            applications: applications.applications,
+            installedCasks: casks
+        )
         externalBinaryPaths = binaryPaths
         if packageGeneration == packageCatalogGeneration {
             externalPackageInstallations = packages
         }
 
         CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
-        CrashReporter.tag("brew.caskroom", value: Self.locateCaskroom(fileManager: fm)?.path ?? "not found")
+        CrashReporter.tag("brew.caskroom", value: caskroom?.path ?? "not found")
 
-        installedCasks = casks
         lastRefresh = .now
     }
 
-    /// The catalog provides the package receipt identifiers needed to associate
-    /// system package records with Homebrew casks.
-    func updatePackageCatalog(_ casks: [Cask]) async {
-        caskDisplayNames = casks.reduce(into: [:]) { names, cask in
-            names[cask.token] = cask.displayName
-        }
-        packageCaskSignatures = casks.compactMap { cask in
-            guard cask.hasPackageArtifact, !cask.packageIdentifiers.isEmpty else { return nil }
-            return PackageCaskSignature(
-                token: cask.token,
-                displayName: cask.displayName,
-                receiptPatterns: cask.packageIdentifiers,
-                appNameCandidates: cask.packageAppNameCandidates
-            )
-        }
-        packageCatalogGeneration &+= 1
-        let packageGeneration = packageCatalogGeneration
-        guard !packageCaskSignatures.isEmpty else {
-            externalPackageInstallations = [:]
-            return
-        }
-
-        let signatures = packageCaskSignatures
-        let fm = fileManager
-        let appDirs = applicationDirectories
-        let applications = await Task.detached(priority: .userInitiated) {
-            Self.scanApplications(fileManager: fm, directories: appDirs)
-        }.value
-        externalAppNames = applications.adoptableNames
-        macAppStoreAppNames = applications.macAppStoreNames
-        macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
-        detectedApplications = applications.applications
-        let packages = await Task.detached(priority: .userInitiated) {
-            Self.scanExternalPackageInstallations(
-                signatures: signatures,
-                availableAppNames: applications.nonStoreNames
-            )
-        }.value
-        if packageGeneration == packageCatalogGeneration {
-            externalPackageInstallations = packages
-        }
-    }
 }
 
 // MARK: - Actions
@@ -279,7 +253,7 @@ extension LocalHomebrewService {
     func repairReinstalling(token: String) async throws {
         guard inFlightActions[token] == nil else { return }
         repairOffers.remove(token)
-        let caskroomEntry = Self.locateCaskroom(fileManager: fileManager)?
+        let caskroomEntry = configuredCaskroomURL()?
             .appendingPathComponent(token)
         let appBundleNames = installedCasks[token]?.appBundleNames ?? []
         Analytics.caskActionStarted(.repairing, token: token, origin: .repair)

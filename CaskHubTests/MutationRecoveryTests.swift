@@ -12,6 +12,7 @@ import XCTest
 final class MutationRecoveryTests: XCTestCase {
     private let fileManager = FileManager.default
     private var root: URL!
+    private var defaults: UserDefaults!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -21,11 +22,11 @@ final class MutationRecoveryTests: XCTestCase {
             at: root.appendingPathComponent("Caskroom/zed/1.10.3"),
             withIntermediateDirectories: true
         )
-        UserDefaults.standard.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
+        defaults = makeScratchDefaults("repair-recovery-\(UUID().uuidString)")
+        defaults.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
     }
 
     override func tearDownWithError() throws {
-        UserDefaults.standard.removeObject(forKey: LocalHomebrewService.customBrewPrefixKey)
         try? fileManager.removeItem(at: root)
         try super.tearDownWithError()
     }
@@ -33,7 +34,7 @@ final class MutationRecoveryTests: XCTestCase {
     private func makeService(runner: StubBrewProcessRunner) -> LocalHomebrewService {
         LocalHomebrewService(
             fileManager: fileManager,
-            defaults: makeScratchDefaults("repair-recovery"),
+            defaults: defaults,
             applicationDirectories: [root.appendingPathComponent("Applications")],
             processRunner: runner,
             brewBinaryProvider: { URL(fileURLWithPath: "/test/bin/brew") },
