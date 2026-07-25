@@ -14,45 +14,12 @@ import Observation
 @MainActor
 @Observable
 final class LocalHomebrewService {
-    var installedCasks: [String: LocalCaskInstallation] = [:] {
-        didSet { catalogStateRevision &+= 1 }
-    }
-
-    /// Non-Mac-App-Store bundle names found in /Applications and ~/Applications.
-    var externalAppNames: Set<String> = []
-
-    /// Directly installed applications resolved to one catalog cask. A token is
-    /// absent when a shared bundle name cannot be disambiguated safely.
-    var externalApplicationOwners: [String: DetectedApplication] = [:] {
-        didSet { catalogStateRevision &+= 1 }
-    }
-
-    /// Mac App Store bundles that must be shown as installed but never adopted.
-    var macAppStoreAppNames: Set<String> = []
-
-    /// Bundle identifiers disambiguate Store apps that reuse another product's name.
-    var macAppStoreBundleIdentifiers: [String: Set<String>] = [:]
-
-    /// Valid app bundles found under the application roots, including nested
-    /// bundles such as /Applications/WhatsApp.localized/WhatsApp.app.
-    var detectedApplications: [DetectedApplication] = []
-
-    /// Executables found in common install locations (~/.local/bin, /usr/local/bin, …).
-    var externalBinaryPaths: [String: URL] = [:]
-
-    /// Package-installed apps matched to cask receipt metadata.
-    var externalPackageInstallations: [String: ExternalPackageInstallation] = [:] {
+    private(set) var installationSnapshot = InstallationSnapshot.empty {
         didSet { catalogStateRevision &+= 1 }
     }
 
     @ObservationIgnored var applicationCaskSignatures: [ApplicationCaskSignature] = []
     @ObservationIgnored var installationCatalog = CaskInstallationCatalog.empty
-
-    /// Catalog-wide installation lookups, rebuilt only when the catalog or a
-    /// local software scan changes. Rendering reads this snapshot in O(1).
-    var installationIndex = CaskInstallationIndex.empty {
-        didSet { catalogStateRevision &+= 1 }
-    }
 
     /// Changes only when state that affects catalog membership or update
     /// eligibility changes; operation progress deliberately does not touch it.
@@ -90,8 +57,6 @@ final class LocalHomebrewService {
     @ObservationIgnored private let brewVersionProvider: () async -> String?
 
     private(set) var isUpdatingAll = false
-
-    private(set) var lastRefresh: Date?
 
     private(set) var brewVersion: String?
 
@@ -154,6 +119,10 @@ final class LocalHomebrewService {
         defaults.set(enabled, forKey: Self.greedyKey)
     }
 
+    func commitInstallationSnapshot(_ snapshot: InstallationSnapshot) {
+        installationSnapshot = snapshot
+    }
+
     func setCustomBrewPrefix(_ prefix: String?) async {
         customBrewPrefix = prefix
         if let prefix, !prefix.isEmpty {
@@ -202,22 +171,24 @@ final class LocalHomebrewService {
             binaryPaths: result.2,
             installedCasks: result.0
         )
-        installedCasks = result.0
-        externalAppNames = result.1.adoptableNames
-        macAppStoreAppNames = result.1.macAppStoreNames
-        macAppStoreBundleIdentifiers = result.1.macAppStoreBundleIdentifiers
-        detectedApplications = result.1.applications
-        externalApplicationOwners = owners
-        externalBinaryPaths = result.2
-        installationIndex = index
-        if packageGeneration == packageCatalogGeneration {
-            externalPackageInstallations = result.3
-        }
+        let packages = packageGeneration == packageCatalogGeneration
+            ? result.3
+            : installationSnapshot.externalPackageInstallations
+        commitInstallationSnapshot(InstallationSnapshot(
+            installedCasks: result.0,
+            externalAppNames: result.1.adoptableNames,
+            externalApplicationOwners: owners,
+            macAppStoreAppNames: result.1.macAppStoreNames,
+            macAppStoreBundleIdentifiers: result.1.macAppStoreBundleIdentifiers,
+            detectedApplications: result.1.applications,
+            externalBinaryPaths: result.2,
+            externalPackageInstallations: packages,
+            installationIndex: index,
+            scannedAt: .now
+        ))
 
         CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
         CrashReporter.tag("brew.caskroom", value: caskroom?.path ?? "not found")
-
-        lastRefresh = .now
     }
 
 }

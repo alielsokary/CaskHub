@@ -26,24 +26,30 @@ extension LocalHomebrewService {
         }.value
         guard packageGeneration == packageCatalogGeneration else { return }
 
+        let current = installationSnapshot
         let owners = Self.resolveExternalApplicationOwners(
             signatures: applicationCaskSignatures,
             applications: applications.applications,
-            installedCasks: installedCasks
+            installedCasks: current.installedCasks
         )
         let index = Self.buildInstallationIndex(
             catalog: installationCatalog,
             applications: applications.applications,
-            binaryPaths: externalBinaryPaths,
-            installedCasks: installedCasks
+            binaryPaths: current.externalBinaryPaths,
+            installedCasks: current.installedCasks
         )
-        externalAppNames = applications.adoptableNames
-        macAppStoreAppNames = applications.macAppStoreNames
-        macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
-        detectedApplications = applications.applications
-        externalApplicationOwners = owners
-        externalPackageInstallations = packages
-        installationIndex = index
+        commitInstallationSnapshot(InstallationSnapshot(
+            installedCasks: current.installedCasks,
+            externalAppNames: applications.adoptableNames,
+            externalApplicationOwners: owners,
+            macAppStoreAppNames: applications.macAppStoreNames,
+            macAppStoreBundleIdentifiers: applications.macAppStoreBundleIdentifiers,
+            detectedApplications: applications.applications,
+            externalBinaryPaths: current.externalBinaryPaths,
+            externalPackageInstallations: packages,
+            installationIndex: index,
+            scannedAt: current.scannedAt
+        ))
     }
 
     private func updateCatalogSignatures(_ casks: [Cask]) {

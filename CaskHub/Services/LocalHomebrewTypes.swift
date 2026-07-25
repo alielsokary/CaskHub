@@ -132,7 +132,7 @@ nonisolated struct PackageInstallationCandidate {
     let score: Int
 }
 
-struct ExternalPackageInstallation: Hashable {
+nonisolated struct ExternalPackageInstallation: Hashable, Sendable {
     let receiptIdentifiers: Set<String>
     let appBundleNames: [String]
 }
@@ -182,7 +182,7 @@ nonisolated struct CaskLocalState: Equatable, Sendable {
     }
 }
 
-struct LocalCaskInstallation: Hashable, Identifiable {
+nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
     let token: String
     let installedVersion: String
     let installedAt: Date?
