@@ -82,6 +82,29 @@ extension LocalHomebrewService {
         return nil
     }
 
+    func uninstallAvailability(for cask: Cask) -> CaskUninstallAvailability {
+        if isInstalled(token: cask.token) {
+            return .available
+        }
+        if isAdoptable(cask) {
+            return .unavailable(
+                reason: "Adopt this app first so CaskHub can manage/uninstall it."
+            )
+        }
+        if isMacAppStoreInstalled(cask) {
+            return .unavailable(
+                reason: "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
+            )
+        }
+        if let externalPath = externalCLIPath(cask) {
+            return .unavailable(
+                reason: "Installed outside Homebrew at \(externalPath.path). "
+                    + "Remove or move that file manually before installing the Homebrew version."
+            )
+        }
+        return .notApplicable
+    }
+
     func isOutdated(token: String, remoteVersion: String) -> Bool {
         guard let installation = installedCasks[token], !installation.isZombie else { return false }
         return Self.comparableVersion(installation.installedVersion)

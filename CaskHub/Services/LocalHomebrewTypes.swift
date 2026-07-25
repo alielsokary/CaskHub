@@ -77,6 +77,17 @@ enum CaskInstallationSource: String, Equatable {
     case externalExecutable = "External executable"
 }
 
+enum CaskUninstallAvailability: Equatable {
+    case available
+    case unavailable(reason: String)
+    case notApplicable
+
+    var unavailableReason: String? {
+        guard case let .unavailable(reason) = self else { return nil }
+        return reason
+    }
+}
+
 struct LocalCaskInstallation: Hashable, Identifiable {
     let token: String
     let installedVersion: String

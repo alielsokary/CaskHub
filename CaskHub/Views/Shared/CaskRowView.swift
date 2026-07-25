@@ -5,6 +5,7 @@
 //  Created by Ali Elsokary on 21/02/2026.
 //
 
+import AppKit
 import SwiftUI
 
 struct CaskRowView: View {
@@ -13,6 +14,7 @@ struct CaskRowView: View {
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var showDeleteConfirmation = false
+    @State private var showingInfo = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -21,7 +23,7 @@ struct CaskRowView: View {
             Spacer()
             metadata
             actionsControl
-                .frame(minWidth: 130, alignment: .trailing)
+                .frame(width: CHSize.listActionWidth, alignment: .trailing)
             menuSlot
                 .frame(width: 24)
         }
@@ -58,36 +60,190 @@ struct CaskRowView: View {
     // MARK: - Actions
 
     private var actionsControl: some View {
-        CaskActionsView(cask: cask, fullWidth: false)
+        CaskActionsView(
+            cask: cask,
+            fullWidth: true,
+            showsUninstallControl: false,
+            usesIconOnlyOpenAndUpdate: true
+        )
     }
 
-    @ViewBuilder
     private var menuSlot: some View {
-        if localHomebrew.isInstalled(token: cask.token),
-           localHomebrew.inFlightActions[cask.token] == nil {
-            installedActionsMenu
-        } else {
-            Color.clear
+        actionsMenu
+    }
+
+    private var actionsMenu: some View {
+        CaskRowActionsMenuButton(
+            showsUpdate: hasAvailableUpdate,
+            isBusy: isBusy,
+            uninstallAvailability: uninstallAvailability,
+            onInfo: {
+                DispatchQueue.main.async {
+                    showingInfo = true
+                }
+            },
+            onUpdate: {
+                Task { try? await localHomebrew.upgrade(token: cask.token) }
+            },
+            onUninstall: {
+                showDeleteConfirmation = true
+            }
+        )
+        .frame(width: 24, height: 24)
+        .popover(isPresented: $showingInfo) {
+            CaskInfoPopover(cask: cask)
         }
     }
 
-    private var installedActionsMenu: some View {
-        Menu {
-            Button(role: .destructive) {
-                showDeleteConfirmation = true
-            } label: {
-                Label("Uninstall", systemImage: "trash")
-            }
-        } label: {
-            Image(systemName: "ellipsis.circle")
-                .font(.body)
-                .foregroundStyle(Color.chTextMuted)
-                .padding(.horizontal, 6)
-                .contentShape(Rectangle())
+    private var hasAvailableUpdate: Bool {
+        localHomebrew.hasAvailableUpdate(
+            token: cask.token,
+            remoteVersion: cask.version,
+            autoUpdates: cask.autoUpdates
+        )
+    }
+
+    private var uninstallAvailability: CaskUninstallAvailability {
+        localHomebrew.uninstallAvailability(for: cask)
+    }
+
+    private var isBusy: Bool {
+        localHomebrew.inFlightActions[cask.token] != nil
+    }
+}
+
+private struct CaskRowActionsMenuButton: NSViewRepresentable {
+    let showsUpdate: Bool
+    let isBusy: Bool
+    let uninstallAvailability: CaskUninstallAvailability
+    let onInfo: () -> Void
+    let onUpdate: () -> Void
+    let onUninstall: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(configuration: self)
+    }
+
+    func makeNSView(context: Context) -> NSButton {
+        let button = NSButton()
+        button.isBordered = false
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyDown
+        button.image = NSImage(
+            systemSymbolName: "ellipsis.circle",
+            accessibilityDescription: "More actions"
+        )?.withSymbolConfiguration(.init(pointSize: 13, weight: .regular))
+        button.contentTintColor = NSColor(Color.chTextMuted)
+        button.focusRingType = .none
+        button.toolTip = "More actions"
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.showMenu(_:))
+        button.setAccessibilityLabel("More actions")
+        return button
+    }
+
+    func updateNSView(_ button: NSButton, context: Context) {
+        context.coordinator.configuration = self
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        var configuration: CaskRowActionsMenuButton
+
+        init(configuration: CaskRowActionsMenuButton) {
+            self.configuration = configuration
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
+
+        @objc func showMenu(_ sender: NSButton) {
+            let menu = makeMenu()
+            menu.popUp(
+                positioning: nil,
+                at: NSPoint(x: sender.bounds.minX, y: sender.bounds.minY - 4),
+                in: sender
+            )
+        }
+
+        @objc private func showInfo() {
+            configuration.onInfo()
+        }
+
+        @objc private func update() {
+            configuration.onUpdate()
+        }
+
+        @objc private func uninstall() {
+            configuration.onUninstall()
+        }
+
+        private func makeMenu() -> NSMenu {
+            let menu = NSMenu()
+            menu.autoenablesItems = false
+            menu.addItem(
+                menuItem(
+                    title: "Info",
+                    systemImage: "info.circle",
+                    action: #selector(showInfo)
+                )
+            )
+
+            if configuration.showsUpdate {
+                menu.addItem(
+                    menuItem(
+                        title: "Update",
+                        systemImage: "arrow.clockwise",
+                        action: #selector(update),
+                        isEnabled: !configuration.isBusy,
+                        toolTip: configuration.isBusy
+                            ? "Wait for the current action to finish."
+                            : nil
+                    )
+                )
+            }
+
+            if configuration.uninstallAvailability != .notApplicable {
+                menu.addItem(.separator())
+                menu.addItem(uninstallMenuItem())
+            }
+            return menu
+        }
+
+        private func uninstallMenuItem() -> NSMenuItem {
+            let reason: String?
+            switch configuration.uninstallAvailability {
+            case .available:
+                reason = configuration.isBusy
+                    ? "Wait for the current action to finish."
+                    : nil
+            case let .unavailable(unavailableReason):
+                reason = unavailableReason
+            case .notApplicable:
+                reason = nil
+            }
+
+            return menuItem(
+                title: "Uninstall",
+                systemImage: "trash",
+                action: #selector(uninstall),
+                isEnabled: reason == nil,
+                toolTip: reason
+            )
+        }
+
+        private func menuItem(
+            title: String,
+            systemImage: String,
+            action: Selector,
+            isEnabled: Bool = true,
+            toolTip: String? = nil
+        ) -> NSMenuItem {
+            let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+            item.target = self
+            item.image = NSImage(systemSymbolName: systemImage, accessibilityDescription: title)
+            item.isEnabled = isEnabled
+            item.toolTip = toolTip
+            item.setAccessibilityHelp(toolTip)
+            return item
+        }
     }
 }
 

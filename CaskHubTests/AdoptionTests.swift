@@ -351,7 +351,10 @@ final class AdoptionViewRenderTests: XCTestCase {
 
         let adoptable = makeCask("chrome", appNames: ["Chrome.app"])
         render(CaskActionsView(cask: adoptable).environment(service).environment(\.isAdoptPage, true))
-        render(CaskActionsView(cask: adoptable).environment(service))
+        render(
+            CaskActionsView(cask: adoptable, usesIconOnlyOpenAndUpdate: true)
+                .environment(service)
+        )
         render(CaskActionsView(cask: makeCask("store", appNames: ["Store.app"])).environment(service))
         render(CaskActionsView(cask: makeCask("claude-code", binaryNames: ["claude"])).environment(service))
         render(CaskActionsView(cask: makeCask("plain")).environment(service))
