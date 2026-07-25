@@ -129,7 +129,12 @@ final class AdoptionSurfaceTests: XCTestCase {
     }
 
     func test_missing_caskroom_scans_as_no_installed_casks() {
-        XCTAssertEqual(LocalHomebrewService.scanCaskroom(fileManager: NoFilesFileManager()).count, 0)
+        XCTAssertEqual(
+            HomebrewInstallationScanner.scanCaskroom(
+                fileManager: NoFilesFileManager()
+            ).count,
+            0
+        )
     }
 
     @MainActor
@@ -203,10 +208,10 @@ final class AdoptionSurfaceTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: directory) }
         let executable = URL(fileURLWithPath: "/Applications/Cask Hub's.app/Contents/MacOS/CaskHub")
 
-        let first = try XCTUnwrap(LocalHomebrewService.ensureAskpassScript(
+        let first = try XCTUnwrap(AskpassScriptManager.create(
             token: "first; unsafe", directory: directory, executableURL: executable
         ))
-        let second = try XCTUnwrap(LocalHomebrewService.ensureAskpassScript(
+        let second = try XCTUnwrap(AskpassScriptManager.create(
             token: "second", directory: directory, executableURL: executable
         ))
 
@@ -218,8 +223,8 @@ final class AdoptionSurfaceTests: XCTestCase {
         let permissions = try FileManager.default.attributesOfItem(atPath: first.path)[.posixPermissions] as? Int
         XCTAssertEqual(permissions, 0o700)
 
-        LocalHomebrewService.removeAskpassScript(at: first)
-        LocalHomebrewService.removeAskpassScript(at: second)
+        AskpassScriptManager.remove(at: first)
+        AskpassScriptManager.remove(at: second)
         XCTAssertFalse(FileManager.default.fileExists(atPath: first.path))
         XCTAssertFalse(FileManager.default.fileExists(atPath: second.path))
     }
@@ -239,7 +244,7 @@ final class AdoptionSurfaceTests: XCTestCase {
     @MainActor
     func test_adopt_of_unknown_cask_surfaces_brew_error() async throws {
         try XCTSkipUnless(
-            LocalHomebrewService.locateBrewBinary() != nil, "needs a Homebrew installation"
+            HomebrewLocator.brewBinaryURL() != nil, "needs a Homebrew installation"
         )
         setenv("HOMEBREW_NO_AUTO_UPDATE", "1", 1)
 

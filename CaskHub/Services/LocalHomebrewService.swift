@@ -80,22 +80,28 @@ final class LocalHomebrewService {
         commandExecutor: (any HomebrewCommandExecuting)? = nil,
         operationStore: CaskOperationStore? = nil,
         softwareScanner: (any InstalledSoftwareScanning)? = nil,
-        brewBinaryProvider: @escaping () -> URL? = { LocalHomebrewService.locateBrewBinary() },
-        brewVersionProvider: @escaping () async -> String? = { await LocalHomebrewService.fetchBrewVersion() }
+        brewBinaryProvider: @escaping () -> URL? = {
+            HomebrewLocator.brewBinaryURL()
+        },
+        brewVersionProvider: @escaping () async -> String? = {
+            await HomebrewVersionLoader().load(
+                from: HomebrewLocator.brewBinaryURL()
+            )
+        }
     ) {
         self.fileManager = fileManager
         self.defaults = defaults
         self.applicationDirectories = applicationDirectories
-            ?? Self.defaultApplicationDirectories(fileManager)
+            ?? ApplicationDiscovery.defaultDirectories(fileManager: fileManager)
         self.commandExecutor = commandExecutor ?? SystemHomebrewCommandExecutor(
             processRunner: processRunner ?? SystemBrewProcessRunner()
         )
         self.operationStore = operationStore ?? CaskOperationStore()
-        self.softwareScanner = softwareScanner ?? SystemInstalledSoftwareScanner()
+        self.softwareScanner = softwareScanner ?? HomebrewInstallationScanner()
         self.brewBinaryProvider = brewBinaryProvider
         self.brewVersionProvider = brewVersionProvider
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
-        customBrewPrefix = defaults.string(forKey: Self.customBrewPrefixKey)
+        customBrewPrefix = defaults.string(forKey: HomebrewLocator.customPrefixKey)
 
         // The permission-request alert tells the user to grant App Management and
         // come back — returning to the app is the cue to finish those adoptions.
@@ -130,9 +136,9 @@ final class LocalHomebrewService {
     func setCustomBrewPrefix(_ prefix: String?) async {
         customBrewPrefix = prefix
         if let prefix, !prefix.isEmpty {
-            defaults.set(prefix, forKey: Self.customBrewPrefixKey)
+            defaults.set(prefix, forKey: HomebrewLocator.customPrefixKey)
         } else {
-            defaults.removeObject(forKey: Self.customBrewPrefixKey)
+            defaults.removeObject(forKey: HomebrewLocator.customPrefixKey)
         }
         brewVersion = nil
         await refresh()
@@ -152,10 +158,44 @@ final class LocalHomebrewService {
                 continue
             }
             commitInstallationSnapshot(scanned)
-            CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
+            CrashReporter.tag(
+                "brew.path",
+                value: brewBinaryProvider()?.path ?? "not found"
+            )
             CrashReporter.tag("brew.caskroom", value: request.caskroomURL?.path ?? "not found")
             return
         }
+    }
+
+    /// Reconciles the catalog identity metadata with the last complete machine
+    /// scan, then publishes one replacement snapshot.
+    func updatePackageCatalog(_ casks: [Cask]) async {
+        applyCatalogRegistration(InstallationCatalogBuilder().build(casks))
+        packageCatalogGeneration &+= 1
+        let packageGeneration = packageCatalogGeneration
+        let request = installedSoftwareScanRequest()
+
+        while packageGeneration == packageCatalogGeneration {
+            let baselineRevision = catalogStateRevision
+            let current = installationSnapshot
+            let reconciled = await softwareScanner.reconcileCatalog(
+                request,
+                with: current
+            )
+            guard packageGeneration == packageCatalogGeneration else { return }
+            guard baselineRevision == catalogStateRevision else { continue }
+            commitInstallationSnapshot(reconciled)
+            return
+        }
+    }
+
+    private func applyCatalogRegistration(
+        _ registration: InstallationCatalogRegistration
+    ) {
+        caskDisplayNames = registration.displayNames
+        applicationCaskSignatures = registration.applicationSignatures
+        installationCatalog = registration.installationCatalog
+        packageCaskSignatures = registration.packageSignatures
     }
 
 }
@@ -194,7 +234,10 @@ extension LocalHomebrewService {
     /// download failure, so it's a reliable gate.
     func repairReinstalling(token: String) async throws {
         guard operationStore.canBeginOperation(for: token) else { return }
-        let caskroomEntry = configuredCaskroomURL()?
+        let caskroomEntry = HomebrewLocator.caskroomURL(
+            customPrefix: customBrewPrefix,
+            fileManager: fileManager
+        )?
             .appendingPathComponent(token)
         let appBundleNames = installedCasks[token]?.appBundleNames ?? []
         Analytics.caskActionStarted(.repairing, token: token, origin: .repair)

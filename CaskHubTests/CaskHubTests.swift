@@ -154,7 +154,7 @@ final class CaskHubTests: XCTestCase {
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
         }
 
-        let scan = LocalHomebrewService.scanBinaryDirectories(
+        let scan = HomebrewInstallationScanner.scanBinaryDirectories(
             fileManager: FileManager.default,
             directories: [root]
         )
@@ -165,7 +165,7 @@ final class CaskHubTests: XCTestCase {
 
     func test_apple_silicon_detection_matches_native_build_arch() {
         #if arch(arm64)
-            XCTAssertTrue(LocalHomebrewService.isAppleSilicon)
+            XCTAssertTrue(HomebrewLocator.isAppleSilicon)
         #endif
         // An x86_64 build can run on either machine (Rosetta), so no assertion there.
     }
@@ -175,15 +175,20 @@ final class CaskHubTests: XCTestCase {
         try XCTSkipUnless(FileManager.default.isExecutableFile(atPath: brew), "needs Homebrew at /opt/homebrew")
 
         XCTAssertEqual(
-            LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: brew)), "/opt/homebrew"
+            HomebrewLocator.prefix(from: URL(fileURLWithPath: brew)),
+            "/opt/homebrew"
         )
         XCTAssertEqual(
-            LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: "/opt/homebrew")), "/opt/homebrew"
+            HomebrewLocator.prefix(from: URL(fileURLWithPath: "/opt/homebrew")),
+            "/opt/homebrew"
         )
         XCTAssertEqual(
-            LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: "/opt/homebrew/bin")), "/opt/homebrew"
+            HomebrewLocator.prefix(from: URL(fileURLWithPath: "/opt/homebrew/bin")),
+            "/opt/homebrew"
         )
-        XCTAssertNil(LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: "/private/tmp")))
+        XCTAssertNil(
+            HomebrewLocator.prefix(from: URL(fileURLWithPath: "/private/tmp"))
+        )
     }
 
     func test_adopt_mismatch_detection() {

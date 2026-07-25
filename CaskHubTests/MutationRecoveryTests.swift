@@ -23,7 +23,7 @@ final class MutationRecoveryTests: XCTestCase {
             withIntermediateDirectories: true
         )
         defaults = makeScratchDefaults("repair-recovery-\(UUID().uuidString)")
-        defaults.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
+        defaults.set(root.path, forKey: HomebrewLocator.customPrefixKey)
     }
 
     override func tearDownWithError() throws {

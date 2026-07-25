@@ -110,8 +110,15 @@ extension LocalHomebrewService {
     }
 
     private func hasStrandedCopy(token: String) -> Bool {
-        guard let caskroom = configuredCaskroomURL() else { return false }
-        return Self.strandedCopyExists(in: caskroom, token: token, fileManager: fileManager)
+        guard let caskroom = HomebrewLocator.caskroomURL(
+            customPrefix: customBrewPrefix,
+            fileManager: fileManager
+        ) else { return false }
+        return HomebrewInstallationScanner.strandedCopyExists(
+            in: caskroom,
+            token: token,
+            fileManager: fileManager
+        )
     }
 
     func runBrewStreaming(
@@ -124,9 +131,9 @@ extension LocalHomebrewService {
             throw LocalHomebrewError.brewBinaryNotFound
         }
 
-        let askpass = Self.ensureAskpassScript(token: token)
+        let askpass = AskpassScriptManager.create(token: token)
         defer {
-            if let askpass { Self.removeAskpassScript(at: askpass) }
+            if let askpass { AskpassScriptManager.remove(at: askpass) }
         }
 
         var environment = ProcessInfo.processInfo.environment

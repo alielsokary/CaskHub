@@ -11,7 +11,10 @@ extension LocalHomebrewService {
     func installedSoftwareScanRequest() -> InstalledSoftwareScanRequest {
         InstalledSoftwareScanRequest(
             applicationDirectories: applicationDirectories,
-            caskroomURL: configuredCaskroomURL(),
+            caskroomURL: HomebrewLocator.caskroomURL(
+                customPrefix: customBrewPrefix,
+                fileManager: fileManager
+            ),
             catalog: installationCatalog,
             applicationSignatures: applicationCaskSignatures,
             packageSignatures: packageCaskSignatures

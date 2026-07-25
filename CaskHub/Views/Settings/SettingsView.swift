@@ -219,12 +219,15 @@ private struct HomebrewSettingsContent: View {
                 }
                 LabeledContent(
                     "Architecture",
-                    value: LocalHomebrewService.isAppleSilicon ? "Apple Silicon" : "Intel"
+                    value: HomebrewLocator.isAppleSilicon ? "Apple Silicon" : "Intel"
                 )
             }
             Section("Paths") {
-                pathRow("Brew Binary", LocalHomebrewService.locateBrewBinary()?.path)
-                pathRow("Caskroom", LocalHomebrewService.locateCaskroom(fileManager: .default)?.path)
+                pathRow("Brew Binary", HomebrewLocator.brewBinaryURL()?.path)
+                pathRow(
+                    "Caskroom",
+                    HomebrewLocator.caskroomURL(fileManager: .default)?.path
+                )
             }
             Section("Library") {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCasks.count)")

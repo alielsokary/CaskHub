@@ -48,15 +48,14 @@
 		7FFA89946C514C00BF5496DB /* BrewOutputCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */; };
 		D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */; };
 		41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */; };
-		41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */; };
-		C15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift */; };
+		C15000000000000000000002 /* InstallationCatalogBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000002 /* InstallationCatalogBuilder.swift */; };
 		A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000001 /* LocalHomebrewTypes.swift */; };
 		F24000000000000000000001 /* CaskOperationProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000001 /* CaskOperationProgress.swift */; };
 		F29000000000000000000001 /* CaskOperationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000001 /* CaskOperationState.swift */; };
 		F29000000000000000000005 /* CaskOperationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000005 /* CaskOperationStore.swift */; };
 		F29000000000000000000009 /* InstallationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000009 /* InstallationSnapshot.swift */; };
 		F2900000000000000000000D /* LocalHomebrewService+Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000000D /* LocalHomebrewService+Snapshot.swift */; };
-		F2900000000000000000000F /* InstalledSoftwareScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000000F /* InstalledSoftwareScanner.swift */; };
+		F2900000000000000000000F /* HomebrewInstallationScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000000F /* HomebrewInstallationScanner.swift */; };
 		F29000000000000000000011 /* HomebrewCommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000011 /* HomebrewCommandExecutor.swift */; };
 		F29000000000000000000015 /* CaskActionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000015 /* CaskActionPresentation.swift */; };
 		F29000000000000000000017 /* LocalHomebrewService+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000017 /* LocalHomebrewService+Intents.swift */; };
@@ -64,6 +63,9 @@
 		F29000000000000000000021 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000021 /* SettingsModels.swift */; };
 		F30000000000000000000002 /* ApplicationDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000001 /* ApplicationDiscovery.swift */; };
 		F30000000000000000000004 /* PackageReceiptResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000003 /* PackageReceiptResolver.swift */; };
+		F30000000000000000000006 /* HomebrewLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000005 /* HomebrewLocator.swift */; };
+		F30000000000000000000008 /* HomebrewVersionLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000007 /* HomebrewVersionLoader.swift */; };
+		F3000000000000000000000A /* AskpassScriptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000009 /* AskpassScriptManager.swift */; };
 		A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000002 /* LocalHomebrewService+State.swift */; };
 		F28000000000000000000002 /* InstallationIndexBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28000000000000000000001 /* InstallationIndexBuilder.swift */; };
 		A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */; };
@@ -156,15 +158,14 @@
 		5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewOutputCollector.swift; sourceTree = "<group>"; };
 		41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppManagementPermission.swift; sourceTree = "<group>"; };
 		41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewService.swift; sourceTree = "<group>"; };
-		41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Brew.swift"; sourceTree = "<group>"; };
-		D15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+ExternalApps.swift"; sourceTree = "<group>"; };
+		D15000000000000000000002 /* InstallationCatalogBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationCatalogBuilder.swift; sourceTree = "<group>"; };
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
 		E24000000000000000000001 /* CaskOperationProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationProgress.swift; sourceTree = "<group>"; };
 		E29000000000000000000001 /* CaskOperationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationState.swift; sourceTree = "<group>"; };
 		E29000000000000000000005 /* CaskOperationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationStore.swift; sourceTree = "<group>"; };
 		E29000000000000000000009 /* InstallationSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationSnapshot.swift; sourceTree = "<group>"; };
 		E2900000000000000000000D /* LocalHomebrewService+Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Snapshot.swift"; sourceTree = "<group>"; };
-		E2900000000000000000000F /* InstalledSoftwareScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledSoftwareScanner.swift; sourceTree = "<group>"; };
+		E2900000000000000000000F /* HomebrewInstallationScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewInstallationScanner.swift; sourceTree = "<group>"; };
 		E29000000000000000000011 /* HomebrewCommandExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewCommandExecutor.swift; sourceTree = "<group>"; };
 		E29000000000000000000015 /* CaskActionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionPresentation.swift; sourceTree = "<group>"; };
 		E29000000000000000000017 /* LocalHomebrewService+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Intents.swift"; sourceTree = "<group>"; };
@@ -172,6 +173,9 @@
 		E29000000000000000000021 /* SettingsModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModels.swift; sourceTree = "<group>"; };
 		F30000000000000000000001 /* ApplicationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationDiscovery.swift; sourceTree = "<group>"; };
 		F30000000000000000000003 /* PackageReceiptResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackageReceiptResolver.swift; sourceTree = "<group>"; };
+		F30000000000000000000005 /* HomebrewLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewLocator.swift; sourceTree = "<group>"; };
+		F30000000000000000000007 /* HomebrewVersionLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewVersionLoader.swift; sourceTree = "<group>"; };
+		F30000000000000000000009 /* AskpassScriptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskpassScriptManager.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		F28000000000000000000001 /* InstallationIndexBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationIndexBuilder.swift; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
@@ -331,15 +335,14 @@
 				D12000000000000000000001 /* BrewProcessRunner.swift */,
 				41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */,
 				41DFD47230028F7D00608C7A /* LocalHomebrewService.swift */,
-				41DFD47330028F7D00608C7A /* LocalHomebrewService+Brew.swift */,
-				D15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift */,
+				D15000000000000000000002 /* InstallationCatalogBuilder.swift */,
 				B12000000000000000000001 /* LocalHomebrewTypes.swift */,
 				E24000000000000000000001 /* CaskOperationProgress.swift */,
 				E29000000000000000000001 /* CaskOperationState.swift */,
 				E29000000000000000000005 /* CaskOperationStore.swift */,
 				E29000000000000000000009 /* InstallationSnapshot.swift */,
 				E2900000000000000000000D /* LocalHomebrewService+Snapshot.swift */,
-				E2900000000000000000000F /* InstalledSoftwareScanner.swift */,
+				E2900000000000000000000F /* HomebrewInstallationScanner.swift */,
 				E29000000000000000000011 /* HomebrewCommandExecutor.swift */,
 				E29000000000000000000015 /* CaskActionPresentation.swift */,
 				E29000000000000000000017 /* LocalHomebrewService+Intents.swift */,
@@ -347,6 +350,9 @@
 				E29000000000000000000021 /* SettingsModels.swift */,
 				F30000000000000000000001 /* ApplicationDiscovery.swift */,
 				F30000000000000000000003 /* PackageReceiptResolver.swift */,
+				F30000000000000000000005 /* HomebrewLocator.swift */,
+				F30000000000000000000007 /* HomebrewVersionLoader.swift */,
+				F30000000000000000000009 /* AskpassScriptManager.swift */,
 				B12000000000000000000002 /* LocalHomebrewService+State.swift */,
 				F28000000000000000000001 /* InstallationIndexBuilder.swift */,
 				B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */,
@@ -642,15 +648,14 @@
 				C12000000000000000000001 /* BrewProcessRunner.swift in Sources */,
 				D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */,
 				41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */,
-				41DFD4A530028F7D00608C7A /* LocalHomebrewService+Brew.swift in Sources */,
-				C15000000000000000000002 /* LocalHomebrewService+ExternalApps.swift in Sources */,
+				C15000000000000000000002 /* InstallationCatalogBuilder.swift in Sources */,
 				A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */,
 				F24000000000000000000001 /* CaskOperationProgress.swift in Sources */,
 				F29000000000000000000001 /* CaskOperationState.swift in Sources */,
 				F29000000000000000000005 /* CaskOperationStore.swift in Sources */,
 				F29000000000000000000009 /* InstallationSnapshot.swift in Sources */,
 				F2900000000000000000000D /* LocalHomebrewService+Snapshot.swift in Sources */,
-				F2900000000000000000000F /* InstalledSoftwareScanner.swift in Sources */,
+				F2900000000000000000000F /* HomebrewInstallationScanner.swift in Sources */,
 				F29000000000000000000011 /* HomebrewCommandExecutor.swift in Sources */,
 				F29000000000000000000015 /* CaskActionPresentation.swift in Sources */,
 				F29000000000000000000017 /* LocalHomebrewService+Intents.swift in Sources */,
@@ -658,6 +663,9 @@
 				F29000000000000000000021 /* SettingsModels.swift in Sources */,
 				F30000000000000000000002 /* ApplicationDiscovery.swift in Sources */,
 				F30000000000000000000004 /* PackageReceiptResolver.swift in Sources */,
+				F30000000000000000000006 /* HomebrewLocator.swift in Sources */,
+				F30000000000000000000008 /* HomebrewVersionLoader.swift in Sources */,
+				F3000000000000000000000A /* AskpassScriptManager.swift in Sources */,
 				A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */,
 				F28000000000000000000002 /* InstallationIndexBuilder.swift in Sources */,
 				A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */,

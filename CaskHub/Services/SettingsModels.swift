@@ -94,7 +94,7 @@ nonisolated protocol HomebrewLocationResolving: Sendable {
 
 nonisolated struct SystemHomebrewLocationResolver: HomebrewLocationResolving {
     func prefix(from selection: URL) -> String? {
-        LocalHomebrewService.brewPrefix(fromSelection: selection)
+        HomebrewLocator.prefix(from: selection)
     }
 }
 

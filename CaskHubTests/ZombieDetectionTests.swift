@@ -49,7 +49,7 @@ final class ZombieDetectionTests: XCTestCase {
     }
 
     private func scan() -> [String: LocalCaskInstallation] {
-        LocalHomebrewService.scanCaskroom(
+        HomebrewInstallationScanner.scanCaskroom(
             at: caskroom, fileManager: fm, applicationDirectories: [appsDir]
         )
     }
@@ -136,7 +136,11 @@ final class ZombieDetectionTests: XCTestCase {
     func test_stranded_copy_detection_reads_the_filesystem() throws {
         let versionDir = try makeEntry("tabby", receiptApps: ["Tabby.app"])
         XCTAssertFalse(
-            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "tabby", fileManager: fm),
+            HomebrewInstallationScanner.strandedCopyExists(
+                in: caskroom,
+                token: "tabby",
+                fileManager: fm
+            ),
             "empty version dir has no stranded copy"
         )
 
@@ -145,7 +149,11 @@ final class ZombieDetectionTests: XCTestCase {
             withDestinationURL: appsDir.appendingPathComponent("Tabby.app")
         )
         XCTAssertFalse(
-            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "tabby", fileManager: fm),
+            HomebrewInstallationScanner.strandedCopyExists(
+                in: caskroom,
+                token: "tabby",
+                fileManager: fm
+            ),
             "the artifact symlink — dangling or not — is not a stranded copy"
         )
 
@@ -153,10 +161,18 @@ final class ZombieDetectionTests: XCTestCase {
             at: versionDir.appendingPathComponent("Tabby Old.app"), withIntermediateDirectories: true
         )
         XCTAssertTrue(
-            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "tabby", fileManager: fm)
+            HomebrewInstallationScanner.strandedCopyExists(
+                in: caskroom,
+                token: "tabby",
+                fileManager: fm
+            )
         )
         XCTAssertFalse(
-            LocalHomebrewService.strandedCopyExists(in: caskroom, token: "other", fileManager: fm)
+            HomebrewInstallationScanner.strandedCopyExists(
+                in: caskroom,
+                token: "other",
+                fileManager: fm
+            )
         )
     }
 
@@ -167,7 +183,7 @@ final class ZombieDetectionTests: XCTestCase {
             at: versionDir.appendingPathComponent("Tabby.app"), withIntermediateDirectories: true
         )
         let defaults = makeScratchDefaults("stranded-fs")
-        defaults.set(root.path, forKey: LocalHomebrewService.customBrewPrefixKey)
+        defaults.set(root.path, forKey: HomebrewLocator.customPrefixKey)
 
         let service = LocalHomebrewService(defaults: defaults)
         let rewordedUpgrade = LocalHomebrewError.brewCommandFailed(
