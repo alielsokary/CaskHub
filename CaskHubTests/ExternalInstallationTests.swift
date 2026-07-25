@@ -51,9 +51,11 @@ final class ExternalInstallationTests: XCTestCase {
         )
         defer { try? FileManager.default.removeItem(at: apps) }
 
+        let launcher = RecordingApplicationLauncher()
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("external-package"),
-            applicationDirectories: [apps]
+            applicationDirectories: [apps],
+            applicationLauncher: launcher
         )
         updateInstallationSnapshot(
             of: service,
@@ -64,8 +66,6 @@ final class ExternalInstallationTests: XCTestCase {
                 )
             ]
         )
-        var openedURL: URL?
-        service.appLauncher = { openedURL = $0 }
         let zoom = makeCask(
             "zoom",
             name: "Zoom",
@@ -79,7 +79,10 @@ final class ExternalInstallationTests: XCTestCase {
         XCTAssertEqual(service.installationSource(for: zoom), .packageInstaller)
 
         service.openExternalApp(cask: zoom)
-        XCTAssertEqual(openedURL?.standardizedFileURL.path, app.standardizedFileURL.path)
+        XCTAssertEqual(
+            launcher.lastOpenedURL?.standardizedFileURL.path,
+            app.standardizedFileURL.path
+        )
     }
 
     func test_application_scan_separates_mac_app_store_bundles() throws {
@@ -144,9 +147,11 @@ final class ExternalInstallationTests: XCTestCase {
         let scan = ApplicationDiscovery().scan(
             fileManager: .default, directories: [root]
         )
+        let launcher = RecordingApplicationLauncher()
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("localized-store-open"),
-            applicationDirectories: [root]
+            applicationDirectories: [root],
+            applicationLauncher: launcher
         )
         updateInstallationSnapshot(
             of: service,
@@ -154,8 +159,6 @@ final class ExternalInstallationTests: XCTestCase {
             macAppStoreBundleIdentifiers: scan.macAppStoreBundleIdentifiers,
             detectedApplications: scan.applications
         )
-        var openedURL: URL?
-        service.appLauncher = { openedURL = $0 }
         let cask = makeCask("whatsapp", name: "WhatsApp", appNames: ["WhatsApp.app"])
 
         XCTAssertTrue(service.isMacAppStoreInstalled(cask))
@@ -164,7 +167,10 @@ final class ExternalInstallationTests: XCTestCase {
         XCTAssertFalse(service.isAdoptable(cask))
 
         service.openExternalApp(cask: cask)
-        XCTAssertEqual(openedURL?.standardizedFileURL, whatsapp.standardizedFileURL)
+        XCTAssertEqual(
+            launcher.lastOpenedURL?.standardizedFileURL,
+            whatsapp.standardizedFileURL
+        )
     }
 
     func test_package_metadata_decodes_receipts_and_deleted_apps() throws {

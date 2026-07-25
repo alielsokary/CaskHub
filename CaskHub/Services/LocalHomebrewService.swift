@@ -32,22 +32,13 @@ final class LocalHomebrewService {
     @ObservationIgnored var permissionProbe: @Sendable () -> AppManagementPermission.Status
         = { AppManagementPermission.probe() }
 
-    /// Test seam — launching a real bundle from unit tests raises Finder's
-    /// "file can't be found" dialog on fixture apps.
-    @ObservationIgnored var appLauncher: (URL) -> Void = { url in
-        NSWorkspace.shared.openApplication(
-            at: url,
-            configuration: NSWorkspace.OpenConfiguration(),
-            completionHandler: nil
-        )
-    }
-
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
 
     @ObservationIgnored let operationStore: CaskOperationStore
 
     @ObservationIgnored var caskDisplayNames: [String: String] = [:]
 
+    @ObservationIgnored let applicationLauncher: any ApplicationLaunching
     @ObservationIgnored let mutationCoordinator: HomebrewMutationCoordinator
     @ObservationIgnored let softwareScanner: any InstalledSoftwareScanning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
@@ -80,6 +71,7 @@ final class LocalHomebrewService {
         commandExecutor: (any HomebrewCommandExecuting)? = nil,
         operationStore: CaskOperationStore? = nil,
         softwareScanner: (any InstalledSoftwareScanning)? = nil,
+        applicationLauncher: (any ApplicationLaunching)? = nil,
         brewBinaryProvider: @escaping () -> URL? = {
             HomebrewLocator.brewBinaryURL()
         },
@@ -98,6 +90,8 @@ final class LocalHomebrewService {
         self.defaults = defaults
         self.applicationDirectories = applicationDirectories
             ?? ApplicationDiscovery.defaultDirectories(fileManager: fileManager)
+        self.applicationLauncher = applicationLauncher
+            ?? WorkspaceApplicationLauncher()
         self.operationStore = resolvedOperationStore
         self.mutationCoordinator = HomebrewMutationCoordinator(
             operationStore: resolvedOperationStore,

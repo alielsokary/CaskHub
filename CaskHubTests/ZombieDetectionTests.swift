@@ -260,22 +260,22 @@ final class ZombieDetectionTests: XCTestCase {
         try makeApplicationBundle(
             in: appsDir, named: "ChatGPT.app", bundleIdentifier: "com.openai.chat"
         )
+        let launcher = RecordingApplicationLauncher()
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("open-fallback"),
-            applicationDirectories: [appsDir]
+            applicationDirectories: [appsDir],
+            applicationLauncher: launcher
         )
         updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true
         ), in: service)
-        var launched: URL?
-        service.appLauncher = { launched = $0 }
         service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
         XCTAssertNil(
             service.operationStore.failures["chatgpt"]?.message,
             "stale receipt name should fall back to the cask's current artifact"
         )
-        XCTAssertEqual(launched?.lastPathComponent, "ChatGPT.app")
+        XCTAssertEqual(launcher.lastOpenedURL?.lastPathComponent, "ChatGPT.app")
     }
 
     @MainActor

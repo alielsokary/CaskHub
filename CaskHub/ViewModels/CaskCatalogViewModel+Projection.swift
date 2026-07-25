@@ -48,14 +48,9 @@ extension CaskCatalogViewModel {
 
     private var librarySnapshot: CatalogLibrarySnapshot {
         libraryCache.value(for: libraryCacheKey) { [casks, categoryService, localHomebrew] in
-            var localStates: [String: CaskLocalState] = [:]
-            localStates.reserveCapacity(casks.count)
-            for cask in casks {
-                localStates[cask.token] = localHomebrew.localState(for: cask)
-            }
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
                 casks: casks,
-                localStates: localStates,
+                localStates: localHomebrew.localStates(for: casks),
                 categoryMappings: categoryService.tokenMappings
             ))
         }

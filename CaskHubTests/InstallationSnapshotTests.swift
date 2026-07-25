@@ -118,9 +118,11 @@ extension ExternalInstallationTests {
         let scan = ApplicationDiscovery().scan(
             fileManager: .default, directories: [root]
         )
+        let launcher = RecordingApplicationLauncher()
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("store-tailscale"),
-            applicationDirectories: [root]
+            applicationDirectories: [root],
+            applicationLauncher: launcher
         )
         updateInstallationSnapshot(
             of: service,
@@ -128,8 +130,6 @@ extension ExternalInstallationTests {
             macAppStoreBundleIdentifiers: scan.macAppStoreBundleIdentifiers,
             detectedApplications: scan.applications
         )
-        var openedURL: URL?
-        service.appLauncher = { openedURL = $0 }
         let tailscale = makeCask(
             "tailscale-app",
             name: "Tailscale",
@@ -143,6 +143,9 @@ extension ExternalInstallationTests {
         XCTAssertTrue(service.canOpen(tailscale))
 
         service.openExternalApp(cask: tailscale)
-        XCTAssertEqual(openedURL?.standardizedFileURL, tailscaleApp.standardizedFileURL)
+        XCTAssertEqual(
+            launcher.lastOpenedURL?.standardizedFileURL,
+            tailscaleApp.standardizedFileURL
+        )
     }
 }

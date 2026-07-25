@@ -255,6 +255,19 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
     return service
 }
 
+@MainActor
+final class RecordingApplicationLauncher: ApplicationLaunching {
+    private(set) var openedURLs: [URL] = []
+
+    var lastOpenedURL: URL? {
+        openedURLs.last
+    }
+
+    func open(_ url: URL) {
+        openedURLs.append(url)
+    }
+}
+
 // MARK: - Crash-reporting spies
 
 final class SpyCrashSpan: CrashSpan {
