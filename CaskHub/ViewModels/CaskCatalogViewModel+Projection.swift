@@ -49,6 +49,7 @@ extension CaskCatalogViewModel {
             var updatableCasks: [Cask] = []
             var installedCasks: [Cask] = []
             var adoptableCasks: [Cask] = []
+            var casksByCategory: [String: [Cask]] = [:]
             var localStates: [String: CaskLocalState] = [:]
             localStates.reserveCapacity(casks.count)
             for cask in casks {
@@ -63,15 +64,18 @@ extension CaskCatalogViewModel {
                 if localState.isAdoptable {
                     adoptableCasks.append(cask)
                 }
+                if let mapping = categoryService.tokenMappings[cask.token] {
+                    for categoryID in Set([mapping.primary] + mapping.secondary) {
+                        casksByCategory[categoryID, default: []].append(cask)
+                    }
+                }
             }
-            let catalogTokens = Set(casks.map(\.token))
-            let categoryCounts = categoryService.categoryTokenSets.mapValues {
-                $0.intersection(catalogTokens).count
-            }
+            let categoryCounts = casksByCategory.mapValues(\.count)
             return CatalogLibrarySnapshot(
                 updatableCasks: updatableCasks,
                 installedCasks: installedCasks,
                 adoptableCasks: adoptableCasks,
+                casksByCategory: casksByCategory,
                 categoryCounts: categoryCounts,
                 localStates: localStates
             )
@@ -166,8 +170,7 @@ extension CaskCatalogViewModel {
         case .library(.adopt):
             return adoptableCasks
         case let .category(categoryID):
-            let tokens = categoryService.tokens(in: categoryID)
-            return casks.filter { tokens.contains($0.token) }
+            return librarySnapshot.casksByCategory[categoryID] ?? []
         }
     }
 

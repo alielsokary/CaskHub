@@ -53,7 +53,7 @@ final class CaskCatalogViewModel {
     @ObservationIgnored let libraryCache =
         MemoizedValue<CatalogLibraryCacheKey, CatalogLibrarySnapshot>()
     @ObservationIgnored let filteredCache =
-        MemoizedValue<FilteredCatalogCacheKey, [Cask]>()
+        BoundedMemoizedValues<FilteredCatalogCacheKey, [Cask]>(capacity: 16)
     @ObservationIgnored let browseCache =
         MemoizedValue<BrowseCatalogCacheKey, [BrowseSection]>()
 

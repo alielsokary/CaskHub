@@ -9,6 +9,7 @@ struct CatalogLibrarySnapshot {
     let updatableCasks: [Cask]
     let installedCasks: [Cask]
     let adoptableCasks: [Cask]
+    let casksByCategory: [String: [Cask]]
     let categoryCounts: [String: Int]
     let localStates: [String: CaskLocalState]
 }
@@ -22,6 +23,32 @@ final class MemoizedValue<Key: Equatable, Value> {
         }
         let value = create()
         entry = (key, value)
+        return value
+    }
+}
+
+final class BoundedMemoizedValues<Key: Equatable, Value> {
+    private let capacity: Int
+    private var entries: [(key: Key, value: Value)] = []
+
+    init(capacity: Int) {
+        precondition(capacity > 0)
+        self.capacity = capacity
+        entries.reserveCapacity(capacity)
+    }
+
+    func value(for key: Key, create: () -> Value) -> Value {
+        if let index = entries.firstIndex(where: { $0.key == key }) {
+            let entry = entries.remove(at: index)
+            entries.append(entry)
+            return entry.value
+        }
+
+        let value = create()
+        if entries.count == capacity {
+            entries.removeFirst()
+        }
+        entries.append((key, value))
         return value
     }
 }
