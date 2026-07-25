@@ -55,7 +55,9 @@ final class LocalHomebrewService {
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
 
-    private(set) var isUpdatingAll = false
+    var isUpdatingAll: Bool {
+        operationStore.isUpdatingAll
+    }
 
     private(set) var brewVersion: String?
 
@@ -285,12 +287,8 @@ extension LocalHomebrewService {
     }
 
     func updateAll(tokens: [String]) async {
-        guard !isUpdatingAll else { return }
-        isUpdatingAll = true
-        defer {
-            operationStore.setUpdateAllProgress(nil)
-            isUpdatingAll = false
-        }
+        guard operationStore.beginUpdateAll() else { return }
+        defer { operationStore.finishUpdateAll() }
         for token in tokens where operationStore.canBeginOperation(for: token) {
             operationStore.send(.enqueue(.updating), for: token)
         }

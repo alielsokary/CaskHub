@@ -76,4 +76,40 @@ final class CaskOperationStoreTests: XCTestCase {
 
         XCTAssertEqual(store.status?.message, "Updating Firefox…")
     }
+
+    func test_update_all_lifecycle_has_one_owner_and_clears_progress_atomically() {
+        let store = CaskOperationStore()
+        let progress = CaskUpdateAllProgress(
+            currentIndex: 1,
+            totalCount: 2,
+            currentToken: "firefox",
+            currentDisplayName: "Firefox"
+        )
+
+        XCTAssertTrue(store.beginUpdateAll())
+        XCTAssertFalse(store.beginUpdateAll())
+
+        store.setUpdateAllProgress(progress)
+        XCTAssertTrue(store.isUpdatingAll)
+        XCTAssertEqual(store.updateAllProgress, progress)
+
+        store.finishUpdateAll()
+        XCTAssertFalse(store.isUpdatingAll)
+        XCTAssertNil(store.updateAllProgress)
+    }
+
+    func test_update_all_progress_is_ignored_outside_an_active_batch() {
+        let store = CaskOperationStore()
+        let progress = CaskUpdateAllProgress(
+            currentIndex: 1,
+            totalCount: 1,
+            currentToken: "firefox",
+            currentDisplayName: "Firefox"
+        )
+
+        store.setUpdateAllProgress(progress)
+
+        XCTAssertNil(store.updateAllProgress)
+        XCTAssertFalse(store.isUpdatingAll)
+    }
 }

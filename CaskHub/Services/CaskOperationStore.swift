@@ -11,6 +11,7 @@ import Observation
 @Observable
 final class CaskOperationStore {
     private(set) var states: [String: CaskOperationState] = [:]
+    private(set) var isUpdatingAll = false
     private(set) var updateAllProgress: CaskUpdateAllProgress?
 
     func state(for token: String) -> CaskOperationState? {
@@ -24,9 +25,22 @@ final class CaskOperationStore {
         states[token] = next
     }
 
-    func setUpdateAllProgress(_ progress: CaskUpdateAllProgress?) {
+    func beginUpdateAll() -> Bool {
+        guard !isUpdatingAll else { return false }
+        isUpdatingAll = true
+        return true
+    }
+
+    func setUpdateAllProgress(_ progress: CaskUpdateAllProgress) {
+        guard isUpdatingAll else { return }
         guard updateAllProgress != progress else { return }
         updateAllProgress = progress
+    }
+
+    func finishUpdateAll() {
+        guard isUpdatingAll || updateAllProgress != nil else { return }
+        isUpdatingAll = false
+        updateAllProgress = nil
     }
 
     func canBeginOperation(for token: String) -> Bool {
