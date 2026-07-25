@@ -89,7 +89,7 @@ Select the **CaskHub** scheme and run (⌘R). Xcode resolves the Swift package d
 
 ## Testing & CI
 
-Tests run with XCTest on every push and pull request to `master` and `develop`, with coverage reported to Codecov and static analysis by Codacy. A release-freshness check on PRs to `master` ensures the bundled category data is up to date with the latest CaskFlow release.
+Tests run with XCTest on pull requests to `master` and `develop`, and on pushes to `develop`, with coverage reported to Codecov and static analysis by Codacy. A release-freshness check on PRs to `master` ensures the bundled category data is up to date with the latest CaskFlow release.
 
 ```bash
 xcodebuild test -project CaskHub.xcodeproj -scheme CaskHub -destination 'platform=macOS'
