@@ -32,6 +32,10 @@ extension CaskCatalogViewModel {
         librarySnapshot.categoryCounts
     }
 
+    func localState(for cask: Cask) -> CaskLocalState {
+        librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
+    }
+
     private var libraryCacheKey: CatalogLibraryCacheKey {
         CatalogLibraryCacheKey(
             catalogRevision: catalogRevision,
@@ -45,18 +49,18 @@ extension CaskCatalogViewModel {
             var updatableCasks: [Cask] = []
             var installedCasks: [Cask] = []
             var adoptableCasks: [Cask] = []
+            var localStates: [String: CaskLocalState] = [:]
+            localStates.reserveCapacity(casks.count)
             for cask in casks {
-                if localHomebrew.hasAvailableUpdate(
-                    token: cask.token,
-                    remoteVersion: cask.version,
-                    autoUpdates: cask.autoUpdates
-                ) {
+                let localState = localHomebrew.localState(for: cask)
+                localStates[cask.token] = localState
+                if localState.hasAvailableUpdate {
                     updatableCasks.append(cask)
                 }
-                if localHomebrew.isPresent(cask) {
+                if localState.isPresent {
                     installedCasks.append(cask)
                 }
-                if localHomebrew.isAdoptable(cask) {
+                if localState.isAdoptable {
                     adoptableCasks.append(cask)
                 }
             }
@@ -68,7 +72,8 @@ extension CaskCatalogViewModel {
                 updatableCasks: updatableCasks,
                 installedCasks: installedCasks,
                 adoptableCasks: adoptableCasks,
-                categoryCounts: categoryCounts
+                categoryCounts: categoryCounts,
+                localStates: localStates
             )
         }
     }

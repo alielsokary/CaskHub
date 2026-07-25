@@ -12,6 +12,7 @@ struct CaskCardView: View {
     var downloads: String?
     var category: (id: String, name: String)?
     var onSelectCategory: ((String) -> Void)?
+    var localState: CaskLocalState?
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var showingInfo = false
@@ -23,7 +24,11 @@ struct CaskCardView: View {
             descriptionText
             metadataLine
             Spacer(minLength: 2)
-            CaskActionsView(cask: cask, onUninstall: canUninstall ? { showDeleteConfirmation = true } : nil)
+            CaskActionsView(
+                cask: cask,
+                localState: localState,
+                onUninstall: canUninstall ? { showDeleteConfirmation = true } : nil
+            )
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 15)
@@ -33,7 +38,8 @@ struct CaskCardView: View {
     }
 
     private var canUninstall: Bool {
-        localHomebrew.isInstalled(token: cask.token)
+        localState?.isHomebrewInstalled
+            ?? localHomebrew.isInstalled(token: cask.token)
     }
 
     // MARK: - Header (icon well + name + info)

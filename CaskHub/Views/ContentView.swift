@@ -224,7 +224,8 @@ private extension ContentView {
                     HeroCard(
                         cask: hero,
                         downloads: viewModel.formattedDownloads(for: hero.token),
-                        categoryName: categoryInfo(for: hero)?.name
+                        categoryName: categoryInfo(for: hero)?.name,
+                        localState: viewModel.localState(for: hero)
                     )
                 }
                 if showsBrowseSections {
@@ -250,7 +251,8 @@ private extension ContentView {
                     cask: cask,
                     downloads: viewModel.formattedDownloads(for: cask.token),
                     category: categoryInfo(for: cask),
-                    onSelectCategory: { selectedSidebar = .category($0) }
+                    onSelectCategory: { selectedSidebar = .category($0) },
+                    localState: viewModel.localState(for: cask)
                 )
             }
         }
@@ -286,7 +288,8 @@ private extension ContentView {
                 ForEach(viewModel.filteredCasks) { cask in
                     CaskRowView(
                         cask: cask,
-                        downloads: viewModel.formattedDownloads(for: cask.token)
+                        downloads: viewModel.formattedDownloads(for: cask.token),
+                        localState: viewModel.localState(for: cask)
                     )
                     .padding(.vertical, 6)
 

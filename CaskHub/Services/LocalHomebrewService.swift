@@ -196,8 +196,6 @@ final class LocalHomebrewService {
         }
         let appDirs = applicationDirectories
         let caskroom = configuredCaskroomURL()
-        let appSignatures = applicationCaskSignatures
-        let catalog = installationCatalog
         let packageSignatures = packageCaskSignatures
         let packageGeneration = packageCatalogGeneration
         let result = await Task.detached(priority: .userInitiated) {
@@ -212,28 +210,28 @@ final class LocalHomebrewService {
                 signatures: packageSignatures,
                 availableAppNames: applications.nonStoreNames
             )
-            let owners = Self.resolveExternalApplicationOwners(
-                signatures: appSignatures,
-                applications: applications.applications,
-                installedCasks: casks
-            )
-            let index = Self.buildInstallationIndex(
-                catalog: catalog,
-                applications: applications.applications,
-                binaryPaths: binaryPaths,
-                installedCasks: casks
-            )
-            return (casks, applications, binaryPaths, packages, owners, index)
+            return (casks, applications, binaryPaths, packages)
         }.value
 
+        let owners = Self.resolveExternalApplicationOwners(
+            signatures: applicationCaskSignatures,
+            applications: result.1.applications,
+            installedCasks: result.0
+        )
+        let index = Self.buildInstallationIndex(
+            catalog: installationCatalog,
+            applications: result.1.applications,
+            binaryPaths: result.2,
+            installedCasks: result.0
+        )
         installedCasks = result.0
         externalAppNames = result.1.adoptableNames
         macAppStoreAppNames = result.1.macAppStoreNames
         macAppStoreBundleIdentifiers = result.1.macAppStoreBundleIdentifiers
         detectedApplications = result.1.applications
-        externalApplicationOwners = result.4
+        externalApplicationOwners = owners
         externalBinaryPaths = result.2
-        installationIndex = result.5
+        installationIndex = index
         if packageGeneration == packageCatalogGeneration {
             externalPackageInstallations = result.3
         }

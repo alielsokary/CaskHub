@@ -227,6 +227,77 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         XCTAssertEqual(index.externalCLIPaths, ["tool": cliURL])
     }
 
+    func test_homebrew_application_state_is_resolved_during_the_scan() {
+        let signatures = [
+            CaskApplicationSignature(
+                token: "live",
+                currentBundleNames: ["Live.app"],
+                launchableBundleNames: ["Live.app"]
+            ),
+            CaskApplicationSignature(
+                token: "gone",
+                currentBundleNames: ["Gone.app"],
+                launchableBundleNames: ["Gone.app"]
+            )
+        ]
+        let liveApplication = DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/Live.app"),
+            bundleName: "Live.app",
+            bundleIdentifier: "com.example.live",
+            isMacAppStore: false,
+            isDirectlyInApplicationDirectory: true
+        )
+        let installed = [
+            "live": LocalCaskInstallation(
+                token: "live", installedVersion: "1.0", installedAt: nil,
+                appBundleNames: ["Live.app"], isZombie: false
+            ),
+            "gone": LocalCaskInstallation(
+                token: "gone", installedVersion: "1.0", installedAt: nil,
+                appBundleNames: ["Gone.app"], isZombie: true
+            )
+        ]
+
+        let result = LocalHomebrewService.resolveHomebrewApplicationState(
+            signatures: signatures,
+            applications: [liveApplication],
+            installedCasks: installed
+        )
+
+        XCTAssertEqual(result.launchableTokens, ["live"])
+        XCTAssertEqual(result.zombieTokens, ["gone"])
+    }
+
+    @MainActor
+    func test_local_state_uses_precomputed_launchability_and_zombie_verdicts() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("precomputed-local-state")
+        )
+        let cask = makeCask("gone", version: "2.0", appNames: ["Gone.app"])
+        service.installedCasks[cask.token] = LocalCaskInstallation(
+            token: cask.token,
+            installedVersion: "1.0",
+            installedAt: nil,
+            appBundleNames: ["Gone.app"],
+            isZombie: true
+        )
+        service.installationIndex = CaskInstallationIndex(
+            catalogTokens: [cask.token],
+            macAppStoreApplications: [:],
+            externalCLIPaths: [:],
+            launchableHomebrewTokens: [],
+            verifiedZombieTokens: [cask.token]
+        )
+
+        let state = service.localState(for: cask)
+
+        XCTAssertEqual(state.installationSource, .homebrew)
+        XCTAssertEqual(state.uninstallAvailability, .available)
+        XCTAssertTrue(state.isZombie)
+        XCTAssertFalse(state.canOpen)
+        XCTAssertFalse(state.hasAvailableUpdate)
+    }
+
     @MainActor
     func test_catalog_resolution_exposes_only_raycast_glaze_for_adoption() async throws {
         let root = FileManager.default.temporaryDirectory

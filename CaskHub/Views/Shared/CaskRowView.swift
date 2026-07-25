@@ -11,6 +11,7 @@ import SwiftUI
 struct CaskRowView: View {
     let cask: Cask
     var downloads: String?
+    var localState: CaskLocalState?
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var showDeleteConfirmation = false
@@ -62,6 +63,7 @@ struct CaskRowView: View {
     private var actionsControl: some View {
         CaskActionsView(
             cask: cask,
+            localState: localState,
             fullWidth: true,
             showsUninstallControl: false,
             usesIconOnlyOpenAndUpdate: true
@@ -96,15 +98,17 @@ struct CaskRowView: View {
     }
 
     private var hasAvailableUpdate: Bool {
-        localHomebrew.hasAvailableUpdate(
-            token: cask.token,
-            remoteVersion: cask.version,
-            autoUpdates: cask.autoUpdates
-        )
+        localState?.hasAvailableUpdate
+            ?? localHomebrew.hasAvailableUpdate(
+                token: cask.token,
+                remoteVersion: cask.version,
+                autoUpdates: cask.autoUpdates
+            )
     }
 
     private var uninstallAvailability: CaskUninstallAvailability {
-        localHomebrew.uninstallAvailability(for: cask)
+        localState?.uninstallAvailability
+            ?? localHomebrew.uninstallAvailability(for: cask)
     }
 
     private var isBusy: Bool {

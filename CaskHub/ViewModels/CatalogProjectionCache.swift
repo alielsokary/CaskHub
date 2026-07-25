@@ -10,6 +10,7 @@ struct CatalogLibrarySnapshot {
     let installedCasks: [Cask]
     let adoptableCasks: [Cask]
     let categoryCounts: [String: Int]
+    let localStates: [String: CaskLocalState]
 }
 
 final class MemoizedValue<Key: Equatable, Value> {

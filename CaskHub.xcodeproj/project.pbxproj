@@ -53,6 +53,7 @@
 		A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000001 /* LocalHomebrewTypes.swift */; };
 		F24000000000000000000001 /* CaskOperationProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000001 /* CaskOperationProgress.swift */; };
 		A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000002 /* LocalHomebrewService+State.swift */; };
+		F28000000000000000000002 /* LocalHomebrewService+InstallationIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28000000000000000000001 /* LocalHomebrewService+InstallationIndex.swift */; };
 		A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */; };
 		C13000000000000000000001 /* LocalHomebrewService+Mutations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */; };
 		C13000000000000000000002 /* MutationRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13000000000000000000002 /* MutationRecoveryTests.swift */; };
@@ -141,6 +142,7 @@
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
 		E24000000000000000000001 /* CaskOperationProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationProgress.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
+		F28000000000000000000001 /* LocalHomebrewService+InstallationIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+InstallationIndex.swift"; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
 		D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Mutations.swift"; sourceTree = "<group>"; };
 		D13000000000000000000002 /* MutationRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutationRecoveryTests.swift; sourceTree = "<group>"; };
@@ -296,6 +298,7 @@
 				B12000000000000000000001 /* LocalHomebrewTypes.swift */,
 				E24000000000000000000001 /* CaskOperationProgress.swift */,
 				B12000000000000000000002 /* LocalHomebrewService+State.swift */,
+				F28000000000000000000001 /* LocalHomebrewService+InstallationIndex.swift */,
 				B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */,
 				D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */,
 				41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */,
@@ -587,6 +590,7 @@
 				A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */,
 				F24000000000000000000001 /* CaskOperationProgress.swift in Sources */,
 				A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */,
+				F28000000000000000000002 /* LocalHomebrewService+InstallationIndex.swift in Sources */,
 				A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */,
 				C13000000000000000000001 /* LocalHomebrewService+Mutations.swift in Sources */,
 				41DFD4A630028F7D00608C7A /* RecentlyAddedService.swift in Sources */,
