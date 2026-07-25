@@ -170,12 +170,7 @@ struct ContentView: View {
             errorView(error)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            switch viewMode {
-            case .grid:
-                gridView
-            case .list:
-                listView
-            }
+            catalogView
         }
     }
 
@@ -222,31 +217,63 @@ struct ContentView: View {
 // MARK: - Grid, List & Error Views
 
 private extension ContentView {
-    var gridView: some View {
+    var catalogView: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: CHSpace.s4) {
-                if let hero = heroCask {
-                    HeroCard(
-                        cask: hero,
-                        downloads: viewModel.formattedDownloads(for: hero.token),
-                        categoryName: categoryInfo(for: hero)?.name,
-                        localState: viewModel.localState(for: hero)
-                    )
-                }
-                if showsBrowseSections {
-                    ForEach(viewModel.browseSections) { section in
-                        browseSectionView(section)
-                    }
-                } else {
-                    caskGrid(viewModel.filteredCasks)
-                }
-            }
-            .frame(width: CHSize.contentWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            catalogContent
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .modifier(ResetScrollOnChange(trigger: selectedSidebar))
+    }
+
+    @ViewBuilder
+    var catalogContent: some View {
+        switch viewMode {
+        case .grid:
+            gridContent
+        case .list:
+            listContent
+        }
+    }
+
+    var gridContent: some View {
+        VStack(alignment: .leading, spacing: CHSpace.s4) {
+            if let hero = heroCask {
+                HeroCard(
+                    cask: hero,
+                    downloads: viewModel.formattedDownloads(for: hero.token),
+                    categoryName: categoryInfo(for: hero)?.name,
+                    localState: viewModel.localState(for: hero)
+                )
+            }
+            if showsBrowseSections {
+                ForEach(viewModel.browseSections) { section in
+                    browseSectionView(section)
+                }
+            } else {
+                caskGrid(viewModel.filteredCasks)
+            }
+        }
+        .frame(width: CHSize.contentWidth, alignment: .leading)
+        .frame(maxWidth: .infinity)
+    }
+
+    var listContent: some View {
+        LazyVStack(spacing: 0) {
+            ForEach(viewModel.filteredCasks) { cask in
+                CaskRowView(
+                    cask: cask,
+                    downloads: viewModel.formattedDownloads(for: cask.token),
+                    localState: viewModel.localState(for: cask)
+                )
+                .padding(.vertical, 6)
+
+                Color.chHairline
+                    .frame(height: 1)
+            }
+        }
+        .frame(width: CHSize.contentWidth)
+        .frame(maxWidth: .infinity)
     }
 
     func caskGrid(_ casks: [Cask]) -> some View {
@@ -283,31 +310,6 @@ private extension ContentView {
             caskGrid(section.casks)
         }
         .padding(.top, CHSpace.s3)
-    }
-
-    // MARK: - List View
-
-    var listView: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(viewModel.filteredCasks) { cask in
-                    CaskRowView(
-                        cask: cask,
-                        downloads: viewModel.formattedDownloads(for: cask.token),
-                        localState: viewModel.localState(for: cask)
-                    )
-                    .padding(.vertical, 6)
-
-                    Color.chHairline
-                        .frame(height: 1)
-                }
-            }
-            .frame(width: CHSize.contentWidth)
-            .frame(maxWidth: .infinity)
-        }
-        .contentMargins(.bottom, 44, for: .scrollContent)
-        .scrollContentBackground(.hidden)
-        .modifier(ResetScrollOnChange(trigger: selectedSidebar))
     }
 
     // MARK: - Error View
