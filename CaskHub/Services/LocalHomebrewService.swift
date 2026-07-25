@@ -14,14 +14,18 @@ import Observation
 @MainActor
 @Observable
 final class LocalHomebrewService {
-    var installedCasks: [String: LocalCaskInstallation] = [:]
+    var installedCasks: [String: LocalCaskInstallation] = [:] {
+        didSet { catalogStateRevision &+= 1 }
+    }
 
     /// Non-Mac-App-Store bundle names found in /Applications and ~/Applications.
     var externalAppNames: Set<String> = []
 
     /// Directly installed applications resolved to one catalog cask. A token is
     /// absent when a shared bundle name cannot be disambiguated safely.
-    var externalApplicationOwners: [String: DetectedApplication] = [:]
+    var externalApplicationOwners: [String: DetectedApplication] = [:] {
+        didSet { catalogStateRevision &+= 1 }
+    }
 
     /// Mac App Store bundles that must be shown as installed but never adopted.
     var macAppStoreAppNames: Set<String> = []
@@ -37,14 +41,22 @@ final class LocalHomebrewService {
     var externalBinaryPaths: [String: URL] = [:]
 
     /// Package-installed apps matched to cask receipt metadata.
-    var externalPackageInstallations: [String: ExternalPackageInstallation] = [:]
+    var externalPackageInstallations: [String: ExternalPackageInstallation] = [:] {
+        didSet { catalogStateRevision &+= 1 }
+    }
 
     @ObservationIgnored var applicationCaskSignatures: [ApplicationCaskSignature] = []
     @ObservationIgnored var installationCatalog = CaskInstallationCatalog.empty
 
     /// Catalog-wide installation lookups, rebuilt only when the catalog or a
     /// local software scan changes. Rendering reads this snapshot in O(1).
-    var installationIndex = CaskInstallationIndex.empty
+    var installationIndex = CaskInstallationIndex.empty {
+        didSet { catalogStateRevision &+= 1 }
+    }
+
+    /// Changes only when state that affects catalog membership or update
+    /// eligibility changes; operation progress deliberately does not touch it.
+    private(set) var catalogStateRevision = 0
 
     /// Package adoptions awaiting the user's reinstall confirmation.
     var packageAdoptionRequests: Set<String> = []
@@ -110,7 +122,9 @@ final class LocalHomebrewService {
     private(set) var customBrewPrefix: String?
 
     /// Include self-updating casks (`auto_updates: true`) in updates, via `brew upgrade --greedy`.
-    private(set) var greedyUpdates: Bool
+    private(set) var greedyUpdates: Bool {
+        didSet { catalogStateRevision &+= 1 }
+    }
 
     let fileManager: FileManager
     private let defaults: UserDefaults

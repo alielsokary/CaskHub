@@ -37,13 +37,25 @@ enum SortOption: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CaskCatalogViewModel {
-    private(set) var casks: [Cask] = []
+    private(set) var casks: [Cask] = [] {
+        didSet { catalogRevision &+= 1 }
+    }
     private(set) var isLoading = false
     private(set) var errorMessage: String?
-    private var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:]
+    var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:] {
+        didSet { catalogRevision &+= 1 }
+    }
     private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     private var analyticsRequestID = UUID()
+    private(set) var catalogRevision = 0
     var searchText = ""
+
+    @ObservationIgnored let libraryCache =
+        MemoizedValue<CatalogLibraryCacheKey, CatalogLibrarySnapshot>()
+    @ObservationIgnored let filteredCache =
+        MemoizedValue<FilteredCatalogCacheKey, [Cask]>()
+    @ObservationIgnored let browseCache =
+        MemoizedValue<BrowseCatalogCacheKey, [BrowseSection]>()
 
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"
@@ -78,9 +90,9 @@ final class CaskCatalogViewModel {
     private(set) var recentlyAddedWindow: RecentlyAddedWindow = .days30
 
     private let apiClient: BrewAPIClientProtocol
-    private let categoryService: CategoryService
-    private let recentlyAdded: RecentlyAddedService
-    private let localHomebrew: LocalHomebrewService
+    let categoryService: CategoryService
+    let recentlyAdded: RecentlyAddedService
+    let localHomebrew: LocalHomebrewService
     private let defaults: UserDefaults
 
     init(
@@ -102,157 +114,6 @@ final class CaskCatalogViewModel {
         }
         if let window = RecentlyAddedWindow(rawValue: defaults.integer(forKey: Self.windowKey)) {
             recentlyAddedWindow = window
-        }
-    }
-
-    // MARK: - Sidebar Counts
-
-    var updatableCasks: [Cask] {
-        casks.filter { [localHomebrew] in
-            localHomebrew.hasAvailableUpdate(token: $0.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates)
-        }
-    }
-
-    var updatesCount: Int {
-        updatableCasks.count
-    }
-
-    var installedCasks: [Cask] {
-        casks.filter { [localHomebrew] in localHomebrew.isPresent($0) }
-    }
-
-    var installedCount: Int {
-        installedCasks.count
-    }
-
-    var adoptableCasks: [Cask] {
-        casks.filter { [localHomebrew] in localHomebrew.isAdoptable($0) }
-    }
-
-    var categoryCounts: [String: Int] {
-        let catalogTokens = Set(casks.map(\.token))
-        return categoryService.categoryTokenSets.mapValues {
-            $0.intersection(catalogTokens).count
-        }
-    }
-
-    // MARK: - Browse Sections
-
-    private static let browseSectionSize = 8
-
-    var browseSections: [BrowseSection] {
-        let counts = analyticsByPeriod[.days365] ?? [:]
-        func top(_ source: [Cask]) -> [Cask] {
-            Array(sortedByDownloads(source, using: counts).prefix(Self.browseSectionSize))
-        }
-
-        let recentTokens = recentlyAdded.recentTokens(within: recentlyAddedWindow.rawValue)
-        var sections = [
-            BrowseSection(
-                title: "Most Popular",
-                destination: .discover(.topCharts),
-                casks: top(casks)
-            ),
-            BrowseSection(
-                title: "Recently Added",
-                destination: .discover(.recentlyAdded),
-                casks: Array(sortedByNewest(casks.filter { recentTokens.contains($0.token) }).prefix(Self.browseSectionSize))
-            )
-        ]
-        for entry in categoryService.orderedCategories where entry.id != "other" {
-            let tokens = categoryService.tokens(in: entry.id)
-            sections.append(BrowseSection(
-                title: entry.definition.displayName,
-                destination: .category(entry.id),
-                casks: top(casks.filter { tokens.contains($0.token) })
-            ))
-        }
-        return sections.filter { !$0.casks.isEmpty }
-    }
-
-    // MARK: - Filtered Casks (3-stage pipeline)
-
-    var filteredCasks: [Cask] {
-        let sidebarFiltered = applySidebarFilter(to: casks)
-        let searched = applySearch(to: sidebarFiltered)
-        return applySort(to: searched)
-    }
-
-    private func applySidebarFilter(to casks: [Cask]) -> [Cask] {
-        switch selectedSidebar {
-        case .discover(.browse):
-            return casks
-
-        case .discover(.featured):
-            return Array(sortedByDownloads(casks, using: downloadCounts).prefix(100))
-
-        case .discover(.topCharts):
-            return casks
-
-        case .discover(.recentlyAdded):
-            let recentTokens = recentlyAdded.recentTokens(within: recentlyAddedWindow.rawValue)
-            return casks.filter { recentTokens.contains($0.token) }
-
-        case .library(.installed):
-            return installedCasks
-
-        case .library(.updates):
-            return updatableCasks
-
-        case .library(.adopt):
-            return adoptableCasks
-
-        case let .category(categoryID):
-            let tokens = categoryService.tokens(in: categoryID)
-            return casks.filter { tokens.contains($0.token) }
-        }
-    }
-
-    private func applySearch(to casks: [Cask]) -> [Cask] {
-        guard !searchText.isEmpty else { return casks }
-        let query = searchText.lowercased()
-        return casks.filter { cask in
-            cask.displayName.lowercased().contains(query)
-                || cask.token.lowercased().contains(query)
-                || (cask.desc?.lowercased().contains(query) ?? false)
-        }
-    }
-
-    private func sortedByDownloads(_ source: [Cask], using counts: [String: Int]) -> [Cask] {
-        source.sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
-    }
-
-    private func sortedByNewest(_ source: [Cask]) -> [Cask] {
-        source.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "") > (recentlyAdded.addedDate(for: $1.token) ?? "") }
-    }
-
-    private func sortedByRecentlyInstalled(_ source: [Cask]) -> [Cask] {
-        source.sorted { lhs, rhs in
-            let lhsDate = localHomebrew.installedCasks[lhs.token]?.installedAt
-            let rhsDate = localHomebrew.installedCasks[rhs.token]?.installedAt
-            if lhsDate != rhsDate {
-                if let lhsDate, let rhsDate { return lhsDate > rhsDate }
-                return lhsDate != nil
-            }
-            return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
-                == .orderedAscending
-        }
-    }
-
-    private func applySort(to casks: [Cask]) -> [Cask] {
-        switch sortOption {
-        case .mostPopular:
-            return sortedByDownloads(casks, using: downloadCounts)
-        case .nameAZ:
-            return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
-        case .nameZA:
-            return casks.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending }
-        case .recentlyInstalled:
-            return sortedByRecentlyInstalled(casks)
-        case .newest:
-            return sortedByNewest(casks)
-        case .oldest:
-            return casks.sorted { (recentlyAdded.addedDate(for: $0.token) ?? "9999") < (recentlyAdded.addedDate(for: $1.token) ?? "9999") }
         }
     }
 
