@@ -104,11 +104,10 @@ struct ContentView: View {
                 .allowsHitTesting(false)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            StatusBarView(
+            ObservedStatusBarView(
                 caskCount: viewModel.casks.count,
                 brewVersion: localHomebrew.brewVersion,
-                caskFlowRelease: categoryService.releaseTag,
-                operation: localHomebrew.statusBarOperation
+                caskFlowRelease: categoryService.releaseTag
             )
         }
         .containerBackground(for: .window) {
