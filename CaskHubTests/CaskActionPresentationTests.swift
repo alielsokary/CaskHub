@@ -14,7 +14,11 @@ final class CaskActionPresentationTests: XCTestCase {
     func test_running_presentation_exposes_one_coherent_operation() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("presentation-running"))
         let cask = makeCask("firefox", name: "Firefox")
-        service.beginOperation(.installing, token: cask.token)
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: cask.token,
+            displayName: cask.displayName
+        )
         service.operationStore.send(.setCancellable(true), for: cask.token)
 
         let presentation = service.actionPresentation(for: cask)

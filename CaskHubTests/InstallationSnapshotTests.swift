@@ -45,7 +45,11 @@ final class InstallationSnapshotTests: XCTestCase {
 
     func test_operation_changes_do_not_invalidate_catalog_snapshot() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("snapshot-operation"))
-        service.beginOperation(.installing, token: "firefox")
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: "firefox",
+            displayName: "Firefox"
+        )
         service.operationStore.send(.setCancellable(true), for: "firefox")
         service.operationStore.send(.requestCancellation, for: "firefox")
 

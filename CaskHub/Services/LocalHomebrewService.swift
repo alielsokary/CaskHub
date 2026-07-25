@@ -47,10 +47,8 @@ final class LocalHomebrewService {
     @ObservationIgnored let operationStore: CaskOperationStore
 
     @ObservationIgnored var caskDisplayNames: [String: String] = [:]
-    @ObservationIgnored var brewOutputBuffers: [String: String] = [:]
-    @ObservationIgnored var lastProgressUpdates: [String: Date] = [:]
 
-    @ObservationIgnored let commandExecutor: any HomebrewCommandExecuting
+    @ObservationIgnored let mutationCoordinator: HomebrewMutationCoordinator
     @ObservationIgnored let softwareScanner: any InstalledSoftwareScanning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
@@ -91,14 +89,22 @@ final class LocalHomebrewService {
             )
         }
     ) {
+        let resolvedOperationStore = operationStore ?? CaskOperationStore()
+        let resolvedCommandExecutor = commandExecutor
+            ?? SystemHomebrewCommandExecutor(
+                processRunner: processRunner ?? SystemBrewProcessRunner()
+            )
         self.fileManager = fileManager
         self.defaults = defaults
         self.applicationDirectories = applicationDirectories
             ?? ApplicationDiscovery.defaultDirectories(fileManager: fileManager)
-        self.commandExecutor = commandExecutor ?? SystemHomebrewCommandExecutor(
-            processRunner: processRunner ?? SystemBrewProcessRunner()
+        self.operationStore = resolvedOperationStore
+        self.mutationCoordinator = HomebrewMutationCoordinator(
+            operationStore: resolvedOperationStore,
+            commandExecutor: resolvedCommandExecutor,
+            brewBinaryProvider: brewBinaryProvider,
+            fileManager: fileManager
         )
-        self.operationStore = operationStore ?? CaskOperationStore()
         self.softwareScanner = softwareScanner ?? HomebrewInstallationScanner()
         self.brewBinaryProvider = brewBinaryProvider
         self.brewVersionProvider = brewVersionProvider
@@ -243,17 +249,7 @@ extension LocalHomebrewService {
             .appendingPathComponent(token)
         let appBundleNames = installedCasks[token]?.appBundleNames ?? []
         Analytics.caskActionStarted(.repairing, token: token, origin: .repair)
-        beginOperation(.repairing, token: token)
-        defer { clearOperationResources(token: token) }
-        do {
-            try await runBrewStreaming(token: token, args: ["fetch", "--cask", token], cancellable: false)
-            operationStore.send(.clear, for: token)
-        } catch {
-            CrashReporter.capture(error)
-            Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
-            noteFailure(token: token, error: error)
-            throw error
-        }
+        try await prepareRepairDownload(token: token)
         do {
             try await runMutation(
                 .uninstalling,
@@ -262,9 +258,10 @@ extension LocalHomebrewService {
                 origin: .repair,
                 environmentOverrides: ["HOMEBREW_NO_AUTOREMOVE": "1"],
                 recoverIf: { [self] in
-                    repairRemovalSatisfied(
+                    mutationCoordinator.removalSatisfied(
                         caskroomEntry: caskroomEntry,
-                        appBundleNames: appBundleNames
+                        appBundleNames: appBundleNames,
+                        applicationDirectories: applicationDirectories
                     )
                 }
             )
@@ -277,6 +274,28 @@ extension LocalHomebrewService {
             Analytics.caskActionCompleted(.repairing, token: token, origin: .repair)
         } catch {
             Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
+            throw error
+        }
+    }
+
+    private func prepareRepairDownload(token: String) async throws {
+        mutationCoordinator.beginOperation(
+            .repairing,
+            token: token,
+            displayName: displayName(for: token)
+        )
+        defer { mutationCoordinator.clearOperationResources(token: token) }
+        do {
+            try await mutationCoordinator.executeStreaming(
+                token: token,
+                arguments: ["fetch", "--cask", token],
+                cancellable: false
+            )
+            operationStore.send(.clear, for: token)
+        } catch {
+            CrashReporter.capture(error)
+            Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
+            noteFailure(token: token, error: error)
             throw error
         }
     }
@@ -304,10 +323,7 @@ extension LocalHomebrewService {
     }
 
     func cancelInstall(token: String) {
-        guard operationStore.state(for: token)?.canCancel == true,
-              commandExecutor.cancel(token: token)
-        else { return }
-        operationStore.send(.requestCancellation, for: token)
+        mutationCoordinator.cancel(token: token)
     }
 
     var statusBarOperation: CaskOperationStatus? {

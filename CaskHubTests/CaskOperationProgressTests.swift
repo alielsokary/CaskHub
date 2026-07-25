@@ -30,11 +30,14 @@ final class CaskOperationProgressTests: XCTestCase {
     @MainActor
     func test_brew_output_updates_download_phase_then_install_phase() throws {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("operation-progress"))
-        service.caskDisplayNames["firefox"] = "Firefox"
-        service.beginOperation(.installing, token: "firefox")
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: "firefox",
+            displayName: "Firefox"
+        )
         service.operationStore.send(.setCancellable(true), for: "firefox")
 
-        service.consumeBrewOutput(
+        service.mutationCoordinator.consumeBrewOutput(
             "==> Downloading https://example.com/firefox.dmg",
             token: "firefox"
         )
@@ -44,7 +47,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "Checking download…"
         )
 
-        service.consumeBrewOutput(
+        service.mutationCoordinator.consumeBrewOutput(
             "Cask firefox    ########    Downloading    42.0MB/100.0MB",
             token: "firefox"
         )
@@ -55,7 +58,10 @@ final class CaskOperationProgressTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(downloading.fractionCompleted), 0.42, accuracy: 0.001)
         XCTAssertTrue(service.statusBarOperation?.message.contains("Downloading Firefox") == true)
 
-        service.consumeBrewOutput("==> Installing Cask firefox", token: "firefox")
+        service.mutationCoordinator.consumeBrewOutput(
+            "==> Installing Cask firefox",
+            token: "firefox"
+        )
         XCTAssertEqual(service.operationStore.operationProgress["firefox"]?.phase, .performing)
         XCTAssertFalse(service.operationStore.cancellableTokens.contains("firefox"))
     }
@@ -68,8 +74,12 @@ final class CaskOperationProgressTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: cachedDownload) }
 
         let service = LocalHomebrewService(defaults: makeScratchDefaults("cached-progress"))
-        service.beginOperation(.installing, token: "chatgpt-classic")
-        service.consumeBrewOutput(
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: "chatgpt-classic",
+            displayName: "ChatGPT Classic"
+        )
+        service.mutationCoordinator.consumeBrewOutput(
             """
             ==> Downloading https://example.com/ChatGPT_Classic.dmg
             Already downloaded: \(cachedDownload.path)
@@ -99,10 +109,14 @@ final class CaskOperationProgressTests: XCTestCase {
     @MainActor
     func test_brew_output_updates_download_phase_then_upgrade_phase() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("update-progress"))
-        service.beginOperation(.updating, token: "firefox")
+        service.mutationCoordinator.beginOperation(
+            .updating,
+            token: "firefox",
+            displayName: "Firefox"
+        )
         service.operationStore.send(.setCancellable(true), for: "firefox")
 
-        service.consumeBrewOutput(
+        service.mutationCoordinator.consumeBrewOutput(
             """
             ==> Upgrading firefox
             Cask firefox    ########    Downloading    100.0MB/100.0MB
@@ -111,7 +125,10 @@ final class CaskOperationProgressTests: XCTestCase {
         )
         XCTAssertEqual(service.operationStore.operationProgress["firefox"]?.phase, .downloading)
 
-        service.consumeBrewOutput("==> Upgrading firefox", token: "firefox")
+        service.mutationCoordinator.consumeBrewOutput(
+            "==> Upgrading firefox",
+            token: "firefox"
+        )
         XCTAssertEqual(service.operationStore.operationProgress["firefox"]?.phase, .performing)
         XCTAssertFalse(service.operationStore.cancellableTokens.contains("firefox"))
     }
@@ -169,8 +186,12 @@ final class CaskOperationProgressTests: XCTestCase {
     @MainActor
     func test_progress_capsule_and_status_bar_render() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("progress-render"))
-        service.beginOperation(.installing, token: "plain")
-        service.consumeBrewOutput(
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: "plain",
+            displayName: "Plain"
+        )
+        service.mutationCoordinator.consumeBrewOutput(
             "Cask plain    ########    Downloading    84.0MB/245.0MB",
             token: "plain"
         )
