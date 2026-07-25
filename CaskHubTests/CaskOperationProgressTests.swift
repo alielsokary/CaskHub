@@ -12,7 +12,7 @@ import XCTest
 final class CaskOperationProgressTests: XCTestCase {
     func test_brew_progress_parser_reads_homebrew_byte_totals() throws {
         let output = "Cask docker-desktop    #######    Downloading    84.2MB/245.0MB"
-        let progress = try XCTUnwrap(BrewProgressParser.byteProgress(in: output))
+        let progress = try XCTUnwrap(BrewProgressParser.parse(output).byteProgress)
 
         XCTAssertEqual(progress.completed, 84_200_000)
         XCTAssertEqual(progress.total, 245_000_000)
@@ -35,6 +35,16 @@ final class CaskOperationProgressTests: XCTestCase {
         service.cancellableDownloads.insert("firefox")
 
         service.consumeBrewOutput(
+            "==> Downloading https://example.com/firefox.dmg",
+            token: "firefox"
+        )
+        XCTAssertEqual(service.operationProgress["firefox"]?.phase, .checkingDownload)
+        XCTAssertEqual(
+            service.operationProgress["firefox"]?.inlineLabel,
+            "Checking download…"
+        )
+
+        service.consumeBrewOutput(
             "Cask firefox    ########    Downloading    42.0MB/100.0MB",
             token: "firefox"
         )
@@ -48,6 +58,40 @@ final class CaskOperationProgressTests: XCTestCase {
         service.consumeBrewOutput("==> Installing Cask firefox", token: "firefox")
         XCTAssertEqual(service.operationProgress["firefox"]?.phase, .performing)
         XCTAssertFalse(service.cancellableDownloads.contains("firefox"))
+    }
+
+    @MainActor
+    func test_brew_output_reports_cached_download_at_full_size() throws {
+        let cachedDownload = FileManager.default.temporaryDirectory
+            .appendingPathComponent("cached download-\(UUID().uuidString).dmg")
+        try Data(repeating: 0, count: 2_048).write(to: cachedDownload)
+        defer { try? FileManager.default.removeItem(at: cachedDownload) }
+
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("cached-progress"))
+        service.beginOperation(.installing, token: "chatgpt-classic")
+        service.consumeBrewOutput(
+            """
+            ==> Downloading https://example.com/ChatGPT_Classic.dmg
+            Already downloaded: \(cachedDownload.path)
+            """,
+            token: "chatgpt-classic"
+        )
+
+        let progress = try XCTUnwrap(service.operationProgress["chatgpt-classic"])
+        XCTAssertEqual(progress.phase, .usingCachedDownload)
+        XCTAssertEqual(progress.completedBytes, 2_048)
+        XCTAssertEqual(progress.totalBytes, 2_048)
+        XCTAssertEqual(progress.fractionCompleted, 1)
+        XCTAssertEqual(progress.inlineLabel, "Using cache · 2 / 2 KB")
+    }
+
+    func test_phase_parser_does_not_treat_download_preflight_as_byte_transfer() {
+        let update = BrewProgressParser.parse(
+            "==> Downloading https://example.com/ChatGPT_Classic.dmg"
+        )
+
+        XCTAssertEqual(update.phase, .checkingDownload)
+        XCTAssertNil(update.byteProgress)
     }
 
     @MainActor
