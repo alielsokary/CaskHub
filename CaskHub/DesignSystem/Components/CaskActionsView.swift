@@ -31,9 +31,13 @@ struct CaskActionsView: View {
     @Environment(\.isAdoptPage) private var isAdoptPage
 
     var body: some View {
-        let state = localState ?? localHomebrew.localState(for: cask)
-        if let inFlight = localHomebrew.inFlightActions[cask.token] {
-            inFlightCapsule(for: inFlight)
+        let presentation = localHomebrew.actionPresentation(
+            for: cask,
+            localState: localState
+        )
+        let state = presentation.localState
+        if let inFlight = presentation.activeAction {
+            inFlightCapsule(for: inFlight, presentation: presentation)
         } else if state.isHomebrewInstalled {
             installedActions(state)
         } else if state.isAdoptable {
@@ -41,14 +45,14 @@ struct CaskActionsView: View {
                 if isAdoptPage {
                     ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
                         if state.isExternalPackage {
-                            localHomebrew.requestPackageAdoption(token: cask.token)
+                            localHomebrew.send(.requestPackageAdoption(token: cask.token))
                         } else {
-                            Task { try? await localHomebrew.adopt(cask) }
+                            localHomebrew.send(.adopt(cask))
                         }
                     }
                 } else {
                     openButton(fullWidth: fullWidth) {
-                        localHomebrew.openExternalApp(cask: cask)
+                        localHomebrew.send(.openExternal(cask))
                     }
                 }
                 if showsUninstallControl,
@@ -59,7 +63,7 @@ struct CaskActionsView: View {
         } else if state.installationSource == .macAppStore {
             HStack(spacing: 8) {
                 openButton(fullWidth: fullWidth) {
-                    localHomebrew.openExternalApp(cask: cask)
+                    localHomebrew.send(.openExternal(cask))
                 }
                 if showsUninstallControl,
                    let reason = state.uninstallAvailability.unavailableReason {
@@ -74,7 +78,7 @@ struct CaskActionsView: View {
                 )
         } else {
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
-                Task { try? await localHomebrew.install(token: cask.token) }
+                localHomebrew.send(.install(token: cask.token))
             }
         }
     }
@@ -83,7 +87,7 @@ struct CaskActionsView: View {
     private func installedActions(_ state: CaskLocalState) -> some View {
         if state.isZombie {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
-                Task { try? await localHomebrew.repair(token: cask.token) }
+                localHomebrew.send(.repair(token: cask.token))
             }
             .help("""
             \(cask.displayName) was removed outside Homebrew, but Homebrew still \
@@ -102,12 +106,12 @@ struct CaskActionsView: View {
                     fullWidth: fullWidth && !state.hasAvailableUpdate,
                     isPairedWithUpdate: state.hasAvailableUpdate
                 ) {
-                    localHomebrew.open(cask)
+                    localHomebrew.send(.open(cask))
                 }
             }
             if state.hasAvailableUpdate {
                 updateButton(fullWidth: fullWidth) {
-                    Task { try? await localHomebrew.upgrade(token: cask.token) }
+                    localHomebrew.send(.update(token: cask.token))
                 }
             }
             if !state.canOpen && !state.hasAvailableUpdate {
@@ -151,18 +155,19 @@ struct CaskActionsView: View {
         }
     }
 
-    private func inFlightCapsule(for action: CaskAction) -> some View {
+    private func inFlightCapsule(
+        for action: CaskAction,
+        presentation: CaskActionPresentation
+    ) -> some View {
         let token = cask.token
-        let isCanceling = localHomebrew.cancelRequested.contains(token)
-        let canCancel = localHomebrew.cancellableDownloads.contains(token) && !isCanceling
 
         return CaskOperationCapsule(
             action: action,
-            progress: localHomebrew.operationProgress[token],
-            isCanceling: isCanceling,
-            canCancel: canCancel,
+            progress: presentation.progress,
+            isCanceling: presentation.isCanceling,
+            canCancel: presentation.canCancel,
             fullWidth: fullWidth,
-            onCancel: { localHomebrew.cancelInstall(token: token) }
+            onCancel: { localHomebrew.send(.cancel(token: token)) }
         )
     }
 }

@@ -64,7 +64,7 @@ struct ContentView: View {
                         ? {
                             let tokens = viewModel.updatableCasks.map(\.token)
                             Analytics.updateAllTapped(count: tokens.count)
-                            Task { await localHomebrew.updateAll(tokens: tokens) }
+                            localHomebrew.send(.updateAll(tokens: tokens))
                         }
                         : nil,
                     isUpdatingAll: localHomebrew.isUpdatingAll,

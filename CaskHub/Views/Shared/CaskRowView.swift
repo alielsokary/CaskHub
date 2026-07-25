@@ -85,7 +85,7 @@ struct CaskRowView: View {
                 }
             },
             onUpdate: {
-                Task { try? await localHomebrew.upgrade(token: cask.token) }
+                localHomebrew.send(.update(token: cask.token))
             },
             onUninstall: {
                 showDeleteConfirmation = true
@@ -98,21 +98,19 @@ struct CaskRowView: View {
     }
 
     private var hasAvailableUpdate: Bool {
-        localState?.hasAvailableUpdate
-            ?? localHomebrew.hasAvailableUpdate(
-                token: cask.token,
-                remoteVersion: cask.version,
-                autoUpdates: cask.autoUpdates
-            )
+        actionPresentation.localState.hasAvailableUpdate
     }
 
     private var uninstallAvailability: CaskUninstallAvailability {
-        localState?.uninstallAvailability
-            ?? localHomebrew.uninstallAvailability(for: cask)
+        actionPresentation.localState.uninstallAvailability
     }
 
     private var isBusy: Bool {
-        localHomebrew.inFlightActions[cask.token] != nil
+        actionPresentation.isBusy
+    }
+
+    private var actionPresentation: CaskActionPresentation {
+        localHomebrew.actionPresentation(for: cask, localState: localState)
     }
 }
 

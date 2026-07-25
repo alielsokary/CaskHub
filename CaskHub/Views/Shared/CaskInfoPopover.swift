@@ -91,8 +91,9 @@ struct CaskInfoPopover: View {
             result.append(InfoRow(property: "Download Size", value: sizeValue))
         }
 
-        let localInstallation = localHomebrew.installedCasks[cask.token]
-        let installationSource = localHomebrew.installationSource(for: cask)
+        let presentation = localHomebrew.actionPresentation(for: cask)
+        let localInstallation = presentation.homebrewInstallation
+        let installationSource = presentation.localState.installationSource
 
         let installedValue: String
         if let version = localInstallation?.installedVersion {
