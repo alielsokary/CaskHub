@@ -10,7 +10,9 @@ import Foundation
 enum CaskOperationPhase: Equatable {
     case queued
     case preparing
+    case checkingDownload
     case downloading
+    case usingCachedDownload
     case verifying
     case performing
     case canceling
@@ -21,8 +23,12 @@ enum CaskOperationPhase: Equatable {
             return "Queued"
         case .preparing:
             return "Preparing"
+        case .checkingDownload:
+            return "Checking download"
         case .downloading:
             return "Downloading"
+        case .usingCachedDownload:
+            return "Using cache"
         case .verifying:
             return "Verifying"
         case .performing:
@@ -30,6 +36,19 @@ enum CaskOperationPhase: Equatable {
         case .canceling:
             return "Canceling"
         }
+    }
+
+    var isDownloadActivity: Bool {
+        switch self {
+        case .checkingDownload, .downloading, .usingCachedDownload:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var showsByteProgress: Bool {
+        self == .downloading || self == .usingCachedDownload
     }
 }
 
@@ -56,7 +75,7 @@ struct CaskOperationProgress: Equatable {
 
     var inlineLabel: String {
         let phaseLabel = phase.label(for: action)
-        guard phase == .downloading, let byteProgressText else {
+        guard phase.showsByteProgress, let byteProgressText else {
             return "\(phaseLabel)…"
         }
         return "\(phaseLabel) · \(byteProgressText)"
@@ -162,7 +181,9 @@ struct CaskOperationStatus: Equatable {
                 updateAll.currentDisplayName
             ].joined(separator: " · ")
             let current = operations.first(where: { $0.token == updateAll.currentToken })
-            let byteProgress = current?.phase == .downloading ? current?.byteProgress : nil
+            let byteProgress = current?.phase.showsByteProgress == true
+                ? current?.byteProgress
+                : nil
             return CaskOperationStatus(label: label, byteProgress: byteProgress)
         }
 
@@ -173,7 +194,7 @@ struct CaskOperationStatus: Equatable {
         guard !sortedOperations.isEmpty else { return nil }
 
         if sortedOperations.count == 1, let operation = sortedOperations.first {
-            let byteProgress = operation.phase == .downloading ? operation.byteProgress : nil
+            let byteProgress = operation.phase.showsByteProgress ? operation.byteProgress : nil
             var label = "\(operation.phase.label(for: operation.action)) \(operation.displayName)"
             if byteProgress == nil { label += "…" }
             return CaskOperationStatus(label: label, byteProgress: byteProgress)
@@ -185,8 +206,9 @@ struct CaskOperationStatus: Equatable {
             counts[label, default: 0] += 1
         }
         let phaseOrder = [
-            "downloading", "verifying", "installing", "updating", "adopting",
-            "uninstalling", "repairing", "preparing", "canceling", "queued"
+            "downloading", "checking download", "using cache", "verifying", "installing",
+            "updating", "adopting", "uninstalling", "repairing", "preparing",
+            "canceling", "queued"
         ]
         let details = phaseOrder.compactMap { label -> String? in
             guard let count = counts[label], count > 0 else { return nil }
@@ -198,32 +220,88 @@ struct CaskOperationStatus: Equatable {
 }
 
 nonisolated enum BrewProgressParser {
+    struct Update {
+        let phase: CaskOperationPhase?
+        let byteProgress: (completed: Int64, total: Int64)?
+        let cachedDownloadPath: String?
+    }
+
     private static let progressPattern =
         #"Downloading\s+([0-9]+(?:\.[0-9]+)?)\s*(B|KB|MB|GB)\s*/\s*([0-9]+(?:\.[0-9]+)?)\s*(B|KB|MB|GB)"#
 
-    static func byteProgress(in output: String) -> (completed: Int64, total: Int64)? {
-        guard let expression = try? NSRegularExpression(pattern: progressPattern) else { return nil }
-        let range = NSRange(output.startIndex..<output.endIndex, in: output)
-        guard let match = expression.matches(in: output, range: range).last,
-              let completed = value(in: output, match: match, valueGroup: 1, unitGroup: 2),
-              let total = value(in: output, match: match, valueGroup: 3, unitGroup: 4)
-        else { return nil }
-        return (completed, total)
-    }
+    static func parse(_ output: String) -> Update {
+        let progressMatch = progressMatches(in: output).last
+        let byteProgress = progressMatch.flatMap { match -> (Int64, Int64)? in
+            guard
+                let completed = value(
+                    in: output,
+                    match: match,
+                    valueGroup: 1,
+                    unitGroup: 2
+                ),
+                let total = value(
+                    in: output,
+                    match: match,
+                    valueGroup: 3,
+                    unitGroup: 4
+                )
+            else { return nil }
+            return (completed, total)
+        }
 
-    static func latestPhase(in output: String) -> CaskOperationPhase? {
+        var events: [(String.Index, CaskOperationPhase)] = []
+        if let match = progressMatch,
+           let range = Range(match.range, in: output) {
+            events.append((range.lowerBound, .downloading))
+        }
+
         let markers: [(String, CaskOperationPhase)] = [
-            ("Downloading", .downloading),
+            ("==> Downloading ", .checkingDownload),
+            ("Already downloaded:", .usingCachedDownload),
             (" Verifying ", .verifying),
             ("Verifying checksum", .verifying),
             ("==> Installing Cask", .performing),
             ("==> Upgrading ", .performing)
         ]
-        return markers.compactMap { marker, phase in
-            output.range(of: marker, options: .backwards).map { ($0.lowerBound, phase) }
+        events += markers.compactMap { marker, phase in
+            output.range(of: marker, options: .backwards).map {
+                ($0.lowerBound, phase)
+            }
         }
-        .max { $0.0 < $1.0 }?
-        .1
+
+        let phase = events.max { $0.0 < $1.0 }?.1
+        let cachedPath: String?
+        switch phase {
+        case .usingCachedDownload:
+            cachedPath = cachedDownloadPath(in: output)
+        default:
+            cachedPath = nil
+        }
+
+        return Update(
+            phase: phase,
+            byteProgress: byteProgress,
+            cachedDownloadPath: cachedPath
+        )
+    }
+
+    private static func progressMatches(in output: String) -> [NSTextCheckingResult] {
+        guard let expression = try? NSRegularExpression(pattern: progressPattern) else {
+            return []
+        }
+        let range = NSRange(output.startIndex..<output.endIndex, in: output)
+        return expression.matches(in: output, range: range)
+    }
+
+    private static func cachedDownloadPath(in output: String) -> String? {
+        let prefix = "Already downloaded:"
+        guard let line = output.components(separatedBy: .newlines).reversed().first(where: {
+            $0.trimmingCharacters(in: .whitespaces).hasPrefix(prefix)
+        }) else { return nil }
+
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        let path = trimmed.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
+        return path.hasPrefix("/") ? path : nil
     }
 
     private static func value(

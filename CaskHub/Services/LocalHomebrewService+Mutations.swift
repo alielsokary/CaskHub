@@ -157,7 +157,12 @@ extension LocalHomebrewService {
         let buffered = String(((brewOutputBuffers[token] ?? "") + output).suffix(6_000))
         brewOutputBuffers[token] = buffered
 
-        if let bytes = BrewProgressParser.byteProgress(in: buffered) {
+        let update = BrewProgressParser.parse(buffered)
+        if update.phase == .checkingDownload {
+            progress.completedBytes = nil
+            progress.totalBytes = nil
+        }
+        if let bytes = update.byteProgress {
             let now = Date()
             let shouldPublish = lastProgressUpdates[token].map {
                 now.timeIntervalSince($0) >= 0.10
@@ -169,7 +174,18 @@ extension LocalHomebrewService {
                 lastProgressUpdates[token] = now
             }
         }
-        if let phase = BrewProgressParser.latestPhase(in: buffered) {
+        if update.phase == .usingCachedDownload {
+            progress.completedBytes = nil
+            progress.totalBytes = nil
+            if let path = update.cachedDownloadPath,
+               let attributes = try? fileManager.attributesOfItem(atPath: path),
+               let size = attributes[.size] as? NSNumber,
+               size.int64Value > 0 {
+                progress.completedBytes = size.int64Value
+                progress.totalBytes = size.int64Value
+            }
+        }
+        if let phase = update.phase {
             progress.phase = phase
             if phase == .performing {
                 cancellableDownloads.remove(token)
