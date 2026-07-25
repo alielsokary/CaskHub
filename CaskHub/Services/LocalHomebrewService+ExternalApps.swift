@@ -9,6 +9,48 @@ extension LocalHomebrewService {
     /// The catalog provides app identity and package receipt metadata needed to
     /// associate software already on the Mac with exactly one Homebrew cask.
     func updatePackageCatalog(_ casks: [Cask]) async {
+        updateCatalogSignatures(casks)
+        packageCatalogGeneration &+= 1
+        let packageGeneration = packageCatalogGeneration
+
+        let appSignatures = applicationCaskSignatures
+        let catalog = installationCatalog
+        let packageSignatures = packageCaskSignatures
+        let installed = installedCasks
+        let binaryPaths = externalBinaryPaths
+        let fm = fileManager
+        let appDirs = applicationDirectories
+        let result = await Task.detached(priority: .userInitiated) {
+            let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
+            let packages = packageSignatures.isEmpty ? [:] : Self.scanExternalPackageInstallations(
+                signatures: packageSignatures,
+                availableAppNames: applications.nonStoreNames
+            )
+            let owners = Self.resolveExternalApplicationOwners(
+                signatures: appSignatures,
+                applications: applications.applications,
+                installedCasks: installed
+            )
+            let index = Self.buildInstallationIndex(
+                catalog: catalog,
+                applications: applications.applications,
+                binaryPaths: binaryPaths,
+                installedCasks: installed
+            )
+            return (applications, packages, owners, index)
+        }.value
+        guard packageGeneration == packageCatalogGeneration else { return }
+
+        externalAppNames = result.0.adoptableNames
+        macAppStoreAppNames = result.0.macAppStoreNames
+        macAppStoreBundleIdentifiers = result.0.macAppStoreBundleIdentifiers
+        detectedApplications = result.0.applications
+        externalApplicationOwners = result.2
+        externalPackageInstallations = result.1
+        installationIndex = result.3
+    }
+
+    private func updateCatalogSignatures(_ casks: [Cask]) {
         caskDisplayNames = casks.reduce(into: [:]) { names, cask in
             names[cask.token] = cask.displayName
         }
@@ -20,6 +62,29 @@ extension LocalHomebrewService {
                 bundleIdentifiers: Set(cask.applicationBundleIdentifiers)
             )
         }
+        let storeSignatures: [MacAppStoreCaskSignature] = casks.compactMap { cask in
+            let bundleNames = Set(cask.appArtifactNames + cask.packageAppNameCandidates)
+            guard !bundleNames.isEmpty else { return nil }
+            return MacAppStoreCaskSignature(
+                token: cask.token,
+                bundleNames: bundleNames,
+                hasPackageArtifact: cask.hasPackageArtifact,
+                applicationBundleIdentifiers: cask.applicationBundleIdentifiers,
+                packageIdentifiers: cask.packageIdentifiers
+            )
+        }
+        let binarySignatures: [BinaryCaskSignature] = casks.compactMap { cask in
+            guard !cask.binaryArtifactNames.isEmpty else { return nil }
+            return BinaryCaskSignature(
+                token: cask.token,
+                binaryNames: cask.binaryArtifactNames
+            )
+        }
+        installationCatalog = CaskInstallationCatalog(
+            tokens: Set(casks.map(\.token)),
+            macAppStoreSignatures: storeSignatures,
+            binarySignatures: binarySignatures
+        )
         packageCaskSignatures = casks.compactMap { cask in
             guard cask.hasPackageArtifact, !cask.packageIdentifiers.isEmpty else { return nil }
             return PackageCaskSignature(
@@ -29,32 +94,6 @@ extension LocalHomebrewService {
                 appNameCandidates: cask.packageAppNameCandidates
             )
         }
-        packageCatalogGeneration &+= 1
-        let packageGeneration = packageCatalogGeneration
-
-        let packageSignatures = packageCaskSignatures
-        let fm = fileManager
-        let appDirs = applicationDirectories
-        let (applications, packages) = await Task.detached(priority: .userInitiated) {
-            let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
-            let packages = packageSignatures.isEmpty ? [:] : Self.scanExternalPackageInstallations(
-                signatures: packageSignatures,
-                availableAppNames: applications.nonStoreNames
-            )
-            return (applications, packages)
-        }.value
-        guard packageGeneration == packageCatalogGeneration else { return }
-
-        externalAppNames = applications.adoptableNames
-        macAppStoreAppNames = applications.macAppStoreNames
-        macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
-        detectedApplications = applications.applications
-        externalApplicationOwners = Self.resolveExternalApplicationOwners(
-            signatures: applicationCaskSignatures,
-            applications: applications.applications,
-            installedCasks: installedCasks
-        )
-        externalPackageInstallations = packages
     }
 
     nonisolated static func scanApplications(
@@ -118,6 +157,16 @@ extension LocalHomebrewService {
             let catalogNames = signaturesByToken[installation.token]?.appBundleNames ?? []
             return installation.appBundleNames + Array(catalogNames)
         }.map { normalizedApplicationName($0) })
+        let installedTokens = Set(installedCasks.keys)
+        var signaturesByBundleName: [String: [ApplicationCaskSignature]] = [:]
+        for signature in signatures where !installedTokens.contains(signature.token) {
+            for bundleName in signature.appBundleNames {
+                signaturesByBundleName[
+                    normalizedApplicationName(bundleName),
+                    default: []
+                ].append(signature)
+            }
+        }
 
         var owners: [String: DetectedApplication] = [:]
         for application in applications where
@@ -125,11 +174,7 @@ extension LocalHomebrewService {
             let normalizedName = normalizedApplicationName(application.bundleName)
             guard !installedBundleNames.contains(normalizedName) else { continue }
 
-            let candidates = signatures.filter { signature in
-                signature.appBundleNames.contains {
-                    normalizedApplicationName($0) == normalizedName
-                } && !installedCasks.keys.contains(signature.token)
-            }
+            let candidates = signaturesByBundleName[normalizedName] ?? []
             guard let owner = externalApplicationOwner(
                 for: application, candidates: candidates
             ) else { continue }

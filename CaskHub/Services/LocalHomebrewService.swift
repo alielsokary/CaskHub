@@ -40,6 +40,11 @@ final class LocalHomebrewService {
     var externalPackageInstallations: [String: ExternalPackageInstallation] = [:]
 
     @ObservationIgnored var applicationCaskSignatures: [ApplicationCaskSignature] = []
+    @ObservationIgnored var installationCatalog = CaskInstallationCatalog.empty
+
+    /// Catalog-wide installation lookups, rebuilt only when the catalog or a
+    /// local software scan changes. Rendering reads this snapshot in O(1).
+    var installationIndex = CaskInstallationIndex.empty
 
     /// Package adoptions awaiting the user's reinstall confirmation.
     var packageAdoptionRequests: Set<String> = []
@@ -177,37 +182,46 @@ final class LocalHomebrewService {
         }
         let appDirs = applicationDirectories
         let caskroom = configuredCaskroomURL()
+        let appSignatures = applicationCaskSignatures
+        let catalog = installationCatalog
         let packageSignatures = packageCaskSignatures
         let packageGeneration = packageCatalogGeneration
-        let (casks, applications, binaryPaths, packages) = await Task.detached(priority: .userInitiated) {
+        let result = await Task.detached(priority: .userInitiated) {
             let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
-            return (
-                caskroom.map {
-                    Self.scanCaskroom(
-                        at: $0, fileManager: fm, applicationDirectories: appDirs
-                    )
-                } ?? [:],
-                applications,
-                Self.scanBinaryDirectories(fileManager: fm),
-                Self.scanExternalPackageInstallations(
-                    signatures: packageSignatures,
-                    availableAppNames: applications.nonStoreNames
+            let casks = caskroom.map {
+                Self.scanCaskroom(
+                    at: $0, fileManager: fm, applicationDirectories: appDirs
                 )
+            } ?? [:]
+            let binaryPaths = Self.scanBinaryDirectories(fileManager: fm)
+            let packages = Self.scanExternalPackageInstallations(
+                signatures: packageSignatures,
+                availableAppNames: applications.nonStoreNames
             )
+            let owners = Self.resolveExternalApplicationOwners(
+                signatures: appSignatures,
+                applications: applications.applications,
+                installedCasks: casks
+            )
+            let index = Self.buildInstallationIndex(
+                catalog: catalog,
+                applications: applications.applications,
+                binaryPaths: binaryPaths,
+                installedCasks: casks
+            )
+            return (casks, applications, binaryPaths, packages, owners, index)
         }.value
-        installedCasks = casks
-        externalAppNames = applications.adoptableNames
-        macAppStoreAppNames = applications.macAppStoreNames
-        macAppStoreBundleIdentifiers = applications.macAppStoreBundleIdentifiers
-        detectedApplications = applications.applications
-        externalApplicationOwners = Self.resolveExternalApplicationOwners(
-            signatures: applicationCaskSignatures,
-            applications: applications.applications,
-            installedCasks: casks
-        )
-        externalBinaryPaths = binaryPaths
+
+        installedCasks = result.0
+        externalAppNames = result.1.adoptableNames
+        macAppStoreAppNames = result.1.macAppStoreNames
+        macAppStoreBundleIdentifiers = result.1.macAppStoreBundleIdentifiers
+        detectedApplications = result.1.applications
+        externalApplicationOwners = result.4
+        externalBinaryPaths = result.2
+        installationIndex = result.5
         if packageGeneration == packageCatalogGeneration {
-            externalPackageInstallations = packages
+            externalPackageInstallations = result.3
         }
 
         CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")

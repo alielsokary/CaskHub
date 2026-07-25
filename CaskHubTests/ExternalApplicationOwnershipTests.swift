@@ -30,6 +30,35 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         )
     ]
 
+    private func storeApplication(
+        named bundleName: String,
+        bundleIdentifier: String
+    ) -> DetectedApplication {
+        DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
+            bundleName: bundleName,
+            bundleIdentifier: bundleIdentifier,
+            isMacAppStore: true,
+            isDirectlyInApplicationDirectory: true
+        )
+    }
+
+    private func storeSignature(
+        token: String,
+        bundleName: String,
+        hasPackage: Bool,
+        applicationIdentifiers: [String] = [],
+        packageIdentifiers: [String] = []
+    ) -> MacAppStoreCaskSignature {
+        MacAppStoreCaskSignature(
+            token: token,
+            bundleNames: [bundleName],
+            hasPackageArtifact: hasPackage,
+            applicationBundleIdentifiers: applicationIdentifiers,
+            packageIdentifiers: packageIdentifiers
+        )
+    }
+
     func test_shared_app_name_resolves_to_exact_bundle_identifier_match() {
         let owners = LocalHomebrewService.resolveExternalApplicationOwners(
             signatures: glazeSignatures,
@@ -111,6 +140,93 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         XCTAssertEqual(owners["unique"], application)
     }
 
+    func test_store_resolution_indexes_direct_and_bundle_family_matches() {
+        let applications = [
+            storeApplication(
+                named: "Canva.app",
+                bundleIdentifier: "com.canva.CanvaDesktop"
+            ),
+            storeApplication(
+                named: "Tailscale.app",
+                bundleIdentifier: "io.tailscale.ipn.macos"
+            ),
+            storeApplication(
+                named: "Shade.app",
+                bundleIdentifier: "com.limit-point.Shade"
+            )
+        ]
+        let signatures = [
+            storeSignature(
+                token: "canva",
+                bundleName: "Canva.app",
+                hasPackage: false
+            ),
+            storeSignature(
+                token: "tailscale-app",
+                bundleName: "Tailscale.app",
+                hasPackage: true,
+                applicationIdentifiers: ["io.tailscale.ipn.macsys"],
+                packageIdentifiers: ["com.tailscale.ipn.macsys"]
+            ),
+            storeSignature(
+                token: "shade",
+                bundleName: "Shade.app",
+                hasPackage: true,
+                packageIdentifiers: ["com.shade.shade"]
+            )
+        ]
+
+        let result = LocalHomebrewService.resolveMacAppStoreApplications(
+            signatures: signatures,
+            applications: applications,
+            installedCasks: [:]
+        )
+
+        XCTAssertEqual(Set(result.keys), ["canva", "tailscale-app"])
+        XCTAssertEqual(result["canva"], applications[0])
+        XCTAssertEqual(result["tailscale-app"], applications[1])
+    }
+
+    func test_installation_index_excludes_brew_owned_tokens_and_indexes_cli_paths() {
+        let installed = LocalCaskInstallation(
+            token: "store-app",
+            installedVersion: "1.0",
+            installedAt: nil,
+            appBundleNames: ["Store.app"]
+        )
+        let storeApplication = DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/Store.app"),
+            bundleName: "Store.app",
+            bundleIdentifier: "com.example.store",
+            isMacAppStore: true,
+            isDirectlyInApplicationDirectory: true
+        )
+        let cliURL = URL(fileURLWithPath: "/usr/local/bin/tool")
+
+        let index = LocalHomebrewService.buildInstallationIndex(
+            catalog: CaskInstallationCatalog(
+                tokens: ["store-app", "tool"],
+                macAppStoreSignatures: [
+                    storeSignature(
+                        token: "store-app",
+                        bundleName: "Store.app",
+                        hasPackage: false
+                    )
+                ],
+                binarySignatures: [
+                    BinaryCaskSignature(token: "tool", binaryNames: ["missing", "tool"])
+                ]
+            ),
+            applications: [storeApplication],
+            binaryPaths: ["tool": cliURL],
+            installedCasks: ["store-app": installed]
+        )
+
+        XCTAssertEqual(index.catalogTokens, ["store-app", "tool"])
+        XCTAssertTrue(index.macAppStoreApplications.isEmpty)
+        XCTAssertEqual(index.externalCLIPaths, ["tool": cliURL])
+    }
+
     @MainActor
     func test_catalog_resolution_exposes_only_raycast_glaze_for_adoption() async throws {
         let root = FileManager.default.temporaryDirectory
@@ -140,5 +256,50 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             service.installationSource(for: raycastGlaze),
             .externalApplication
         )
+    }
+
+    @MainActor
+    func test_catalog_presence_lookup_performance() {
+        let itemCount = 500
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("catalog-presence-performance")
+        )
+        let casks = (0..<itemCount).map { index in
+            makeCask("store-\(index)", appNames: ["Store \(index).app"])
+        }
+        let applications = (0..<itemCount).map { index in
+            storeApplication(
+                named: "Store \(index).app",
+                bundleIdentifier: "com.example.store\(index)"
+            )
+        }
+        let storeSignatures = casks.map { cask in
+            storeSignature(
+                token: cask.token,
+                bundleName: cask.appArtifactNames[0],
+                hasPackage: false
+            )
+        }
+        service.installationIndex = LocalHomebrewService.buildInstallationIndex(
+            catalog: CaskInstallationCatalog(
+                tokens: Set(casks.map(\.token)),
+                macAppStoreSignatures: storeSignatures,
+                binarySignatures: []
+            ),
+            applications: applications,
+            binaryPaths: [:],
+            installedCasks: [:]
+        )
+
+        XCTAssertTrue(service.isPresent(casks[0]))
+        XCTAssertTrue(service.isPresent(casks[itemCount - 1]))
+
+        measure(metrics: [XCTClockMetric()]) {
+            for _ in 0..<20 {
+                for cask in casks {
+                    _ = service.isPresent(cask)
+                }
+            }
+        }
     }
 }
