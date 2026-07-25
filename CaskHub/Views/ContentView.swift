@@ -11,10 +11,6 @@ enum ViewMode: String {
     case grid, list
 }
 
-private enum CatalogScrollAnchor: Hashable {
-    case top
-}
-
 struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(CategoryService.self) private var categoryService
@@ -227,35 +223,30 @@ struct ContentView: View {
 
 private extension ContentView {
     var gridView: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: CHSpace.s4) {
-                    if let hero = heroCask {
-                        HeroCard(
-                            cask: hero,
-                            downloads: viewModel.formattedDownloads(for: hero.token),
-                            categoryName: categoryInfo(for: hero)?.name,
-                            localState: viewModel.localState(for: hero)
-                        )
-                    }
-                    if showsBrowseSections {
-                        ForEach(viewModel.browseSections) { section in
-                            browseSectionView(section)
-                        }
-                    } else {
-                        caskGrid(viewModel.filteredCasks)
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: CHSpace.s4) {
+                if let hero = heroCask {
+                    HeroCard(
+                        cask: hero,
+                        downloads: viewModel.formattedDownloads(for: hero.token),
+                        categoryName: categoryInfo(for: hero)?.name,
+                        localState: viewModel.localState(for: hero)
+                    )
                 }
-                .id(CatalogScrollAnchor.top)
-                .frame(width: CHSize.contentWidth, alignment: .leading)
-                .frame(maxWidth: .infinity)
+                if showsBrowseSections {
+                    ForEach(viewModel.browseSections) { section in
+                        browseSectionView(section)
+                    }
+                } else {
+                    caskGrid(viewModel.filteredCasks)
+                }
             }
-            .contentMargins(.bottom, 44, for: .scrollContent)
-            .scrollContentBackground(.hidden)
-            .onChange(of: selectedSidebar) {
-                resetScrollPosition(proxy)
-            }
+            .frame(width: CHSize.contentWidth, alignment: .leading)
+            .frame(maxWidth: .infinity)
         }
+        .contentMargins(.bottom, 44, for: .scrollContent)
+        .scrollContentBackground(.hidden)
+        .modifier(ResetScrollOnChange(trigger: selectedSidebar))
     }
 
     func caskGrid(_ casks: [Cask]) -> some View {
@@ -297,41 +288,26 @@ private extension ContentView {
     // MARK: - List View
 
     var listView: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(viewModel.filteredCasks) { cask in
-                        CaskRowView(
-                            cask: cask,
-                            downloads: viewModel.formattedDownloads(for: cask.token),
-                            localState: viewModel.localState(for: cask)
-                        )
-                        .padding(.vertical, 6)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(viewModel.filteredCasks) { cask in
+                    CaskRowView(
+                        cask: cask,
+                        downloads: viewModel.formattedDownloads(for: cask.token),
+                        localState: viewModel.localState(for: cask)
+                    )
+                    .padding(.vertical, 6)
 
-                        Color.chHairline
-                            .frame(height: 1)
-                    }
+                    Color.chHairline
+                        .frame(height: 1)
                 }
-                .id(CatalogScrollAnchor.top)
-                .frame(width: CHSize.contentWidth)
-                .frame(maxWidth: .infinity)
             }
-            .contentMargins(.bottom, 44, for: .scrollContent)
-            .scrollContentBackground(.hidden)
-            .onChange(of: selectedSidebar) {
-                resetScrollPosition(proxy)
-            }
+            .frame(width: CHSize.contentWidth)
+            .frame(maxWidth: .infinity)
         }
-    }
-
-    func resetScrollPosition(_ proxy: ScrollViewProxy) {
-        DispatchQueue.main.async {
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                proxy.scrollTo(CatalogScrollAnchor.top, anchor: .top)
-            }
-        }
+        .contentMargins(.bottom, 44, for: .scrollContent)
+        .scrollContentBackground(.hidden)
+        .modifier(ResetScrollOnChange(trigger: selectedSidebar))
     }
 
     // MARK: - Error View
@@ -348,6 +324,30 @@ private extension ContentView {
                 Task { await viewModel.fetchCasks() }
             }
         }
+    }
+}
+
+private struct ResetScrollOnChange<Trigger: Equatable>: ViewModifier {
+    let trigger: Trigger
+    @State private var position = ScrollPosition(edge: .top)
+    @State private var isAtTop = true
+
+    func body(content: Content) -> some View {
+        content
+            .scrollPosition($position)
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y <= geometry.contentInsets.top + 1
+            } action: { _, newValue in
+                isAtTop = newValue
+            }
+            .onChange(of: trigger) {
+                guard !isAtTop else { return }
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    position.scrollTo(edge: .top)
+                }
+            }
     }
 }
 
