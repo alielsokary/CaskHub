@@ -25,6 +25,53 @@ private final class BackgroundUpdateCheckerSpy: BackgroundUpdateChecking {
 
 final class SettingsViewTests: XCTestCase {
     @MainActor
+    func test_general_settings_model_routes_login_and_permission_adapters() async {
+        let login = LoginItemManagerSpy(isEnabled: false)
+        let permission = AppManagementPermissionProviderSpy(status: .granted)
+        let model = GeneralSettingsModel(
+            loginItemManager: login,
+            permissionProvider: permission
+        )
+
+        model.setLaunchAtLogin(true)
+        await model.refreshAppManagement()
+        model.openAppManagementSettings()
+
+        XCTAssertTrue(model.launchAtLogin)
+        XCTAssertEqual(login.requestedValues, [true])
+        XCTAssertEqual(model.appManagement, .granted)
+        XCTAssertEqual(permission.openCount, 1)
+    }
+
+    @MainActor
+    func test_homebrew_location_model_validates_before_applying() async {
+        let settings = HomebrewSettingsSpy(customBrewPrefix: "/existing")
+        let resolver = HomebrewLocationResolverStub(prefixes: [
+            "/selected": "/resolved"
+        ])
+        let model = HomebrewLocationSettingsModel(
+            settings: settings,
+            resolver: resolver
+        )
+
+        model.customPathField = "/invalid"
+        await model.applyTypedPath()
+        XCTAssertTrue(model.invalidSelection)
+        XCTAssertEqual(model.customPathField, "/existing")
+        XCTAssertTrue(settings.appliedPrefixes.isEmpty)
+
+        await model.applySelection(URL(fileURLWithPath: "/selected"))
+        XCTAssertFalse(model.invalidSelection)
+        XCTAssertEqual(settings.appliedPrefixes, ["/resolved"])
+        XCTAssertEqual(model.customPathField, "/resolved")
+
+        model.customPathField = "  "
+        await model.applyTypedPath()
+        XCTAssertEqual(settings.appliedPrefixes, ["/resolved", nil])
+        XCTAssertEqual(model.customPathField, "")
+    }
+
+    @MainActor
     func test_launch_check_respects_automatic_update_preference() {
         let enabled = BackgroundUpdateCheckerSpy(automaticallyChecksForUpdates: true)
         let disabled = BackgroundUpdateCheckerSpy(automaticallyChecksForUpdates: false)
@@ -170,5 +217,62 @@ final class SettingsViewTests: XCTestCase {
     private func temporaryCacheDirectory() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("icon-disk-cache-\(UUID().uuidString)", isDirectory: true)
+    }
+}
+
+@MainActor
+private final class LoginItemManagerSpy: LoginItemManaging {
+    private(set) var isEnabled: Bool
+    private(set) var requestedValues: [Bool] = []
+
+    init(isEnabled: Bool) {
+        self.isEnabled = isEnabled
+    }
+
+    func setEnabled(_ enabled: Bool) throws {
+        requestedValues.append(enabled)
+        isEnabled = enabled
+    }
+}
+
+@MainActor
+private final class AppManagementPermissionProviderSpy:
+    AppManagementPermissionProviding {
+    let status: AppManagementPermission.Status
+    private(set) var openCount = 0
+
+    init(status: AppManagementPermission.Status) {
+        self.status = status
+    }
+
+    func currentStatus() async -> AppManagementPermission.Status {
+        status
+    }
+
+    func openSystemSettings() {
+        openCount += 1
+    }
+}
+
+@MainActor
+private final class HomebrewSettingsSpy: HomebrewSettingsApplying {
+    private(set) var customBrewPrefix: String?
+    private(set) var appliedPrefixes: [String?] = []
+
+    init(customBrewPrefix: String?) {
+        self.customBrewPrefix = customBrewPrefix
+    }
+
+    func setCustomBrewPrefix(_ prefix: String?) async {
+        appliedPrefixes.append(prefix)
+        customBrewPrefix = prefix
+    }
+}
+
+private nonisolated struct HomebrewLocationResolverStub: HomebrewLocationResolving {
+    let prefixes: [String: String]
+
+    func prefix(from selection: URL) -> String? {
+        prefixes[selection.path]
     }
 }
