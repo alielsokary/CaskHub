@@ -1,5 +1,5 @@
 //
-//  LocalHomebrewService+InstallationIndex.swift
+//  InstallationIndexBuilder.swift
 //  CaskHub
 //
 //  Created by Ali Elsokary on 25/07/2026.
@@ -7,8 +7,9 @@
 
 import Foundation
 
-extension LocalHomebrewService {
-    static func makeCatalogApplicationSignatures(
+nonisolated struct InstallationIndexBuilder: Sendable {
+    @MainActor
+    func makeApplicationSignatures(
         _ casks: [Cask]
     ) -> [CaskApplicationSignature] {
         casks.compactMap { cask in
@@ -27,7 +28,7 @@ extension LocalHomebrewService {
         }
     }
 
-    nonisolated static func buildInstallationIndex(
+    func build(
         catalog: CaskInstallationCatalog,
         applications: [DetectedApplication],
         binaryPaths: [String: URL],
@@ -55,7 +56,7 @@ extension LocalHomebrewService {
         )
     }
 
-    nonisolated static func resolveMacAppStoreApplications(
+    func resolveMacAppStoreApplications(
         signatures: [MacAppStoreCaskSignature],
         applications: [DetectedApplication],
         installedCasks: [String: LocalCaskInstallation]
@@ -79,7 +80,7 @@ extension LocalHomebrewService {
         return result
     }
 
-    nonisolated static func resolveExternalCLIPaths(
+    func resolveExternalCLIPaths(
         signatures: [BinaryCaskSignature],
         binaryPaths: [String: URL],
         installedCasks: [String: LocalCaskInstallation]
@@ -87,13 +88,15 @@ extension LocalHomebrewService {
         let installedTokens = Set(installedCasks.keys)
         return signatures.reduce(into: [:]) { result, signature in
             guard !installedTokens.contains(signature.token),
-                  let path = signature.binaryNames.lazy.compactMap({ binaryPaths[$0] }).first
+                  let path = signature.binaryNames.lazy.compactMap({
+                      binaryPaths[$0]
+                  }).first
             else { return }
             result[signature.token] = path
         }
     }
 
-    nonisolated static func resolveHomebrewApplicationState(
+    func resolveHomebrewApplicationState(
         signatures: [CaskApplicationSignature],
         applications: [DetectedApplication],
         installedCasks: [String: LocalCaskInstallation]
@@ -122,19 +125,19 @@ extension LocalHomebrewService {
         return (launchableTokens, zombieTokens)
     }
 
-    private nonisolated static func macAppStoreApplication(
+    private func macAppStoreApplication(
         _ application: DetectedApplication,
         matches signature: MacAppStoreCaskSignature
     ) -> Bool {
         guard signature.hasPackageArtifact else { return true }
         guard let bundleIdentifier = application.bundleIdentifier else { return false }
         if !signature.applicationBundleIdentifiers.isEmpty {
-            return applicationBundleIdentifier(
+            return ApplicationIdentityMatcher.applicationBundleIdentifier(
                 bundleIdentifier,
                 matchesAny: signature.applicationBundleIdentifiers
             )
         }
-        return Self.bundleIdentifier(
+        return ApplicationIdentityMatcher.bundleIdentifier(
             bundleIdentifier,
             matchesPackageIdentifiers: signature.packageIdentifiers
         )

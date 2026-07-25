@@ -27,6 +27,7 @@ nonisolated protocol InstalledSoftwareScanning: Sendable {
 nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
     private let applicationDiscovery: ApplicationDiscovery
     private let applicationOwnershipResolver: ApplicationOwnershipResolver
+    private let installationIndexBuilder: InstallationIndexBuilder
     private let packageReceiptResolver: PackageReceiptResolver
 
     private struct ScanComponents: Sendable {
@@ -40,10 +41,12 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
         applicationDiscovery: ApplicationDiscovery = ApplicationDiscovery(),
         applicationOwnershipResolver: ApplicationOwnershipResolver =
             ApplicationOwnershipResolver(),
+        installationIndexBuilder: InstallationIndexBuilder = InstallationIndexBuilder(),
         packageReceiptResolver: PackageReceiptResolver = PackageReceiptResolver()
     ) {
         self.applicationDiscovery = applicationDiscovery
         self.applicationOwnershipResolver = applicationOwnershipResolver
+        self.installationIndexBuilder = installationIndexBuilder
         self.packageReceiptResolver = packageReceiptResolver
     }
 
@@ -125,7 +128,7 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
             applications: components.applications.applications,
             installedCasks: components.installedCasks
         )
-        let index = LocalHomebrewService.buildInstallationIndex(
+        let index = installationIndexBuilder.build(
             catalog: request.catalog,
             applications: components.applications.applications,
             binaryPaths: components.binaryPaths,

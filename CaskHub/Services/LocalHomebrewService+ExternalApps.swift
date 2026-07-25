@@ -60,7 +60,8 @@ extension LocalHomebrewService {
                 binaryNames: cask.binaryArtifactNames
             )
         }
-        let applicationSignatures = Self.makeCatalogApplicationSignatures(casks)
+        let applicationSignatures = InstallationIndexBuilder()
+            .makeApplicationSignatures(casks)
         installationCatalog = CaskInstallationCatalog(
             tokens: Set(casks.map(\.token)),
             macAppStoreSignatures: storeSignatures,

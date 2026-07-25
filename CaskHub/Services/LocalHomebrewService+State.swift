@@ -171,7 +171,7 @@ extension LocalHomebrewService {
         }
         if installedCasks[cask.token] == nil,
            let application = macAppStoreApplication(for: cask) {
-            return Self.applicationBundleMetadata(
+            return ApplicationDiscovery().metadata(
                 at: application.url, fileManager: fileManager
             ) != nil
         }
@@ -242,9 +242,9 @@ extension LocalHomebrewService {
             guard application.isMacAppStore,
                   matchingNames.contains(application.bundleName)
             else { return false }
-            guard cask.hasPackageArtifact else { return true }
-            guard let bundleIdentifier = application.bundleIdentifier else { return false }
-            return storeBundleIdentifier(bundleIdentifier, matches: cask)
+        guard cask.hasPackageArtifact else { return true }
+        guard let bundleIdentifier = application.bundleIdentifier else { return false }
+        return storeBundleIdentifier(bundleIdentifier, matches: cask)
         }
     }
 
@@ -253,50 +253,24 @@ extension LocalHomebrewService {
     /// only their final channel/platform component (macsys versus macos).
     private func storeBundleIdentifier(_ identifier: String, matches cask: Cask) -> Bool {
         if !cask.applicationBundleIdentifiers.isEmpty {
-            return Self.applicationBundleIdentifier(
+            return ApplicationIdentityMatcher.applicationBundleIdentifier(
                 identifier, matchesAny: cask.applicationBundleIdentifiers
             )
         }
-        return Self.bundleIdentifier(
+        return ApplicationIdentityMatcher.bundleIdentifier(
             identifier, matchesPackageIdentifiers: cask.packageIdentifiers
         )
     }
 
-    nonisolated static func applicationBundleIdentifier(
-        _ identifier: String,
-        matchesAny candidates: [String]
-    ) -> Bool {
-        let actual = identifier.lowercased().split(separator: ".").map(String.init)
-        return candidates.contains { candidate in
-            let expected = candidate.lowercased().split(separator: ".").map(String.init)
-            if actual == expected { return true }
-            return zip(actual, expected).prefix { pair in
-                pair.0 == pair.1
-            }.count >= 3
-        }
-    }
-
-    nonisolated static func bundleIdentifier(
-        _ bundleIdentifier: String,
-        matchesPackageIdentifiers packageIdentifiers: [String]
-    ) -> Bool {
-        guard let bundleVendor = reverseDNSVendorPrefix(bundleIdentifier) else { return false }
-        return packageIdentifiers.contains {
-            reverseDNSVendorPrefix($0) == bundleVendor
-        }
-    }
-
-    private nonisolated static func reverseDNSVendorPrefix(_ identifier: String) -> String? {
-        let components = identifier.lowercased().split(separator: ".")
-        guard components.count >= 2 else { return nil }
-        return components.prefix(2).joined(separator: ".")
-    }
-
     func existingBundleURL(named names: [String]) -> URL? {
+        let applicationDiscovery = ApplicationDiscovery()
         let nameSet = Set(names)
         if let detected = detectedApplications.first(where: {
             nameSet.contains($0.bundleName)
-                && Self.applicationBundleMetadata(at: $0.url, fileManager: fileManager) != nil
+                && applicationDiscovery.metadata(
+                    at: $0.url,
+                    fileManager: fileManager
+                ) != nil
         }) {
             return detected.url
         }
@@ -304,6 +278,8 @@ extension LocalHomebrewService {
         return names.flatMap { name in
             applicationDirectories.map { $0.appendingPathComponent(name) }
         }
-        .first { Self.applicationBundleMetadata(at: $0, fileManager: fileManager) != nil }
+        .first {
+            applicationDiscovery.metadata(at: $0, fileManager: fileManager) != nil
+        }
     }
 }

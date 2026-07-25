@@ -176,7 +176,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             )
         ]
 
-        let result = LocalHomebrewService.resolveMacAppStoreApplications(
+        let result = InstallationIndexBuilder().resolveMacAppStoreApplications(
             signatures: signatures,
             applications: applications,
             installedCasks: [:]
@@ -203,7 +203,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         )
         let cliURL = URL(fileURLWithPath: "/usr/local/bin/tool")
 
-        let index = LocalHomebrewService.buildInstallationIndex(
+        let index = InstallationIndexBuilder().build(
             catalog: CaskInstallationCatalog(
                 tokens: ["store-app", "tool"],
                 macAppStoreSignatures: [
@@ -258,7 +258,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             )
         ]
 
-        let result = LocalHomebrewService.resolveHomebrewApplicationState(
+        let result = InstallationIndexBuilder().resolveHomebrewApplicationState(
             signatures: signatures,
             applications: [liveApplication],
             installedCasks: installed
@@ -358,7 +358,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         }
         updateInstallationSnapshot(
             of: service,
-            installationIndex: LocalHomebrewService.buildInstallationIndex(
+            installationIndex: InstallationIndexBuilder().build(
                 catalog: CaskInstallationCatalog(
                     tokens: Set(casks.map(\.token)),
                     macAppStoreSignatures: storeSignatures,
