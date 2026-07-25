@@ -562,30 +562,134 @@
 		41DFD4B230028F9F00608C7A /* CaskHubTests */ = {
 			isa = PBXGroup;
 			children = (
-				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
-				41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */,
-				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
-				E25000000000000000000001 /* CaskCatalogSortTests.swift */,
-				D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */,
-				D15000000000000000000001 /* ExternalInstallationTests.swift */,
-				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
-				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
-				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
-				8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */,
-				E26000000000000000000001 /* CaskListActionTests.swift */,
-				E24000000000000000000003 /* CaskOperationProgressTests.swift */,
-				E29000000000000000000003 /* CaskOperationStateTests.swift */,
-				E29000000000000000000007 /* CaskOperationStoreTests.swift */,
-				E2900000000000000000000B /* InstallationSnapshotTests.swift */,
-				E29000000000000000000013 /* HomebrewCommandExecutorTests.swift */,
-				E29000000000000000000019 /* CaskActionPresentationTests.swift */,
-				E2900000000000000000001F /* DownloadMetadataProviderTests.swift */,
-				E24000000000000000000004 /* BrewProcessRunnerTests.swift */,
-				D13000000000000000000002 /* MutationRecoveryTests.swift */,
-				B12000000000000000000004 /* ZombieDetectionTests.swift */,
-				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
+				F32000000000000000000020 /* Support */,
+				F32000000000000000000021 /* Telemetry */,
+				F32000000000000000000022 /* Catalog */,
+				F32000000000000000000023 /* Views */,
+				F32000000000000000000024 /* Downloads */,
+				F32000000000000000000025 /* Homebrew */,
 			);
 			path = CaskHubTests;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000020 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000021 /* Telemetry */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
+				41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */,
+			);
+			path = Telemetry;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000022 /* Catalog */ = {
+			isa = PBXGroup;
+			children = (
+				E25000000000000000000001 /* CaskCatalogSortTests.swift */,
+				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
+			);
+			path = Catalog;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000023 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
+				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000024 /* Downloads */ = {
+			isa = PBXGroup;
+			children = (
+				E2900000000000000000001F /* DownloadMetadataProviderTests.swift */,
+			);
+			path = Downloads;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000025 /* Homebrew */ = {
+			isa = PBXGroup;
+			children = (
+				F32000000000000000000026 /* Domain */,
+				F32000000000000000000027 /* Coordination */,
+				F32000000000000000000028 /* Detection */,
+				F32000000000000000000029 /* Infrastructure */,
+				F3200000000000000000002A /* Presentation */,
+				F3200000000000000000002B /* Workflows */,
+				F3200000000000000000002C /* Integration */,
+			);
+			path = Homebrew;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000026 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				E24000000000000000000003 /* CaskOperationProgressTests.swift */,
+				E29000000000000000000003 /* CaskOperationStateTests.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000027 /* Coordination */ = {
+			isa = PBXGroup;
+			children = (
+				E29000000000000000000007 /* CaskOperationStoreTests.swift */,
+				D13000000000000000000002 /* MutationRecoveryTests.swift */,
+			);
+			path = Coordination;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000028 /* Detection */ = {
+			isa = PBXGroup;
+			children = (
+				D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */,
+				D15000000000000000000001 /* ExternalInstallationTests.swift */,
+				E2900000000000000000000B /* InstallationSnapshotTests.swift */,
+				B12000000000000000000004 /* ZombieDetectionTests.swift */,
+			);
+			path = Detection;
+			sourceTree = "<group>";
+		};
+		F32000000000000000000029 /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				E24000000000000000000004 /* BrewProcessRunnerTests.swift */,
+				E29000000000000000000013 /* HomebrewCommandExecutorTests.swift */,
+			);
+			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		F3200000000000000000002A /* Presentation */ = {
+			isa = PBXGroup;
+			children = (
+				E29000000000000000000019 /* CaskActionPresentationTests.swift */,
+				E26000000000000000000001 /* CaskListActionTests.swift */,
+			);
+			path = Presentation;
+			sourceTree = "<group>";
+		};
+		F3200000000000000000002B /* Workflows */ = {
+			isa = PBXGroup;
+			children = (
+				8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */,
+			);
+			path = Workflows;
+			sourceTree = "<group>";
+		};
+		F3200000000000000000002C /* Integration */ = {
+			isa = PBXGroup;
+			children = (
+				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
+			);
+			path = Integration;
 			sourceTree = "<group>";
 		};
 		41EBDCD82F37FD8B00BEABB8 = {
