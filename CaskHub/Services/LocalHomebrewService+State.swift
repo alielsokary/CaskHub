@@ -51,6 +51,9 @@ extension LocalHomebrewService {
     /// Mac App Store apps are present, but adopting them would break Store updates.
     func isMacAppStoreInstalled(_ cask: Cask) -> Bool {
         guard installedCasks[cask.token] == nil else { return false }
+        if installationIndex.catalogTokens.contains(cask.token) {
+            return installationIndex.macAppStoreApplications[cask.token] != nil
+        }
         if macAppStoreApplication(for: cask) != nil { return true }
 
         // Keep the name-indexed fallback for state injected by previews and tests.
@@ -70,6 +73,9 @@ extension LocalHomebrewService {
     /// (e.g. claude-code's native install script). Detected, not managed.
     func externalCLIPath(_ cask: Cask) -> URL? {
         guard installedCasks[cask.token] == nil else { return nil }
+        if installationIndex.catalogTokens.contains(cask.token) {
+            return installationIndex.externalCLIPaths[cask.token]
+        }
         return cask.binaryArtifactNames.lazy.compactMap { self.externalBinaryPaths[$0] }.first
     }
 
@@ -105,6 +111,22 @@ extension LocalHomebrewService {
         return .notApplicable
     }
 
+    func localState(for cask: Cask) -> CaskLocalState {
+        let source = installationSource(for: cask)
+        return CaskLocalState(
+            installationSource: source,
+            externalCLIPath: source == .externalExecutable ? externalCLIPath(cask) : nil,
+            uninstallAvailability: uninstallAvailability(for: cask),
+            hasAvailableUpdate: hasAvailableUpdate(
+                token: cask.token,
+                remoteVersion: cask.version,
+                autoUpdates: cask.autoUpdates
+            ),
+            isZombie: isZombie(cask),
+            canOpen: canOpen(cask)
+        )
+    }
+
     func isOutdated(token: String, remoteVersion: String) -> Bool {
         guard let installation = installedCasks[token], !installation.isZombie else { return false }
         return Self.comparableVersion(installation.installedVersion)
@@ -128,6 +150,9 @@ extension LocalHomebrewService {
         guard let installation = installedCasks[cask.token], installation.isZombie,
               !cask.appArtifactNames.isEmpty
         else { return false }
+        if installationIndex.catalogTokens.contains(cask.token) {
+            return installationIndex.verifiedZombieTokens.contains(cask.token)
+        }
         return existingBundleURL(named: cask.appArtifactNames) == nil
     }
 
@@ -139,6 +164,14 @@ extension LocalHomebrewService {
     }
 
     func canOpen(_ cask: Cask) -> Bool {
+        if installationIndex.catalogTokens.contains(cask.token) {
+            if installedCasks[cask.token] != nil {
+                return installationIndex.launchableHomebrewTokens.contains(cask.token)
+            }
+            return installationIndex.macAppStoreApplications[cask.token] != nil
+                || externalApplicationOwners[cask.token] != nil
+                || externalPackageInstallations[cask.token] != nil
+        }
         if installedCasks[cask.token] == nil,
            let application = macAppStoreApplication(for: cask) {
             return Self.applicationBundleMetadata(
@@ -204,6 +237,9 @@ extension LocalHomebrewService {
     }
 
     private func macAppStoreApplication(for cask: Cask) -> DetectedApplication? {
+        if installationIndex.catalogTokens.contains(cask.token) {
+            return installationIndex.macAppStoreApplications[cask.token]
+        }
         let matchingNames = Set(cask.appArtifactNames + cask.packageAppNameCandidates)
         return detectedApplications.first { application in
             guard application.isMacAppStore,

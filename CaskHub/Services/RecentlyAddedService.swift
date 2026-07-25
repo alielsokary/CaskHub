@@ -33,8 +33,11 @@ final class RecentlyAddedService {
 
     private static let schemaVersion = 1
 
-    var addedDates: [String: String] = [:]
+    var addedDates: [String: String] = [:] {
+        didSet { catalogStateRevision &+= 1 }
+    }
     private(set) var generatedDate = ""
+    private(set) var catalogStateRevision = 0
 
     func loadBundledDates(bundle: Bundle = .main) {
         guard let url = bundle.url(forResource: "added_dates", withExtension: "json"),

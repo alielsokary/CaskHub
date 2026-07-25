@@ -20,6 +20,29 @@ final class CaskCatalogSortTests: XCTestCase {
     }
 
     @MainActor
+    private func alternatingCategories(for casks: [Cask]) -> CategoryService {
+        let categories = CategoryService()
+        categories.applyData(CaskCategoryData(
+            version: 1,
+            generatedDate: "2026-07-25",
+            releaseTag: nil,
+            totalCasks: casks.count,
+            categories: [
+                "even": CategoryDefinition(displayName: "Even", icon: "2.circle"),
+                "odd": CategoryDefinition(displayName: "Odd", icon: "1.circle")
+            ],
+            tokenToCategory: Dictionary(
+                uniqueKeysWithValues: casks.enumerated().map { index, cask in
+                    let category = index.isMultiple(of: 2) ? "even" : "odd"
+                    return (cask.token, TokenCategoryMapping(primary: category, secondary: []))
+                }
+            ),
+            iconTokens: nil
+        ))
+        return categories
+    }
+
+    @MainActor
     func test_sort_options_order_by_downloads_name_and_added_date() async {
         let recent = RecentlyAddedService()
         recent.addedDates = [
@@ -96,5 +119,131 @@ final class CaskCatalogSortTests: XCTestCase {
         vm.selectedSidebar = .library(.adopt)
         XCTAssertEqual(vm.sortOption, .nameAZ)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["able", "bravo"])
+    }
+
+    @MainActor
+    func test_repeated_catalog_projection_performance() async {
+        let itemCount = 1_500
+        let casks = (0..<itemCount).map { makeCask("app-\($0)") }
+        let analytics = (0..<itemCount).map { ("app-\($0)", "\($0 + 1)") }
+        let (vm, _) = await makeSUT(casks: casks, analytics: analytics)
+        var checksum = 0
+
+        measure(metrics: [XCTClockMetric()]) {
+            var iterationChecksum = 0
+            for _ in 0..<20 {
+                iterationChecksum += vm.filteredCasks.count
+                iterationChecksum += vm.installedCount
+                iterationChecksum += vm.updatesCount
+                iterationChecksum += vm.adoptableCasks.count
+                iterationChecksum += vm.categoryCounts.count
+            }
+            checksum = iterationChecksum
+        }
+
+        XCTAssertEqual(checksum, itemCount * 20)
+    }
+
+    @MainActor
+    func test_repeated_sidebar_projection_performance() async {
+        let itemCount = 1_500
+        let casks = (0 ..< itemCount).map { makeCask("app-\($0)") }
+        let analytics = (0 ..< itemCount).map { ("app-\($0)", "\($0 + 1)") }
+        let categories = alternatingCategories(for: casks)
+        let (vm, _) = await makeSUT(
+            casks: casks,
+            analytics: analytics,
+            categories: categories
+        )
+        let routes: [SidebarSelection] = [
+            .discover(.browse),
+            .category("even"),
+            .library(.installed),
+            .library(.adopt),
+            .category("odd"),
+            .discover(.recentlyAdded)
+        ]
+        for route in routes {
+            vm.selectedSidebar = route
+            _ = vm.filteredCasks.count
+        }
+        var checksum = 0
+
+        measure(metrics: [XCTClockMetric()]) {
+            var iterationChecksum = 0
+            for _ in 0 ..< 20 {
+                for route in routes {
+                    vm.selectedSidebar = route
+                    iterationChecksum += vm.filteredCasks.count
+                }
+            }
+            checksum = iterationChecksum
+        }
+
+        XCTAssertEqual(checksum, itemCount * 40)
+    }
+
+    func test_bounded_memoization_reuses_multiple_keys_and_evicts_lru() {
+        let cache = BoundedMemoizedValues<Int, String>(capacity: 2)
+        var buildCount = 0
+        func value(for key: Int) -> String {
+            cache.value(for: key) {
+                buildCount += 1
+                return "value-\(key)"
+            }
+        }
+
+        XCTAssertEqual(value(for: 1), "value-1")
+        XCTAssertEqual(value(for: 2), "value-2")
+        XCTAssertEqual(value(for: 1), "value-1")
+        XCTAssertEqual(buildCount, 2)
+
+        XCTAssertEqual(value(for: 3), "value-3")
+        XCTAssertEqual(value(for: 2), "value-2")
+        XCTAssertEqual(buildCount, 4)
+    }
+
+    @MainActor
+    func test_cached_projections_invalidate_for_each_catalog_dependency() async {
+        let local = LocalHomebrewService(
+            defaults: makeScratchDefaults("projection-invalidation")
+        )
+        let categories = CategoryService()
+        let recentlyAdded = RecentlyAddedService()
+        let cask = makeCask("example", version: "2.0")
+        let (vm, _) = await makeSUT(
+            casks: [cask],
+            categories: categories,
+            recentlyAdded: recentlyAdded,
+            localHomebrew: local
+        )
+
+        XCTAssertEqual(vm.installedCount, 0)
+        local.installedCasks[cask.token] = installation(cask.token, version: "1.0")
+        XCTAssertEqual(vm.installedCount, 1)
+        XCTAssertEqual(vm.updatesCount, 1)
+
+        vm.selectedSidebar = .discover(.recentlyAdded)
+        XCTAssertTrue(vm.filteredCasks.isEmpty)
+        recentlyAdded.addedDates[cask.token] = dateString(daysAgo: 1)
+        XCTAssertEqual(vm.filteredCasks.map(\.token), [cask.token])
+
+        vm.selectedSidebar = .category("utilities")
+        XCTAssertTrue(vm.filteredCasks.isEmpty)
+        categories.applyData(CaskCategoryData(
+            version: 1,
+            generatedDate: "2026-07-25",
+            releaseTag: nil,
+            totalCasks: 1,
+            categories: [
+                "utilities": CategoryDefinition(displayName: "Utilities", icon: "wrench")
+            ],
+            tokenToCategory: [
+                cask.token: TokenCategoryMapping(primary: "utilities", secondary: [])
+            ],
+            iconTokens: nil
+        ))
+        XCTAssertEqual(vm.filteredCasks.map(\.token), [cask.token])
+        XCTAssertEqual(vm.categoryCounts["utilities"], 1)
     }
 }

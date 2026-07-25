@@ -16,7 +16,6 @@ struct ContentView: View {
     @Environment(CategoryService.self) private var categoryService
     @Environment(RecentlyAddedService.self) private var recentlyAdded
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
@@ -30,7 +29,10 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             SidebarView(
-                selection: $selectedSidebar,
+                selection: Binding(
+                    get: { viewModel.selectedSidebar },
+                    set: { viewModel.selectedSidebar = $0 }
+                ),
                 categoryService: categoryService,
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount,
@@ -104,11 +106,10 @@ struct ContentView: View {
                 .allowsHitTesting(false)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            StatusBarView(
+            ObservedStatusBarView(
                 caskCount: viewModel.casks.count,
                 brewVersion: localHomebrew.brewVersion,
-                caskFlowRelease: categoryService.releaseTag,
-                operation: localHomebrew.statusBarOperation
+                caskFlowRelease: categoryService.releaseTag
             )
         }
         .containerBackground(for: .window) {
@@ -122,9 +123,8 @@ struct ContentView: View {
             async let addedDates: Void = recentlyAdded.refreshFromRemote()
             _ = await(catalog, local, categories, addedDates)
         }
-        .onChange(of: selectedSidebar) { _, newValue in
+        .onChange(of: viewModel.selectedSidebar) { _, newValue in
             Analytics.pageOpened(newValue)
-            viewModel.selectedSidebar = newValue
             if newValue == .discover(.topCharts) {
                 Task { await viewModel.selectAnalyticsPeriod(viewModel.analyticsPeriod) }
             }
@@ -170,12 +170,7 @@ struct ContentView: View {
             errorView(error)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            switch viewMode {
-            case .grid:
-                gridView
-            case .list:
-                listView
-            }
+            catalogView
         }
     }
 
@@ -185,6 +180,10 @@ struct ContentView: View {
         case let .library(item): return item.rawValue
         case let .category(categoryID): return categoryService.displayName(for: categoryID)
         }
+    }
+
+    private var selectedSidebar: SidebarSelection {
+        viewModel.selectedSidebar
     }
 
     private var heroCask: Cask? {
@@ -218,30 +217,63 @@ struct ContentView: View {
 // MARK: - Grid, List & Error Views
 
 private extension ContentView {
-    var gridView: some View {
+    var catalogView: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: CHSpace.s4) {
-                if let hero = heroCask {
-                    HeroCard(
-                        cask: hero,
-                        downloads: viewModel.formattedDownloads(for: hero.token),
-                        categoryName: categoryInfo(for: hero)?.name
-                    )
-                }
-                if showsBrowseSections {
-                    ForEach(viewModel.browseSections) { section in
-                        browseSectionView(section)
-                    }
-                } else {
-                    caskGrid(viewModel.filteredCasks)
-                }
-            }
-            .frame(width: CHSize.contentWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            catalogContent
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
-        .id(selectedSidebar)
+        .modifier(ResetScrollOnChange(trigger: selectedSidebar))
+    }
+
+    @ViewBuilder
+    var catalogContent: some View {
+        switch viewMode {
+        case .grid:
+            gridContent
+        case .list:
+            listContent
+        }
+    }
+
+    var gridContent: some View {
+        VStack(alignment: .leading, spacing: CHSpace.s4) {
+            if let hero = heroCask {
+                HeroCard(
+                    cask: hero,
+                    downloads: viewModel.formattedDownloads(for: hero.token),
+                    categoryName: categoryInfo(for: hero)?.name,
+                    localState: viewModel.localState(for: hero)
+                )
+            }
+            if showsBrowseSections {
+                ForEach(viewModel.browseSections) { section in
+                    browseSectionView(section)
+                }
+            } else {
+                caskGrid(viewModel.filteredCasks)
+            }
+        }
+        .frame(width: CHSize.contentWidth, alignment: .leading)
+        .frame(maxWidth: .infinity)
+    }
+
+    var listContent: some View {
+        LazyVStack(spacing: 0) {
+            ForEach(viewModel.filteredCasks) { cask in
+                CaskRowView(
+                    cask: cask,
+                    downloads: viewModel.formattedDownloads(for: cask.token),
+                    localState: viewModel.localState(for: cask)
+                )
+                .padding(.vertical, 6)
+
+                Color.chHairline
+                    .frame(height: 1)
+            }
+        }
+        .frame(width: CHSize.contentWidth)
+        .frame(maxWidth: .infinity)
     }
 
     func caskGrid(_ casks: [Cask]) -> some View {
@@ -251,7 +283,8 @@ private extension ContentView {
                     cask: cask,
                     downloads: viewModel.formattedDownloads(for: cask.token),
                     category: categoryInfo(for: cask),
-                    onSelectCategory: { selectedSidebar = .category($0) }
+                    onSelectCategory: { viewModel.selectedSidebar = .category($0) },
+                    localState: viewModel.localState(for: cask)
                 )
             }
         }
@@ -266,7 +299,7 @@ private extension ContentView {
                 Spacer()
                 Button {
                     Analytics.viewAllTapped(to: section.destination)
-                    selectedSidebar = section.destination
+                    viewModel.selectedSidebar = section.destination
                 } label: {
                     Text("View All")
                         .font(CHType.button)
@@ -277,30 +310,6 @@ private extension ContentView {
             caskGrid(section.casks)
         }
         .padding(.top, CHSpace.s3)
-    }
-
-    // MARK: - List View
-
-    var listView: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(viewModel.filteredCasks) { cask in
-                    CaskRowView(
-                        cask: cask,
-                        downloads: viewModel.formattedDownloads(for: cask.token)
-                    )
-                    .padding(.vertical, 6)
-
-                    Color.chHairline
-                        .frame(height: 1)
-                }
-            }
-            .frame(width: CHSize.contentWidth)
-            .frame(maxWidth: .infinity)
-        }
-        .contentMargins(.bottom, 44, for: .scrollContent)
-        .scrollContentBackground(.hidden)
-        .id(selectedSidebar)
     }
 
     // MARK: - Error View
@@ -317,6 +326,30 @@ private extension ContentView {
                 Task { await viewModel.fetchCasks() }
             }
         }
+    }
+}
+
+private struct ResetScrollOnChange<Trigger: Equatable>: ViewModifier {
+    let trigger: Trigger
+    @State private var position = ScrollPosition(edge: .top)
+    @State private var isAtTop = true
+
+    func body(content: Content) -> some View {
+        content
+            .scrollPosition($position)
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y <= geometry.contentInsets.top + 1
+            } action: { _, newValue in
+                isAtTop = newValue
+            }
+            .onChange(of: trigger) {
+                guard !isAtTop else { return }
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    position.scrollTo(edge: .top)
+                }
+            }
     }
 }
 

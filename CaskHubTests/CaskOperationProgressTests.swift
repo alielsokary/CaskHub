@@ -182,6 +182,13 @@ final class CaskOperationProgressTests: XCTestCase {
                 operation: service.statusBarOperation
             )
         )
+        render(
+            ObservedStatusBarView(
+                caskCount: 3_781,
+                caskFlowRelease: "caskflow-v2026.07.18"
+            )
+            .environment(service)
+        )
     }
 
     @MainActor

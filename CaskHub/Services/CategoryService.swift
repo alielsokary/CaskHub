@@ -42,6 +42,7 @@ final class CategoryService {
     private(set) var generatedDate: String = ""
     private(set) var releaseTag: String?
     private(set) var iconTokens: Set<String>?
+    private(set) var catalogStateRevision = 0
 
     var orderedCategories: [(id: CategoryID, definition: CategoryDefinition)] {
         categoryDefinitions
@@ -88,6 +89,7 @@ final class CategoryService {
         generatedDate = catalog.generatedDate
         releaseTag = catalog.releaseTag
         iconTokens = catalog.iconTokens.map(Set.init)
+        catalogStateRevision &+= 1
     }
 
     func category(for token: String) -> CategoryID? {

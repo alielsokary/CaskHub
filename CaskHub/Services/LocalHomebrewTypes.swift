@@ -50,6 +50,74 @@ nonisolated struct ApplicationCaskSignature {
     let bundleIdentifiers: Set<String>
 }
 
+nonisolated struct MacAppStoreCaskSignature: Sendable {
+    let token: String
+    let bundleNames: Set<String>
+    let hasPackageArtifact: Bool
+    let applicationBundleIdentifiers: [String]
+    let packageIdentifiers: [String]
+}
+
+nonisolated struct BinaryCaskSignature: Sendable {
+    let token: String
+    let binaryNames: [String]
+}
+
+nonisolated struct CaskApplicationSignature: Sendable {
+    let token: String
+    let currentBundleNames: Set<String>
+    let launchableBundleNames: Set<String>
+}
+
+nonisolated struct CaskInstallationCatalog: Sendable {
+    let tokens: Set<String>
+    let macAppStoreSignatures: [MacAppStoreCaskSignature]
+    let binarySignatures: [BinaryCaskSignature]
+    let applicationSignatures: [CaskApplicationSignature]
+
+    init(
+        tokens: Set<String>,
+        macAppStoreSignatures: [MacAppStoreCaskSignature],
+        binarySignatures: [BinaryCaskSignature],
+        applicationSignatures: [CaskApplicationSignature] = []
+    ) {
+        self.tokens = tokens
+        self.macAppStoreSignatures = macAppStoreSignatures
+        self.binarySignatures = binarySignatures
+        self.applicationSignatures = applicationSignatures
+    }
+
+    static let empty = CaskInstallationCatalog(
+        tokens: [], macAppStoreSignatures: [], binarySignatures: []
+    )
+}
+
+nonisolated struct CaskInstallationIndex: Sendable {
+    let catalogTokens: Set<String>
+    let macAppStoreApplications: [String: DetectedApplication]
+    let externalCLIPaths: [String: URL]
+    let launchableHomebrewTokens: Set<String>
+    let verifiedZombieTokens: Set<String>
+
+    init(
+        catalogTokens: Set<String>,
+        macAppStoreApplications: [String: DetectedApplication],
+        externalCLIPaths: [String: URL],
+        launchableHomebrewTokens: Set<String> = [],
+        verifiedZombieTokens: Set<String> = []
+    ) {
+        self.catalogTokens = catalogTokens
+        self.macAppStoreApplications = macAppStoreApplications
+        self.externalCLIPaths = externalCLIPaths
+        self.launchableHomebrewTokens = launchableHomebrewTokens
+        self.verifiedZombieTokens = verifiedZombieTokens
+    }
+
+    static let empty = CaskInstallationIndex(
+        catalogTokens: [], macAppStoreApplications: [:], externalCLIPaths: [:]
+    )
+}
+
 nonisolated struct PackageCaskSignature {
     let token: String
     let displayName: String
@@ -69,7 +137,7 @@ struct ExternalPackageInstallation: Hashable {
     let appBundleNames: [String]
 }
 
-enum CaskInstallationSource: String, Equatable {
+nonisolated enum CaskInstallationSource: String, Equatable, Sendable {
     case homebrew = "Homebrew"
     case macAppStore = "Mac App Store"
     case externalApplication = "External application"
@@ -77,7 +145,7 @@ enum CaskInstallationSource: String, Equatable {
     case externalExecutable = "External executable"
 }
 
-enum CaskUninstallAvailability: Equatable {
+nonisolated enum CaskUninstallAvailability: Equatable, Sendable {
     case available
     case unavailable(reason: String)
     case notApplicable
@@ -85,6 +153,32 @@ enum CaskUninstallAvailability: Equatable {
     var unavailableReason: String? {
         guard case let .unavailable(reason) = self else { return nil }
         return reason
+    }
+}
+
+nonisolated struct CaskLocalState: Equatable, Sendable {
+    let installationSource: CaskInstallationSource?
+    let externalCLIPath: URL?
+    let uninstallAvailability: CaskUninstallAvailability
+    let hasAvailableUpdate: Bool
+    let isZombie: Bool
+    let canOpen: Bool
+
+    var isPresent: Bool {
+        installationSource != nil
+    }
+
+    var isHomebrewInstalled: Bool {
+        installationSource == .homebrew
+    }
+
+    var isAdoptable: Bool {
+        installationSource == .externalApplication
+            || installationSource == .packageInstaller
+    }
+
+    var isExternalPackage: Bool {
+        installationSource == .packageInstaller
     }
 }
 

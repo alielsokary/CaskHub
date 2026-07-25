@@ -21,6 +21,7 @@ extension EnvironmentValues {
 
 struct CaskActionsView: View {
     let cask: Cask
+    var localState: CaskLocalState?
     var fullWidth = true
     var onUninstall: (() -> Void)?
     var showsUninstallControl = true
@@ -30,15 +31,16 @@ struct CaskActionsView: View {
     @Environment(\.isAdoptPage) private var isAdoptPage
 
     var body: some View {
+        let state = localState ?? localHomebrew.localState(for: cask)
         if let inFlight = localHomebrew.inFlightActions[cask.token] {
             inFlightCapsule(for: inFlight)
-        } else if localHomebrew.installedCasks[cask.token] != nil {
-            installedActions
-        } else if localHomebrew.isAdoptable(cask) {
+        } else if state.isHomebrewInstalled {
+            installedActions(state)
+        } else if state.isAdoptable {
             HStack(spacing: 8) {
                 if isAdoptPage {
                     ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
-                        if localHomebrew.isExternalPackageInstalled(cask) {
+                        if state.isExternalPackage {
                             localHomebrew.requestPackageAdoption(token: cask.token)
                         } else {
                             Task { try? await localHomebrew.adopt(cask) }
@@ -50,24 +52,24 @@ struct CaskActionsView: View {
                     }
                 }
                 if showsUninstallControl,
-                   let reason = localHomebrew.uninstallAvailability(for: cask).unavailableReason {
+                   let reason = state.uninstallAvailability.unavailableReason {
                     DisabledUninstallControl(message: reason)
                 }
             }
-        } else if localHomebrew.isMacAppStoreInstalled(cask) {
+        } else if state.installationSource == .macAppStore {
             HStack(spacing: 8) {
                 openButton(fullWidth: fullWidth) {
                     localHomebrew.openExternalApp(cask: cask)
                 }
                 if showsUninstallControl,
-                   let reason = localHomebrew.uninstallAvailability(for: cask).unavailableReason {
+                   let reason = state.uninstallAvailability.unavailableReason {
                     DisabledUninstallControl(message: reason)
                 }
             }
-        } else if let externalPath = localHomebrew.externalCLIPath(cask) {
+        } else if let externalPath = state.externalCLIPath {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
                 .help(
-                    localHomebrew.uninstallAvailability(for: cask).unavailableReason
+                    state.uninstallAvailability.unavailableReason
                         ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
         } else {
@@ -78,8 +80,8 @@ struct CaskActionsView: View {
     }
 
     @ViewBuilder
-    private var installedActions: some View {
-        if localHomebrew.isZombie(cask) {
+    private func installedActions(_ state: CaskLocalState) -> some View {
+        if state.isZombie {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
                 Task { try? await localHomebrew.repair(token: cask.token) }
             }
@@ -88,32 +90,27 @@ struct CaskActionsView: View {
             has records for it. Clean Up removes the leftover data.
             """)
         } else {
-            managedActions
+            managedActions(state)
         }
     }
 
     @ViewBuilder
-    private var managedActions: some View {
-        let showUpdate = localHomebrew.hasAvailableUpdate(
-            token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates
-        )
-        let canOpen = localHomebrew.canOpen(cask)
-
+    private func managedActions(_ state: CaskLocalState) -> some View {
         HStack(spacing: 8) {
-            if canOpen {
+            if state.canOpen {
                 openButton(
-                    fullWidth: fullWidth && !showUpdate,
-                    isPairedWithUpdate: showUpdate
+                    fullWidth: fullWidth && !state.hasAvailableUpdate,
+                    isPairedWithUpdate: state.hasAvailableUpdate
                 ) {
                     localHomebrew.open(cask)
                 }
             }
-            if showUpdate {
+            if state.hasAvailableUpdate {
                 updateButton(fullWidth: fullWidth) {
                     Task { try? await localHomebrew.upgrade(token: cask.token) }
                 }
             }
-            if !canOpen && !showUpdate {
+            if !state.canOpen && !state.hasAvailableUpdate {
                 ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
             }
             if let onUninstall {

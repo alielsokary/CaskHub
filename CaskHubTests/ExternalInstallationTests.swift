@@ -201,7 +201,19 @@ final class ExternalInstallationTests: XCTestCase {
             packageAppNames: ["Package App.app"]
         )
         let (vm, _) = await makeSUT(casks: [store, package], localHomebrew: local)
-        local.macAppStoreAppNames = ["Store App.app"]
+        local.installationIndex = CaskInstallationIndex(
+            catalogTokens: [store.token, package.token],
+            macAppStoreApplications: [
+                store.token: DetectedApplication(
+                    url: URL(fileURLWithPath: "/Applications/Store App.app"),
+                    bundleName: "Store App.app",
+                    bundleIdentifier: "com.example.store-app",
+                    isMacAppStore: true,
+                    isDirectlyInApplicationDirectory: true
+                )
+            ],
+            externalCLIPaths: [:]
+        )
         local.externalPackageInstallations[package.token] = ExternalPackageInstallation(
             receiptIdentifiers: ["com.example.package"],
             appBundleNames: ["Package App.app"]

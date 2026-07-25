@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+/// Owns high-frequency operation observation so byte-progress changes invalidate
+/// only the status bar, never the catalog root or its scroll containers.
+struct ObservedStatusBarView: View {
+    var caskCount: Int
+    var brewVersion: String?
+    var caskFlowRelease: String?
+
+    @Environment(LocalHomebrewService.self) private var localHomebrew
+
+    var body: some View {
+        StatusBarView(
+            caskCount: caskCount,
+            brewVersion: brewVersion,
+            caskFlowRelease: caskFlowRelease,
+            operation: localHomebrew.statusBarOperation
+        )
+    }
+}
+
 struct StatusBarView: View {
     var caskCount: Int
     var brewVersion: String?
