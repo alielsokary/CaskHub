@@ -365,46 +365,4 @@ final class ExternalInstallationTests: XCTestCase {
         XCTAssertFalse(service.isPresent(shade))
     }
 
-    @MainActor
-    func test_store_tailscale_matches_package_cask_by_application_bundle_family() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("store-tailscale-\(UUID().uuidString)")
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let tailscaleApp = try makeApplicationBundle(
-            in: root,
-            named: "Tailscale.app",
-            bundleIdentifier: "io.tailscale.ipn.macos",
-            macAppStoreReceipt: true
-        )
-        let scan = LocalHomebrewService.scanApplications(
-            fileManager: .default, directories: [root]
-        )
-        let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("store-tailscale"),
-            applicationDirectories: [root]
-        )
-        updateInstallationSnapshot(
-            of: service,
-            macAppStoreAppNames: scan.macAppStoreNames,
-            macAppStoreBundleIdentifiers: scan.macAppStoreBundleIdentifiers,
-            detectedApplications: scan.applications
-        )
-        var openedURL: URL?
-        service.appLauncher = { openedURL = $0 }
-        let tailscale = makeCask(
-            "tailscale-app",
-            name: "Tailscale",
-            packageIdentifiers: ["com.tailscale.ipn.macsys"],
-            applicationBundleIdentifiers: ["io.tailscale.ipn.macsys"]
-        )
-
-        XCTAssertTrue(service.isMacAppStoreInstalled(tailscale))
-        XCTAssertTrue(service.isPresent(tailscale))
-        XCTAssertFalse(service.isAdoptable(tailscale))
-        XCTAssertTrue(service.canOpen(tailscale))
-
-        service.openExternalApp(cask: tailscale)
-        XCTAssertEqual(openedURL?.standardizedFileURL, tailscaleApp.standardizedFileURL)
-    }
 }

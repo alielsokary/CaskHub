@@ -2,6 +2,8 @@
 //  HomebrewCommandExecutor.swift
 //  CaskHub
 //
+//  Created by Ali Elsokary on 25/07/2026.
+//
 
 import Darwin
 import Foundation

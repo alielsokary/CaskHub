@@ -2,6 +2,8 @@
 //  LocalHomebrewService+Intents.swift
 //  CaskHub
 //
+//  Created by Ali Elsokary on 25/07/2026.
+//
 
 enum CaskIntent {
     case install(token: String)

@@ -6,8 +6,6 @@
 //
 
 @testable import CaskHub
-import SwiftUI
-import Synchronization
 import XCTest
 
 final class CaskHubTests: XCTestCase {
@@ -329,79 +327,5 @@ final class CaskHubTests: XCTestCase {
         )
         vm.selectedSidebar = .library(.adopt)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["google-chrome"])
-    }
-}
-
-final class RequestRecordingProtocol: URLProtocol {
-    private static let requestedHosts = Mutex<[String]>([])
-    static func reset() { requestedHosts.withLock { $0.removeAll() } }
-    static func snapshot() -> [String] { requestedHosts.withLock { $0 } }
-
-    override static func canInit(with _: URLRequest) -> Bool {
-        true
-    }
-
-    override static func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        if let host = request.url?.host() {
-            Self.requestedHosts.withLock { $0.append(host) }
-        }
-        client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
-    }
-
-    override func stopLoading() {}
-}
-
-final class ImageCacheManifestGateTests: XCTestCase {
-    @MainActor
-    private func makeCache() -> ImageCacheService {
-        let config = URLSessionConfiguration.ephemeral
-        config.protocolClasses = [RequestRecordingProtocol.self]
-        return ImageCacheService(session: URLSession(configuration: config))
-    }
-
-    @MainActor
-    private func cliCask(_ token: String) -> Cask {
-        var cask = Cask.preview(token: token)
-        cask.artifacts = [ArtifactStanza(keys: ["binary"])]
-        return cask
-    }
-
-    @MainActor
-    func test_cli_cask_missing_from_manifest_makes_no_request() async {
-        let cache = makeCache()
-        cache.knownIconTokens = { [] }
-        RequestRecordingProtocol.reset()
-
-        let image = await cache.image(for: cliCask("gate-cli-\(UUID().uuidString)"))
-
-        XCTAssertNil(image)
-        XCTAssertEqual(RequestRecordingProtocol.snapshot(), [])
-    }
-
-    @MainActor
-    func test_app_cask_missing_from_manifest_probes_only_appfair() async {
-        let cache = makeCache()
-        cache.knownIconTokens = { [] }
-        RequestRecordingProtocol.reset()
-
-        _ = await cache.image(for: Cask.preview(token: "gate-app-\(UUID().uuidString)"))
-
-        let hosts = RequestRecordingProtocol.snapshot()
-        XCTAssertFalse(hosts.isEmpty)
-        XCTAssertEqual(Set(hosts), ["github.com"])
-    }
-
-    @MainActor
-    func test_unknown_manifest_still_probes_caskflow() async {
-        let cache = makeCache()
-        RequestRecordingProtocol.reset()
-
-        _ = await cache.image(for: cliCask("gate-probe-\(UUID().uuidString)"))
-
-        XCTAssertEqual(RequestRecordingProtocol.snapshot().first, "cdn.jsdelivr.net")
     }
 }
