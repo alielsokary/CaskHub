@@ -118,13 +118,17 @@ struct AppDriver {
     }
 
     func sidebarButton(containing text: String) throws -> AXUIElement {
-        let query = text.lowercased()
         let sidebar = try sidebarScrollArea()
-        let candidates = descendants(of: sidebar).filter { role(of: $0) == kAXButtonRole }
+        return try button(containing: text, in: sidebar)
+    }
+
+    func button(containing text: String, in root: AXUIElement) throws -> AXUIElement {
+        let query = text.lowercased()
+        let candidates = descendants(of: root).filter { role(of: $0) == kAXButtonRole }
         guard let match = candidates.first(where: {
             semanticText(of: $0).lowercased().contains(query)
         }) else {
-            throw ProfileUIError.control("sidebar button containing “\(text)”")
+            throw ProfileUIError.control("button containing “\(text)”")
         }
         return match
     }
@@ -211,26 +215,6 @@ struct AppDriver {
         sleep(0.1)
     }
 
-    func click(at point: CGPoint) throws {
-        let source = CGEventSource(stateID: .combinedSessionState)
-        guard let down = CGEvent(
-            mouseEventSource: source,
-            mouseType: .leftMouseDown,
-            mouseCursorPosition: point,
-            mouseButton: .left
-        ),
-        let up = CGEvent(
-            mouseEventSource: source,
-            mouseType: .leftMouseUp,
-            mouseCursorPosition: point,
-            mouseButton: .left
-        ) else {
-            throw ProfileUIError.control("mouse click event")
-        }
-        down.post(tap: .cghidEventTap)
-        up.post(tap: .cghidEventTap)
-    }
-
     func scroll(at point: CGPoint, delta: Int32, eventCount: Int = 8) throws {
         try raise()
         let source = CGEventSource(stateID: .combinedSessionState)
@@ -309,7 +293,7 @@ func sleep(_ seconds: Double) {
 
 func resolvedSidebarControls(
     driver: AppDriver
-) throws -> [(label: String, point: CGPoint)] {
+) throws -> (sidebar: AXUIElement, labels: [String]) {
     let labels = [
         "Browse",
         "Installed",
@@ -319,31 +303,17 @@ func resolvedSidebarControls(
         "Recently Added"
     ]
     let sidebar = try driver.sidebarScrollArea()
-    guard let sidebarOrigin = driver.position(of: sidebar),
-          let sidebarSize = driver.size(of: sidebar) else {
-        throw ProfileUIError.control("sidebar geometry")
-    }
-    let visibleFrame = CGRect(origin: sidebarOrigin, size: sidebarSize)
-    let controls = labels.compactMap { label -> (String, CGPoint)? in
-        guard let element = try? driver.sidebarButton(containing: label) else {
+    let availableLabels = labels.compactMap { label -> String? in
+        guard (try? driver.button(containing: label, in: sidebar)) != nil else {
             print("missing_control\t\(label)")
             return nil
         }
-        guard let origin = driver.position(of: element), let size = driver.size(of: element) else {
-            print("missing_geometry\t\(label)")
-            return nil
-        }
-        let point = CGPoint(x: origin.x + size.width / 2, y: origin.y + size.height / 2)
-        guard visibleFrame.contains(point) else {
-            print("offscreen_control\t\(label)")
-            return nil
-        }
-        return (label, point)
+        return label
     }
-    guard controls.count >= 3 else {
+    guard availableLabels.count >= 3 else {
         throw ProfileUIError.control("at least three sidebar destinations")
     }
-    return controls
+    return (sidebar, availableLabels)
 }
 
 func runCatalogWorkload(
@@ -377,9 +347,9 @@ func runSidebarWorkload(
     try driver.raise()
     sleep(startDelay)
     for _ in 0 ..< cycles {
-        for control in controls {
-            try driver.click(at: control.point)
-            print("click\t\(control.label)")
+        for label in controls.labels {
+            let button = try driver.button(containing: label, in: controls.sidebar)
+            try driver.timedPress(button, label: label)
             sleep(settleDelay)
         }
     }
