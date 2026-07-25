@@ -54,26 +54,6 @@ extension LocalHomebrewService {
         "'" + value.replacingOccurrences(of: "'", with: "'\"'\"'") + "'"
     }
 
-    nonisolated static func signalTree(pid: Int32, signal: Int32) {
-        let pgrep = Process()
-        pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
-        pgrep.arguments = ["-P", "\(pid)"]
-        let stdout = Pipe()
-        pgrep.standardOutput = stdout
-        pgrep.standardError = FileHandle.nullDevice
-        if (try? pgrep.run()) != nil {
-            let data = stdout.fileHandleForReading.readDataToEndOfFile()
-            pgrep.waitUntilExit()
-            let children = String(data: data, encoding: .utf8)?
-                .split(whereSeparator: \.isNewline)
-                .compactMap { Int32($0) } ?? []
-            for child in children {
-                signalTree(pid: child, signal: signal)
-            }
-        }
-        kill(pid, signal)
-    }
-
     nonisolated static func fetchBrewVersion() async -> String? {
         guard let brewURL = locateBrewBinary() else { return nil }
         return await Task.detached(priority: .utility) {

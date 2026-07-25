@@ -136,12 +136,14 @@ extension LocalHomebrewService {
         }
 
         let service = self
-        let result = try await processRunner.run(
-            executableURL: brewURL,
-            arguments: args,
-            environment: environment,
-            onStart: { process in
-                service.runningProcesses[token] = process
+        let result = try await commandExecutor.execute(
+            HomebrewCommandRequest(
+                token: token,
+                executableURL: brewURL,
+                arguments: args,
+                environment: environment
+            ),
+            onStart: {
                 service.operationStore.send(.setCancellable(cancellable), for: token)
             },
             onChunk: { text in
@@ -183,7 +185,6 @@ extension LocalHomebrewService {
     func clearOperationResources(token: String) {
         brewOutputBuffers[token] = nil
         lastProgressUpdates[token] = nil
-        runningProcesses[token] = nil
     }
 
     func consumeBrewOutput(_ output: String, token: String) {

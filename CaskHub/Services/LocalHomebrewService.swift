@@ -50,9 +50,7 @@ final class LocalHomebrewService {
     @ObservationIgnored var brewOutputBuffers: [String: String] = [:]
     @ObservationIgnored var lastProgressUpdates: [String: Date] = [:]
 
-    @ObservationIgnored var runningProcesses: [String: Process] = [:]
-
-    @ObservationIgnored let processRunner: any BrewProcessRunning
+    @ObservationIgnored let commandExecutor: any HomebrewCommandExecuting
     @ObservationIgnored let softwareScanner: any InstalledSoftwareScanning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
@@ -79,6 +77,7 @@ final class LocalHomebrewService {
         defaults: UserDefaults = .standard,
         applicationDirectories: [URL]? = nil,
         processRunner: (any BrewProcessRunning)? = nil,
+        commandExecutor: (any HomebrewCommandExecuting)? = nil,
         operationStore: CaskOperationStore? = nil,
         softwareScanner: (any InstalledSoftwareScanning)? = nil,
         brewBinaryProvider: @escaping () -> URL? = { LocalHomebrewService.locateBrewBinary() },
@@ -88,7 +87,9 @@ final class LocalHomebrewService {
         self.defaults = defaults
         self.applicationDirectories = applicationDirectories
             ?? Self.defaultApplicationDirectories(fileManager)
-        self.processRunner = processRunner ?? SystemBrewProcessRunner()
+        self.commandExecutor = commandExecutor ?? SystemHomebrewCommandExecutor(
+            processRunner: processRunner ?? SystemBrewProcessRunner()
+        )
         self.operationStore = operationStore ?? CaskOperationStore()
         self.softwareScanner = softwareScanner ?? SystemInstalledSoftwareScanner()
         self.brewBinaryProvider = brewBinaryProvider
@@ -311,15 +312,9 @@ extension LocalHomebrewService {
 
     func cancelInstall(token: String) {
         guard operationStore.state(for: token)?.canCancel == true,
-              let process = runningProcesses[token] else { return }
+              commandExecutor.cancel(token: token)
+        else { return }
         operationStore.send(.requestCancellation, for: token)
-
-        let pid = process.processIdentifier
-        Task.detached(priority: .userInitiated) {
-            Self.signalTree(pid: pid, signal: SIGINT)
-            try? await Task.sleep(for: .seconds(5))
-            if process.isRunning { process.terminate() }
-        }
     }
 
     var statusBarOperation: CaskOperationStatus? {
