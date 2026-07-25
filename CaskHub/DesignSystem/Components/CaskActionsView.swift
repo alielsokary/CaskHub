@@ -23,6 +23,8 @@ struct CaskActionsView: View {
     let cask: Cask
     var fullWidth = true
     var onUninstall: (() -> Void)?
+    var showsUninstallControl = true
+    var usesIconOnlyOpenAndUpdate = false
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(\.isAdoptPage) private var isAdoptPage
@@ -43,28 +45,30 @@ struct CaskActionsView: View {
                         }
                     }
                 } else {
-                    ActionCapsuleButton(action: .open, fullWidth: fullWidth) {
+                    openButton(fullWidth: fullWidth) {
                         localHomebrew.openExternalApp(cask: cask)
                     }
                 }
-                DisabledUninstallControl(
-                    message: "Adopt this app first so CaskHub can manage/uninstall it."
-                )
+                if showsUninstallControl,
+                   let reason = localHomebrew.uninstallAvailability(for: cask).unavailableReason {
+                    DisabledUninstallControl(message: reason)
+                }
             }
         } else if localHomebrew.isMacAppStoreInstalled(cask) {
             HStack(spacing: 8) {
-                ActionCapsuleButton(action: .open, fullWidth: fullWidth) {
+                openButton(fullWidth: fullWidth) {
                     localHomebrew.openExternalApp(cask: cask)
                 }
-                DisabledUninstallControl(
-                    message: "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
-                )
+                if showsUninstallControl,
+                   let reason = localHomebrew.uninstallAvailability(for: cask).unavailableReason {
+                    DisabledUninstallControl(message: reason)
+                }
             }
         } else if let externalPath = localHomebrew.externalCLIPath(cask) {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
                 .help(
-                    "Installed outside Homebrew at \(externalPath.path). "
-                        + "Remove or move that file manually before installing the Homebrew version."
+                    localHomebrew.uninstallAvailability(for: cask).unavailableReason
+                        ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
         } else {
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
@@ -97,12 +101,15 @@ struct CaskActionsView: View {
 
         HStack(spacing: 8) {
             if canOpen {
-                ActionCapsuleButton(action: .open, fullWidth: fullWidth && !showUpdate) {
+                openButton(
+                    fullWidth: fullWidth && !showUpdate,
+                    isPairedWithUpdate: showUpdate
+                ) {
                     localHomebrew.open(cask)
                 }
             }
             if showUpdate {
-                ActionCapsuleButton(action: .update, fullWidth: fullWidth) {
+                updateButton(fullWidth: fullWidth) {
                     Task { try? await localHomebrew.upgrade(token: cask.token) }
                 }
             }
@@ -122,6 +129,28 @@ struct CaskActionsView: View {
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func openButton(
+        fullWidth: Bool,
+        isPairedWithUpdate: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        if usesIconOnlyOpenAndUpdate && isPairedWithUpdate {
+            ActionCapsuleIconButton(action: .open, onTap: action)
+        } else {
+            ActionCapsuleButton(action: .open, fullWidth: fullWidth, onTap: action)
+        }
+    }
+
+    @ViewBuilder
+    private func updateButton(fullWidth: Bool, action: @escaping () -> Void) -> some View {
+        if usesIconOnlyOpenAndUpdate {
+            ActionCapsuleIconButton(action: .update, onTap: action)
+        } else {
+            ActionCapsuleButton(action: .update, fullWidth: fullWidth, onTap: action)
         }
     }
 

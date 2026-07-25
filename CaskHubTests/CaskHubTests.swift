@@ -113,6 +113,31 @@ final class CaskHubTests: XCTestCase {
         XCTAssertNil(service.externalCLIPath(other))
     }
 
+    @MainActor
+    func test_uninstall_availability_explains_each_installed_source() {
+        let service = LocalHomebrewService()
+        let managed = makeCask("managed")
+        service.installedCasks[managed.token] = installation(managed.token, version: "1.0")
+        XCTAssertEqual(service.uninstallAvailability(for: managed), .available)
+
+        let adoptable = makeCask("adoptable", appNames: ["Adoptable.app"])
+        service.externalAppNames = ["Adoptable.app"]
+        let adoptHint = "Adopt this app first so CaskHub can manage/uninstall it."
+        XCTAssertEqual(service.uninstallAvailability(for: adoptable).unavailableReason, adoptHint)
+
+        let store = makeCask("store", appNames: ["Store.app"])
+        service.macAppStoreAppNames = ["Store.app"]
+        let storeHint = "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
+        XCTAssertEqual(service.uninstallAvailability(for: store).unavailableReason, storeHint)
+
+        let external = makeCask("external", binaryNames: ["external"])
+        service.externalBinaryPaths = ["external": URL(fileURLWithPath: "/usr/local/bin/external")]
+        let externalHint = "Installed outside Homebrew at /usr/local/bin/external. "
+            + "Remove or move that file manually before installing the Homebrew version."
+        XCTAssertEqual(service.uninstallAvailability(for: external).unavailableReason, externalHint)
+        XCTAssertEqual(service.uninstallAvailability(for: makeCask("missing")), .notApplicable)
+    }
+
     func test_binary_scan_detects_executables_in_homebrew_prefix() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("binary-scan-\(UUID().uuidString)")

@@ -100,6 +100,27 @@ struct ActionCapsuleButton: View {
     }
 }
 
+struct ActionCapsuleIconButton: View {
+    let action: CaskActionStyle
+    var onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            Image(systemName: action.icon)
+                .font(.system(size: action.iconSize, weight: .bold))
+                .foregroundStyle(action.foreground)
+                .frame(minWidth: 44, maxWidth: .infinity)
+                .frame(height: CHSize.actionCapsuleHeight)
+                .background(Capsule().fill(action.background))
+                .overlay(Capsule().strokeBorder(action.border, lineWidth: 1))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help(action.title)
+        .accessibilityLabel(action.title)
+    }
+}
+
 struct CountBadge: View {
     let count: Int
 
