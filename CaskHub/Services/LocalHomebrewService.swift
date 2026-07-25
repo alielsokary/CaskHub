@@ -58,22 +58,8 @@ final class LocalHomebrewService {
     /// eligibility changes; operation progress deliberately does not touch it.
     private(set) var catalogStateRevision = 0
 
-    /// Package adoptions awaiting the user's reinstall confirmation.
-    var packageAdoptionRequests: Set<String> = []
-
     @ObservationIgnored var packageCaskSignatures: [PackageCaskSignature] = []
     @ObservationIgnored var packageCatalogGeneration = 0
-
-    var adoptReplaceOffers: Set<String> = []
-
-    /// Casks wedged by a stranded app copy inside the Caskroom; repair =
-    /// clear brew's records, then reinstall fresh.
-    var repairOffers: Set<String> = []
-
-    var appManagementDenials: Set<String> = []
-
-    /// Adoptions waiting for the App Management permission; value = retry with `--force`.
-    var permissionRequests: [String: Bool] = [:]
 
     /// Test seam — the real probe hits TCC via the filesystem.
     @ObservationIgnored var permissionProbe: @Sendable () -> AppManagementPermission.Status
@@ -91,15 +77,7 @@ final class LocalHomebrewService {
 
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
 
-    var inFlightActions: [String: CaskAction] = [:]
-
-    var operationProgress: [String: CaskOperationProgress] = [:]
-
-    var updateAllProgress: CaskUpdateAllProgress?
-
-    var cancellableDownloads: Set<String> = []
-
-    var cancelRequested: Set<String> = []
+    @ObservationIgnored let operationStore: CaskOperationStore
 
     @ObservationIgnored var caskDisplayNames: [String: String] = [:]
     @ObservationIgnored var brewOutputBuffers: [String: String] = [:]
@@ -110,8 +88,6 @@ final class LocalHomebrewService {
     @ObservationIgnored let processRunner: any BrewProcessRunning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
-
-    var actionErrors: [String: String] = [:]
 
     private(set) var isUpdatingAll = false
 
@@ -137,6 +113,7 @@ final class LocalHomebrewService {
         defaults: UserDefaults = .standard,
         applicationDirectories: [URL]? = nil,
         processRunner: (any BrewProcessRunning)? = nil,
+        operationStore: CaskOperationStore? = nil,
         brewBinaryProvider: @escaping () -> URL? = { LocalHomebrewService.locateBrewBinary() },
         brewVersionProvider: @escaping () async -> String? = { await LocalHomebrewService.fetchBrewVersion() }
     ) {
@@ -145,6 +122,7 @@ final class LocalHomebrewService {
         self.applicationDirectories = applicationDirectories
             ?? Self.defaultApplicationDirectories(fileManager)
         self.processRunner = processRunner ?? SystemBrewProcessRunner()
+        self.operationStore = operationStore ?? CaskOperationStore()
         self.brewBinaryProvider = brewBinaryProvider
         self.brewVersionProvider = brewVersionProvider
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
@@ -244,6 +222,54 @@ final class LocalHomebrewService {
 
 }
 
+// MARK: - Operation presentation
+
+extension LocalHomebrewService {
+    var inFlightActions: [String: CaskAction] {
+        operationStore.inFlightActions
+    }
+
+    var operationProgress: [String: CaskOperationProgress] {
+        operationStore.operationProgress
+    }
+
+    var updateAllProgress: CaskUpdateAllProgress? {
+        operationStore.updateAllProgress
+    }
+
+    var cancellableDownloads: Set<String> {
+        operationStore.cancellableTokens
+    }
+
+    var cancelRequested: Set<String> {
+        operationStore.cancellationRequestedTokens
+    }
+
+    var actionErrors: [String: String] {
+        operationStore.failures.mapValues(\.message)
+    }
+
+    var permissionRequests: [String: Bool] {
+        operationStore.pendingPermissions
+    }
+
+    var packageAdoptionRequests: Set<String> {
+        operationStore.pendingPackageAdoptions
+    }
+
+    var adoptReplaceOffers: Set<String> {
+        operationStore.tokens(offering: .replaceWithHomebrew)
+    }
+
+    var repairOffers: Set<String> {
+        operationStore.tokens(offering: .repairAndReinstall)
+    }
+
+    var appManagementDenials: Set<String> {
+        operationStore.tokens(offering: .openAppManagementSettings)
+    }
+}
+
 // MARK: - Actions
 
 extension LocalHomebrewService {
@@ -277,22 +303,20 @@ extension LocalHomebrewService {
     /// leave the user with no app at all, and `brew fetch` exits non-zero on
     /// download failure, so it's a reliable gate.
     func repairReinstalling(token: String) async throws {
-        guard inFlightActions[token] == nil else { return }
-        repairOffers.remove(token)
+        guard operationStore.canBeginOperation(for: token) else { return }
         let caskroomEntry = configuredCaskroomURL()?
             .appendingPathComponent(token)
         let appBundleNames = installedCasks[token]?.appBundleNames ?? []
         Analytics.caskActionStarted(.repairing, token: token, origin: .repair)
         beginOperation(.repairing, token: token)
+        defer { clearOperationResources(token: token) }
         do {
             try await runBrewStreaming(token: token, args: ["fetch", "--cask", token], cancellable: false)
-            clearOperation(token: token)
+            operationStore.send(.clear, for: token)
         } catch {
-            clearOperation(token: token)
             CrashReporter.capture(error)
             Analytics.caskActionFailed(.repairing, token: token, origin: .repair)
-            actionErrors[token] = (error as? LocalHomebrewError)?.errorDescription
-                ?? error.localizedDescription
+            noteFailure(token: token, error: error)
             throw error
         }
         do {
@@ -331,32 +355,27 @@ extension LocalHomebrewService {
         guard !isUpdatingAll else { return }
         isUpdatingAll = true
         defer {
-            updateAllProgress = nil
+            operationStore.setUpdateAllProgress(nil)
             isUpdatingAll = false
         }
-        for token in tokens where inFlightActions[token] == nil {
-            inFlightActions[token] = .queued
+        for token in tokens where operationStore.canBeginOperation(for: token) {
+            operationStore.send(.enqueue(.updating), for: token)
         }
         for (index, token) in tokens.enumerated() {
-            updateAllProgress = CaskUpdateAllProgress(
+            operationStore.setUpdateAllProgress(CaskUpdateAllProgress(
                 currentIndex: index + 1,
                 totalCount: tokens.count,
                 currentToken: token,
                 currentDisplayName: displayName(for: token)
-            )
+            ))
             try? await upgrade(token: token, origin: .updateAll)
         }
     }
 
     func cancelInstall(token: String) {
-        guard cancellableDownloads.contains(token),
+        guard operationStore.state(for: token)?.canCancel == true,
               let process = runningProcesses[token] else { return }
-        cancelRequested.insert(token)
-        cancellableDownloads.remove(token)
-        if var progress = operationProgress[token] {
-            progress.phase = .canceling
-            operationProgress[token] = progress
-        }
+        operationStore.send(.requestCancellation, for: token)
 
         let pid = process.processIdentifier
         Task.detached(priority: .userInitiated) {
@@ -367,13 +386,11 @@ extension LocalHomebrewService {
     }
 
     var statusBarOperation: CaskOperationStatus? {
-        CaskOperationStatus.make(
-            operations: Array(operationProgress.values),
-            updateAll: updateAllProgress
-        )
+        operationStore.status
     }
 
     func displayName(for token: String) -> String {
         caskDisplayNames[token] ?? token
     }
+
 }

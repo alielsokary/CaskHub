@@ -32,7 +32,7 @@ final class CaskOperationProgressTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("operation-progress"))
         service.caskDisplayNames["firefox"] = "Firefox"
         service.beginOperation(.installing, token: "firefox")
-        service.cancellableDownloads.insert("firefox")
+        service.operationStore.send(.setCancellable(true), for: "firefox")
 
         service.consumeBrewOutput(
             "==> Downloading https://example.com/firefox.dmg",
@@ -98,7 +98,7 @@ final class CaskOperationProgressTests: XCTestCase {
     func test_brew_output_updates_download_phase_then_upgrade_phase() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("update-progress"))
         service.beginOperation(.updating, token: "firefox")
-        service.cancellableDownloads.insert("firefox")
+        service.operationStore.send(.setCancellable(true), for: "firefox")
 
         service.consumeBrewOutput(
             """

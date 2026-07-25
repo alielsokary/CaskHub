@@ -9,18 +9,17 @@ import Foundation
 
 extension LocalHomebrewService {
     func requestPackageAdoption(token: String) {
-        packageAdoptionRequests.insert(token)
+        operationStore.send(.awaitPackageAdoption, for: token)
     }
 
     func cancelPackageAdoptionRequest(token: String) {
-        packageAdoptionRequests.remove(token)
+        operationStore.send(.clear, for: token)
     }
 
     /// Package artifacts do not support Homebrew's `--adopt` semantics. Running
     /// the package installer again is the supported path that creates Homebrew's
     /// Caskroom records and transfers future management to Homebrew.
     func adoptPackage(token: String) async throws {
-        packageAdoptionRequests.remove(token)
         try await runMutation(
             .adopting,
             token: token,
@@ -34,11 +33,18 @@ extension LocalHomebrewService {
     /// safe replace path instead.
     func adopt(_ cask: Cask, bypassPermissionCheck: Bool = false) async throws {
         if let missing = adoptBlockedByMissingBinary(cask) {
-            adoptReplaceOffers.insert(cask.token)
-            actionErrors[cask.token] = "Your installed copy of \(cask.displayName) is missing "
+            let message = "Your installed copy of \(cask.displayName) is missing "
                 + "a component Homebrew's version includes (\(missing)), so it can't be "
                 + "adopted as-is. You can replace it with Homebrew's copy instead — "
                 + "your settings and data are kept."
+            operationStore.send(
+                .fail(CaskOperationFailure(
+                    kind: .adoptionPreflight,
+                    message: message,
+                    recoveries: [.replaceWithHomebrew]
+                )),
+                for: cask.token
+            )
             return
         }
         try await adopt(token: cask.token, bypassPermissionCheck: bypassPermissionCheck)
@@ -61,19 +67,10 @@ extension LocalHomebrewService {
 
     func adopt(token: String, bypassPermissionCheck: Bool = false) async throws {
         if !bypassPermissionCheck, await !permissionAllowsAdoption() {
-            permissionRequests[token] = false
+            operationStore.send(.awaitPermission(force: false), for: token)
             return
         }
-        do {
-            try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--adopt"])
-        } catch {
-            if case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error,
-               LocalHomebrewError.isAdoptMismatch(args: args, stderr: stderr),
-               !LocalHomebrewError.isStrandedApp(stderr: stderr) {
-                adoptReplaceOffers.insert(token)
-            }
-            throw error
-        }
+        try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--adopt"])
     }
 
     /// Fallback when `--adopt` refuses: replace the on-disk app with Homebrew's copy.
@@ -81,25 +78,23 @@ extension LocalHomebrewService {
     /// and a TCC-denied delete makes brew escalate to a scary sudo password prompt.
     func adoptReplacing(token: String, bypassPermissionCheck: Bool = false) async throws {
         if !bypassPermissionCheck, await !permissionAllowsAdoption() {
-            permissionRequests[token] = true
+            operationStore.send(.awaitPermission(force: true), for: token)
             return
         }
-        adoptReplaceOffers.remove(token)
         try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--force"])
     }
 
     func cancelPermissionRequest(token: String) {
-        permissionRequests[token] = nil
+        operationStore.send(.clear, for: token)
     }
 
     /// Called when the app becomes active: if the user granted App Management while
     /// away (in System Settings), finish the adoptions that were waiting on it.
     func resumePendingAdoptions() {
-        guard !permissionRequests.isEmpty else { return }
+        let pending = operationStore.pendingPermissions
+        guard !pending.isEmpty else { return }
         Task {
             guard await permissionAllowsAdoption() else { return }
-            let pending = permissionRequests
-            permissionRequests.removeAll()
             for (token, useForce) in pending {
                 if useForce {
                     try? await adoptReplacing(token: token, bypassPermissionCheck: true)

@@ -9,10 +9,7 @@ import Foundation
 
 extension LocalHomebrewService {
     func clearError(for token: String) {
-        actionErrors[token] = nil
-        adoptReplaceOffers.remove(token)
-        repairOffers.remove(token)
-        appManagementDenials.remove(token)
+        operationStore.send(.clear, for: token)
     }
 
     func isInstalled(token: String) -> Bool {
@@ -159,7 +156,7 @@ extension LocalHomebrewService {
     /// Opens via the receipt's bundle names, falling back to the cask's current
     /// artifact names — receipts go stale when apps rename themselves.
     func open(_ cask: Cask) {
-        actionErrors[cask.token] = nil
+        clearError(for: cask.token)
         openBundle(named: launchableBundleNames(for: cask), token: cask.token)
     }
 
@@ -182,10 +179,10 @@ extension LocalHomebrewService {
     }
 
     func openApp(token: String) {
-        actionErrors[token] = nil
+        clearError(for: token)
 
         guard let installation = installedCasks[token] else {
-            actionErrors[token] = LocalHomebrewError.appBundleNotFound(token: token).errorDescription
+            noteFailure(token: token, error: LocalHomebrewError.appBundleNotFound(token: token))
             return
         }
         openBundle(named: installation.appBundleNames, token: token)
@@ -193,7 +190,7 @@ extension LocalHomebrewService {
 
     /// Launches a not-yet-adopted app straight from its on-disk bundle.
     func openExternalApp(cask: Cask) {
-        actionErrors[cask.token] = nil
+        clearError(for: cask.token)
         if let application = macAppStoreApplication(for: cask) {
             appLauncher(application.url)
             return
@@ -220,7 +217,7 @@ extension LocalHomebrewService {
 
     private func openBundle(named names: [String], token: String) {
         guard let appURL = existingBundleURL(named: names) else {
-            actionErrors[token] = LocalHomebrewError.appBundleNotFound(token: token).errorDescription
+            noteFailure(token: token, error: LocalHomebrewError.appBundleNotFound(token: token))
             return
         }
         appLauncher(appURL)

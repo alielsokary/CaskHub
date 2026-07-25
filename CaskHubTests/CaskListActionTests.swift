@@ -165,9 +165,9 @@ final class CaskListActionTests: XCTestCase {
         render(row(managed, service: service))
         render(row(makeCask("managed", version: "2.0", appNames: ["Managed.app"]), service: service))
 
-        service.inFlightActions[managed.token] = .updating
+        service.operationStore.send(.enqueue(.updating), for: managed.token)
         render(row(managed, service: service))
-        service.inFlightActions[managed.token] = nil
+        service.operationStore.send(.clear, for: managed.token)
 
         let installedOnly = makeCask("installed-only")
         service.installedCasks[installedOnly.token] = installation(installedOnly.token, version: "1.0")
