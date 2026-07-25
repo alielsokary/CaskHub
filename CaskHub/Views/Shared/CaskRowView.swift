@@ -112,7 +112,7 @@ struct CaskRowView: View {
     }
 }
 
-private struct CaskRowActionsMenuButton: NSViewRepresentable {
+struct CaskRowActionsMenuButton: NSViewRepresentable {
     let showsUpdate: Bool
     let isBusy: Bool
     let uninstallAvailability: CaskUninstallAvailability
@@ -163,19 +163,19 @@ private struct CaskRowActionsMenuButton: NSViewRepresentable {
             )
         }
 
-        @objc private func showInfo() {
+        @objc func showInfo() {
             configuration.onInfo()
         }
 
-        @objc private func update() {
+        @objc func update() {
             configuration.onUpdate()
         }
 
-        @objc private func uninstall() {
+        @objc func uninstall() {
             configuration.onUninstall()
         }
 
-        private func makeMenu() -> NSMenu {
+        func makeMenu() -> NSMenu {
             let menu = NSMenu()
             menu.autoenablesItems = false
             menu.addItem(
