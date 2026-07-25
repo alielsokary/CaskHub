@@ -20,6 +20,57 @@ final class CaskCatalogSortTests: XCTestCase {
     }
 
     @MainActor
+    func test_projector_builds_library_and_route_from_explicit_values() {
+        let installed = makeCask("installed")
+        let adoptable = makeCask("adoptable")
+        let input = CatalogLibraryProjectionInput(
+            casks: [installed, adoptable],
+            localStates: [
+                installed.token: CaskLocalState(
+                    installationSource: .homebrew,
+                    externalCLIPath: nil,
+                    uninstallAvailability: .available,
+                    hasAvailableUpdate: true,
+                    isZombie: false,
+                    canOpen: true
+                ),
+                adoptable.token: CaskLocalState(
+                    installationSource: .externalApplication,
+                    externalCLIPath: nil,
+                    uninstallAvailability: .unavailable(reason: "Adopt first"),
+                    hasAvailableUpdate: false,
+                    isZombie: false,
+                    canOpen: true
+                )
+            ],
+            categoryMappings: [
+                installed.token: TokenCategoryMapping(
+                    primary: "utilities",
+                    secondary: []
+                )
+            ]
+        )
+
+        let library = CatalogProjector.makeLibrary(from: input)
+        let filtered = CatalogProjector.makeFiltered(from: CatalogFilteredProjectionInput(
+            casks: input.casks,
+            library: library,
+            selectedSidebar: .library(.updates),
+            searchText: "",
+            sortOption: .nameAZ,
+            downloadCounts: [:],
+            recentTokens: [],
+            addedDates: [:],
+            installedDates: [:]
+        ))
+
+        XCTAssertEqual(library.installedCasks.map(\.token), ["installed", "adoptable"])
+        XCTAssertEqual(library.adoptableCasks.map(\.token), ["adoptable"])
+        XCTAssertEqual(library.categoryCounts, ["utilities": 1])
+        XCTAssertEqual(filtered.map(\.token), ["installed"])
+    }
+
+    @MainActor
     private func alternatingCategories(for casks: [Cask]) -> CategoryService {
         let categories = CategoryService()
         categories.applyData(CaskCategoryData(

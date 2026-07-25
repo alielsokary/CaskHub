@@ -117,11 +117,7 @@ struct ContentView: View {
         }
         .tint(Color.chTerracotta)
         .task {
-            async let catalog: Void = viewModel.fetchCasks()
-            async let local: Void = localHomebrew.refresh()
-            async let categories: Void = categoryService.refreshFromRemote()
-            async let addedDates: Void = recentlyAdded.refreshFromRemote()
-            _ = await(catalog, local, categories, addedDates)
+            await viewModel.load()
         }
         .onChange(of: viewModel.selectedSidebar) { _, newValue in
             Analytics.pageOpened(newValue)

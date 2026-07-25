@@ -46,39 +46,16 @@ extension CaskCatalogViewModel {
 
     private var librarySnapshot: CatalogLibrarySnapshot {
         libraryCache.value(for: libraryCacheKey) { [casks, categoryService, localHomebrew] in
-            var updatableCasks: [Cask] = []
-            var installedCasks: [Cask] = []
-            var adoptableCasks: [Cask] = []
-            var casksByCategory: [String: [Cask]] = [:]
             var localStates: [String: CaskLocalState] = [:]
             localStates.reserveCapacity(casks.count)
             for cask in casks {
-                let localState = localHomebrew.localState(for: cask)
-                localStates[cask.token] = localState
-                if localState.hasAvailableUpdate {
-                    updatableCasks.append(cask)
-                }
-                if localState.isPresent {
-                    installedCasks.append(cask)
-                }
-                if localState.isAdoptable {
-                    adoptableCasks.append(cask)
-                }
-                if let mapping = categoryService.tokenMappings[cask.token] {
-                    for categoryID in Set([mapping.primary] + mapping.secondary) {
-                        casksByCategory[categoryID, default: []].append(cask)
-                    }
-                }
+                localStates[cask.token] = localHomebrew.localState(for: cask)
             }
-            let categoryCounts = casksByCategory.mapValues(\.count)
-            return CatalogLibrarySnapshot(
-                updatableCasks: updatableCasks,
-                installedCasks: installedCasks,
-                adoptableCasks: adoptableCasks,
-                casksByCategory: casksByCategory,
-                categoryCounts: categoryCounts,
-                localStates: localStates
-            )
+            return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
+                casks: casks,
+                localStates: localStates,
+                categoryMappings: categoryService.tokenMappings
+            ))
         }
     }
 
@@ -93,44 +70,23 @@ extension CaskCatalogViewModel {
             recentlyAddedRevision: recentlyAdded.catalogStateRevision,
             recentlyAddedWindow: recentlyAddedWindow
         )
-        return browseCache.value(for: key) { makeBrowseSections() }
-    }
-
-    private func makeBrowseSections() -> [BrowseSection] {
-        let counts = analyticsByPeriod[.days365] ?? [:]
-        let popularityOrder = sortedByDownloads(casks, using: counts)
-        var casksByCategory: [String: [Cask]] = [:]
-        for cask in popularityOrder {
-            guard let mapping = categoryService.tokenMappings[cask.token] else { continue }
-            for categoryID in Set([mapping.primary] + mapping.secondary)
-                where casksByCategory[categoryID, default: []].count < Self.browseSectionSize {
-                casksByCategory[categoryID, default: []].append(cask)
-            }
-        }
-
-        let recentTokens = recentlyAdded.recentTokens(within: recentlyAddedWindow.rawValue)
-        var sections = [
-            BrowseSection(
-                title: "Most Popular",
-                destination: .discover(.topCharts),
-                casks: Array(popularityOrder.prefix(Self.browseSectionSize))
-            ),
-            BrowseSection(
-                title: "Recently Added",
-                destination: .discover(.recentlyAdded),
-                casks: Array(sortedByNewest(casks.filter {
-                    recentTokens.contains($0.token)
-                }).prefix(Self.browseSectionSize))
+        return browseCache.value(for: key) {
+            CatalogProjector.makeBrowseSections(
+                from: CatalogBrowseProjectionInput(
+                    casks: casks,
+                    annualDownloadCounts: analyticsByPeriod[.days365] ?? [:],
+                    categoryMappings: categoryService.tokenMappings,
+                    orderedCategories: categoryService.orderedCategories.map {
+                        (id: $0.id, displayName: $0.definition.displayName)
+                    },
+                    recentTokens: recentlyAdded.recentTokens(
+                        within: recentlyAddedWindow.rawValue
+                    ),
+                    addedDates: recentlyAdded.addedDates
+                ),
+                sectionSize: Self.browseSectionSize
             )
-        ]
-        for entry in categoryService.orderedCategories where entry.id != "other" {
-            sections.append(BrowseSection(
-                title: entry.definition.displayName,
-                destination: .category(entry.id),
-                casks: casksByCategory[entry.id] ?? []
-            ))
         }
-        return sections.filter { !$0.casks.isEmpty }
     }
 
     // MARK: - Filtered Casks
@@ -146,94 +102,20 @@ extension CaskCatalogViewModel {
             sortOption: sortOption
         )
         return filteredCache.value(for: key) {
-            let sidebarFiltered = applySidebarFilter(to: casks)
-            let searched = applySearch(to: sidebarFiltered)
-            return applySort(to: searched)
-        }
-    }
-
-    private func applySidebarFilter(to casks: [Cask]) -> [Cask] {
-        switch selectedSidebar {
-        case .discover(.browse):
-            return casks
-        case .discover(.featured):
-            return Array(sortedByDownloads(casks, using: downloadCounts).prefix(100))
-        case .discover(.topCharts):
-            return casks
-        case .discover(.recentlyAdded):
-            let recentTokens = recentlyAdded.recentTokens(within: recentlyAddedWindow.rawValue)
-            return casks.filter { recentTokens.contains($0.token) }
-        case .library(.installed):
-            return installedCasks
-        case .library(.updates):
-            return updatableCasks
-        case .library(.adopt):
-            return adoptableCasks
-        case let .category(categoryID):
-            return librarySnapshot.casksByCategory[categoryID] ?? []
-        }
-    }
-
-    private func applySearch(to casks: [Cask]) -> [Cask] {
-        guard !searchText.isEmpty else { return casks }
-        let query = searchText.lowercased()
-        return casks.filter { cask in
-            cask.displayName.lowercased().contains(query)
-                || cask.token.lowercased().contains(query)
-                || (cask.desc?.lowercased().contains(query) ?? false)
-        }
-    }
-
-    private func sortedByDownloads(
-        _ source: [Cask],
-        using counts: [String: Int]
-    ) -> [Cask] {
-        source.sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
-    }
-
-    private func sortedByNewest(_ source: [Cask]) -> [Cask] {
-        source.sorted {
-            (recentlyAdded.addedDate(for: $0.token) ?? "")
-                > (recentlyAdded.addedDate(for: $1.token) ?? "")
-        }
-    }
-
-    private func sortedByRecentlyInstalled(_ source: [Cask]) -> [Cask] {
-        source.sorted { lhs, rhs in
-            let lhsDate = localHomebrew.installedCasks[lhs.token]?.installedAt
-            let rhsDate = localHomebrew.installedCasks[rhs.token]?.installedAt
-            if lhsDate != rhsDate {
-                if let lhsDate, let rhsDate { return lhsDate > rhsDate }
-                return lhsDate != nil
-            }
-            return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
-                == .orderedAscending
-        }
-    }
-
-    private func applySort(to casks: [Cask]) -> [Cask] {
-        switch sortOption {
-        case .mostPopular:
-            return sortedByDownloads(casks, using: downloadCounts)
-        case .nameAZ:
-            return casks.sorted {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
-                    == .orderedAscending
-            }
-        case .nameZA:
-            return casks.sorted {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
-                    == .orderedDescending
-            }
-        case .recentlyInstalled:
-            return sortedByRecentlyInstalled(casks)
-        case .newest:
-            return sortedByNewest(casks)
-        case .oldest:
-            return casks.sorted {
-                (recentlyAdded.addedDate(for: $0.token) ?? "9999")
-                    < (recentlyAdded.addedDate(for: $1.token) ?? "9999")
-            }
+            CatalogProjector.makeFiltered(from: CatalogFilteredProjectionInput(
+                casks: casks,
+                library: librarySnapshot,
+                selectedSidebar: selectedSidebar,
+                searchText: searchText,
+                sortOption: sortOption,
+                downloadCounts: downloadCounts,
+                recentTokens: recentlyAdded.recentTokens(
+                    within: recentlyAddedWindow.rawValue
+                ),
+                addedDates: recentlyAdded.addedDates,
+                installedDates: localHomebrew.installationSnapshot.installedCasks
+                    .compactMapValues(\.installedAt)
+            ))
         }
     }
 }

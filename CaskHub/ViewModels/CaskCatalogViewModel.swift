@@ -119,6 +119,14 @@ final class CaskCatalogViewModel {
 
     // MARK: - Data Fetching
 
+    func load() async {
+        async let catalog: Void = fetchCasks()
+        async let local: Void = localHomebrew.refresh()
+        async let categories: Void = categoryService.refreshFromRemote()
+        async let addedDates: Void = recentlyAdded.refreshFromRemote()
+        _ = await (catalog, local, categories, addedDates)
+    }
+
     func fetchCasks() async {
         isLoading = true
         errorMessage = nil
