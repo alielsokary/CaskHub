@@ -231,22 +231,8 @@ nonisolated enum BrewProgressParser {
 
     static func parse(_ output: String) -> Update {
         let progressMatch = progressMatches(in: output).last
-        let byteProgress = progressMatch.flatMap { match -> (Int64, Int64)? in
-            guard
-                let completed = value(
-                    in: output,
-                    match: match,
-                    valueGroup: 1,
-                    unitGroup: 2
-                ),
-                let total = value(
-                    in: output,
-                    match: match,
-                    valueGroup: 3,
-                    unitGroup: 4
-                )
-            else { return nil }
-            return (completed, total)
+        let byteProgress = progressMatch.flatMap {
+            parsedByteProgress(in: output, match: $0)
         }
 
         var events: [(String.Index, CaskOperationPhase)] = []
@@ -283,6 +269,17 @@ nonisolated enum BrewProgressParser {
             byteProgress: byteProgress,
             cachedDownloadPath: cachedPath
         )
+    }
+
+    private static func parsedByteProgress(
+        in output: String,
+        match: NSTextCheckingResult
+    ) -> (completed: Int64, total: Int64)? {
+        guard
+            let completed = value(in: output, match: match, valueGroup: 1, unitGroup: 2),
+            let total = value(in: output, match: match, valueGroup: 3, unitGroup: 4)
+        else { return nil }
+        return (completed, total)
     }
 
     private static func progressMatches(in output: String) -> [NSTextCheckingResult] {
