@@ -105,20 +105,26 @@ final class AdoptionSurfaceTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("open-missing"))
 
         service.openApp(token: "ghost")
-        XCTAssertNotNil(service.actionErrors["ghost"], "not installed should surface an error")
+        XCTAssertNotNil(
+            service.operationStore.failures["ghost"]?.message,
+            "not installed should surface an error"
+        )
         service.clearError(for: "ghost")
-        XCTAssertNil(service.actionErrors["ghost"])
+        XCTAssertNil(service.operationStore.failures["ghost"])
 
         service.installedCasks["ghost"] = LocalCaskInstallation(
             token: "ghost", installedVersion: "1", installedAt: nil,
             appBundleNames: ["CaskHubTestNoSuchApp.app"]
         )
         service.openApp(token: "ghost")
-        XCTAssertNotNil(service.actionErrors["ghost"], "missing bundle should surface an error")
+        XCTAssertNotNil(
+            service.operationStore.failures["ghost"]?.message,
+            "missing bundle should surface an error"
+        )
 
         let external = makeCask("ghost2", appNames: ["CaskHubTestNoSuchApp.app"])
         service.openExternalApp(cask: external)
-        XCTAssertNotNil(service.actionErrors["ghost2"])
+        XCTAssertNotNil(service.operationStore.failures["ghost2"]?.message)
         XCTAssertNil(service.externalAppVersion(for: external))
     }
 
@@ -150,8 +156,8 @@ final class AdoptionSurfaceTests: XCTestCase {
         let askpassPath = try? XCTUnwrap(runner.requests.first?.environment["SUDO_ASKPASS"])
         XCTAssertNotNil(runner.requests.first?.askpassContents)
         XCTAssertFalse(askpassPath.map(FileManager.default.fileExists(atPath:)) ?? true)
-        XCTAssertNotNil(service.actionErrors["firefox"])
-        XCTAssertNil(service.inFlightActions["firefox"])
+        XCTAssertNotNil(service.operationStore.failures["firefox"])
+        XCTAssertNil(service.operationStore.state(for: "firefox")?.action)
     }
 
     @MainActor
@@ -160,13 +166,13 @@ final class AdoptionSurfaceTests: XCTestCase {
         let service = makeMutationService(runner: runner)
 
         service.requestPackageAdoption(token: "zoom")
-        XCTAssertTrue(service.packageAdoptionRequests.contains("zoom"))
+        XCTAssertTrue(service.operationStore.pendingPackageAdoptions.contains("zoom"))
 
         try await service.adoptPackage(token: "zoom")
 
         XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "zoom"]])
-        XCTAssertFalse(service.packageAdoptionRequests.contains("zoom"))
-        XCTAssertNil(service.inFlightActions["zoom"])
+        XCTAssertFalse(service.operationStore.pendingPackageAdoptions.contains("zoom"))
+        XCTAssertNil(service.operationStore.state(for: "zoom")?.action)
     }
 
     @MainActor
@@ -243,9 +249,9 @@ final class AdoptionSurfaceTests: XCTestCase {
 
         try? await service.adopt(token: token)
 
-        XCTAssertNotNil(service.actionErrors[token])
-        XCTAssertNil(service.inFlightActions[token])
-        XCTAssertTrue(service.permissionRequests.isEmpty)
+        XCTAssertNotNil(service.operationStore.failures[token])
+        XCTAssertNil(service.operationStore.state(for: token)?.action)
+        XCTAssertTrue(service.operationStore.pendingPermissions.isEmpty)
     }
 
     func test_permission_probe_completes_without_crashing() {
@@ -288,12 +294,15 @@ final class AdoptionSurfaceTests: XCTestCase {
 
         try await service.adopt(cask)
 
-        XCTAssertTrue(service.adoptReplaceOffers.contains(cask.token), "should offer the safe replace path")
         XCTAssertTrue(
-            service.actionErrors[cask.token]?.contains("fake-cli") == true,
+            service.operationStore.tokens(offering: .replaceWithHomebrew).contains(cask.token),
+            "should offer the safe replace path"
+        )
+        XCTAssertTrue(
+            service.operationStore.failures[cask.token]?.message.contains("fake-cli") == true,
             "error should name the missing component"
         )
-        XCTAssertNil(service.inFlightActions[cask.token], "brew must never run")
+        XCTAssertNil(service.operationStore.state(for: cask.token)?.action, "brew must never run")
 
         FileManager.default.createFile(
             atPath: macOSDir.appendingPathComponent("fake-cli").path, contents: Data()

@@ -206,19 +206,26 @@ final class CaskHubTests: XCTestCase {
         service.permissionProbe = { .denied }
 
         try await service.adopt(token: "chatgpt-classic")
-        XCTAssertEqual(service.permissionRequests["chatgpt-classic"], false)
-        XCTAssertNil(service.inFlightActions["chatgpt-classic"], "brew must not run while permission is missing")
+        XCTAssertEqual(service.operationStore.pendingPermissions["chatgpt-classic"], false)
+        XCTAssertNil(
+            service.operationStore.state(for: "chatgpt-classic")?.action,
+            "brew must not run while permission is missing"
+        )
 
         try await service.adoptReplacing(token: "canva")
-        XCTAssertEqual(service.permissionRequests["canva"], true, "replace path remembers it needs --force")
+        XCTAssertEqual(
+            service.operationStore.pendingPermissions["canva"],
+            true,
+            "replace path remembers it needs --force"
+        )
 
         // Returning to the app while still denied keeps the requests pending.
         service.resumePendingAdoptions()
         try await Task.sleep(for: .milliseconds(100))
-        XCTAssertEqual(service.permissionRequests.count, 2)
+        XCTAssertEqual(service.operationStore.pendingPermissions.count, 2)
 
         service.cancelPermissionRequest(token: "canva")
-        XCTAssertNil(service.permissionRequests["canva"])
+        XCTAssertNil(service.operationStore.pendingPermissions["canva"])
     }
 
     func test_app_management_denial_maps_to_permission_guidance() {

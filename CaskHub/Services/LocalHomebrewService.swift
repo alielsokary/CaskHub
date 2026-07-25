@@ -160,54 +160,6 @@ final class LocalHomebrewService {
 
 }
 
-// MARK: - Operation presentation
-
-extension LocalHomebrewService {
-    var inFlightActions: [String: CaskAction] {
-        operationStore.inFlightActions
-    }
-
-    var operationProgress: [String: CaskOperationProgress] {
-        operationStore.operationProgress
-    }
-
-    var updateAllProgress: CaskUpdateAllProgress? {
-        operationStore.updateAllProgress
-    }
-
-    var cancellableDownloads: Set<String> {
-        operationStore.cancellableTokens
-    }
-
-    var cancelRequested: Set<String> {
-        operationStore.cancellationRequestedTokens
-    }
-
-    var actionErrors: [String: String] {
-        operationStore.failures.mapValues(\.message)
-    }
-
-    var permissionRequests: [String: Bool] {
-        operationStore.pendingPermissions
-    }
-
-    var packageAdoptionRequests: Set<String> {
-        operationStore.pendingPackageAdoptions
-    }
-
-    var adoptReplaceOffers: Set<String> {
-        operationStore.tokens(offering: .replaceWithHomebrew)
-    }
-
-    var repairOffers: Set<String> {
-        operationStore.tokens(offering: .repairAndReinstall)
-    }
-
-    var appManagementDenials: Set<String> {
-        operationStore.tokens(offering: .openAppManagementSettings)
-    }
-}
-
 // MARK: - Actions
 
 extension LocalHomebrewService {

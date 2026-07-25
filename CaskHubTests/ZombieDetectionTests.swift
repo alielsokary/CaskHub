@@ -98,10 +98,14 @@ final class ZombieDetectionTests: XCTestCase {
                 + "'/opt/homebrew/Caskroom/tabby/1.0.230/Tabby.app'."
         )
         service.noteFailure(token: "tabby", error: error)
-        XCTAssertTrue(service.repairOffers.contains("tabby"))
+        XCTAssertTrue(
+            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby")
+        )
 
         service.clearError(for: "tabby")
-        XCTAssertFalse(service.repairOffers.contains("tabby"))
+        XCTAssertFalse(
+            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby")
+        )
     }
 
     @MainActor
@@ -112,8 +116,12 @@ final class ZombieDetectionTests: XCTestCase {
             stderr: "chmod: /Applications/SourceTree.app: Unable to change file mode: Operation not permitted"
         )
         service.noteFailure(token: "sourcetree", error: error)
-        XCTAssertTrue(service.appManagementDenials.contains("sourcetree"))
-        XCTAssertFalse(service.repairOffers.contains("sourcetree"))
+        XCTAssertTrue(
+            service.operationStore.tokens(offering: .openAppManagementSettings).contains("sourcetree")
+        )
+        XCTAssertFalse(
+            service.operationStore.tokens(offering: .repairAndReinstall).contains("sourcetree")
+        )
     }
 
     func test_stranded_app_error_message_explains_repair() {
@@ -168,7 +176,7 @@ final class ZombieDetectionTests: XCTestCase {
         )
         service.noteFailure(token: "tabby", error: rewordedUpgrade)
         XCTAssertTrue(
-            service.repairOffers.contains("tabby"),
+            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby"),
             "a parked copy on disk should back up the offer even if brew rewords its error"
         )
 
@@ -179,7 +187,7 @@ final class ZombieDetectionTests: XCTestCase {
         )
         service.noteFailure(token: "tabby", error: rewordedInstall)
         XCTAssertFalse(
-            service.repairOffers.contains("tabby"),
+            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby"),
             "filesystem evidence only backs upgrade failures"
         )
     }
@@ -248,7 +256,7 @@ final class ZombieDetectionTests: XCTestCase {
         service.appLauncher = { launched = $0 }
         service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
         XCTAssertNil(
-            service.actionErrors["chatgpt"],
+            service.operationStore.failures["chatgpt"]?.message,
             "stale receipt name should fall back to the cask's current artifact"
         )
         XCTAssertEqual(launched?.lastPathComponent, "ChatGPT.app")
