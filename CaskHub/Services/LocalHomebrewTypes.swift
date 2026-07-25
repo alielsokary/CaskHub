@@ -19,7 +19,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
     let isDirectlyInApplicationDirectory: Bool
 }
 
-nonisolated struct ExternalApplicationScan {
+nonisolated struct ExternalApplicationScan: Sendable {
     let applications: [DetectedApplication]
 
     var adoptableNames: Set<String> {
@@ -44,7 +44,7 @@ nonisolated struct ExternalApplicationScan {
     }
 }
 
-nonisolated struct ApplicationCaskSignature {
+nonisolated struct ApplicationCaskSignature: Sendable {
     let token: String
     let appBundleNames: Set<String>
     let bundleIdentifiers: Set<String>
@@ -118,7 +118,7 @@ nonisolated struct CaskInstallationIndex: Sendable {
     )
 }
 
-nonisolated struct PackageCaskSignature {
+nonisolated struct PackageCaskSignature: Sendable {
     let token: String
     let displayName: String
     let receiptPatterns: [String]

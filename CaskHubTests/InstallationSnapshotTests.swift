@@ -49,4 +49,49 @@ final class InstallationSnapshotTests: XCTestCase {
 
         XCTAssertEqual(service.catalogStateRevision, 0)
     }
+
+    func test_refresh_uses_injected_scanner_without_reading_the_machine() async {
+        let scanned = InstallationSnapshot(
+            installedCasks: [
+                "firefox": LocalCaskInstallation(
+                    token: "firefox",
+                    installedVersion: "2",
+                    installedAt: nil,
+                    appBundleNames: ["Firefox.app"]
+                )
+            ],
+            scannedAt: Date(timeIntervalSince1970: 200)
+        )
+        let scanner = StubInstalledSoftwareScanner(
+            scanned: scanned,
+            reconciled: scanned
+        )
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("snapshot-scanner"),
+            softwareScanner: scanner,
+            brewVersionProvider: { "Homebrew test" }
+        )
+
+        await service.refresh()
+
+        XCTAssertEqual(service.installationSnapshot.installedCasks["firefox"]?.installedVersion, "2")
+        XCTAssertEqual(service.lastRefresh, Date(timeIntervalSince1970: 200))
+        XCTAssertEqual(service.brewVersion, "Homebrew test")
+    }
+}
+
+private nonisolated struct StubInstalledSoftwareScanner: InstalledSoftwareScanning {
+    let scanned: InstallationSnapshot
+    let reconciled: InstallationSnapshot
+
+    func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
+        scanned
+    }
+
+    func reconcileCatalog(
+        _ request: InstalledSoftwareScanRequest,
+        with current: InstallationSnapshot
+    ) async -> InstallationSnapshot {
+        reconciled
+    }
 }

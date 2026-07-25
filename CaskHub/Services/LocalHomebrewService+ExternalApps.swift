@@ -12,44 +12,20 @@ extension LocalHomebrewService {
         updateCatalogSignatures(casks)
         packageCatalogGeneration &+= 1
         let packageGeneration = packageCatalogGeneration
+        let request = installedSoftwareScanRequest()
 
-        let packageSignatures = packageCaskSignatures
-        let fm = fileManager
-        let appDirs = applicationDirectories
-        let (applications, packages) = await Task.detached(priority: .userInitiated) {
-            let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
-            let packages = packageSignatures.isEmpty ? [:] : Self.scanExternalPackageInstallations(
-                signatures: packageSignatures,
-                availableAppNames: applications.nonStoreNames
+        while packageGeneration == packageCatalogGeneration {
+            let baselineRevision = catalogStateRevision
+            let current = installationSnapshot
+            let reconciled = await softwareScanner.reconcileCatalog(
+                request,
+                with: current
             )
-            return (applications, packages)
-        }.value
-        guard packageGeneration == packageCatalogGeneration else { return }
-
-        let current = installationSnapshot
-        let owners = Self.resolveExternalApplicationOwners(
-            signatures: applicationCaskSignatures,
-            applications: applications.applications,
-            installedCasks: current.installedCasks
-        )
-        let index = Self.buildInstallationIndex(
-            catalog: installationCatalog,
-            applications: applications.applications,
-            binaryPaths: current.externalBinaryPaths,
-            installedCasks: current.installedCasks
-        )
-        commitInstallationSnapshot(InstallationSnapshot(
-            installedCasks: current.installedCasks,
-            externalAppNames: applications.adoptableNames,
-            externalApplicationOwners: owners,
-            macAppStoreAppNames: applications.macAppStoreNames,
-            macAppStoreBundleIdentifiers: applications.macAppStoreBundleIdentifiers,
-            detectedApplications: applications.applications,
-            externalBinaryPaths: current.externalBinaryPaths,
-            externalPackageInstallations: packages,
-            installationIndex: index,
-            scannedAt: current.scannedAt
-        ))
+            guard packageGeneration == packageCatalogGeneration else { return }
+            guard baselineRevision == catalogStateRevision else { continue }
+            commitInstallationSnapshot(reconciled)
+            return
+        }
     }
 
     private func updateCatalogSignatures(_ casks: [Cask]) {

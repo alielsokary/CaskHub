@@ -53,6 +53,7 @@ final class LocalHomebrewService {
     @ObservationIgnored var runningProcesses: [String: Process] = [:]
 
     @ObservationIgnored let processRunner: any BrewProcessRunning
+    @ObservationIgnored let softwareScanner: any InstalledSoftwareScanning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
 
@@ -79,6 +80,7 @@ final class LocalHomebrewService {
         applicationDirectories: [URL]? = nil,
         processRunner: (any BrewProcessRunning)? = nil,
         operationStore: CaskOperationStore? = nil,
+        softwareScanner: (any InstalledSoftwareScanning)? = nil,
         brewBinaryProvider: @escaping () -> URL? = { LocalHomebrewService.locateBrewBinary() },
         brewVersionProvider: @escaping () async -> String? = { await LocalHomebrewService.fetchBrewVersion() }
     ) {
@@ -88,6 +90,7 @@ final class LocalHomebrewService {
             ?? Self.defaultApplicationDirectories(fileManager)
         self.processRunner = processRunner ?? SystemBrewProcessRunner()
         self.operationStore = operationStore ?? CaskOperationStore()
+        self.softwareScanner = softwareScanner ?? SystemInstalledSoftwareScanner()
         self.brewBinaryProvider = brewBinaryProvider
         self.brewVersionProvider = brewVersionProvider
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
@@ -137,58 +140,21 @@ final class LocalHomebrewService {
     // MARK: - Detection
 
     func refresh() async {
-        let fm = fileManager
         if brewVersion == nil {
             brewVersion = await brewVersionProvider()
         }
-        let appDirs = applicationDirectories
-        let caskroom = configuredCaskroomURL()
-        let packageSignatures = packageCaskSignatures
-        let packageGeneration = packageCatalogGeneration
-        let result = await Task.detached(priority: .userInitiated) {
-            let applications = Self.scanApplications(fileManager: fm, directories: appDirs)
-            let casks = caskroom.map {
-                Self.scanCaskroom(
-                    at: $0, fileManager: fm, applicationDirectories: appDirs
-                )
-            } ?? [:]
-            let binaryPaths = Self.scanBinaryDirectories(fileManager: fm)
-            let packages = Self.scanExternalPackageInstallations(
-                signatures: packageSignatures,
-                availableAppNames: applications.nonStoreNames
-            )
-            return (casks, applications, binaryPaths, packages)
-        }.value
-
-        let owners = Self.resolveExternalApplicationOwners(
-            signatures: applicationCaskSignatures,
-            applications: result.1.applications,
-            installedCasks: result.0
-        )
-        let index = Self.buildInstallationIndex(
-            catalog: installationCatalog,
-            applications: result.1.applications,
-            binaryPaths: result.2,
-            installedCasks: result.0
-        )
-        let packages = packageGeneration == packageCatalogGeneration
-            ? result.3
-            : installationSnapshot.externalPackageInstallations
-        commitInstallationSnapshot(InstallationSnapshot(
-            installedCasks: result.0,
-            externalAppNames: result.1.adoptableNames,
-            externalApplicationOwners: owners,
-            macAppStoreAppNames: result.1.macAppStoreNames,
-            macAppStoreBundleIdentifiers: result.1.macAppStoreBundleIdentifiers,
-            detectedApplications: result.1.applications,
-            externalBinaryPaths: result.2,
-            externalPackageInstallations: packages,
-            installationIndex: index,
-            scannedAt: .now
-        ))
-
-        CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
-        CrashReporter.tag("brew.caskroom", value: caskroom?.path ?? "not found")
+        while true {
+            let request = installedSoftwareScanRequest()
+            let packageGeneration = packageCatalogGeneration
+            let scanned = await softwareScanner.scan(request)
+            guard packageGeneration == packageCatalogGeneration else {
+                continue
+            }
+            commitInstallationSnapshot(scanned)
+            CrashReporter.tag("brew.path", value: Self.locateBrewBinary()?.path ?? "not found")
+            CrashReporter.tag("brew.caskroom", value: request.caskroomURL?.path ?? "not found")
+            return
+        }
     }
 
 }

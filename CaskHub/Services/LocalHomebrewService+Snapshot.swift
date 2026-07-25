@@ -6,6 +6,16 @@
 import Foundation
 
 extension LocalHomebrewService {
+    func installedSoftwareScanRequest() -> InstalledSoftwareScanRequest {
+        InstalledSoftwareScanRequest(
+            applicationDirectories: applicationDirectories,
+            caskroomURL: configuredCaskroomURL(),
+            catalog: installationCatalog,
+            applicationSignatures: applicationCaskSignatures,
+            packageSignatures: packageCaskSignatures
+        )
+    }
+
     var installedCasks: [String: LocalCaskInstallation] {
         get { installationSnapshot.installedCasks }
         set { replaceInstallationSnapshot(installedCasks: newValue) }
