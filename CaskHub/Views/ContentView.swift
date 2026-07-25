@@ -11,12 +11,15 @@ enum ViewMode: String {
     case grid, list
 }
 
+private enum CatalogScrollAnchor: Hashable {
+    case top
+}
+
 struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(CategoryService.self) private var categoryService
     @Environment(RecentlyAddedService.self) private var recentlyAdded
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @State private var selectedSidebar: SidebarSelection = .discover(.browse)
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var showsResultsHeader = false
@@ -30,7 +33,10 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             SidebarView(
-                selection: $selectedSidebar,
+                selection: Binding(
+                    get: { viewModel.selectedSidebar },
+                    set: { viewModel.selectedSidebar = $0 }
+                ),
                 categoryService: categoryService,
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount,
@@ -121,9 +127,8 @@ struct ContentView: View {
             async let addedDates: Void = recentlyAdded.refreshFromRemote()
             _ = await(catalog, local, categories, addedDates)
         }
-        .onChange(of: selectedSidebar) { _, newValue in
+        .onChange(of: viewModel.selectedSidebar) { _, newValue in
             Analytics.pageOpened(newValue)
-            viewModel.selectedSidebar = newValue
             if newValue == .discover(.topCharts) {
                 Task { await viewModel.selectAnalyticsPeriod(viewModel.analyticsPeriod) }
             }
@@ -186,6 +191,10 @@ struct ContentView: View {
         }
     }
 
+    private var selectedSidebar: SidebarSelection {
+        viewModel.selectedSidebar
+    }
+
     private var heroCask: Cask? {
         guard showsBrowseSections else { return nil }
         return viewModel.filteredCasks.first
@@ -218,30 +227,35 @@ struct ContentView: View {
 
 private extension ContentView {
     var gridView: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: CHSpace.s4) {
-                if let hero = heroCask {
-                    HeroCard(
-                        cask: hero,
-                        downloads: viewModel.formattedDownloads(for: hero.token),
-                        categoryName: categoryInfo(for: hero)?.name,
-                        localState: viewModel.localState(for: hero)
-                    )
-                }
-                if showsBrowseSections {
-                    ForEach(viewModel.browseSections) { section in
-                        browseSectionView(section)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: CHSpace.s4) {
+                    if let hero = heroCask {
+                        HeroCard(
+                            cask: hero,
+                            downloads: viewModel.formattedDownloads(for: hero.token),
+                            categoryName: categoryInfo(for: hero)?.name,
+                            localState: viewModel.localState(for: hero)
+                        )
                     }
-                } else {
-                    caskGrid(viewModel.filteredCasks)
+                    if showsBrowseSections {
+                        ForEach(viewModel.browseSections) { section in
+                            browseSectionView(section)
+                        }
+                    } else {
+                        caskGrid(viewModel.filteredCasks)
+                    }
                 }
+                .id(CatalogScrollAnchor.top)
+                .frame(width: CHSize.contentWidth, alignment: .leading)
+                .frame(maxWidth: .infinity)
             }
-            .frame(width: CHSize.contentWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .contentMargins(.bottom, 44, for: .scrollContent)
+            .scrollContentBackground(.hidden)
+            .onChange(of: selectedSidebar) {
+                resetScrollPosition(proxy)
+            }
         }
-        .contentMargins(.bottom, 44, for: .scrollContent)
-        .scrollContentBackground(.hidden)
-        .id(selectedSidebar)
     }
 
     func caskGrid(_ casks: [Cask]) -> some View {
@@ -251,7 +265,7 @@ private extension ContentView {
                     cask: cask,
                     downloads: viewModel.formattedDownloads(for: cask.token),
                     category: categoryInfo(for: cask),
-                    onSelectCategory: { selectedSidebar = .category($0) },
+                    onSelectCategory: { viewModel.selectedSidebar = .category($0) },
                     localState: viewModel.localState(for: cask)
                 )
             }
@@ -267,7 +281,7 @@ private extension ContentView {
                 Spacer()
                 Button {
                     Analytics.viewAllTapped(to: section.destination)
-                    selectedSidebar = section.destination
+                    viewModel.selectedSidebar = section.destination
                 } label: {
                     Text("View All")
                         .font(CHType.button)
@@ -283,26 +297,41 @@ private extension ContentView {
     // MARK: - List View
 
     var listView: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(viewModel.filteredCasks) { cask in
-                    CaskRowView(
-                        cask: cask,
-                        downloads: viewModel.formattedDownloads(for: cask.token),
-                        localState: viewModel.localState(for: cask)
-                    )
-                    .padding(.vertical, 6)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.filteredCasks) { cask in
+                        CaskRowView(
+                            cask: cask,
+                            downloads: viewModel.formattedDownloads(for: cask.token),
+                            localState: viewModel.localState(for: cask)
+                        )
+                        .padding(.vertical, 6)
 
-                    Color.chHairline
-                        .frame(height: 1)
+                        Color.chHairline
+                            .frame(height: 1)
+                    }
                 }
+                .id(CatalogScrollAnchor.top)
+                .frame(width: CHSize.contentWidth)
+                .frame(maxWidth: .infinity)
             }
-            .frame(width: CHSize.contentWidth)
-            .frame(maxWidth: .infinity)
+            .contentMargins(.bottom, 44, for: .scrollContent)
+            .scrollContentBackground(.hidden)
+            .onChange(of: selectedSidebar) {
+                resetScrollPosition(proxy)
+            }
         }
-        .contentMargins(.bottom, 44, for: .scrollContent)
-        .scrollContentBackground(.hidden)
-        .id(selectedSidebar)
+    }
+
+    func resetScrollPosition(_ proxy: ScrollViewProxy) {
+        DispatchQueue.main.async {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                proxy.scrollTo(CatalogScrollAnchor.top, anchor: .top)
+            }
+        }
     }
 
     // MARK: - Error View
