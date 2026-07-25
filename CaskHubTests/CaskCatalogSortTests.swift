@@ -131,20 +131,23 @@ final class CaskCatalogSortTests: XCTestCase {
 
         let now = Date()
         let local = LocalHomebrewService(defaults: makeScratchDefaults("library-sort-defaults"))
-        local.installedCasks = [
-            "alpha": LocalCaskInstallation(
-                token: "alpha",
-                installedVersion: "1.0",
-                installedAt: now.addingTimeInterval(-86_400),
-                appBundleNames: []
-            ),
-            "zulu": LocalCaskInstallation(
-                token: "zulu",
-                installedVersion: "1.0",
-                installedAt: now,
-                appBundleNames: []
-            )
-        ]
+        updateInstallationSnapshot(
+            of: local,
+            installedCasks: [
+                "alpha": LocalCaskInstallation(
+                    token: "alpha",
+                    installedVersion: "1.0",
+                    installedAt: now.addingTimeInterval(-86_400),
+                    appBundleNames: []
+                ),
+                "zulu": LocalCaskInstallation(
+                    token: "zulu",
+                    installedVersion: "1.0",
+                    installedAt: now,
+                    appBundleNames: []
+                )
+            ]
+        )
         let (vm, _) = await makeSUT(
             casks: [
                 makeCask("alpha", version: "2.0"),
@@ -154,10 +157,13 @@ final class CaskCatalogSortTests: XCTestCase {
             ],
             localHomebrew: local
         )
-        local.externalApplicationOwners = [
-            "able": detectedApplication(named: "Able.app"),
-            "bravo": detectedApplication(named: "Bravo.app")
-        ]
+        updateInstallationSnapshot(
+            of: local,
+            externalApplicationOwners: [
+                "able": detectedApplication(named: "Able.app"),
+                "bravo": detectedApplication(named: "Bravo.app")
+            ]
+        )
 
         vm.selectedSidebar = .library(.installed)
         XCTAssertEqual(vm.sortOption, .recentlyInstalled)
@@ -270,7 +276,7 @@ final class CaskCatalogSortTests: XCTestCase {
         )
 
         XCTAssertEqual(vm.installedCount, 0)
-        local.installedCasks[cask.token] = installation(cask.token, version: "1.0")
+        updateInstalledCask(installation(cask.token, version: "1.0"), in: local)
         XCTAssertEqual(vm.installedCount, 1)
         XCTAssertEqual(vm.updatesCount, 1)
 

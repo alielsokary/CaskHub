@@ -274,19 +274,24 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             defaults: makeScratchDefaults("precomputed-local-state")
         )
         let cask = makeCask("gone", version: "2.0", appNames: ["Gone.app"])
-        service.installedCasks[cask.token] = LocalCaskInstallation(
-            token: cask.token,
-            installedVersion: "1.0",
-            installedAt: nil,
-            appBundleNames: ["Gone.app"],
-            isZombie: true
-        )
-        service.installationIndex = CaskInstallationIndex(
-            catalogTokens: [cask.token],
-            macAppStoreApplications: [:],
-            externalCLIPaths: [:],
-            launchableHomebrewTokens: [],
-            verifiedZombieTokens: [cask.token]
+        updateInstallationSnapshot(
+            of: service,
+            installedCasks: [
+                cask.token: LocalCaskInstallation(
+                    token: cask.token,
+                    installedVersion: "1.0",
+                    installedAt: nil,
+                    appBundleNames: ["Gone.app"],
+                    isZombie: true
+                )
+            ],
+            installationIndex: CaskInstallationIndex(
+                catalogTokens: [cask.token],
+                macAppStoreApplications: [:],
+                externalCLIPaths: [:],
+                launchableHomebrewTokens: [],
+                verifiedZombieTokens: [cask.token]
+            )
         )
 
         let state = service.localState(for: cask)
@@ -351,15 +356,18 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                 hasPackage: false
             )
         }
-        service.installationIndex = LocalHomebrewService.buildInstallationIndex(
-            catalog: CaskInstallationCatalog(
-                tokens: Set(casks.map(\.token)),
-                macAppStoreSignatures: storeSignatures,
-                binarySignatures: []
-            ),
-            applications: applications,
-            binaryPaths: [:],
-            installedCasks: [:]
+        updateInstallationSnapshot(
+            of: service,
+            installationIndex: LocalHomebrewService.buildInstallationIndex(
+                catalog: CaskInstallationCatalog(
+                    tokens: Set(casks.map(\.token)),
+                    macAppStoreSignatures: storeSignatures,
+                    binarySignatures: []
+                ),
+                applications: applications,
+                binaryPaths: [:],
+                installedCasks: [:]
+            )
         )
 
         XCTAssertTrue(service.isPresent(casks[0]))

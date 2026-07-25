@@ -129,9 +129,14 @@ final class CaskListActionTests: XCTestCase {
 
     func test_list_rows_render_install_and_external_installation_states() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("list-external"))
-        service.externalAppNames = ["Adoptable.app"]
-        service.macAppStoreAppNames = ["Store.app"]
-        service.externalBinaryPaths = ["native-cli": URL(fileURLWithPath: "/usr/local/bin/native-cli")]
+        updateInstallationSnapshot(
+            of: service,
+            externalAppNames: ["Adoptable.app"],
+            macAppStoreAppNames: ["Store.app"],
+            externalBinaryPaths: [
+                "native-cli": URL(fileURLWithPath: "/usr/local/bin/native-cli")
+            ]
+        )
 
         render(row(makeCask("plain", desc: "A new app"), service: service))
         render(row(makeCask("adoptable", appNames: ["Adoptable.app"]), service: service))
@@ -155,12 +160,12 @@ final class CaskListActionTests: XCTestCase {
             applicationDirectories: [applications]
         )
         let managed = makeCask("managed", desc: "Managed app", appNames: ["Managed.app"])
-        service.installedCasks[managed.token] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: managed.token,
             installedVersion: "1.0",
             installedAt: nil,
             appBundleNames: ["Managed.app"]
-        )
+        ), in: service)
 
         render(row(managed, service: service))
         render(row(makeCask("managed", version: "2.0", appNames: ["Managed.app"]), service: service))
@@ -170,21 +175,21 @@ final class CaskListActionTests: XCTestCase {
         service.operationStore.send(.clear, for: managed.token)
 
         let installedOnly = makeCask("installed-only")
-        service.installedCasks[installedOnly.token] = installation(installedOnly.token, version: "1.0")
+        updateInstalledCask(installation(installedOnly.token, version: "1.0"), in: service)
         render(row(installedOnly, service: service))
 
         let updateOnly = makeCask("update-only", version: "2.0")
-        service.installedCasks[updateOnly.token] = installation(updateOnly.token, version: "1.0")
+        updateInstalledCask(installation(updateOnly.token, version: "1.0"), in: service)
         render(row(updateOnly, service: service))
 
         let zombie = makeCask("zombie", appNames: ["Missing.app"])
-        service.installedCasks[zombie.token] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: zombie.token,
             installedVersion: "1.0",
             installedAt: nil,
             appBundleNames: ["Missing.app"],
             isZombie: true
-        )
+        ), in: service)
         render(row(zombie, service: service))
     }
 

@@ -108,6 +108,47 @@ func installation(_ token: String, version: String) -> LocalCaskInstallation {
     LocalCaskInstallation(token: token, installedVersion: version, installedAt: nil, appBundleNames: [])
 }
 
+@MainActor
+func updateInstallationSnapshot(
+    of service: LocalHomebrewService,
+    installedCasks: [String: LocalCaskInstallation]? = nil,
+    externalAppNames: Set<String>? = nil,
+    externalApplicationOwners: [String: DetectedApplication]? = nil,
+    macAppStoreAppNames: Set<String>? = nil,
+    macAppStoreBundleIdentifiers: [String: Set<String>]? = nil,
+    detectedApplications: [DetectedApplication]? = nil,
+    externalBinaryPaths: [String: URL]? = nil,
+    externalPackageInstallations: [String: ExternalPackageInstallation]? = nil,
+    installationIndex: CaskInstallationIndex? = nil
+) {
+    let current = service.installationSnapshot
+    service.commitInstallationSnapshot(InstallationSnapshot(
+        installedCasks: installedCasks ?? current.installedCasks,
+        externalAppNames: externalAppNames ?? current.externalAppNames,
+        externalApplicationOwners:
+            externalApplicationOwners ?? current.externalApplicationOwners,
+        macAppStoreAppNames: macAppStoreAppNames ?? current.macAppStoreAppNames,
+        macAppStoreBundleIdentifiers:
+            macAppStoreBundleIdentifiers ?? current.macAppStoreBundleIdentifiers,
+        detectedApplications: detectedApplications ?? current.detectedApplications,
+        externalBinaryPaths: externalBinaryPaths ?? current.externalBinaryPaths,
+        externalPackageInstallations:
+            externalPackageInstallations ?? current.externalPackageInstallations,
+        installationIndex: installationIndex ?? current.installationIndex,
+        scannedAt: current.scannedAt
+    ))
+}
+
+@MainActor
+func updateInstalledCask(
+    _ installation: LocalCaskInstallation,
+    in service: LocalHomebrewService
+) {
+    var installedCasks = service.installationSnapshot.installedCasks
+    installedCasks[installation.token] = installation
+    updateInstallationSnapshot(of: service, installedCasks: installedCasks)
+}
+
 func dateString(daysAgo: Int) -> String {
     let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: .now)!
     return date.formatted(.iso8601.year().month().day())

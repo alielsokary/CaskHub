@@ -73,12 +73,12 @@ final class CaskHubTests: XCTestCase {
     @MainActor
     func test_adoptable_requires_on_disk_app_and_no_brew_install() {
         let service = LocalHomebrewService()
-        service.externalAppNames = ["Google Chrome.app"]
+        updateInstallationSnapshot(of: service, externalAppNames: ["Google Chrome.app"])
 
         let chrome = makeCask("google-chrome", appNames: ["Google Chrome.app"])
         XCTAssertTrue(service.isAdoptable(chrome))
 
-        service.installedCasks["google-chrome"] = installation("google-chrome", version: "1.0")
+        updateInstalledCask(installation("google-chrome", version: "1.0"), in: service)
         XCTAssertFalse(service.isAdoptable(chrome))
 
         let firefox = makeCask("firefox", appNames: ["Firefox.app"])
@@ -102,12 +102,12 @@ final class CaskHubTests: XCTestCase {
     func test_external_cli_detection_requires_binary_on_disk_and_no_brew_install() {
         let service = LocalHomebrewService()
         let externalPath = URL(fileURLWithPath: "/usr/local/bin/claude")
-        service.externalBinaryPaths = ["claude": externalPath]
+        updateInstallationSnapshot(of: service, externalBinaryPaths: ["claude": externalPath])
 
         let claudeCode = makeCask("claude-code", binaryNames: ["claude"])
         XCTAssertEqual(service.externalCLIPath(claudeCode), externalPath)
 
-        service.installedCasks["claude-code"] = installation("claude-code", version: "2.0")
+        updateInstalledCask(installation("claude-code", version: "2.0"), in: service)
         XCTAssertNil(service.externalCLIPath(claudeCode), "brew-installed wins over external detection")
 
         let other = makeCask("some-tool", binaryNames: ["some-tool"])
@@ -118,21 +118,24 @@ final class CaskHubTests: XCTestCase {
     func test_uninstall_availability_explains_each_installed_source() {
         let service = LocalHomebrewService()
         let managed = makeCask("managed")
-        service.installedCasks[managed.token] = installation(managed.token, version: "1.0")
+        updateInstalledCask(installation(managed.token, version: "1.0"), in: service)
         XCTAssertEqual(service.uninstallAvailability(for: managed), .available)
 
         let adoptable = makeCask("adoptable", appNames: ["Adoptable.app"])
-        service.externalAppNames = ["Adoptable.app"]
+        updateInstallationSnapshot(of: service, externalAppNames: ["Adoptable.app"])
         let adoptHint = "Adopt this app first so CaskHub can manage/uninstall it."
         XCTAssertEqual(service.uninstallAvailability(for: adoptable).unavailableReason, adoptHint)
 
         let store = makeCask("store", appNames: ["Store.app"])
-        service.macAppStoreAppNames = ["Store.app"]
+        updateInstallationSnapshot(of: service, macAppStoreAppNames: ["Store.app"])
         let storeHint = "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
         XCTAssertEqual(service.uninstallAvailability(for: store).unavailableReason, storeHint)
 
         let external = makeCask("external", binaryNames: ["external"])
-        service.externalBinaryPaths = ["external": URL(fileURLWithPath: "/usr/local/bin/external")]
+        updateInstallationSnapshot(
+            of: service,
+            externalBinaryPaths: ["external": URL(fileURLWithPath: "/usr/local/bin/external")]
+        )
         let externalHint = "Installed outside Homebrew at /usr/local/bin/external. "
             + "Remove or move that file manually before installing the Homebrew version."
         XCTAssertEqual(service.uninstallAvailability(for: external).unavailableReason, externalHint)
@@ -295,7 +298,7 @@ final class CaskHubTests: XCTestCase {
     func test_greedy_updates_include_auto_updating_casks_and_persist() {
         let defaults = makeScratchDefaults("greedy")
         let service = LocalHomebrewService(defaults: defaults)
-        service.installedCasks["google-chrome"] = installation("google-chrome", version: "137.0")
+        updateInstalledCask(installation("google-chrome", version: "137.0"), in: service)
 
         XCTAssertFalse(service.hasAvailableUpdate(
             token: "google-chrome", remoteVersion: "138.0", autoUpdates: true
@@ -316,7 +319,7 @@ final class CaskHubTests: XCTestCase {
     @MainActor
     func test_adopt_sidebar_filter_lists_only_adoptable_casks() async {
         let homebrew = LocalHomebrewService()
-        homebrew.externalAppNames = ["Google Chrome.app"]
+        updateInstallationSnapshot(of: homebrew, externalAppNames: ["Google Chrome.app"])
         let (vm, _) = await makeSUT(
             casks: [
                 makeCask("google-chrome", appNames: ["Google Chrome.app"]),

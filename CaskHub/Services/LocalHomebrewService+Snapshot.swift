@@ -17,80 +17,42 @@ extension LocalHomebrewService {
     }
 
     var installedCasks: [String: LocalCaskInstallation] {
-        get { installationSnapshot.installedCasks }
-        set { replaceInstallationSnapshot(installedCasks: newValue) }
+        installationSnapshot.installedCasks
     }
 
     var externalAppNames: Set<String> {
-        get { installationSnapshot.externalAppNames }
-        set { replaceInstallationSnapshot(externalAppNames: newValue) }
+        installationSnapshot.externalAppNames
     }
 
     var externalApplicationOwners: [String: DetectedApplication] {
-        get { installationSnapshot.externalApplicationOwners }
-        set { replaceInstallationSnapshot(externalApplicationOwners: newValue) }
+        installationSnapshot.externalApplicationOwners
     }
 
     var macAppStoreAppNames: Set<String> {
-        get { installationSnapshot.macAppStoreAppNames }
-        set { replaceInstallationSnapshot(macAppStoreAppNames: newValue) }
+        installationSnapshot.macAppStoreAppNames
     }
 
     var macAppStoreBundleIdentifiers: [String: Set<String>] {
-        get { installationSnapshot.macAppStoreBundleIdentifiers }
-        set { replaceInstallationSnapshot(macAppStoreBundleIdentifiers: newValue) }
+        installationSnapshot.macAppStoreBundleIdentifiers
     }
 
     var detectedApplications: [DetectedApplication] {
-        get { installationSnapshot.detectedApplications }
-        set { replaceInstallationSnapshot(detectedApplications: newValue) }
+        installationSnapshot.detectedApplications
     }
 
     var externalBinaryPaths: [String: URL] {
-        get { installationSnapshot.externalBinaryPaths }
-        set { replaceInstallationSnapshot(externalBinaryPaths: newValue) }
+        installationSnapshot.externalBinaryPaths
     }
 
     var externalPackageInstallations: [String: ExternalPackageInstallation] {
-        get { installationSnapshot.externalPackageInstallations }
-        set { replaceInstallationSnapshot(externalPackageInstallations: newValue) }
+        installationSnapshot.externalPackageInstallations
     }
 
     var installationIndex: CaskInstallationIndex {
-        get { installationSnapshot.installationIndex }
-        set { replaceInstallationSnapshot(installationIndex: newValue) }
+        installationSnapshot.installationIndex
     }
 
     var lastRefresh: Date? {
         installationSnapshot.scannedAt
-    }
-
-    private func replaceInstallationSnapshot(
-        installedCasks: [String: LocalCaskInstallation]? = nil,
-        externalAppNames: Set<String>? = nil,
-        externalApplicationOwners: [String: DetectedApplication]? = nil,
-        macAppStoreAppNames: Set<String>? = nil,
-        macAppStoreBundleIdentifiers: [String: Set<String>]? = nil,
-        detectedApplications: [DetectedApplication]? = nil,
-        externalBinaryPaths: [String: URL]? = nil,
-        externalPackageInstallations: [String: ExternalPackageInstallation]? = nil,
-        installationIndex: CaskInstallationIndex? = nil
-    ) {
-        let current = installationSnapshot
-        commitInstallationSnapshot(InstallationSnapshot(
-            installedCasks: installedCasks ?? current.installedCasks,
-            externalAppNames: externalAppNames ?? current.externalAppNames,
-            externalApplicationOwners:
-                externalApplicationOwners ?? current.externalApplicationOwners,
-            macAppStoreAppNames: macAppStoreAppNames ?? current.macAppStoreAppNames,
-            macAppStoreBundleIdentifiers:
-                macAppStoreBundleIdentifiers ?? current.macAppStoreBundleIdentifiers,
-            detectedApplications: detectedApplications ?? current.detectedApplications,
-            externalBinaryPaths: externalBinaryPaths ?? current.externalBinaryPaths,
-            externalPackageInstallations:
-                externalPackageInstallations ?? current.externalPackageInstallations,
-            installationIndex: installationIndex ?? current.installationIndex,
-            scannedAt: current.scannedAt
-        ))
     }
 }

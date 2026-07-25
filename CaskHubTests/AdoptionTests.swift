@@ -112,10 +112,10 @@ final class AdoptionSurfaceTests: XCTestCase {
         service.clearError(for: "ghost")
         XCTAssertNil(service.operationStore.failures["ghost"])
 
-        service.installedCasks["ghost"] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: "ghost", installedVersion: "1", installedAt: nil,
             appBundleNames: ["CaskHubTestNoSuchApp.app"]
-        )
+        ), in: service)
         service.openApp(token: "ghost")
         XCTAssertNotNil(
             service.operationStore.failures["ghost"]?.message,
@@ -351,11 +351,21 @@ final class AdoptionViewRenderTests: XCTestCase {
     @MainActor
     func test_cask_actions_render_every_external_state() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-actions"))
-        service.externalAppNames = ["Chrome.app"]
-        service.macAppStoreAppNames = ["Store.app"]
-        service.externalBinaryPaths = ["claude": URL(fileURLWithPath: "/usr/local/bin/claude")]
-        service.installedCasks["managed"] = LocalCaskInstallation(
-            token: "managed", installedVersion: "1.0", installedAt: nil, appBundleNames: ["Managed.app"]
+        updateInstallationSnapshot(
+            of: service,
+            installedCasks: [
+                "managed": LocalCaskInstallation(
+                    token: "managed",
+                    installedVersion: "1.0",
+                    installedAt: nil,
+                    appBundleNames: ["Managed.app"]
+                )
+            ],
+            externalAppNames: ["Chrome.app"],
+            macAppStoreAppNames: ["Store.app"],
+            externalBinaryPaths: [
+                "claude": URL(fileURLWithPath: "/usr/local/bin/claude")
+            ]
         )
 
         let adoptable = makeCask("chrome", appNames: ["Chrome.app"])
@@ -392,9 +402,9 @@ final class AdoptionViewRenderTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-popover"))
         render(CaskInfoPopover(cask: makeCask("mystery", appNames: ["NoSuchApp.app"])).environment(service))
 
-        service.installedCasks["known"] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: "known", installedVersion: "3.1", installedAt: .now, appBundleNames: []
-        )
+        ), in: service)
         render(CaskInfoPopover(cask: makeCask("known")).environment(service))
     }
 }

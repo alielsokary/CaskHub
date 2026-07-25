@@ -10,7 +10,7 @@ final class ExternalInstallationTests: XCTestCase {
     @MainActor
     func test_mac_app_store_app_is_installed_but_not_adoptable() {
         let service = LocalHomebrewService()
-        service.macAppStoreAppNames = ["Canva.app"]
+        updateInstallationSnapshot(of: service, macAppStoreAppNames: ["Canva.app"])
         let canva = makeCask("canva", appNames: ["Canva.app"])
 
         XCTAssertTrue(service.isMacAppStoreInstalled(canva))
@@ -22,10 +22,13 @@ final class ExternalInstallationTests: XCTestCase {
     @MainActor
     func test_package_cask_matches_store_app_by_exact_display_name_but_is_not_adoptable() {
         let service = LocalHomebrewService()
-        service.macAppStoreAppNames = ["Microsoft Outlook.app"]
-        service.macAppStoreBundleIdentifiers = [
-            "Microsoft Outlook.app": ["com.microsoft.Outlook"]
-        ]
+        updateInstallationSnapshot(
+            of: service,
+            macAppStoreAppNames: ["Microsoft Outlook.app"],
+            macAppStoreBundleIdentifiers: [
+                "Microsoft Outlook.app": ["com.microsoft.Outlook"]
+            ]
+        )
         let outlook = makeCask(
             "microsoft-outlook",
             name: "Microsoft Outlook",
@@ -50,9 +53,14 @@ final class ExternalInstallationTests: XCTestCase {
             defaults: makeScratchDefaults("external-package"),
             applicationDirectories: [apps]
         )
-        service.externalPackageInstallations["zoom"] = ExternalPackageInstallation(
-            receiptIdentifiers: ["us.zoom.pkg.videomeeting"],
-            appBundleNames: ["zoom.us.app"]
+        updateInstallationSnapshot(
+            of: service,
+            externalPackageInstallations: [
+                "zoom": ExternalPackageInstallation(
+                    receiptIdentifiers: ["us.zoom.pkg.videomeeting"],
+                    appBundleNames: ["zoom.us.app"]
+                )
+            ]
         )
         var openedURL: URL?
         service.appLauncher = { openedURL = $0 }
@@ -138,9 +146,12 @@ final class ExternalInstallationTests: XCTestCase {
             defaults: makeScratchDefaults("localized-store-open"),
             applicationDirectories: [root]
         )
-        service.detectedApplications = scan.applications
-        service.macAppStoreAppNames = scan.macAppStoreNames
-        service.macAppStoreBundleIdentifiers = scan.macAppStoreBundleIdentifiers
+        updateInstallationSnapshot(
+            of: service,
+            macAppStoreAppNames: scan.macAppStoreNames,
+            macAppStoreBundleIdentifiers: scan.macAppStoreBundleIdentifiers,
+            detectedApplications: scan.applications
+        )
         var openedURL: URL?
         service.appLauncher = { openedURL = $0 }
         let cask = makeCask("whatsapp", name: "WhatsApp", appNames: ["WhatsApp.app"])
@@ -201,22 +212,27 @@ final class ExternalInstallationTests: XCTestCase {
             packageAppNames: ["Package App.app"]
         )
         let (vm, _) = await makeSUT(casks: [store, package], localHomebrew: local)
-        local.installationIndex = CaskInstallationIndex(
-            catalogTokens: [store.token, package.token],
-            macAppStoreApplications: [
-                store.token: DetectedApplication(
-                    url: URL(fileURLWithPath: "/Applications/Store App.app"),
-                    bundleName: "Store App.app",
-                    bundleIdentifier: "com.example.store-app",
-                    isMacAppStore: true,
-                    isDirectlyInApplicationDirectory: true
+        updateInstallationSnapshot(
+            of: local,
+            externalPackageInstallations: [
+                package.token: ExternalPackageInstallation(
+                    receiptIdentifiers: ["com.example.package"],
+                    appBundleNames: ["Package App.app"]
                 )
             ],
-            externalCLIPaths: [:]
-        )
-        local.externalPackageInstallations[package.token] = ExternalPackageInstallation(
-            receiptIdentifiers: ["com.example.package"],
-            appBundleNames: ["Package App.app"]
+            installationIndex: CaskInstallationIndex(
+                catalogTokens: [store.token, package.token],
+                macAppStoreApplications: [
+                    store.token: DetectedApplication(
+                        url: URL(fileURLWithPath: "/Applications/Store App.app"),
+                        bundleName: "Store App.app",
+                        bundleIdentifier: "com.example.store-app",
+                        isMacAppStore: true,
+                        isDirectlyInApplicationDirectory: true
+                    )
+                ],
+                externalCLIPaths: [:]
+            )
         )
 
         vm.selectedSidebar = .library(.installed)
@@ -270,12 +286,12 @@ final class ExternalInstallationTests: XCTestCase {
             packageIdentifiers: ["com.apple.pkg.SFSymbols"],
             packageAppNames: ["SF Symbols.app"]
         )
-        service.installedCasks[cask.token] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: cask.token,
             installedVersion: "8.0",
             installedAt: nil,
             appBundleNames: []
-        )
+        ), in: service)
 
         XCTAssertFalse(service.canOpen(cask))
         XCTAssertFalse(service.isZombie(cask))
@@ -332,10 +348,13 @@ final class ExternalInstallationTests: XCTestCase {
     @MainActor
     func test_store_app_with_same_name_but_different_vendor_is_not_the_cask() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("store-shade"))
-        service.macAppStoreAppNames = ["Shade.app"]
-        service.macAppStoreBundleIdentifiers = [
-            "Shade.app": ["com.limit-point.Shade"]
-        ]
+        updateInstallationSnapshot(
+            of: service,
+            macAppStoreAppNames: ["Shade.app"],
+            macAppStoreBundleIdentifiers: [
+                "Shade.app": ["com.limit-point.Shade"]
+            ]
+        )
         let shade = makeCask(
             "shade",
             name: "Shade",
@@ -365,9 +384,12 @@ final class ExternalInstallationTests: XCTestCase {
             defaults: makeScratchDefaults("store-tailscale"),
             applicationDirectories: [root]
         )
-        service.detectedApplications = scan.applications
-        service.macAppStoreAppNames = scan.macAppStoreNames
-        service.macAppStoreBundleIdentifiers = scan.macAppStoreBundleIdentifiers
+        updateInstallationSnapshot(
+            of: service,
+            macAppStoreAppNames: scan.macAppStoreNames,
+            macAppStoreBundleIdentifiers: scan.macAppStoreBundleIdentifiers,
+            detectedApplications: scan.applications
+        )
         var openedURL: URL?
         service.appLauncher = { openedURL = $0 }
         let tailscale = makeCask(

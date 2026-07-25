@@ -203,10 +203,10 @@ final class ZombieDetectionTests: XCTestCase {
             defaults: makeScratchDefaults("zombie-crosscheck"),
             applicationDirectories: [appsDir]
         )
-        service.installedCasks["chatgpt"] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true
-        )
+        ), in: service)
         XCTAssertFalse(service.isZombie(makeCask("chatgpt", appNames: ["ChatGPT.app"])))
     }
 
@@ -216,10 +216,10 @@ final class ZombieDetectionTests: XCTestCase {
             defaults: makeScratchDefaults("zombie-holds"),
             applicationDirectories: [appsDir]
         )
-        service.installedCasks["mole-app"] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mole.app"], isZombie: true
-        )
+        ), in: service)
         XCTAssertTrue(service.isZombie(makeCask("mole-app", appNames: ["Mole.app"])))
     }
 
@@ -229,10 +229,10 @@ final class ZombieDetectionTests: XCTestCase {
             defaults: makeScratchDefaults("zombie-no-artifacts"),
             applicationDirectories: [appsDir]
         )
-        service.installedCasks["mystery"] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: "mystery", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mystery.app"], isZombie: true
-        )
+        ), in: service)
         XCTAssertFalse(
             service.isZombie(makeCask("mystery")),
             "no artifact data to verify against → never offer deletion"
@@ -248,10 +248,10 @@ final class ZombieDetectionTests: XCTestCase {
             defaults: makeScratchDefaults("open-fallback"),
             applicationDirectories: [appsDir]
         )
-        service.installedCasks["chatgpt"] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true
-        )
+        ), in: service)
         var launched: URL?
         service.appLauncher = { launched = $0 }
         service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
@@ -265,10 +265,10 @@ final class ZombieDetectionTests: XCTestCase {
     @MainActor
     func test_zombies_never_offer_updates() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("zombie-updates"))
-        service.installedCasks["mole-app"] = LocalCaskInstallation(
+        updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mole.app"], isZombie: true
-        )
+        ), in: service)
         XCTAssertFalse(
             service.hasAvailableUpdate(token: "mole-app", remoteVersion: "2.0", autoUpdates: nil)
         )
