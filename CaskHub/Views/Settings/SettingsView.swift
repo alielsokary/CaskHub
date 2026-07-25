@@ -230,7 +230,7 @@ private struct HomebrewSettingsContent: View {
                 )
             }
             Section("Library") {
-                LabeledContent("Installed Casks", value: "\(localHomebrew.installedCasks.count)")
+                LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
                 LabeledContent(
                     "Last Scan",
                     value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened) ?? "Never"

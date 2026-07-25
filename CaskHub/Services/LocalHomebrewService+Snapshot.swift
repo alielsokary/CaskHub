@@ -21,6 +21,10 @@ extension LocalHomebrewService {
         )
     }
 
+    var installedCaskCount: Int {
+        installationSnapshot.installedCasks.count
+    }
+
     var installedCasks: [String: LocalCaskInstallation] {
         installationSnapshot.installedCasks
     }
