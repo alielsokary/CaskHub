@@ -27,27 +27,65 @@ final class CaskOperationStateTests: XCTestCase {
         XCTAssertFalse(running?.cancellationRequested == true)
     }
 
-    func test_begin_does_not_replace_an_existing_running_operation() {
-        let installing = CaskOperationState.running(
-            progress: makeProgress(action: .installing),
-            canCancel: true,
+    func test_enqueue_is_only_accepted_from_idle_or_failure() {
+        for fixture in stateFixtures {
+            let expected: CaskOperationState? = switch fixture.state {
+            case nil, .failed:
+                .queued(.updating)
+            default:
+                fixture.state
+            }
+            let result = CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .enqueue(.updating)
+            )
+
+            XCTAssertEqual(result, expected, fixture.name)
+        }
+    }
+
+    func test_begin_is_accepted_from_every_state_except_running() {
+        let progress = makeProgress(action: .updating)
+        let expectedRunning = CaskOperationState.running(
+            progress: progress,
+            canCancel: false,
             cancellationRequested: false
         )
 
+        for fixture in stateFixtures {
+            let expected = fixture.state?.progress == nil
+                ? expectedRunning
+                : fixture.state
+            let result = CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .begin(progress, canCancel: false)
+            )
+
+            XCTAssertEqual(result, expected, fixture.name)
+        }
+    }
+
+    func test_progress_update_preserves_running_flags() {
+        let initial = runningState(
+            canCancel: true,
+            cancellationRequested: false
+        )
+        let updatedProgress = makeProgress(
+            action: .installing,
+            phase: .downloading
+        )
         let result = CaskOperationStateMachine.transition(
-            from: installing,
-            on: .begin(makeProgress(action: .updating), canCancel: false)
+            from: initial,
+            on: .updateProgress(updatedProgress)
         )
 
-        XCTAssertEqual(result, installing)
+        XCTAssertEqual(result?.progress, updatedProgress)
+        XCTAssertTrue(result?.canCancel == true)
+        XCTAssertFalse(result?.cancellationRequested == true)
     }
 
     func test_progress_update_requires_the_same_token_and_action() {
-        let initial = CaskOperationState.running(
-            progress: makeProgress(action: .installing),
-            canCancel: true,
-            cancellationRequested: false
-        )
+        let initial = runningState(canCancel: true)
         let wrongToken = CaskOperationProgress(
             token: "other",
             displayName: "Other",
@@ -72,11 +110,55 @@ final class CaskOperationStateTests: XCTestCase {
         )
     }
 
+    func test_progress_update_is_ignored_outside_running_state() {
+        for fixture in nonRunningStateFixtures {
+            let result = CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .updateProgress(makeProgress(action: .installing))
+            )
+
+            XCTAssertEqual(result, fixture.state, fixture.name)
+        }
+    }
+
+    func test_set_cancellable_only_changes_running_state() {
+        for fixture in nonRunningStateFixtures {
+            let result = CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .setCancellable(true)
+            )
+
+            XCTAssertEqual(result, fixture.state, fixture.name)
+        }
+
+        let running = runningState(canCancel: false)
+        let cancellable = CaskOperationStateMachine.transition(
+            from: running,
+            on: .setCancellable(true)
+        )
+
+        XCTAssertTrue(cancellable?.canCancel == true)
+    }
+
+    func test_set_cancellable_cannot_reenable_requested_cancellation() {
+        let canceling = runningState(
+            canCancel: false,
+            cancellationRequested: true
+        )
+        let result = CaskOperationStateMachine.transition(
+            from: canceling,
+            on: .setCancellable(true)
+        )
+
+        XCTAssertEqual(result, canceling)
+        XCTAssertFalse(result?.canCancel == true)
+        XCTAssertTrue(result?.cancellationRequested == true)
+    }
+
     func test_request_cancellation_is_one_legal_transition() {
-        let running = CaskOperationState.running(
-            progress: makeProgress(action: .installing, phase: .downloading),
+        let running = runningState(
             canCancel: true,
-            cancellationRequested: false
+            phase: .downloading
         )
 
         let canceling = CaskOperationStateMachine.transition(
@@ -95,11 +177,7 @@ final class CaskOperationStateTests: XCTestCase {
     }
 
     func test_non_cancellable_operation_ignores_cancellation() {
-        let running = CaskOperationState.running(
-            progress: makeProgress(action: .repairing),
-            canCancel: false,
-            cancellationRequested: false
-        )
+        let running = runningState(canCancel: false)
 
         XCTAssertEqual(
             CaskOperationStateMachine.transition(
@@ -108,6 +186,17 @@ final class CaskOperationStateTests: XCTestCase {
             ),
             running
         )
+    }
+
+    func test_request_cancellation_is_ignored_outside_running_state() {
+        for fixture in nonRunningStateFixtures {
+            let result = CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .requestCancellation
+            )
+
+            XCTAssertEqual(result, fixture.state, fixture.name)
+        }
     }
 
     func test_failure_keeps_one_typed_set_of_recovery_actions() {
@@ -128,36 +217,85 @@ final class CaskOperationStateTests: XCTestCase {
         )
     }
 
-    func test_confirmation_states_replace_transient_operation_state() {
-        let running = CaskOperationState.running(
-            progress: makeProgress(action: .adopting),
-            canCancel: false,
-            cancellationRequested: false
-        )
+    func test_unconditional_events_replace_every_state() {
+        for fixture in stateFixtures {
+            assertUnconditionalEventsReplace(fixture)
+        }
+    }
 
-        XCTAssertEqual(
-            CaskOperationStateMachine.transition(
-                from: running,
-                on: .awaitPermission(force: true)
-            ),
-            .awaitingPermission(force: true)
-        )
-        XCTAssertEqual(
-            CaskOperationStateMachine.transition(
-                from: running,
-                on: .awaitPackageAdoption
-            ),
-            .awaitingPackageAdoption
+    private var stateFixtures: [(name: String, state: CaskOperationState?)] {
+        nonRunningStateFixtures + [
+            (
+                "running",
+                runningState(canCancel: true)
+            )
+        ]
+    }
+
+    private var nonRunningStateFixtures:
+        [(name: String, state: CaskOperationState?)] {
+        [
+            ("idle", nil),
+            ("queued", .queued(.installing)),
+            ("awaiting permission", .awaitingPermission(force: false)),
+            ("awaiting adoption", .awaitingPackageAdoption),
+            ("failed", .failed(sampleFailure))
+        ]
+    }
+
+    private var sampleFailure: CaskOperationFailure {
+        CaskOperationFailure(
+            kind: .brewCommand,
+            message: "failed"
         )
     }
 
-    func test_clear_returns_to_implicit_idle_state() {
-        let failed = CaskOperationState.failed(CaskOperationFailure(
-            kind: .brewCommand,
-            message: "failed"
-        ))
+    private func assertUnconditionalEventsReplace(
+        _ fixture: (name: String, state: CaskOperationState?)
+    ) {
+        XCTAssertEqual(
+            CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .awaitPermission(force: true)
+            ),
+            .awaitingPermission(force: true),
+            fixture.name
+        )
+        XCTAssertEqual(
+            CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .awaitPackageAdoption
+            ),
+            .awaitingPackageAdoption,
+            fixture.name
+        )
+        XCTAssertEqual(
+            CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .fail(sampleFailure)
+            ),
+            .failed(sampleFailure),
+            fixture.name
+        )
+        XCTAssertNil(
+            CaskOperationStateMachine.transition(
+                from: fixture.state,
+                on: .clear
+            ),
+            fixture.name
+        )
+    }
 
-        XCTAssertNil(CaskOperationStateMachine.transition(from: failed, on: .clear))
+    private func runningState(
+        canCancel: Bool,
+        cancellationRequested: Bool = false,
+        phase: CaskOperationPhase = .preparing
+    ) -> CaskOperationState {
+        .running(
+            progress: makeProgress(action: .installing, phase: phase),
+            canCancel: canCancel,
+            cancellationRequested: cancellationRequested
+        )
     }
 
     private func makeProgress(
