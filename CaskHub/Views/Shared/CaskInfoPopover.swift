@@ -9,9 +9,19 @@ import SwiftUI
 
 struct CaskInfoPopover: View {
     let cask: Cask
+    let downloadMetadataProvider: any DownloadMetadataProviding
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @State private var downloadSize: DownloadSizeCache.Result?
+    @State private var downloadSize: DownloadSizeResult?
+
+    init(
+        cask: Cask,
+        downloadMetadataProvider: any DownloadMetadataProviding =
+            DownloadMetadataProvider.shared
+    ) {
+        self.cask = cask
+        self.downloadMetadataProvider = downloadMetadataProvider
+    }
 
     var body: some View {
         Grid(alignment: .leadingFirstTextBaseline, verticalSpacing: 8) {
@@ -42,7 +52,7 @@ struct CaskInfoPopover: View {
         .padding()
         .frame(minWidth: 400)
         .task(id: cask.token) {
-            downloadSize = await DownloadSizeCache.fetch(urlString: cask.url)
+            downloadSize = await downloadMetadataProvider.downloadSize(for: cask.url)
         }
     }
 
@@ -144,48 +154,6 @@ private struct InfoRow {
     var link: URL?
 }
 
-/// ponytail: uses the API's default `url`; per-arch `variations` can differ.
-@MainActor
-enum DownloadSizeCache {
-    enum Result {
-        case known(Int64)
-        case unknown
-    }
-
-    private static var cache: [String: Result] = [:]
-
-    static func fetch(urlString: String?) async -> Result {
-        guard let urlString, let url = URL(string: urlString) else { return .unknown }
-        if let cached = cache[urlString] { return cached }
-
-        let result: Result
-        if let bytes = await contentLength(of: url) {
-            result = .known(bytes)
-        } else {
-            result = .unknown
-        }
-        cache[urlString] = result
-        return result
-    }
-
-    private static func contentLength(of url: URL) async -> Int64? {
-        var head = URLRequest(url: url, timeoutInterval: 15)
-        head.httpMethod = "HEAD"
-        if let response = try? await URLSession.shared.data(for: head).1,
-           response.expectedContentLength > 0 {
-            return response.expectedContentLength
-        }
-
-        var ranged = URLRequest(url: url, timeoutInterval: 15)
-        ranged.setValue("bytes=0-0", forHTTPHeaderField: "Range")
-        guard let response = try? await URLSession.shared.data(for: ranged).1 as? HTTPURLResponse,
-              let contentRange = response.value(forHTTPHeaderField: "Content-Range"),
-              let total = contentRange.split(separator: "/").last.flatMap({ Int64($0) })
-        else { return nil }
-        return total
-    }
-}
-
 #Preview {
     CaskInfoPopover(
         cask: Cask(
@@ -203,7 +171,8 @@ enum DownloadSizeCache {
             deprecated: false,
             disabled: false,
             autoUpdates: true
-        )
+        ),
+        downloadMetadataProvider: UnavailableDownloadMetadataProvider()
     )
     .environment(LocalHomebrewService())
 }
