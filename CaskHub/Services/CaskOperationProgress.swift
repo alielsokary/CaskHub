@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum CaskOperationPhase: Equatable {
+nonisolated enum CaskOperationPhase: Equatable, Sendable {
     case queued
     case preparing
     case checkingDownload
@@ -52,7 +52,7 @@ enum CaskOperationPhase: Equatable {
     }
 }
 
-struct CaskOperationProgress: Equatable {
+nonisolated struct CaskOperationProgress: Equatable, Sendable {
     let token: String
     let displayName: String
     let action: CaskAction
@@ -82,7 +82,7 @@ struct CaskOperationProgress: Equatable {
     }
 }
 
-struct CaskByteProgress: Equatable {
+nonisolated struct CaskByteProgress: Equatable, Sendable {
     let completedBytes: Int64
     let totalBytes: Int64
 
@@ -150,14 +150,14 @@ struct CaskByteProgress: Equatable {
     }
 }
 
-struct CaskUpdateAllProgress: Equatable {
+nonisolated struct CaskUpdateAllProgress: Equatable, Sendable {
     let currentIndex: Int
     let totalCount: Int
     let currentToken: String
     let currentDisplayName: String
 }
 
-struct CaskOperationStatus: Equatable {
+nonisolated struct CaskOperationStatus: Equatable, Sendable {
     let label: String
     let byteProgress: CaskByteProgress?
 

@@ -211,7 +211,7 @@ struct LocalCaskInstallation: Hashable, Identifiable {
     }
 }
 
-enum CaskAction: Equatable {
+nonisolated enum CaskAction: Equatable, Sendable {
     case opening
     case installing
     case adopting
@@ -233,7 +233,7 @@ enum CaskAction: Equatable {
     }
 }
 
-enum CaskActionOrigin: String {
+nonisolated enum CaskActionOrigin: String, Sendable {
     case individual
     case updateAll
     case repair
