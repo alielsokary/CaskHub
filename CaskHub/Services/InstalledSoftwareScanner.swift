@@ -25,6 +25,10 @@ nonisolated protocol InstalledSoftwareScanning: Sendable {
 }
 
 nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
+    private let applicationDiscovery: ApplicationDiscovery
+    private let applicationOwnershipResolver: ApplicationOwnershipResolver
+    private let packageReceiptResolver: PackageReceiptResolver
+
     private struct ScanComponents: Sendable {
         let applications: ExternalApplicationScan
         let installedCasks: [String: LocalCaskInstallation]
@@ -32,12 +36,23 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
         let packages: [String: ExternalPackageInstallation]
     }
 
+    init(
+        applicationDiscovery: ApplicationDiscovery = ApplicationDiscovery(),
+        applicationOwnershipResolver: ApplicationOwnershipResolver =
+            ApplicationOwnershipResolver(),
+        packageReceiptResolver: PackageReceiptResolver = PackageReceiptResolver()
+    ) {
+        self.applicationDiscovery = applicationDiscovery
+        self.applicationOwnershipResolver = applicationOwnershipResolver
+        self.packageReceiptResolver = packageReceiptResolver
+    }
+
     func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
         // FileManager enumeration and pkgutil are synchronous. This task owns a
         // complete independent scan and returns one Sendable value to MainActor.
         return await Task.detached(priority: .userInitiated) {
             let fileManager = FileManager.default
-            let applications = LocalHomebrewService.scanApplications(
+            let applications = applicationDiscovery.scan(
                 fileManager: fileManager,
                 directories: request.applicationDirectories
             )
@@ -51,7 +66,7 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
             let binaryPaths = LocalHomebrewService.scanBinaryDirectories(
                 fileManager: fileManager
             )
-            let packages = LocalHomebrewService.scanExternalPackageInstallations(
+            let packages = packageReceiptResolver.scan(
                 signatures: request.packageSignatures,
                 availableAppNames: applications.nonStoreNames
             )
@@ -61,7 +76,7 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
                 binaryPaths: binaryPaths,
                 packages: packages
             )
-            return Self.makeSnapshot(
+            return makeSnapshot(
                 request: request,
                 current: nil,
                 components: components
@@ -77,12 +92,12 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
         // it reuses the current Caskroom and binary scan.
         return await Task.detached(priority: .userInitiated) {
             let fileManager = FileManager.default
-            let applications = LocalHomebrewService.scanApplications(
+            let applications = applicationDiscovery.scan(
                 fileManager: fileManager,
                 directories: request.applicationDirectories
             )
             let packages = request.packageSignatures.isEmpty ? [:] :
-                LocalHomebrewService.scanExternalPackageInstallations(
+                packageReceiptResolver.scan(
                     signatures: request.packageSignatures,
                     availableAppNames: applications.nonStoreNames
                 )
@@ -92,7 +107,7 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
                 binaryPaths: current.externalBinaryPaths,
                 packages: packages
             )
-            return Self.makeSnapshot(
+            return makeSnapshot(
                 request: request,
                 current: current,
                 components: components
@@ -100,12 +115,12 @@ nonisolated struct SystemInstalledSoftwareScanner: InstalledSoftwareScanning {
         }.value
     }
 
-    private static func makeSnapshot(
+    private func makeSnapshot(
         request: InstalledSoftwareScanRequest,
         current: InstallationSnapshot?,
         components: ScanComponents
     ) -> InstallationSnapshot {
-        let owners = LocalHomebrewService.resolveExternalApplicationOwners(
+        let owners = applicationOwnershipResolver.resolve(
             signatures: request.applicationSignatures,
             applications: components.applications.applications,
             installedCasks: components.installedCasks

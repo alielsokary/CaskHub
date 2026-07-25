@@ -95,7 +95,7 @@ final class ExternalInstallationTests: XCTestCase {
             macAppStoreReceipt: true
         )
 
-        let scan = LocalHomebrewService.scanApplications(
+        let scan = ApplicationDiscovery().scan(
             fileManager: FileManager.default,
             directories: [root]
         )
@@ -119,7 +119,7 @@ final class ExternalInstallationTests: XCTestCase {
             macAppStoreReceipt: true
         )
 
-        let scan = LocalHomebrewService.scanApplications(
+        let scan = ApplicationDiscovery().scan(
             fileManager: .default, directories: [root]
         )
 
@@ -139,7 +139,7 @@ final class ExternalInstallationTests: XCTestCase {
             bundleIdentifier: "net.whatsapp.WhatsApp",
             macAppStoreReceipt: true
         )
-        let scan = LocalHomebrewService.scanApplications(
+        let scan = ApplicationDiscovery().scan(
             fileManager: .default, directories: [root]
         )
         let service = LocalHomebrewService(
@@ -185,14 +185,14 @@ final class ExternalInstallationTests: XCTestCase {
     }
 
     func test_package_receipt_patterns_and_payload_app_names() {
-        XCTAssertTrue(LocalHomebrewService.packageIdentifier(
+        XCTAssertTrue(PackageReceiptResolver.identifier(
             "org.virtualbox.pkg.virtualbox", matches: "org.virtualbox.pkg.*"
         ))
-        XCTAssertFalse(LocalHomebrewService.packageIdentifier(
+        XCTAssertFalse(PackageReceiptResolver.identifier(
             "org.virtualbox.extension", matches: "org.virtualbox.pkg.*"
         ))
         XCTAssertEqual(
-            LocalHomebrewService.appBundleNames(inPackageFileList: """
+            PackageReceiptResolver.appBundleNames(inPackageFileList: """
             Applications/VirtualBox.app
             Applications/VirtualBox.app/Contents/MacOS/VirtualBox
             Library/Extensions/VBoxDrv.kext
@@ -259,11 +259,12 @@ final class ExternalInstallationTests: XCTestCase {
             bundleIdentifier: "com.apple.SFSymbols-beta"
         )
 
-        let scan = LocalHomebrewService.scanApplications(
+        let discovery = ApplicationDiscovery()
+        let scan = discovery.scan(
             fileManager: .default, directories: [root]
         )
         XCTAssertEqual(scan.adoptableNames, ["SF Symbols Beta.app"])
-        XCTAssertNil(LocalHomebrewService.applicationBundleMetadata(
+        XCTAssertNil(discovery.metadata(
             at: stable, fileManager: .default
         ))
     }
@@ -305,7 +306,7 @@ final class ExternalInstallationTests: XCTestCase {
             appNameCandidates: ["SF Symbols.app"]
         )
 
-        let result = LocalHomebrewService.resolveExternalPackageInstallations(
+        let result = PackageReceiptResolver().resolve(
             signatures: [signature],
             installedReceipts: ["com.apple.pkg.SFSymbols"],
             packageFileLists: [
@@ -334,7 +335,7 @@ final class ExternalInstallationTests: XCTestCase {
             )
         ]
 
-        let result = LocalHomebrewService.resolveExternalPackageInstallations(
+        let result = PackageReceiptResolver().resolve(
             signatures: signatures,
             installedReceipts: [receipt],
             packageFileLists: [:],

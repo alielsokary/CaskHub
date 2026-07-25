@@ -111,7 +111,7 @@ extension ExternalInstallationTests {
             bundleIdentifier: "io.tailscale.ipn.macos",
             macAppStoreReceipt: true
         )
-        let scan = LocalHomebrewService.scanApplications(
+        let scan = ApplicationDiscovery().scan(
             fileManager: .default, directories: [root]
         )
         let service = LocalHomebrewService(

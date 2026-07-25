@@ -60,7 +60,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
     }
 
     func test_shared_app_name_resolves_to_exact_bundle_identifier_match() {
-        let owners = LocalHomebrewService.resolveExternalApplicationOwners(
+        let owners = ApplicationOwnershipResolver().resolve(
             signatures: glazeSignatures,
             applications: [glaze],
             installedCasks: [:]
@@ -78,7 +78,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             appBundleNames: ["Glaze.app"]
         )
 
-        let owners = LocalHomebrewService.resolveExternalApplicationOwners(
+        let owners = ApplicationOwnershipResolver().resolve(
             signatures: glazeSignatures,
             applications: [glaze],
             installedCasks: ["raycast-glaze": installed]
@@ -108,7 +108,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             )
         ]
 
-        let owners = LocalHomebrewService.resolveExternalApplicationOwners(
+        let owners = ApplicationOwnershipResolver().resolve(
             signatures: signatures,
             applications: [application],
             installedCasks: [:]
@@ -131,7 +131,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             bundleIdentifiers: []
         )
 
-        let owners = LocalHomebrewService.resolveExternalApplicationOwners(
+        let owners = ApplicationOwnershipResolver().resolve(
             signatures: [signature],
             applications: [application],
             installedCasks: [:]

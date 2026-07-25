@@ -62,6 +62,8 @@
 		F29000000000000000000017 /* LocalHomebrewService+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000017 /* LocalHomebrewService+Intents.swift */; };
 		F2900000000000000000001D /* DownloadMetadataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000001D /* DownloadMetadataProvider.swift */; };
 		F29000000000000000000021 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000021 /* SettingsModels.swift */; };
+		F30000000000000000000002 /* ApplicationDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000001 /* ApplicationDiscovery.swift */; };
+		F30000000000000000000004 /* PackageReceiptResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30000000000000000000003 /* PackageReceiptResolver.swift */; };
 		A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000002 /* LocalHomebrewService+State.swift */; };
 		F28000000000000000000002 /* LocalHomebrewService+InstallationIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28000000000000000000001 /* LocalHomebrewService+InstallationIndex.swift */; };
 		A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */; };
@@ -168,6 +170,8 @@
 		E29000000000000000000017 /* LocalHomebrewService+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Intents.swift"; sourceTree = "<group>"; };
 		E2900000000000000000001D /* DownloadMetadataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadMetadataProvider.swift; sourceTree = "<group>"; };
 		E29000000000000000000021 /* SettingsModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModels.swift; sourceTree = "<group>"; };
+		F30000000000000000000001 /* ApplicationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationDiscovery.swift; sourceTree = "<group>"; };
+		F30000000000000000000003 /* PackageReceiptResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackageReceiptResolver.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		F28000000000000000000001 /* LocalHomebrewService+InstallationIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+InstallationIndex.swift"; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
@@ -341,6 +345,8 @@
 				E29000000000000000000017 /* LocalHomebrewService+Intents.swift */,
 				E2900000000000000000001D /* DownloadMetadataProvider.swift */,
 				E29000000000000000000021 /* SettingsModels.swift */,
+				F30000000000000000000001 /* ApplicationDiscovery.swift */,
+				F30000000000000000000003 /* PackageReceiptResolver.swift */,
 				B12000000000000000000002 /* LocalHomebrewService+State.swift */,
 				F28000000000000000000001 /* LocalHomebrewService+InstallationIndex.swift */,
 				B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */,
@@ -650,6 +656,8 @@
 				F29000000000000000000017 /* LocalHomebrewService+Intents.swift in Sources */,
 				F2900000000000000000001D /* DownloadMetadataProvider.swift in Sources */,
 				F29000000000000000000021 /* SettingsModels.swift in Sources */,
+				F30000000000000000000002 /* ApplicationDiscovery.swift in Sources */,
+				F30000000000000000000004 /* PackageReceiptResolver.swift in Sources */,
 				A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */,
 				F28000000000000000000002 /* LocalHomebrewService+InstallationIndex.swift in Sources */,
 				A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */,
