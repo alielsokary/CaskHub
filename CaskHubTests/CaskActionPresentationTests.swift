@@ -57,6 +57,21 @@ final class CaskActionPresentationTests: XCTestCase {
             .homebrewMissing(message: "Homebrew not found")
         )
     }
+
+    func test_alert_query_reads_only_the_operation_state_for_a_token() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("presentation-alert"))
+        let failure = CaskOperationFailure(
+            kind: .brewCommand,
+            message: "Repair is available",
+            recoveries: [.repairAndReinstall]
+        )
+
+        XCTAssertNil(service.actionAlert(for: "tabby"))
+
+        service.operationStore.send(.fail(failure), for: "tabby")
+
+        XCTAssertEqual(service.actionAlert(for: "tabby"), .failure(failure))
+    }
 }
 
 final class AdoptionViewRenderTests: XCTestCase {

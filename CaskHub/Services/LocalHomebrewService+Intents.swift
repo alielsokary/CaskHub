@@ -26,6 +26,10 @@ enum CaskIntent {
 }
 
 extension LocalHomebrewService {
+    func actionAlert(for token: String) -> CaskActionAlert? {
+        CaskActionAlert.make(operationState: operationStore.state(for: token))
+    }
+
     func actionPresentation(
         for cask: Cask,
         localState suppliedState: CaskLocalState? = nil

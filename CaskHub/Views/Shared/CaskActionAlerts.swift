@@ -33,7 +33,7 @@ private struct CaskActionAlerts: ViewModifier {
     }
 
     private var actionAlert: CaskActionAlert? {
-        localHomebrew.actionPresentation(for: cask).alert
+        localHomebrew.actionAlert(for: cask.token)
     }
 
     private var hasBrewMissingError: Binding<Bool> {
@@ -193,7 +193,7 @@ private extension View {
         for cask: Cask,
         service: LocalHomebrewService
     ) -> Bool? {
-        guard case let .permission(force) = service.actionPresentation(for: cask).alert else {
+        guard case let .permission(force) = service.actionAlert(for: cask.token) else {
             return nil
         }
         return force
@@ -203,7 +203,7 @@ private extension View {
         for cask: Cask,
         service: LocalHomebrewService
     ) -> CaskOperationFailure? {
-        guard case let .failure(failure) = service.actionPresentation(for: cask).alert else {
+        guard case let .failure(failure) = service.actionAlert(for: cask.token) else {
             return nil
         }
         return failure

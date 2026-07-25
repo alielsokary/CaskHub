@@ -10,6 +10,21 @@ nonisolated enum CaskActionAlert: Equatable, Sendable {
     case permission(force: Bool)
     case homebrewMissing(message: String)
     case failure(CaskOperationFailure)
+
+    static func make(operationState: CaskOperationState?) -> Self? {
+        switch operationState {
+        case .awaitingPackageAdoption:
+            return .packageAdoption
+        case let .awaitingPermission(force):
+            return .permission(force: force)
+        case let .failed(failure) where failure.kind == .homebrewMissing:
+            return .homebrewMissing(message: failure.message)
+        case let .failed(failure):
+            return .failure(failure)
+        case .queued, .running, nil:
+            return nil
+        }
+    }
 }
 
 nonisolated struct CaskActionPresentation: Equatable, Sendable {
@@ -38,17 +53,6 @@ nonisolated struct CaskActionPresentation: Equatable, Sendable {
     }
 
     var alert: CaskActionAlert? {
-        switch operationState {
-        case .awaitingPackageAdoption:
-            return .packageAdoption
-        case let .awaitingPermission(force):
-            return .permission(force: force)
-        case let .failed(failure) where failure.kind == .homebrewMissing:
-            return .homebrewMissing(message: failure.message)
-        case let .failed(failure):
-            return .failure(failure)
-        case .queued, .running, nil:
-            return nil
-        }
+        CaskActionAlert.make(operationState: operationState)
     }
 }
