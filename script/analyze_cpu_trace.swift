@@ -216,6 +216,7 @@ struct ProfileSummary {
     let projectSourceRoot: String
     let references: TraceReferences
     var aggregates: [String: Aggregate] = [:]
+    var leafAggregates: [String: Aggregate] = [:]
     var mainThreadWeight = 0.0
     var rowCount = 0
     var totalWeight = 0.0
@@ -244,6 +245,12 @@ struct ProfileSummary {
         totalWeight += weight
         if threadName.localizedCaseInsensitiveContains("main") {
             mainThreadWeight += weight
+        }
+
+        if let leafFrame = frames.first {
+            let leafKey = key(for: leafFrame)
+            leafAggregates[leafKey, default: Aggregate()].selfWeight += weight
+            leafAggregates[leafKey, default: Aggregate()].sampleCount += 1
         }
 
         let userFrames = frames.filter(isUserFrame)
@@ -285,11 +292,31 @@ struct ProfileSummary {
                 name
             ))
         }
+
+        print("leaf_pct\tsamples\tleaf_frame")
+        for (name, aggregate) in leafAggregates.sorted(by: {
+            $0.value.selfWeight > $1.value.selfWeight
+        }).prefix(limit) {
+            let percentage = totalWeight > 0 ? aggregate.selfWeight / totalWeight * 100 : 0
+            print(String(
+                format: "%.2f\t%d\t%@",
+                percentage,
+                aggregate.sampleCount,
+                name
+            ))
+        }
     }
 
     private func isUserFrame(_ frame: Frame) -> Bool {
-        frame.sourcePath.contains(projectSourceRoot)
-            || (frame.sourcePath.isEmpty && frame.binary == "CaskHub")
+        guard !isAppEntryPoint(frame) else { return false }
+        return frame.sourcePath.contains(projectSourceRoot)
+            || (frame.sourcePath.isEmpty && frame.binary.hasPrefix("CaskHub"))
+    }
+
+    private func isAppEntryPoint(_ frame: Frame) -> Bool {
+        frame.name == "static CaskHubMain.main()"
+            || frame.name == "static CaskHubMain.$main()"
+            || frame.name == "__debug_main_executable_dylib_entry_point"
     }
 
     private func uniqueFrames(_ frames: [Frame]) -> [Frame] {
