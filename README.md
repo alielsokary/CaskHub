@@ -17,7 +17,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 
 ## Install
 
-<a href="https://github.com/alielsokary/CaskHub/releases/download/0.6.5/CaskHub-0.6.5.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
+<a href="https://github.com/alielsokary/CaskHub/releases/download/0.6.6/CaskHub-0.6.6.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
 
 Or install with Homebrew:
 
