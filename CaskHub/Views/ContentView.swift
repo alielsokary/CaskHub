@@ -14,7 +14,6 @@ enum ViewMode: String {
 struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(CategoryService.self) private var categoryService
-    @Environment(RecentlyAddedService.self) private var recentlyAdded
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
@@ -64,7 +63,7 @@ struct ContentView: View {
                         ? {
                             let tokens = viewModel.updatableCasks.map(\.token)
                             Analytics.updateAllTapped(count: tokens.count)
-                            Task { await localHomebrew.updateAll(tokens: tokens) }
+                            localHomebrew.send(.updateAll(tokens: tokens))
                         }
                         : nil,
                     isUpdatingAll: localHomebrew.isUpdatingAll,
@@ -117,11 +116,7 @@ struct ContentView: View {
         }
         .tint(Color.chTerracotta)
         .task {
-            async let catalog: Void = viewModel.fetchCasks()
-            async let local: Void = localHomebrew.refresh()
-            async let categories: Void = categoryService.refreshFromRemote()
-            async let addedDates: Void = recentlyAdded.refreshFromRemote()
-            _ = await(catalog, local, categories, addedDates)
+            await viewModel.load()
         }
         .onChange(of: viewModel.selectedSidebar) { _, newValue in
             Analytics.pageOpened(newValue)
