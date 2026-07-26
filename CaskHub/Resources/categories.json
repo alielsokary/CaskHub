@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-24",
-  "totalCasks": 3820,
+  "generatedDate": "2026-07-25",
+  "totalCasks": 3831,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -1519,6 +1519,12 @@
       "primary": "financeCrypto",
       "secondary": []
     },
+    "billy": {
+      "primary": "financeCrypto",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "billy-frontier": {
       "primary": "games",
       "secondary": []
@@ -1630,6 +1636,13 @@
     "blobby-volley2": {
       "primary": "games",
       "secondary": []
+    },
+    "block-buzz": {
+      "primary": "communication",
+      "secondary": [
+        "ai",
+        "productivity"
+      ]
     },
     "block-goose": {
       "primary": "developerTools",
@@ -2174,6 +2187,10 @@
       "primary": "utilities",
       "secondary": []
     },
+    "changes": {
+      "primary": "developerTools",
+      "secondary": []
+    },
     "charles": {
       "primary": "developerTools",
       "secondary": []
@@ -2365,6 +2382,12 @@
     "clamxav": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "clarc": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "clarify": {
       "primary": "productivity",
@@ -2695,6 +2718,12 @@
     },
     "codexbar": {
       "primary": "menuBar",
+      "secondary": [
+        "ai"
+      ]
+    },
+    "codexia": {
+      "primary": "developerTools",
       "secondary": [
         "ai"
       ]
@@ -3636,6 +3665,12 @@
     "dnclient": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "dnclient-server": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "utilities"
+      ]
     },
     "dnsmonitor": {
       "primary": "securityPrivacy",
@@ -5193,6 +5228,12 @@
       "primary": "scienceEducation",
       "secondary": []
     },
+    "gamehub": {
+      "primary": "games",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "gamemaker": {
       "primary": "developerTools",
       "secondary": []
@@ -5914,6 +5955,12 @@
     "herd": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "hermes-desktop": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
     },
     "heroic": {
       "primary": "games",
@@ -7148,6 +7195,13 @@
     "kodi": {
       "primary": "videoMedia",
       "secondary": []
+    },
+    "koe": {
+      "primary": "productivity",
+      "secondary": [
+        "ai",
+        "utilities"
+      ]
     },
     "kogiqa": {
       "primary": "productivity",
@@ -8875,6 +8929,10 @@
       "primary": "utilities",
       "secondary": []
     },
+    "moonfin": {
+      "primary": "videoMedia",
+      "secondary": []
+    },
     "moonlight": {
       "primary": "games",
       "secondary": []
@@ -9308,6 +9366,10 @@
     },
     "neo4j-desktop": {
       "primary": "developerTools",
+      "secondary": []
+    },
+    "neodisk": {
+      "primary": "utilities",
       "secondary": []
     },
     "neofinder": {
@@ -16476,7 +16538,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.07.24",
+  "releaseTag": "caskflow-v2026.07.25",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -16787,6 +16849,7 @@
     "bike",
     "bilibili",
     "billings-pro",
+    "billy",
     "billy-frontier",
     "binance",
     "binary-ninja-free",
@@ -16816,6 +16879,7 @@
     "blisk",
     "blitz-gg",
     "blobby-volley2",
+    "block-buzz",
     "block-goose",
     "blockbench",
     "blockstream",
@@ -16936,6 +17000,7 @@
     "cemu",
     "cernbox",
     "chalk",
+    "changes",
     "charles",
     "charles@4",
     "charmstone",
@@ -16976,6 +17041,7 @@
     "citrix-workspace",
     "cityofzion-neon",
     "clamxav",
+    "clarc",
     "clarify",
     "clariti",
     "clash-mi",
@@ -17041,6 +17107,7 @@
     "codespace",
     "codex-app",
     "codexbar",
+    "codexia",
     "codexmonitor",
     "cog-app",
     "coherence-x",
@@ -17557,6 +17624,7 @@
     "fxfactory",
     "gama-jdk",
     "gama-platform",
+    "gamehub",
     "gamemaker",
     "gamma-control",
     "gams",
@@ -17717,6 +17785,7 @@
     "helpwire-operator",
     "heptabase",
     "herd",
+    "hermes-desktop",
     "heroic",
     "hex-fiend",
     "hey-desktop",
@@ -17988,6 +18057,7 @@
     "kobo",
     "kodelife",
     "kodi",
+    "koe",
     "kogiqa",
     "koharu",
     "komet",
@@ -18360,6 +18430,7 @@
     "monologue",
     "monotype",
     "moom",
+    "moonfin",
     "moonlight",
     "moose",
     "moradownloader",
@@ -18460,6 +18531,7 @@
     "neat-reader",
     "neo-network-utility",
     "neo4j-desktop",
+    "neodisk",
     "neofinder",
     "neohtop",
     "neon-vision-editor",
