@@ -216,9 +216,10 @@ final class ZombieDetectionTests: XCTestCase {
             in: appsDir, named: "ChatGPT.app", bundleIdentifier: "com.openai.chat"
         )
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("zombie-crosscheck"),
-            applicationDirectories: [appsDir]
-        )
+            defaults: makeScratchDefaults("zombie-crosscheck")
+        ) {
+            $0.applicationDirectories = [appsDir]
+        }
         updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true
@@ -229,9 +230,10 @@ final class ZombieDetectionTests: XCTestCase {
     @MainActor
     func test_zombie_verdict_holds_when_current_cask_app_is_gone_too() {
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("zombie-holds"),
-            applicationDirectories: [appsDir]
-        )
+            defaults: makeScratchDefaults("zombie-holds")
+        ) {
+            $0.applicationDirectories = [appsDir]
+        }
         updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mole.app"], isZombie: true
@@ -242,9 +244,10 @@ final class ZombieDetectionTests: XCTestCase {
     @MainActor
     func test_zombie_verdict_is_conservative_without_artifact_data() {
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("zombie-no-artifacts"),
-            applicationDirectories: [appsDir]
-        )
+            defaults: makeScratchDefaults("zombie-no-artifacts")
+        ) {
+            $0.applicationDirectories = [appsDir]
+        }
         updateInstalledCask(LocalCaskInstallation(
             token: "mystery", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mystery.app"], isZombie: true
@@ -262,10 +265,11 @@ final class ZombieDetectionTests: XCTestCase {
         )
         let launcher = RecordingApplicationLauncher()
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("open-fallback"),
-            applicationDirectories: [appsDir],
-            applicationLauncher: launcher
-        )
+            defaults: makeScratchDefaults("open-fallback")
+        ) {
+            $0.applicationDirectories = [appsDir]
+            $0.applicationLauncher = launcher
+        }
         updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true

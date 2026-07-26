@@ -131,14 +131,13 @@ final class CaskListActionTests: XCTestCase {
 
     func test_list_rows_render_install_and_external_installation_states() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("list-external"))
-        updateInstallationSnapshot(
-            of: service,
-            externalAppNames: ["Adoptable.app"],
-            macAppStoreAppNames: ["Store.app"],
-            externalBinaryPaths: [
+        updateInstallationSnapshot(of: service) {
+            $0.externalAppNames = ["Adoptable.app"]
+            $0.macAppStoreAppNames = ["Store.app"]
+            $0.externalBinaryPaths = [
                 "native-cli": URL(fileURLWithPath: "/usr/local/bin/native-cli")
             ]
-        )
+        }
 
         render(row(makeCask("plain", desc: "A new app"), service: service))
         render(row(makeCask("adoptable", appNames: ["Adoptable.app"]), service: service))
@@ -158,9 +157,10 @@ final class CaskListActionTests: XCTestCase {
         )
 
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("list-managed"),
-            applicationDirectories: [applications]
-        )
+            defaults: makeScratchDefaults("list-managed")
+        ) {
+            $0.applicationDirectories = [applications]
+        }
         let managed = makeCask("managed", desc: "Managed app", appNames: ["Managed.app"])
         updateInstalledCask(LocalCaskInstallation(
             token: managed.token,

@@ -131,9 +131,8 @@ final class CaskCatalogSortTests: XCTestCase {
 
         let now = Date()
         let local = LocalHomebrewService(defaults: makeScratchDefaults("library-sort-defaults"))
-        updateInstallationSnapshot(
-            of: local,
-            installedCasks: [
+        updateInstallationSnapshot(of: local) {
+            $0.installedCasks = [
                 "alpha": LocalCaskInstallation(
                     token: "alpha",
                     installedVersion: "1.0",
@@ -147,7 +146,7 @@ final class CaskCatalogSortTests: XCTestCase {
                     appBundleNames: []
                 )
             ]
-        )
+        }
         let (vm, _) = await makeSUT(
             casks: [
                 makeCask("alpha", version: "2.0"),
@@ -157,13 +156,12 @@ final class CaskCatalogSortTests: XCTestCase {
             ],
             localHomebrew: local
         )
-        updateInstallationSnapshot(
-            of: local,
-            externalApplicationOwners: [
+        updateInstallationSnapshot(of: local) {
+            $0.externalApplicationOwners = [
                 "able": detectedApplication(named: "Able.app"),
                 "bravo": detectedApplication(named: "Bravo.app")
             ]
-        )
+        }
 
         vm.selectedSidebar = .library(.installed)
         XCTAssertEqual(vm.sortOption, .recentlyInstalled)

@@ -109,34 +109,59 @@ func installation(_ token: String, version: String) -> LocalCaskInstallation {
 }
 
 @MainActor
+struct InstallationSnapshotFixture {
+    var installedCasks: [String: LocalCaskInstallation]
+    var externalAppNames: Set<String>
+    var externalApplicationOwners: [String: DetectedApplication]
+    var macAppStoreAppNames: Set<String>
+    var macAppStoreBundleIdentifiers: [String: Set<String>]
+    var detectedApplications: [DetectedApplication]
+    var externalBinaryPaths: [String: URL]
+    var externalPackageInstallations: [String: ExternalPackageInstallation]
+    var installationIndex: CaskInstallationIndex
+    var scannedAt: Date?
+
+    init(snapshot: InstallationSnapshot) {
+        installedCasks = snapshot.installedCasks
+        externalAppNames = snapshot.externalAppNames
+        externalApplicationOwners = snapshot.externalApplicationOwners
+        macAppStoreAppNames = snapshot.macAppStoreAppNames
+        macAppStoreBundleIdentifiers = snapshot.macAppStoreBundleIdentifiers
+        detectedApplications = snapshot.detectedApplications
+        externalBinaryPaths = snapshot.externalBinaryPaths
+        externalPackageInstallations = snapshot.externalPackageInstallations
+        installationIndex = snapshot.installationIndex
+        scannedAt = snapshot.scannedAt
+    }
+
+    func makeSnapshot() -> InstallationSnapshot {
+        InstallationSnapshot(
+            installedCasks: installedCasks,
+            applications: ApplicationInstallationSnapshot(
+                externalAppNames: externalAppNames,
+                externalApplicationOwners: externalApplicationOwners,
+                macAppStoreAppNames: macAppStoreAppNames,
+                macAppStoreBundleIdentifiers: macAppStoreBundleIdentifiers,
+                detectedApplications: detectedApplications
+            ),
+            externalBinaryPaths: externalBinaryPaths,
+            externalPackageInstallations: externalPackageInstallations,
+            installationIndex: installationIndex,
+            scannedAt: scannedAt
+        )
+    }
+}
+
+@MainActor
 func updateInstallationSnapshot(
     of service: LocalHomebrewService,
-    installedCasks: [String: LocalCaskInstallation]? = nil,
-    externalAppNames: Set<String>? = nil,
-    externalApplicationOwners: [String: DetectedApplication]? = nil,
-    macAppStoreAppNames: Set<String>? = nil,
-    macAppStoreBundleIdentifiers: [String: Set<String>]? = nil,
-    detectedApplications: [DetectedApplication]? = nil,
-    externalBinaryPaths: [String: URL]? = nil,
-    externalPackageInstallations: [String: ExternalPackageInstallation]? = nil,
-    installationIndex: CaskInstallationIndex? = nil
+    update: (inout InstallationSnapshotFixture) -> Void
 ) {
-    let current = service.installationSnapshot
-    service.commitInstallationSnapshot(InstallationSnapshot(
-        installedCasks: installedCasks ?? current.installedCasks,
-        externalAppNames: externalAppNames ?? current.externalAppNames,
-        externalApplicationOwners:
-            externalApplicationOwners ?? current.externalApplicationOwners,
-        macAppStoreAppNames: macAppStoreAppNames ?? current.macAppStoreAppNames,
-        macAppStoreBundleIdentifiers:
-            macAppStoreBundleIdentifiers ?? current.macAppStoreBundleIdentifiers,
-        detectedApplications: detectedApplications ?? current.detectedApplications,
-        externalBinaryPaths: externalBinaryPaths ?? current.externalBinaryPaths,
-        externalPackageInstallations:
-            externalPackageInstallations ?? current.externalPackageInstallations,
-        installationIndex: installationIndex ?? current.installationIndex,
-        scannedAt: current.scannedAt
-    ))
+    var fixture = InstallationSnapshotFixture(
+        snapshot: service.installationSnapshot
+    )
+    update(&fixture)
+    service.commitInstallationSnapshot(fixture.makeSnapshot())
 }
 
 @MainActor
@@ -146,7 +171,9 @@ func updateInstalledCask(
 ) {
     var installedCasks = service.installationSnapshot.installedCasks
     installedCasks[installation.token] = installation
-    updateInstallationSnapshot(of: service, installedCasks: installedCasks)
+    updateInstallationSnapshot(of: service) {
+        $0.installedCasks = installedCasks
+    }
 }
 
 func dateString(daysAgo: Int) -> String {

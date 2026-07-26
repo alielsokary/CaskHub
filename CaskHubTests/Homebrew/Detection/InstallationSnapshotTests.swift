@@ -27,8 +27,10 @@ final class InstallationSnapshotTests: XCTestCase {
         )
         let snapshot = InstallationSnapshot(
             installedCasks: ["firefox": installed],
-            externalAppNames: ["Firefox.app"],
-            detectedApplications: [application],
+            applications: ApplicationInstallationSnapshot(
+                externalAppNames: ["Firefox.app"],
+                detectedApplications: [application]
+            ),
             externalBinaryPaths: [
                 "firefox": URL(fileURLWithPath: "/usr/local/bin/firefox")
             ],
@@ -73,10 +75,11 @@ final class InstallationSnapshotTests: XCTestCase {
             reconciled: scanned
         )
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("snapshot-scanner"),
-            softwareScanner: scanner,
-            brewVersionProvider: { "Homebrew test" }
-        )
+            defaults: makeScratchDefaults("snapshot-scanner")
+        ) {
+            $0.softwareScanner = scanner
+            $0.brewVersionProvider = { "Homebrew test" }
+        }
 
         await service.refresh()
 
@@ -120,16 +123,17 @@ extension ExternalInstallationTests {
         )
         let launcher = RecordingApplicationLauncher()
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("store-tailscale"),
-            applicationDirectories: [root],
-            applicationLauncher: launcher
-        )
-        updateInstallationSnapshot(
-            of: service,
-            macAppStoreAppNames: scan.macAppStoreNames,
-            macAppStoreBundleIdentifiers: scan.macAppStoreBundleIdentifiers,
-            detectedApplications: scan.applications
-        )
+            defaults: makeScratchDefaults("store-tailscale")
+        ) {
+            $0.applicationDirectories = [root]
+            $0.applicationLauncher = launcher
+        }
+        updateInstallationSnapshot(of: service) {
+            $0.macAppStoreAppNames = scan.macAppStoreNames
+            $0.macAppStoreBundleIdentifiers =
+                scan.macAppStoreBundleIdentifiers
+            $0.detectedApplications = scan.applications
+        }
         let tailscale = makeCask(
             "tailscale-app",
             name: "Tailscale",

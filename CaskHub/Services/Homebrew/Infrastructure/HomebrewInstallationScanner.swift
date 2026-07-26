@@ -136,12 +136,14 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
         )
         return InstallationSnapshot(
             installedCasks: components.installedCasks,
-            externalAppNames: components.applications.adoptableNames,
-            externalApplicationOwners: owners,
-            macAppStoreAppNames: components.applications.macAppStoreNames,
-            macAppStoreBundleIdentifiers:
-                components.applications.macAppStoreBundleIdentifiers,
-            detectedApplications: components.applications.applications,
+            applications: ApplicationInstallationSnapshot(
+                externalAppNames: components.applications.adoptableNames,
+                externalApplicationOwners: owners,
+                macAppStoreAppNames: components.applications.macAppStoreNames,
+                macAppStoreBundleIdentifiers:
+                    components.applications.macAppStoreBundleIdentifiers,
+                detectedApplications: components.applications.applications
+            ),
             externalBinaryPaths: components.binaryPaths,
             externalPackageInstallations: components.packages,
             installationIndex: index,
@@ -266,28 +268,10 @@ extension HomebrewInstallationScanner {
         fileManager: FileManager,
         applicationDirectories: [URL]
     ) -> LocalCaskInstallation? {
-        var isDirectory: ObjCBool = false
-        guard fileManager.fileExists(
-            atPath: entry.path,
-            isDirectory: &isDirectory
-        ),
-            isDirectory.boolValue,
-            let subdirectories = try? fileManager.contentsOfDirectory(
-                at: entry,
-                includingPropertiesForKeys: [
-                    .isDirectoryKey,
-                    .contentModificationDateKey
-                ],
-                options: [.skipsHiddenFiles]
-            )
-        else { return nil }
-
-        let versionDirectories = subdirectories.filter {
-            (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
-        }
-        guard let versionDirectory = versionDirectories.max(by: {
-            modificationDate(of: $0) < modificationDate(of: $1)
-        }) else { return nil }
+        guard let versionDirectory = latestVersionDirectory(
+            in: entry,
+            fileManager: fileManager
+        ) else { return nil }
 
         let receiptURL = entry
             .appendingPathComponent(".metadata", isDirectory: true)
@@ -314,6 +298,35 @@ extension HomebrewInstallationScanner {
             appBundleNames: receipt?.appBundleNames ?? [],
             isZombie: isZombie
         )
+    }
+
+    private static func latestVersionDirectory(
+        in entry: URL,
+        fileManager: FileManager
+    ) -> URL? {
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(
+            atPath: entry.path,
+            isDirectory: &isDirectory
+        ),
+            isDirectory.boolValue,
+            let subdirectories = try? fileManager.contentsOfDirectory(
+                at: entry,
+                includingPropertiesForKeys: [
+                    .isDirectoryKey,
+                    .contentModificationDateKey
+                ],
+                options: [.skipsHiddenFiles]
+            )
+        else { return nil }
+
+        let versionDirectories = subdirectories.filter {
+            (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+        }
+        guard let versionDirectory = versionDirectories.max(by: {
+            modificationDate(of: $0) < modificationDate(of: $1)
+        }) else { return nil }
+        return versionDirectory
     }
 
     private static func appsGoneEverywhere(

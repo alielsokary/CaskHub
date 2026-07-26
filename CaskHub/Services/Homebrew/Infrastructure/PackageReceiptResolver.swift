@@ -55,37 +55,14 @@ nonisolated struct PackageReceiptResolver: Sendable {
         packageFileLists: [String: String],
         availableAppNames: Set<String>
     ) -> [String: ExternalPackageInstallation] {
-        var candidates: [PackageInstallationCandidate] = []
-
-        for signature in signatures {
-            let matchingReceipts = Set(installedReceipts.filter { receipt in
-                signature.receiptPatterns.contains {
-                    Self.identifier(receipt, matches: $0)
-                }
-            })
-            guard !matchingReceipts.isEmpty else { continue }
-
-            let declaredApps = Set(signature.appNameCandidates).intersection(availableAppNames)
-            let payloadApps = Set(matchingReceipts.flatMap { receipt in
-                packageFileLists[receipt].map(Self.appBundleNames(inPackageFileList:)) ?? []
-            })
-            .intersection(availableAppNames)
-            .filter { Self.payloadAppName($0, matches: signature.appNameCandidates) }
-            let existingApps = declaredApps.union(payloadApps)
-            guard !existingApps.isEmpty else { continue }
-
-            let score = existingApps.map { appName in
-                (declaredApps.contains(appName) ? 1000 : 0)
-                    + Self.nameMatchScore(appName, displayName: signature.displayName)
-            }.max() ?? 0
-            candidates.append(PackageInstallationCandidate(
-                signature: signature,
-                receiptIdentifiers: matchingReceipts,
-                appBundleNames: existingApps,
-                score: score
-            ))
+        var candidates = signatures.compactMap {
+            candidate(
+                for: $0,
+                installedReceipts: installedReceipts,
+                packageFileLists: packageFileLists,
+                availableAppNames: availableAppNames
+            )
         }
-
         candidates.sort {
             if $0.score != $1.score { return $0.score > $1.score }
             if $0.signature.token.count != $1.signature.token.count {
@@ -106,6 +83,51 @@ nonisolated struct PackageReceiptResolver: Sendable {
             claimedApps.formUnion(unclaimedApps)
         }
         return result
+    }
+
+    private func candidate(
+        for signature: PackageCaskSignature,
+        installedReceipts: Set<String>,
+        packageFileLists: [String: String],
+        availableAppNames: Set<String>
+    ) -> PackageInstallationCandidate? {
+        let matchingReceipts = Set(installedReceipts.filter { receipt in
+            signature.receiptPatterns.contains {
+                Self.identifier(receipt, matches: $0)
+            }
+        })
+        guard !matchingReceipts.isEmpty else { return nil }
+
+        let declaredApps = Set(signature.appNameCandidates)
+            .intersection(availableAppNames)
+        let payloadApps = Set(matchingReceipts.flatMap { receipt in
+            packageFileLists[receipt].map(
+                Self.appBundleNames(inPackageFileList:)
+            ) ?? []
+        })
+        .intersection(availableAppNames)
+        .filter {
+            Self.payloadAppName(
+                $0,
+                matches: signature.appNameCandidates
+            )
+        }
+        let existingApps = declaredApps.union(payloadApps)
+        guard !existingApps.isEmpty else { return nil }
+
+        let score = existingApps.map { appName in
+            (declaredApps.contains(appName) ? 1000 : 0)
+                + Self.nameMatchScore(
+                    appName,
+                    displayName: signature.displayName
+                )
+        }.max() ?? 0
+        return PackageInstallationCandidate(
+            signature: signature,
+            receiptIdentifiers: matchingReceipts,
+            appBundleNames: existingApps,
+            score: score
+        )
     }
 
     static func payloadAppName(

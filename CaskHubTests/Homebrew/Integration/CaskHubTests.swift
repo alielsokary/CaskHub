@@ -71,7 +71,9 @@ final class CaskHubTests: XCTestCase {
     @MainActor
     func test_adoptable_requires_on_disk_app_and_no_brew_install() {
         let service = LocalHomebrewService()
-        updateInstallationSnapshot(of: service, externalAppNames: ["Google Chrome.app"])
+        updateInstallationSnapshot(of: service) {
+            $0.externalAppNames = ["Google Chrome.app"]
+        }
 
         let chrome = makeCask("google-chrome", appNames: ["Google Chrome.app"])
         XCTAssertTrue(service.isAdoptable(chrome))
@@ -100,7 +102,9 @@ final class CaskHubTests: XCTestCase {
     func test_external_cli_detection_requires_binary_on_disk_and_no_brew_install() {
         let service = LocalHomebrewService()
         let externalPath = URL(fileURLWithPath: "/usr/local/bin/claude")
-        updateInstallationSnapshot(of: service, externalBinaryPaths: ["claude": externalPath])
+        updateInstallationSnapshot(of: service) {
+            $0.externalBinaryPaths = ["claude": externalPath]
+        }
 
         let claudeCode = makeCask("claude-code", binaryNames: ["claude"])
         XCTAssertEqual(service.externalCLIPath(claudeCode), externalPath)
@@ -120,20 +124,25 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(service.uninstallAvailability(for: managed), .available)
 
         let adoptable = makeCask("adoptable", appNames: ["Adoptable.app"])
-        updateInstallationSnapshot(of: service, externalAppNames: ["Adoptable.app"])
+        updateInstallationSnapshot(of: service) {
+            $0.externalAppNames = ["Adoptable.app"]
+        }
         let adoptHint = "Adopt this app first so CaskHub can manage/uninstall it."
         XCTAssertEqual(service.uninstallAvailability(for: adoptable).unavailableReason, adoptHint)
 
         let store = makeCask("store", appNames: ["Store.app"])
-        updateInstallationSnapshot(of: service, macAppStoreAppNames: ["Store.app"])
+        updateInstallationSnapshot(of: service) {
+            $0.macAppStoreAppNames = ["Store.app"]
+        }
         let storeHint = "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
         XCTAssertEqual(service.uninstallAvailability(for: store).unavailableReason, storeHint)
 
         let external = makeCask("external", binaryNames: ["external"])
-        updateInstallationSnapshot(
-            of: service,
-            externalBinaryPaths: ["external": URL(fileURLWithPath: "/usr/local/bin/external")]
-        )
+        updateInstallationSnapshot(of: service) {
+            $0.externalBinaryPaths = [
+                "external": URL(fileURLWithPath: "/usr/local/bin/external")
+            ]
+        }
         let externalHint = "Installed outside Homebrew at /usr/local/bin/external. "
             + "Remove or move that file manually before installing the Homebrew version."
         XCTAssertEqual(service.uninstallAvailability(for: external).unavailableReason, externalHint)
@@ -322,7 +331,9 @@ final class CaskHubTests: XCTestCase {
     @MainActor
     func test_adopt_sidebar_filter_lists_only_adoptable_casks() async {
         let homebrew = LocalHomebrewService()
-        updateInstallationSnapshot(of: homebrew, externalAppNames: ["Google Chrome.app"])
+        updateInstallationSnapshot(of: homebrew) {
+            $0.externalAppNames = ["Google Chrome.app"]
+        }
         let (vm, _) = await makeSUT(
             casks: [
                 makeCask("google-chrome", appNames: ["Google Chrome.app"]),

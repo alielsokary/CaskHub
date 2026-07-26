@@ -89,22 +89,21 @@ final class AdoptionViewRenderTests: XCTestCase {
     @MainActor
     func test_cask_actions_render_every_external_state() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-actions"))
-        updateInstallationSnapshot(
-            of: service,
-            installedCasks: [
+        updateInstallationSnapshot(of: service) {
+            $0.installedCasks = [
                 "managed": LocalCaskInstallation(
                     token: "managed",
                     installedVersion: "1.0",
                     installedAt: nil,
                     appBundleNames: ["Managed.app"]
                 )
-            ],
-            externalAppNames: ["Chrome.app"],
-            macAppStoreAppNames: ["Store.app"],
-            externalBinaryPaths: [
+            ]
+            $0.externalAppNames = ["Chrome.app"]
+            $0.macAppStoreAppNames = ["Store.app"]
+            $0.externalBinaryPaths = [
                 "claude": URL(fileURLWithPath: "/usr/local/bin/claude")
             ]
-        )
+        }
 
         let adoptable = makeCask("chrome", appNames: ["Chrome.app"])
         render(CaskActionsView(cask: adoptable).environment(service).environment(\.isAdoptPage, true))

@@ -68,12 +68,15 @@ final class AdoptionSurfaceTests: XCTestCase {
     @MainActor
     private func makeMutationService(runner: StubBrewProcessRunner) -> LocalHomebrewService {
         LocalHomebrewService(
-            fileManager: NoFilesFileManager(),
-            defaults: makeScratchDefaults("mutation-runner-\(UUID().uuidString)"),
-            processRunner: runner,
-            brewBinaryProvider: { URL(fileURLWithPath: "/test/bin/brew") },
-            brewVersionProvider: { "test" }
-        )
+            defaults: makeScratchDefaults("mutation-runner-\(UUID().uuidString)")
+        ) {
+            $0.fileManager = NoFilesFileManager()
+            $0.processRunner = runner
+            $0.brewBinaryProvider = {
+                URL(fileURLWithPath: "/test/bin/brew")
+            }
+            $0.brewVersionProvider = { "test" }
+        }
     }
 
     func test_error_descriptions_cover_every_case() {
@@ -288,9 +291,10 @@ final class AdoptionSurfaceTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: appsDir) }
 
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("adopt-preflight"),
-            applicationDirectories: [appsDir]
-        )
+            defaults: makeScratchDefaults("adopt-preflight")
+        ) {
+            $0.applicationDirectories = [appsDir]
+        }
         service.permissionProbe = { .granted }
         let cask = makeCask(
             "caskhub-test-nonexistent-cask", appNames: ["Fake.app"],
@@ -325,9 +329,10 @@ final class AdoptionSurfaceTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: appsDir) }
 
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("adopt-staged"),
-            applicationDirectories: [appsDir]
-        )
+            defaults: makeScratchDefaults("adopt-staged")
+        ) {
+            $0.applicationDirectories = [appsDir]
+        }
         let cask = makeCask(
             "fake", appNames: ["Fake.app"],
             binarySourcePaths: ["$HOMEBREW_PREFIX/Caskroom/fake/1.0/fake-cli"]

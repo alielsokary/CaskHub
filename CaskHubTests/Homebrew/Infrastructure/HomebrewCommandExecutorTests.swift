@@ -13,12 +13,15 @@ final class HomebrewCommandExecutorTests: XCTestCase {
     func test_service_cancellation_routes_through_executor_and_state_machine() async {
         let executor = SuspendingHomebrewCommandExecutor()
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("command-cancellation"),
-            commandExecutor: executor,
-            softwareScanner: EmptyInstalledSoftwareScanner(),
-            brewBinaryProvider: { URL(fileURLWithPath: "/test/bin/brew") },
-            brewVersionProvider: { "test" }
-        )
+            defaults: makeScratchDefaults("command-cancellation")
+        ) {
+            $0.commandExecutor = executor
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = {
+                URL(fileURLWithPath: "/test/bin/brew")
+            }
+            $0.brewVersionProvider = { "test" }
+        }
 
         let mutation = Task {
             try? await service.install(token: "firefox")

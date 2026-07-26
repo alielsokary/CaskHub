@@ -32,14 +32,17 @@ final class MutationRecoveryTests: XCTestCase {
     }
 
     private func makeService(runner: StubBrewProcessRunner) -> LocalHomebrewService {
-        LocalHomebrewService(
-            fileManager: fileManager,
-            defaults: defaults,
-            applicationDirectories: [root.appendingPathComponent("Applications")],
-            processRunner: runner,
-            brewBinaryProvider: { URL(fileURLWithPath: "/test/bin/brew") },
-            brewVersionProvider: { "test" }
-        )
+        LocalHomebrewService(defaults: defaults) {
+            $0.fileManager = fileManager
+            $0.applicationDirectories = [
+                root.appendingPathComponent("Applications")
+            ]
+            $0.processRunner = runner
+            $0.brewBinaryProvider = {
+                URL(fileURLWithPath: "/test/bin/brew")
+            }
+            $0.brewVersionProvider = { "test" }
+        }
     }
 
     func test_repair_reinstalls_when_uninstall_returns_nonzero_after_removing_cask() async throws {

@@ -64,47 +64,38 @@ final class LocalHomebrewService {
     private static let greedyKey = "greedyUpdates"
 
     init(
-        fileManager: FileManager = .default,
         defaults: UserDefaults = .standard,
-        applicationDirectories: [URL]? = nil,
-        processRunner: (any BrewProcessRunning)? = nil,
-        commandExecutor: (any HomebrewCommandExecuting)? = nil,
-        operationStore: CaskOperationStore? = nil,
-        softwareScanner: (any InstalledSoftwareScanning)? = nil,
-        applicationLauncher: (any ApplicationLaunching)? = nil,
-        brewBinaryProvider: @escaping () -> URL? = {
-            HomebrewLocator.brewBinaryURL()
-        },
-        brewVersionProvider: @escaping () async -> String? = {
-            await HomebrewVersionLoader().load(
-                from: HomebrewLocator.brewBinaryURL()
-            )
-        }
+        configureDependencies: (inout LocalHomebrewDependencies) -> Void = { _ in }
     ) {
-        let resolvedOperationStore = operationStore ?? CaskOperationStore()
-        let resolvedCommandExecutor = commandExecutor
-            ?? SystemHomebrewCommandExecutor(
-                processRunner: processRunner ?? SystemBrewProcessRunner()
-            )
-        self.fileManager = fileManager
+        var dependencies = LocalHomebrewDependencies()
+        configureDependencies(&dependencies)
+        let operationStore = dependencies.operationStore ?? CaskOperationStore()
+
+        fileManager = dependencies.fileManager
         self.defaults = defaults
-        self.applicationDirectories = applicationDirectories
-            ?? ApplicationDiscovery.defaultDirectories(fileManager: fileManager)
-        self.applicationLauncher = applicationLauncher
+        applicationDirectories = dependencies.applicationDirectories
+            ?? ApplicationDiscovery.defaultDirectories(
+                fileManager: dependencies.fileManager
+            )
+        applicationLauncher = dependencies.applicationLauncher
             ?? WorkspaceApplicationLauncher()
-        self.operationStore = resolvedOperationStore
-        self.mutationCoordinator = HomebrewMutationCoordinator(
-            operationStore: resolvedOperationStore,
-            commandExecutor: resolvedCommandExecutor,
-            brewBinaryProvider: brewBinaryProvider,
-            fileManager: fileManager
+        self.operationStore = operationStore
+        mutationCoordinator = HomebrewMutationCoordinator(
+            operationStore: operationStore,
+            commandExecutor: dependencies.resolvedCommandExecutor(),
+            brewBinaryProvider: dependencies.brewBinaryProvider,
+            fileManager: dependencies.fileManager
         )
-        self.softwareScanner = softwareScanner ?? HomebrewInstallationScanner()
-        self.brewBinaryProvider = brewBinaryProvider
-        self.brewVersionProvider = brewVersionProvider
+        softwareScanner = dependencies.softwareScanner
+            ?? HomebrewInstallationScanner()
+        brewBinaryProvider = dependencies.brewBinaryProvider
+        brewVersionProvider = dependencies.brewVersionProvider
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         customBrewPrefix = defaults.string(forKey: HomebrewLocator.customPrefixKey)
+        observeApplicationActivation()
+    }
 
+    private func observeApplicationActivation() {
         // The permission-request alert tells the user to grant App Management and
         // come back — returning to the app is the cue to finish those adoptions.
         activationObserver = NotificationCenter.default.addObserver(

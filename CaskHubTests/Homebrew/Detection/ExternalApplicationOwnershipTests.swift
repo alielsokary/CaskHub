@@ -274,9 +274,8 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             defaults: makeScratchDefaults("precomputed-local-state")
         )
         let cask = makeCask("gone", version: "2.0", appNames: ["Gone.app"])
-        updateInstallationSnapshot(
-            of: service,
-            installedCasks: [
+        updateInstallationSnapshot(of: service) {
+            $0.installedCasks = [
                 cask.token: LocalCaskInstallation(
                     token: cask.token,
                     installedVersion: "1.0",
@@ -284,15 +283,15 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                     appBundleNames: ["Gone.app"],
                     isZombie: true
                 )
-            ],
-            installationIndex: CaskInstallationIndex(
+            ]
+            $0.installationIndex = CaskInstallationIndex(
                 catalogTokens: [cask.token],
                 macAppStoreApplications: [:],
                 externalCLIPaths: [:],
                 launchableHomebrewTokens: [],
                 verifiedZombieTokens: [cask.token]
             )
-        )
+        }
 
         let state = service.localState(for: cask)
 
@@ -314,9 +313,10 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             bundleIdentifier: "app.glaze.macos.main"
         )
         let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("glaze-ownership"),
-            applicationDirectories: [root]
-        )
+            defaults: makeScratchDefaults("glaze-ownership")
+        ) {
+            $0.applicationDirectories = [root]
+        }
         let glazeApp = makeCask("glaze-app", appNames: ["Glaze.app"])
         let raycastGlaze = makeCask(
             "raycast-glaze",
@@ -356,9 +356,8 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                 hasPackage: false
             )
         }
-        updateInstallationSnapshot(
-            of: service,
-            installationIndex: InstallationIndexBuilder().build(
+        updateInstallationSnapshot(of: service) {
+            $0.installationIndex = InstallationIndexBuilder().build(
                 catalog: CaskInstallationCatalog(
                     tokens: Set(casks.map(\.token)),
                     macAppStoreSignatures: storeSignatures,
@@ -368,7 +367,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                 binaryPaths: [:],
                 installedCasks: [:]
             )
-        )
+        }
 
         XCTAssertTrue(service.isPresent(casks[0]))
         XCTAssertTrue(service.isPresent(casks[itemCount - 1]))
