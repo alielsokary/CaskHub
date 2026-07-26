@@ -6,7 +6,6 @@
 //
 
 import AppKit
-import ServiceManagement
 import SwiftUI
 
 struct SettingsView: View {
@@ -81,19 +80,25 @@ struct AboutSettingsView: View {
 struct GeneralSettingsView: View {
     @Environment(UpdaterService.self) private var updater
     @Environment(ImageCacheService.self) private var imageCache
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
-    @State private var appManagement: AppManagementPermission.Status = .unknown
+    @State private var settingsModel: GeneralSettingsModel
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
     @AppStorage(UpdaterService.showUpdatePromptKey) private var showUpdatePrompt = true
+
+    init(settingsModel: GeneralSettingsModel? = nil) {
+        _settingsModel = State(initialValue: settingsModel ?? GeneralSettingsModel())
+    }
 
     var body: some View {
         @Bindable var updater = updater
         Form {
             Section("Startup") {
-                Toggle("Launch CaskHub at login", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) { _, enabled in
-                        setLaunchAtLogin(enabled)
-                    }
+                Toggle(
+                    "Launch CaskHub at login",
+                    isOn: Binding(
+                        get: { settingsModel.launchAtLogin },
+                        set: { settingsModel.setLaunchAtLogin($0) }
+                    )
+                )
             }
             Section("Updates") {
                 Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
@@ -116,9 +121,9 @@ struct GeneralSettingsView: View {
                 LabeledContent("App Management") {
                     HStack(spacing: 10) {
                         permissionBadge
-                        if appManagement != .granted {
+                        if settingsModel.appManagement != .granted {
                             Button("Open System Settings") {
-                                AppManagementPermission.openSystemSettings()
+                                settingsModel.openAppManagementSettings()
                             }
                         }
                     }
@@ -144,18 +149,18 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
-        .task { refreshAppManagement() }
+        .task { await settingsModel.refreshAppManagement() }
         .onReceive(
             NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
         ) { _ in
             // Re-probe when the user comes back from System Settings.
-            refreshAppManagement()
+            Task { await settingsModel.refreshAppManagement() }
         }
     }
 
     @ViewBuilder
     private var permissionBadge: some View {
-        switch appManagement {
+        switch settingsModel.appManagement {
         case .granted:
             badge("Granted", icon: "checkmark.circle.fill", tint: .green)
         case .denied:
@@ -173,33 +178,29 @@ struct GeneralSettingsView: View {
         .foregroundStyle(tint)
     }
 
-    private func refreshAppManagement() {
-        Task.detached(priority: .utility) {
-            let status = AppManagementPermission.probe()
-            await MainActor.run { appManagement = status }
-        }
-    }
-
-    private func setLaunchAtLogin(_ enabled: Bool) {
-        do {
-            if enabled {
-                try SMAppService.mainApp.register()
-            } else {
-                try SMAppService.mainApp.unregister()
-            }
-        } catch {
-            CrashReporter.capture(error)
-            launchAtLogin = SMAppService.mainApp.status == .enabled
-        }
-    }
 }
 
 struct HomebrewSettingsView: View {
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @State private var invalidSelection = false
-    @State private var customPathField = ""
 
     var body: some View {
+        HomebrewSettingsContent(localHomebrew: localHomebrew)
+    }
+}
+
+private struct HomebrewSettingsContent: View {
+    let localHomebrew: LocalHomebrewService
+    @State private var locationModel: HomebrewLocationSettingsModel
+
+    init(localHomebrew: LocalHomebrewService) {
+        self.localHomebrew = localHomebrew
+        _locationModel = State(initialValue: HomebrewLocationSettingsModel(
+            settings: localHomebrew
+        ))
+    }
+
+    var body: some View {
+        @Bindable var locationModel = locationModel
         Form {
             Section("Status") {
                 LabeledContent("Homebrew") {
@@ -218,15 +219,18 @@ struct HomebrewSettingsView: View {
                 }
                 LabeledContent(
                     "Architecture",
-                    value: LocalHomebrewService.isAppleSilicon ? "Apple Silicon" : "Intel"
+                    value: HomebrewLocator.isAppleSilicon ? "Apple Silicon" : "Intel"
                 )
             }
             Section("Paths") {
-                pathRow("Brew Binary", LocalHomebrewService.locateBrewBinary()?.path)
-                pathRow("Caskroom", LocalHomebrewService.locateCaskroom(fileManager: .default)?.path)
+                pathRow("Brew Binary", HomebrewLocator.brewBinaryURL()?.path)
+                pathRow(
+                    "Caskroom",
+                    HomebrewLocator.caskroomURL(fileManager: .default)?.path
+                )
             }
             Section("Library") {
-                LabeledContent("Installed Casks", value: "\(localHomebrew.installedCasks.count)")
+                LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
                 LabeledContent(
                     "Last Scan",
                     value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened) ?? "Never"
@@ -235,10 +239,12 @@ struct HomebrewSettingsView: View {
             Section("Custom Location") {
                 LabeledContent("Custom Path") {
                     HStack(spacing: 10) {
-                        TextField("", text: $customPathField, prompt: Text(""))
+                        TextField("", text: $locationModel.customPathField, prompt: Text(""))
                             .textFieldStyle(.roundedBorder)
                             .frame(minWidth: 220)
-                            .onSubmit { applyTypedPath() }
+                            .onSubmit {
+                                Task { await locationModel.applyTypedPath() }
+                            }
                         Button("Choose…") { chooseCustomPrefix() }
                     }
                 }
@@ -253,29 +259,21 @@ struct HomebrewSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
-        .onAppear { customPathField = localHomebrew.customBrewPrefix ?? "" }
-        .onChange(of: localHomebrew.customBrewPrefix) { _, newValue in
-            customPathField = newValue ?? ""
+        .onAppear { locationModel.synchronize() }
+        .onChange(of: localHomebrew.customBrewPrefix) {
+            locationModel.synchronize()
         }
-        .alert("No Homebrew There", isPresented: $invalidSelection) {
+        .alert(
+            "No Homebrew There",
+            isPresented: Binding(
+                get: { locationModel.invalidSelection },
+                set: { if !$0 { locationModel.dismissInvalidSelection() } }
+            )
+        ) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("The selected location doesn't contain a brew binary.")
         }
-    }
-
-    private func applyTypedPath() {
-        let trimmed = customPathField.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty {
-            Task { await localHomebrew.setCustomBrewPrefix(nil) }
-            return
-        }
-        guard let prefix = LocalHomebrewService.brewPrefix(fromSelection: URL(fileURLWithPath: trimmed)) else {
-            invalidSelection = true
-            customPathField = localHomebrew.customBrewPrefix ?? ""
-            return
-        }
-        Task { await localHomebrew.setCustomBrewPrefix(prefix) }
     }
 
     private func pathRow(_ title: String, _ path: String?) -> some View {
@@ -297,11 +295,7 @@ struct HomebrewSettingsView: View {
         panel.showsHiddenFiles = true
         panel.message = "Select the brew binary or the Homebrew installation folder"
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        guard let prefix = LocalHomebrewService.brewPrefix(fromSelection: url) else {
-            invalidSelection = true
-            return
-        }
-        Task { await localHomebrew.setCustomBrewPrefix(prefix) }
+        Task { await locationModel.applySelection(url) }
     }
 }
 

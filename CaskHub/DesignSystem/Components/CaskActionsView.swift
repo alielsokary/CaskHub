@@ -21,92 +21,100 @@ extension EnvironmentValues {
 
 struct CaskActionsView: View {
     let cask: Cask
+    var localState: CaskLocalState?
     var fullWidth = true
     var onUninstall: (() -> Void)?
+    var showsUninstallControl = true
+    var usesIconOnlyOpenAndUpdate = false
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(\.isAdoptPage) private var isAdoptPage
 
     var body: some View {
-        if let inFlight = localHomebrew.inFlightActions[cask.token] {
-            inFlightCapsule(for: inFlight)
-        } else if localHomebrew.installedCasks[cask.token] != nil {
-            installedActions
-        } else if localHomebrew.isAdoptable(cask) {
+        let presentation = localHomebrew.actionPresentation(
+            for: cask,
+            localState: localState
+        )
+        let state = presentation.localState
+        if let inFlight = presentation.activeAction {
+            inFlightCapsule(for: inFlight, presentation: presentation)
+        } else if state.isHomebrewInstalled {
+            installedActions(state)
+        } else if state.isAdoptable {
             HStack(spacing: 8) {
                 if isAdoptPage {
                     ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
-                        if localHomebrew.isExternalPackageInstalled(cask) {
-                            localHomebrew.requestPackageAdoption(token: cask.token)
+                        if state.isExternalPackage {
+                            localHomebrew.send(.requestPackageAdoption(token: cask.token))
                         } else {
-                            Task { try? await localHomebrew.adopt(cask) }
+                            localHomebrew.send(.adopt(cask))
                         }
                     }
                 } else {
-                    ActionCapsuleButton(action: .open, fullWidth: fullWidth) {
-                        localHomebrew.openExternalApp(cask: cask)
+                    openButton(fullWidth: fullWidth) {
+                        localHomebrew.send(.openExternal(cask))
                     }
                 }
-                DisabledUninstallControl(
-                    message: "Adopt this app first so CaskHub can manage/uninstall it."
-                )
-            }
-        } else if localHomebrew.isMacAppStoreInstalled(cask) {
-            HStack(spacing: 8) {
-                ActionCapsuleButton(action: .open, fullWidth: fullWidth) {
-                    localHomebrew.openExternalApp(cask: cask)
+                if showsUninstallControl,
+                   let reason = state.uninstallAvailability.unavailableReason {
+                    DisabledUninstallControl(message: reason)
                 }
-                DisabledUninstallControl(
-                    message: "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
-                )
             }
-        } else if let externalPath = localHomebrew.externalCLIPath(cask) {
+        } else if state.installationSource == .macAppStore {
+            HStack(spacing: 8) {
+                openButton(fullWidth: fullWidth) {
+                    localHomebrew.send(.openExternal(cask))
+                }
+                if showsUninstallControl,
+                   let reason = state.uninstallAvailability.unavailableReason {
+                    DisabledUninstallControl(message: reason)
+                }
+            }
+        } else if let externalPath = state.externalCLIPath {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
                 .help(
-                    "Installed outside Homebrew at \(externalPath.path). "
-                        + "Remove or move that file manually before installing the Homebrew version."
+                    state.uninstallAvailability.unavailableReason
+                        ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
         } else {
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
-                Task { try? await localHomebrew.install(token: cask.token) }
+                localHomebrew.send(.install(token: cask.token))
             }
         }
     }
 
     @ViewBuilder
-    private var installedActions: some View {
-        if localHomebrew.isZombie(cask) {
+    private func installedActions(_ state: CaskLocalState) -> some View {
+        if state.isZombie {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
-                Task { try? await localHomebrew.repair(token: cask.token) }
+                localHomebrew.send(.repair(token: cask.token))
             }
             .help("""
             \(cask.displayName) was removed outside Homebrew, but Homebrew still \
             has records for it. Clean Up removes the leftover data.
             """)
         } else {
-            managedActions
+            managedActions(state)
         }
     }
 
     @ViewBuilder
-    private var managedActions: some View {
-        let showUpdate = localHomebrew.hasAvailableUpdate(
-            token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates
-        )
-        let canOpen = localHomebrew.canOpen(cask)
-
+    private func managedActions(_ state: CaskLocalState) -> some View {
         HStack(spacing: 8) {
-            if canOpen {
-                ActionCapsuleButton(action: .open, fullWidth: fullWidth && !showUpdate) {
-                    localHomebrew.open(cask)
+            if state.canOpen {
+                openButton(
+                    fullWidth: fullWidth && !state.hasAvailableUpdate,
+                    isPairedWithUpdate: state.hasAvailableUpdate
+                ) {
+                    localHomebrew.send(.open(cask))
                 }
             }
-            if showUpdate {
-                ActionCapsuleButton(action: .update, fullWidth: fullWidth) {
-                    Task { try? await localHomebrew.upgrade(token: cask.token) }
+            if state.hasAvailableUpdate {
+                updateButton(fullWidth: fullWidth) {
+                    localHomebrew.send(.update(token: cask.token))
                 }
             }
-            if !canOpen && !showUpdate {
+            if !state.canOpen && !state.hasAvailableUpdate {
                 ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
             }
             if let onUninstall {
@@ -125,18 +133,41 @@ struct CaskActionsView: View {
         }
     }
 
-    private func inFlightCapsule(for action: CaskAction) -> some View {
+    @ViewBuilder
+    private func openButton(
+        fullWidth: Bool,
+        isPairedWithUpdate: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        if usesIconOnlyOpenAndUpdate && isPairedWithUpdate {
+            ActionCapsuleIconButton(action: .open, onTap: action)
+        } else {
+            ActionCapsuleButton(action: .open, fullWidth: fullWidth, onTap: action)
+        }
+    }
+
+    @ViewBuilder
+    private func updateButton(fullWidth: Bool, action: @escaping () -> Void) -> some View {
+        if usesIconOnlyOpenAndUpdate {
+            ActionCapsuleIconButton(action: .update, onTap: action)
+        } else {
+            ActionCapsuleButton(action: .update, fullWidth: fullWidth, onTap: action)
+        }
+    }
+
+    private func inFlightCapsule(
+        for action: CaskAction,
+        presentation: CaskActionPresentation
+    ) -> some View {
         let token = cask.token
-        let isCanceling = localHomebrew.cancelRequested.contains(token)
-        let canCancel = localHomebrew.cancellableDownloads.contains(token) && !isCanceling
 
         return CaskOperationCapsule(
             action: action,
-            progress: localHomebrew.operationProgress[token],
-            isCanceling: isCanceling,
-            canCancel: canCancel,
+            progress: presentation.progress,
+            isCanceling: presentation.isCanceling,
+            canCancel: presentation.canCancel,
             fullWidth: fullWidth,
-            onCancel: { localHomebrew.cancelInstall(token: token) }
+            onCancel: { localHomebrew.send(.cancel(token: token)) }
         )
     }
 }

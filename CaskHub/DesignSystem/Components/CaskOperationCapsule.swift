@@ -17,17 +17,17 @@ struct CaskOperationCapsule: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            if fractionCompleted == nil {
-                ProgressView()
-                    .controlSize(.small)
-            } else {
+            if showsDownloadIcon {
                 Image(systemName: "arrow.down")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundStyle(accentColor)
+            } else {
+                ProgressView()
+                    .controlSize(.small)
             }
 
-            if let byteProgress = downloadingByteProgress {
-                Text("Downloading")
+            if let byteProgress = downloadByteProgress {
+                Text(progress?.phase.label(for: action) ?? "Downloading")
                     .font(CHType.downloadLabel)
                     .foregroundStyle(Color.chTextBody)
                     .lineLimit(1)
@@ -47,7 +47,7 @@ struct CaskOperationCapsule: View {
             }
 
             if canCancel {
-                if downloadingByteProgress == nil {
+                if downloadByteProgress == nil {
                     Spacer(minLength: 0)
                 }
                 Button(action: onCancel) {
@@ -60,7 +60,7 @@ struct CaskOperationCapsule: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .help("Cancel download")
+                .help("Cancel operation")
             }
         }
         .frame(
@@ -77,6 +77,8 @@ struct CaskOperationCapsule: View {
                         fraction: fractionCompleted,
                         color: accentColor.opacity(0.18)
                     )
+                } else if showsIndeterminateDownloadFill {
+                    IndeterminateProgressFill(color: accentColor.opacity(0.18))
                 }
             }
         }
@@ -95,8 +97,8 @@ struct CaskOperationCapsule: View {
         }
     }
 
-    private var downloadingByteProgress: CaskByteProgress? {
-        guard !isCanceling, progress?.phase == .downloading else { return nil }
+    private var downloadByteProgress: CaskByteProgress? {
+        guard !isCanceling, progress?.phase.showsByteProgress == true else { return nil }
         return progress?.byteProgress
     }
 
@@ -108,8 +110,16 @@ struct CaskOperationCapsule: View {
     }
 
     private var fractionCompleted: Double? {
-        guard !isCanceling, progress?.phase == .downloading else { return nil }
+        guard !isCanceling, progress?.phase.showsByteProgress == true else { return nil }
         return progress?.fractionCompleted
+    }
+
+    private var showsDownloadIcon: Bool {
+        !isCanceling && progress?.phase.isDownloadActivity == true
+    }
+
+    private var showsIndeterminateDownloadFill: Bool {
+        showsDownloadIcon && fractionCompleted == nil
     }
 
     private var accentColor: Color {
@@ -121,6 +131,35 @@ struct CaskOperationCapsule: View {
         default:
             return .chTextBrand
         }
+    }
+}
+
+private struct IndeterminateProgressFill: View {
+    let color: Color
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isAnimating = false
+
+    var body: some View {
+        GeometryReader { proxy in
+            let width = max(proxy.size.width * 0.34, 24)
+
+            Capsule()
+                .fill(color)
+                .frame(width: width)
+                .offset(
+                    x: reduceMotion
+                        ? 0
+                        : (isAnimating ? proxy.size.width : -width)
+                )
+                .onAppear {
+                    guard !reduceMotion else { return }
+                    withAnimation(.linear(duration: 1.15).repeatForever(autoreverses: false)) {
+                        isAnimating = true
+                    }
+                }
+        }
+        .clipShape(Capsule())
     }
 }
 

@@ -11,6 +11,7 @@ struct HeroCard: View {
     let cask: Cask
     var downloads: String?
     var categoryName: String?
+    var localState: CaskLocalState?
 
     var body: some View {
         HStack(spacing: 28) {
@@ -35,7 +36,7 @@ struct HeroCard: View {
                 }
 
                 HStack(spacing: 14) {
-                    CaskActionsView(cask: cask, fullWidth: false)
+                    CaskActionsView(cask: cask, localState: localState, fullWidth: false)
                     Text(metaLine)
                         .font(CHType.statusMono)
                         .foregroundStyle(Color.chTextMuted)

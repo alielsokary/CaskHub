@@ -25,20 +25,13 @@ enum AnalyticsPeriod: String, CaseIterable, Identifiable {
     }
 }
 
-struct CaskAnalyticsResponse: Codable {
-    let category: String
-    let totalItems: Int
-    let startDate: String
-    let endDate: String
-    let totalCount: Int
+struct CaskAnalyticsResponse: Decodable {
     let items: [CaskAnalyticsItem]
 }
 
-struct CaskAnalyticsItem: Codable {
-    let number: Int
+struct CaskAnalyticsItem: Decodable {
     let cask: String
     let count: String
-    let percent: String
 
     var downloadCount: Int {
         Int(count.replacingOccurrences(of: ",", with: "")) ?? 0

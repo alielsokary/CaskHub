@@ -32,30 +32,45 @@ private struct CaskActionAlerts: ViewModifier {
             )
     }
 
-    private var brewIsMissing: Bool {
-        localHomebrew.brewVersion == nil
+    private var actionAlert: CaskActionAlert? {
+        localHomebrew.actionAlert(for: cask.token)
     }
 
     private var hasBrewMissingError: Binding<Bool> {
         Binding(
-            get: { localHomebrew.actionErrors[cask.token] != nil && brewIsMissing },
-            set: { if !$0 { localHomebrew.clearError(for: cask.token) } }
+            get: {
+                guard case .homebrewMissing = actionAlert else { return false }
+                return true
+            },
+            set: {
+                if !$0 { localHomebrew.send(.dismissFailure(token: cask.token)) }
+            }
         )
     }
 
     private var hasPackageAdoptionRequest: Binding<Bool> {
         Binding(
-            get: { localHomebrew.packageAdoptionRequests.contains(cask.token) },
+            get: {
+                guard case .packageAdoption = actionAlert else { return false }
+                return true
+            },
             set: {
-                if !$0 { localHomebrew.cancelPackageAdoptionRequest(token: cask.token) }
+                if !$0 {
+                    localHomebrew.send(.cancelPackageAdoption(token: cask.token))
+                }
             }
         )
     }
 
     private var hasActionError: Binding<Bool> {
         Binding(
-            get: { localHomebrew.actionErrors[cask.token] != nil && !brewIsMissing },
-            set: { if !$0 { localHomebrew.clearError(for: cask.token) } }
+            get: {
+                guard case .failure = actionAlert else { return false }
+                return true
+            },
+            set: {
+                if !$0 { localHomebrew.send(.dismissFailure(token: cask.token)) }
+            }
         )
     }
 }
@@ -68,10 +83,10 @@ private extension View {
     ) -> some View {
         alert("Adopt \(cask.displayName)?", isPresented: isPresented) {
             Button("Cancel", role: .cancel) {
-                service.cancelPackageAdoptionRequest(token: cask.token)
+                service.send(.cancelPackageAdoption(token: cask.token))
             }
             Button("Adopt") {
-                Task { try? await service.adoptPackage(token: cask.token) }
+                service.send(.confirmPackageAdoption(token: cask.token))
             }
         } message: {
             Text("""
@@ -88,8 +103,8 @@ private extension View {
         service: LocalHomebrewService,
         isPresented: Binding<Bool>
     ) -> some View {
-        onChange(of: service.permissionRequests[cask.token] != nil) { _, isPending in
-            if isPending { isPresented.wrappedValue = true }
+        onChange(of: permissionForce(for: cask, service: service)) { _, force in
+            if force != nil { isPresented.wrappedValue = true }
         }
         .alert("Permission Needed", isPresented: isPresented) {
             Button("Open System Settings") {
@@ -97,18 +112,11 @@ private extension View {
                 AppManagementPermission.openSystemSettings()
             }
             Button("Adopt Anyway") {
-                let useForce = service.permissionRequests[cask.token] == true
-                service.cancelPermissionRequest(token: cask.token)
-                Task {
-                    if useForce {
-                        try? await service.adoptReplacing(token: cask.token, bypassPermissionCheck: true)
-                    } else {
-                        try? await service.adopt(token: cask.token, bypassPermissionCheck: true)
-                    }
-                }
+                let useForce = permissionForce(for: cask, service: service) == true
+                service.send(.adoptAnyway(token: cask.token, force: useForce))
             }
             Button("Cancel", role: .cancel) {
-                service.cancelPermissionRequest(token: cask.token)
+                service.send(.cancelPermission(token: cask.token))
             }
         } message: {
             Text("""
@@ -129,7 +137,7 @@ private extension View {
         alert("Uninstall \(cask.displayName)?", isPresented: isPresented) {
             Button("Cancel", role: .cancel) {}
             Button("Uninstall", role: .destructive) {
-                Task { try? await service.uninstall(token: cask.token) }
+                service.send(.uninstall(token: cask.token))
             }
         } message: {
             Text("This will run `brew uninstall --cask \(cask.token)`.")
@@ -157,25 +165,48 @@ private extension View {
         isPresented: Binding<Bool>
     ) -> some View {
         alert("Error", isPresented: isPresented) {
-            if service.adoptReplaceOffers.contains(cask.token) {
+            if failure(for: cask, service: service)?
+                .recoveries.contains(.replaceWithHomebrew) == true {
                 Button("Replace with Homebrew Version") {
-                    Task { try? await service.adoptReplacing(token: cask.token) }
+                    service.send(.replaceWithHomebrew(token: cask.token))
                 }
             }
-            if service.repairOffers.contains(cask.token) {
+            if failure(for: cask, service: service)?
+                .recoveries.contains(.repairAndReinstall) == true {
                 Button("Repair & Reinstall") {
-                    Task { try? await service.repairReinstalling(token: cask.token) }
+                    service.send(.repairAndReinstall(token: cask.token))
                 }
             }
-            if service.appManagementDenials.contains(cask.token) {
+            if failure(for: cask, service: service)?
+                .recoveries.contains(.openAppManagementSettings) == true {
                 Button("Open System Settings") {
                     AppManagementPermission.openSystemSettings()
                 }
             }
             Button("OK", role: .cancel) {}
         } message: {
-            Text(service.actionErrors[cask.token] ?? "")
+            Text(failure(for: cask, service: service)?.message ?? "")
         }
+    }
+
+    private func permissionForce(
+        for cask: Cask,
+        service: LocalHomebrewService
+    ) -> Bool? {
+        guard case let .permission(force) = service.actionAlert(for: cask.token) else {
+            return nil
+        }
+        return force
+    }
+
+    private func failure(
+        for cask: Cask,
+        service: LocalHomebrewService
+    ) -> CaskOperationFailure? {
+        guard case let .failure(failure) = service.actionAlert(for: cask.token) else {
+            return nil
+        }
+        return failure
     }
 }
 
