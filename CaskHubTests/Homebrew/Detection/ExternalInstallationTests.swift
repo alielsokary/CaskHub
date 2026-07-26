@@ -16,11 +16,11 @@ final class ExternalInstallationTests: XCTestCase {
             $0.macAppStoreAppNames = ["Canva.app"]
         }
         let canva = makeCask("canva", appNames: ["Canva.app"])
+        let state = service.localState(for: canva)
 
-        XCTAssertTrue(service.isMacAppStoreInstalled(canva))
-        XCTAssertTrue(service.isPresent(canva))
-        XCTAssertEqual(service.installationSource(for: canva), .macAppStore)
-        XCTAssertFalse(service.isAdoptable(canva))
+        XCTAssertEqual(state.installationSource, .macAppStore)
+        XCTAssertTrue(state.isPresent)
+        XCTAssertFalse(state.isAdoptable)
     }
 
     @MainActor
@@ -37,10 +37,11 @@ final class ExternalInstallationTests: XCTestCase {
             name: "Microsoft Outlook",
             packageIdentifiers: ["com.microsoft.package.Microsoft_Outlook.app"]
         )
+        let state = service.localState(for: outlook)
 
-        XCTAssertTrue(service.isMacAppStoreInstalled(outlook))
-        XCTAssertTrue(service.isPresent(outlook))
-        XCTAssertFalse(service.isAdoptable(outlook))
+        XCTAssertEqual(state.installationSource, .macAppStore)
+        XCTAssertTrue(state.isPresent)
+        XCTAssertFalse(state.isAdoptable)
     }
 
     @MainActor
@@ -62,7 +63,6 @@ final class ExternalInstallationTests: XCTestCase {
         updateInstallationSnapshot(of: service) {
             $0.externalPackageInstallations = [
                 "zoom": ExternalPackageInstallation(
-                    receiptIdentifiers: ["us.zoom.pkg.videomeeting"],
                     appBundleNames: ["zoom.us.app"]
                 )
             ]
@@ -73,11 +73,12 @@ final class ExternalInstallationTests: XCTestCase {
             packageIdentifiers: ["us.zoom.pkg.videomeeting"],
             packageAppNames: ["zoom.us.app"]
         )
+        let state = service.localState(for: zoom)
 
-        XCTAssertTrue(service.isPresent(zoom))
-        XCTAssertTrue(service.isAdoptable(zoom))
-        XCTAssertTrue(service.canOpen(zoom))
-        XCTAssertEqual(service.installationSource(for: zoom), .packageInstaller)
+        XCTAssertTrue(state.isPresent)
+        XCTAssertTrue(state.isAdoptable)
+        XCTAssertTrue(state.canOpen)
+        XCTAssertEqual(state.installationSource, .packageInstaller)
 
         service.openExternalApp(cask: zoom)
         XCTAssertEqual(
@@ -162,11 +163,12 @@ final class ExternalInstallationTests: XCTestCase {
             $0.detectedApplications = scan.applications
         }
         let cask = makeCask("whatsapp", name: "WhatsApp", appNames: ["WhatsApp.app"])
+        let state = service.localState(for: cask)
 
-        XCTAssertTrue(service.isMacAppStoreInstalled(cask))
-        XCTAssertTrue(service.isPresent(cask))
-        XCTAssertTrue(service.canOpen(cask))
-        XCTAssertFalse(service.isAdoptable(cask))
+        XCTAssertEqual(state.installationSource, .macAppStore)
+        XCTAssertTrue(state.isPresent)
+        XCTAssertTrue(state.canOpen)
+        XCTAssertFalse(state.isAdoptable)
 
         service.openExternalApp(cask: cask)
         XCTAssertEqual(
@@ -225,7 +227,6 @@ final class ExternalInstallationTests: XCTestCase {
         updateInstallationSnapshot(of: local) {
             $0.externalPackageInstallations = [
                 package.token: ExternalPackageInstallation(
-                    receiptIdentifiers: ["com.example.package"],
                     appBundleNames: ["Package App.app"]
                 )
             ]
@@ -304,8 +305,9 @@ final class ExternalInstallationTests: XCTestCase {
             appBundleNames: []
         ), in: service)
 
-        XCTAssertFalse(service.canOpen(cask))
-        XCTAssertFalse(service.isZombie(cask))
+        let state = service.localState(for: cask)
+        XCTAssertFalse(state.canOpen)
+        XCTAssertFalse(state.isZombie)
     }
 
     func test_stable_sf_symbols_cask_does_not_claim_beta_payload() {
@@ -370,9 +372,10 @@ final class ExternalInstallationTests: XCTestCase {
             name: "Shade",
             packageIdentifiers: ["com.shade.shade"]
         )
+        let state = service.localState(for: shade)
 
-        XCTAssertFalse(service.isMacAppStoreInstalled(shade))
-        XCTAssertFalse(service.isPresent(shade))
+        XCTAssertNotEqual(state.installationSource, .macAppStore)
+        XCTAssertFalse(state.isPresent)
     }
 
 }

@@ -41,9 +41,9 @@ final class CaskOperationProgressTests: XCTestCase {
             "==> Downloading https://example.com/firefox.dmg",
             token: "firefox"
         )
-        XCTAssertEqual(service.operationStore.operationProgress["firefox"]?.phase, .checkingDownload)
+        XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .checkingDownload)
         XCTAssertEqual(
-            service.operationStore.operationProgress["firefox"]?.inlineLabel,
+            service.operationStore.state(for: "firefox")?.progress?.inlineLabel,
             "Checking download…"
         )
 
@@ -51,7 +51,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "Cask firefox    ########    Downloading    42.0MB/100.0MB",
             token: "firefox"
         )
-        let downloading = try XCTUnwrap(service.operationStore.operationProgress["firefox"])
+        let downloading = try XCTUnwrap(service.operationStore.state(for: "firefox")?.progress)
         XCTAssertEqual(downloading.phase, .downloading)
         XCTAssertEqual(downloading.completedBytes, 42_000_000)
         XCTAssertEqual(downloading.totalBytes, 100_000_000)
@@ -62,8 +62,8 @@ final class CaskOperationProgressTests: XCTestCase {
             "==> Installing Cask firefox",
             token: "firefox"
         )
-        XCTAssertEqual(service.operationStore.operationProgress["firefox"]?.phase, .performing)
-        XCTAssertFalse(service.operationStore.cancellableTokens.contains("firefox"))
+        XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .performing)
+        XCTAssertFalse(service.operationStore.state(for: "firefox")?.canCancel == true)
     }
 
     @MainActor
@@ -88,7 +88,7 @@ final class CaskOperationProgressTests: XCTestCase {
         )
 
         let progress = try XCTUnwrap(
-            service.operationStore.operationProgress["chatgpt-classic"]
+            service.operationStore.state(for: "chatgpt-classic")?.progress
         )
         XCTAssertEqual(progress.phase, .usingCachedDownload)
         XCTAssertEqual(progress.completedBytes, 2_048)
@@ -123,14 +123,14 @@ final class CaskOperationProgressTests: XCTestCase {
             """,
             token: "firefox"
         )
-        XCTAssertEqual(service.operationStore.operationProgress["firefox"]?.phase, .downloading)
+        XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .downloading)
 
         service.mutationCoordinator.consumeBrewOutput(
             "==> Upgrading firefox",
             token: "firefox"
         )
-        XCTAssertEqual(service.operationStore.operationProgress["firefox"]?.phase, .performing)
-        XCTAssertFalse(service.operationStore.cancellableTokens.contains("firefox"))
+        XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .performing)
+        XCTAssertFalse(service.operationStore.state(for: "firefox")?.canCancel == true)
     }
 
     func test_operation_status_summarizes_multiple_operations() {

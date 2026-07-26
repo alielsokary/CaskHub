@@ -8,27 +8,21 @@
 import Foundation
 
 extension LocalHomebrewService {
-    func install(
-        token: String,
-        origin: CaskActionOrigin = .individual
-    ) async throws {
+    func install(token: String) async throws {
         try await runMutation(
             .installing,
             token: token,
             args: ["install", "--cask", token],
-            origin: origin
+            origin: .individual
         )
     }
 
-    func uninstall(
-        token: String,
-        origin: CaskActionOrigin = .individual
-    ) async throws {
+    func uninstall(token: String) async throws {
         try await runMutation(
             .uninstalling,
             token: token,
             args: ["uninstall", "--cask", token],
-            origin: origin
+            origin: .individual
         )
     }
 

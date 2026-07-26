@@ -16,14 +16,6 @@ enum AppTheme: String, CaseIterable, Identifiable {
         rawValue
     }
 
-    var iconName: String {
-        switch self {
-        case .system: return "circle.lefthalf.filled"
-        case .light: return "sun.max.fill"
-        case .dark: return "moon.fill"
-        }
-    }
-
     var previewImage: NSImage? {
         NSImage(named: "ThemePreview-\(rawValue.lowercased())")
     }

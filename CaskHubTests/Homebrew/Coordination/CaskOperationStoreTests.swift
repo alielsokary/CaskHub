@@ -22,10 +22,11 @@ final class CaskOperationStoreTests: XCTestCase {
         store.send(.begin(progress, canCancel: false), for: "firefox")
         store.send(.setCancellable(true), for: "firefox")
 
-        XCTAssertEqual(store.inFlightActions, ["firefox": .installing])
-        XCTAssertEqual(store.operationProgress, ["firefox": progress])
-        XCTAssertEqual(store.cancellableTokens, ["firefox"])
-        XCTAssertTrue(store.failures.isEmpty)
+        let state = store.state(for: "firefox")
+        XCTAssertEqual(state?.action, .installing)
+        XCTAssertEqual(state?.progress, progress)
+        XCTAssertTrue(state?.canCancel == true)
+        XCTAssertNil(state?.failure)
     }
 
     func test_store_projects_confirmation_states() {
@@ -35,8 +36,9 @@ final class CaskOperationStoreTests: XCTestCase {
         store.send(.awaitPackageAdoption, for: "zoom")
 
         XCTAssertEqual(store.pendingPermissions, ["canva": true])
-        XCTAssertEqual(store.pendingPackageAdoptions, ["zoom"])
-        XCTAssertTrue(store.inFlightActions.isEmpty)
+        XCTAssertEqual(store.state(for: "zoom"), .awaitingPackageAdoption)
+        XCTAssertNil(store.state(for: "canva")?.action)
+        XCTAssertNil(store.state(for: "zoom")?.action)
     }
 
     func test_store_projects_failure_and_recovery_options() {
@@ -49,10 +51,11 @@ final class CaskOperationStoreTests: XCTestCase {
 
         store.send(.fail(failure), for: "tabby")
 
-        XCTAssertEqual(store.failures["tabby"], failure)
-        XCTAssertEqual(store.tokens(offering: .repairAndReinstall), ["tabby"])
-        XCTAssertEqual(store.tokens(offering: .openAppManagementSettings), ["tabby"])
-        XCTAssertTrue(store.tokens(offering: .replaceWithHomebrew).isEmpty)
+        let storedFailure = store.state(for: "tabby")?.failure
+        XCTAssertEqual(storedFailure, failure)
+        XCTAssertTrue(storedFailure?.recoveries.contains(.repairAndReinstall) == true)
+        XCTAssertTrue(storedFailure?.recoveries.contains(.openAppManagementSettings) == true)
+        XCTAssertFalse(storedFailure?.recoveries.contains(.replaceWithHomebrew) == true)
     }
 
     func test_store_ignores_duplicate_transitions() {

@@ -27,7 +27,7 @@ final class CaskActionPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.progress?.token, cask.token)
         XCTAssertTrue(presentation.canCancel)
         XCTAssertTrue(presentation.isBusy)
-        XCTAssertNil(presentation.alert)
+        XCTAssertNil(service.actionAlert(for: cask.token))
     }
 
     func test_failure_presentation_carries_message_and_recovery_together() {
@@ -42,7 +42,7 @@ final class CaskActionPresentationTests: XCTestCase {
 
         let presentation = service.actionPresentation(for: cask)
 
-        XCTAssertEqual(presentation.alert, .failure(failure))
+        XCTAssertEqual(service.actionAlert(for: cask.token), .failure(failure))
         XCTAssertFalse(presentation.isBusy)
         XCTAssertNil(presentation.activeAction)
     }
@@ -57,7 +57,7 @@ final class CaskActionPresentationTests: XCTestCase {
         service.operationStore.send(.fail(failure), for: cask.token)
 
         XCTAssertEqual(
-            service.actionPresentation(for: cask).alert,
+            service.actionAlert(for: cask.token),
             .homebrewMissing(message: "Homebrew not found")
         )
     }
@@ -125,7 +125,7 @@ final class AdoptionViewRenderTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-alerts"))
         service.permissionProbe = { .denied }
         try? await service.adopt(token: "chrome")
-        service.openApp(token: "chrome")
+        service.open(makeCask("chrome"))
 
         render(
             Text("host")

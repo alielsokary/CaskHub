@@ -17,11 +17,10 @@ nonisolated struct ApplicationDiscovery: Sendable {
 
     func scan(
         fileManager: FileManager,
-        directories: [URL]? = nil
+        directories: [URL]
     ) -> ExternalApplicationScan {
-        let folders = directories ?? Self.defaultDirectories(fileManager: fileManager)
         var applications: [DetectedApplication] = []
-        for folder in folders {
+        for folder in directories {
             guard let enumerator = fileManager.enumerator(
                 at: folder,
                 includingPropertiesForKeys: [.isDirectoryKey, .isPackageKey],

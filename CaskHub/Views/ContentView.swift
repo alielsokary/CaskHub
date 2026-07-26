@@ -14,7 +14,6 @@ enum ViewMode: String {
 struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(CategoryService.self) private var categoryService
-    @Environment(RecentlyAddedService.self) private var recentlyAdded
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool

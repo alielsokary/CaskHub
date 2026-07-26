@@ -326,10 +326,10 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
 
         await service.updatePackageCatalog([glazeApp, raycastGlaze])
 
-        XCTAssertFalse(service.isAdoptable(glazeApp))
-        XCTAssertTrue(service.isAdoptable(raycastGlaze))
+        XCTAssertFalse(service.localState(for: glazeApp).isAdoptable)
+        XCTAssertTrue(service.localState(for: raycastGlaze).isAdoptable)
         XCTAssertEqual(
-            service.installationSource(for: raycastGlaze),
+            service.localState(for: raycastGlaze).installationSource,
             .externalApplication
         )
     }
@@ -369,13 +369,13 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             )
         }
 
-        XCTAssertTrue(service.isPresent(casks[0]))
-        XCTAssertTrue(service.isPresent(casks[itemCount - 1]))
+        XCTAssertTrue(service.localState(for: casks[0]).isPresent)
+        XCTAssertTrue(service.localState(for: casks[itemCount - 1]).isPresent)
 
         measure(metrics: [XCTClockMetric()]) {
             for _ in 0..<20 {
                 for cask in casks {
-                    _ = service.isPresent(cask)
+                    _ = service.localState(for: cask).isPresent
                 }
             }
         }

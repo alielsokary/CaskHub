@@ -127,13 +127,11 @@ nonisolated struct PackageCaskSignature: Sendable {
 
 nonisolated struct PackageInstallationCandidate {
     let signature: PackageCaskSignature
-    let receiptIdentifiers: Set<String>
     let appBundleNames: Set<String>
     let score: Int
 }
 
 nonisolated struct ExternalPackageInstallation: Hashable, Sendable {
-    let receiptIdentifiers: Set<String>
     let appBundleNames: [String]
 }
 

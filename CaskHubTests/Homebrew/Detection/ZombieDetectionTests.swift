@@ -99,12 +99,14 @@ final class ZombieDetectionTests: XCTestCase {
         )
         service.noteFailure(token: "tabby", error: error)
         XCTAssertTrue(
-            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby")
+            service.operationStore.state(for: "tabby")?.failure?
+                .recoveries.contains(.repairAndReinstall) == true
         )
 
         service.clearError(for: "tabby")
         XCTAssertFalse(
-            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby")
+            service.operationStore.state(for: "tabby")?.failure?
+                .recoveries.contains(.repairAndReinstall) == true
         )
     }
 
@@ -117,10 +119,12 @@ final class ZombieDetectionTests: XCTestCase {
         )
         service.noteFailure(token: "sourcetree", error: error)
         XCTAssertTrue(
-            service.operationStore.tokens(offering: .openAppManagementSettings).contains("sourcetree")
+            service.operationStore.state(for: "sourcetree")?.failure?
+                .recoveries.contains(.openAppManagementSettings) == true
         )
         XCTAssertFalse(
-            service.operationStore.tokens(offering: .repairAndReinstall).contains("sourcetree")
+            service.operationStore.state(for: "sourcetree")?.failure?
+                .recoveries.contains(.repairAndReinstall) == true
         )
     }
 
@@ -192,7 +196,8 @@ final class ZombieDetectionTests: XCTestCase {
         )
         service.noteFailure(token: "tabby", error: rewordedUpgrade)
         XCTAssertTrue(
-            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby"),
+            service.operationStore.state(for: "tabby")?.failure?
+                .recoveries.contains(.repairAndReinstall) == true,
             "a parked copy on disk should back up the offer even if brew rewords its error"
         )
 
@@ -203,7 +208,8 @@ final class ZombieDetectionTests: XCTestCase {
         )
         service.noteFailure(token: "tabby", error: rewordedInstall)
         XCTAssertFalse(
-            service.operationStore.tokens(offering: .repairAndReinstall).contains("tabby"),
+            service.operationStore.state(for: "tabby")?.failure?
+                .recoveries.contains(.repairAndReinstall) == true,
             "filesystem evidence only backs upgrade failures"
         )
     }
@@ -224,7 +230,12 @@ final class ZombieDetectionTests: XCTestCase {
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true
         ), in: service)
-        XCTAssertFalse(service.isZombie(makeCask("chatgpt", appNames: ["ChatGPT.app"])))
+        XCTAssertFalse(
+            service.localState(for: makeCask(
+                "chatgpt",
+                appNames: ["ChatGPT.app"]
+            )).isZombie
+        )
     }
 
     @MainActor
@@ -238,7 +249,12 @@ final class ZombieDetectionTests: XCTestCase {
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mole.app"], isZombie: true
         ), in: service)
-        XCTAssertTrue(service.isZombie(makeCask("mole-app", appNames: ["Mole.app"])))
+        XCTAssertTrue(
+            service.localState(for: makeCask(
+                "mole-app",
+                appNames: ["Mole.app"]
+            )).isZombie
+        )
     }
 
     @MainActor
@@ -253,7 +269,7 @@ final class ZombieDetectionTests: XCTestCase {
             appBundleNames: ["Mystery.app"], isZombie: true
         ), in: service)
         XCTAssertFalse(
-            service.isZombie(makeCask("mystery")),
+            service.localState(for: makeCask("mystery")).isZombie,
             "no artifact data to verify against → never offer deletion"
         )
     }
@@ -276,7 +292,7 @@ final class ZombieDetectionTests: XCTestCase {
         ), in: service)
         service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
         XCTAssertNil(
-            service.operationStore.failures["chatgpt"]?.message,
+            service.operationStore.state(for: "chatgpt")?.failure?.message,
             "stale receipt name should fall back to the cask's current artifact"
         )
         XCTAssertEqual(launcher.lastOpenedURL?.lastPathComponent, "ChatGPT.app")
@@ -290,7 +306,11 @@ final class ZombieDetectionTests: XCTestCase {
             appBundleNames: ["Mole.app"], isZombie: true
         ), in: service)
         XCTAssertFalse(
-            service.hasAvailableUpdate(token: "mole-app", remoteVersion: "2.0", autoUpdates: nil)
+            service.localState(for: makeCask(
+                "mole-app",
+                version: "2.0",
+                appNames: ["Mole.app"]
+            )).hasAvailableUpdate
         )
     }
 }

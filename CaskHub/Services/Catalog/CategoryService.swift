@@ -20,11 +20,10 @@ struct TokenCategoryMapping: Codable, Hashable {
     let secondary: [CategoryID]
 }
 
-struct CaskCategoryData: Codable {
+struct CaskCategoryData: Decodable {
     let version: Int
     let generatedDate: String
     let releaseTag: String?
-    let totalCasks: Int
     let categories: [String: CategoryDefinition]
     let tokenToCategory: [String: TokenCategoryMapping]
     /// Manifest of tokens with an icon on the CaskFlow icons branch, stamped
@@ -37,7 +36,6 @@ struct CaskCategoryData: Codable {
 final class CategoryService {
     private(set) var categoryDefinitions: [CategoryID: CategoryDefinition] = [:]
     private(set) var tokenMappings: [String: TokenCategoryMapping] = [:]
-    private(set) var categoryTokenSets: [CategoryID: Set<String>] = [:]
     private(set) var version: Int = 0
     private(set) var generatedDate: String = ""
     private(set) var releaseTag: String?
@@ -77,14 +75,6 @@ final class CategoryService {
         categoryDefinitions = catalog.categories
         tokenMappings = catalog.tokenToCategory
 
-        var sets: [CategoryID: Set<String>] = [:]
-        for (token, mapping) in catalog.tokenToCategory {
-            sets[mapping.primary, default: []].insert(token)
-            for secondaryCat in mapping.secondary {
-                sets[secondaryCat, default: []].insert(token)
-            }
-        }
-        categoryTokenSets = sets
         version = catalog.version
         generatedDate = catalog.generatedDate
         releaseTag = catalog.releaseTag
@@ -94,10 +84,6 @@ final class CategoryService {
 
     func category(for token: String) -> CategoryID? {
         tokenMappings[token]?.primary
-    }
-
-    func tokens(in categoryID: CategoryID) -> Set<String> {
-        categoryTokenSets[categoryID] ?? []
     }
 
     func displayName(for categoryID: CategoryID) -> String {

@@ -25,10 +25,10 @@ nonisolated protocol InstalledSoftwareScanning: Sendable {
 }
 
 nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
-    private let applicationDiscovery: ApplicationDiscovery
-    private let applicationOwnershipResolver: ApplicationOwnershipResolver
-    private let installationIndexBuilder: InstallationIndexBuilder
-    private let packageReceiptResolver: PackageReceiptResolver
+    private let applicationDiscovery = ApplicationDiscovery()
+    private let applicationOwnershipResolver = ApplicationOwnershipResolver()
+    private let installationIndexBuilder = InstallationIndexBuilder()
+    private let packageReceiptResolver = PackageReceiptResolver()
 
     private struct ScanComponents: Sendable {
         let applications: ExternalApplicationScan
@@ -37,18 +37,7 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
         let packages: [String: ExternalPackageInstallation]
     }
 
-    init(
-        applicationDiscovery: ApplicationDiscovery = ApplicationDiscovery(),
-        applicationOwnershipResolver: ApplicationOwnershipResolver =
-            ApplicationOwnershipResolver(),
-        installationIndexBuilder: InstallationIndexBuilder = InstallationIndexBuilder(),
-        packageReceiptResolver: PackageReceiptResolver = PackageReceiptResolver()
-    ) {
-        self.applicationDiscovery = applicationDiscovery
-        self.applicationOwnershipResolver = applicationOwnershipResolver
-        self.installationIndexBuilder = installationIndexBuilder
-        self.packageReceiptResolver = packageReceiptResolver
-    }
+    init() {}
 
     func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
         // FileManager enumeration and pkgutil are synchronous. This task owns a

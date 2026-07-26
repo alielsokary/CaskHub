@@ -146,9 +146,9 @@ final class SettingsViewTests: XCTestCase {
 
         await cache.clearCache()
 
-        let contents = await diskCache.fileNames()
-        XCTAssertTrue(contents.allSatisfy { $0.hasPrefix(".") },
-                      "expected no cached icons, found: \(contents)")
+        let contents = try? FileManager.default.contentsOfDirectory(atPath: directory.path)
+        XCTAssertTrue(contents?.allSatisfy { $0.hasPrefix(".") } == true,
+                      "expected no cached icons, found: \(contents ?? [])")
     }
 
     func test_clear_serializes_with_pending_write_and_removes_result() async throws {

@@ -63,10 +63,6 @@ final class RecentlyAddedService {
         return Set(addedDates.filter { $0.value >= cutoff }.keys)
     }
 
-    func addedDate(for token: String) -> String? {
-        addedDates[token]
-    }
-
     private static func dateString(daysAgo: Int) -> String {
         let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: .now) ?? .now
         return date.formatted(.iso8601.year().month().day())

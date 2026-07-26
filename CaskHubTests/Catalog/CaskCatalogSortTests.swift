@@ -77,7 +77,6 @@ final class CaskCatalogSortTests: XCTestCase {
             version: 1,
             generatedDate: "2026-07-25",
             releaseTag: nil,
-            totalCasks: casks.count,
             categories: [
                 "even": CategoryDefinition(displayName: "Even", icon: "2.circle"),
                 "odd": CategoryDefinition(displayName: "Odd", icon: "1.circle")
@@ -289,7 +288,6 @@ final class CaskCatalogSortTests: XCTestCase {
             version: 1,
             generatedDate: "2026-07-25",
             releaseTag: nil,
-            totalCasks: 1,
             categories: [
                 "utilities": CategoryDefinition(displayName: "Utilities", icon: "wrench")
             ],

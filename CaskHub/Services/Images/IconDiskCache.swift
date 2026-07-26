@@ -138,10 +138,6 @@ actor IconDiskCache {
         try writeAtomically(Data(), to: flag)
     }
 
-    func fileNames() -> [String] {
-        (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
-    }
-
     private func ensureDirectory() throws {
         try FileManager.default.createDirectory(
             at: directory,

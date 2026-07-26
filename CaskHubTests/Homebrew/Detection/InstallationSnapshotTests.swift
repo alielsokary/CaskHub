@@ -41,7 +41,7 @@ final class InstallationSnapshotTests: XCTestCase {
 
         XCTAssertEqual(service.catalogStateRevision, 1)
         XCTAssertEqual(service.installationSnapshot.installedCasks["firefox"], installed)
-        XCTAssertEqual(service.detectedApplications, [application])
+        XCTAssertEqual(service.installationSnapshot.detectedApplications, [application])
         XCTAssertEqual(service.lastRefresh, Date(timeIntervalSince1970: 100))
     }
 
@@ -140,11 +140,12 @@ extension ExternalInstallationTests {
             packageIdentifiers: ["com.tailscale.ipn.macsys"],
             applicationBundleIdentifiers: ["io.tailscale.ipn.macsys"]
         )
+        let state = service.localState(for: tailscale)
 
-        XCTAssertTrue(service.isMacAppStoreInstalled(tailscale))
-        XCTAssertTrue(service.isPresent(tailscale))
-        XCTAssertFalse(service.isAdoptable(tailscale))
-        XCTAssertTrue(service.canOpen(tailscale))
+        XCTAssertEqual(state.installationSource, .macAppStore)
+        XCTAssertTrue(state.isPresent)
+        XCTAssertFalse(state.isAdoptable)
+        XCTAssertTrue(state.canOpen)
 
         service.openExternalApp(cask: tailscale)
         XCTAssertEqual(

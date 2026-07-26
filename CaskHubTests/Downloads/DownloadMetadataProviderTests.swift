@@ -48,7 +48,7 @@ private actor DownloadLoaderCounter {
         self.result = result
     }
 
-    func load(_ url: URL) -> Int64? {
+    func load(_: URL) -> Int64? {
         callCount += 1
         return result
     }

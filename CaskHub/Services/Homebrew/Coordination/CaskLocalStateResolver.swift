@@ -20,13 +20,6 @@ struct CaskLocalStateResolver {
         snapshot.installedCasks[token] != nil
     }
 
-    func isPresent(_ cask: Cask) -> Bool {
-        isInstalled(token: cask.token)
-            || isMacAppStoreInstalled(cask)
-            || isAdoptable(cask)
-            || externalCLIPath(cask) != nil
-    }
-
     func isAdoptable(_ cask: Cask) -> Bool {
         isAdoptableApplication(cask) || isExternalPackageInstalled(cask)
     }
@@ -184,13 +177,6 @@ struct CaskLocalStateResolver {
 
     func launchURL(for cask: Cask) -> URL? {
         existingBundleURL(named: launchableBundleNames(for: cask))
-    }
-
-    func launchURL(forInstalledToken token: String) -> URL? {
-        guard let installation = snapshot.installedCasks[token] else {
-            return nil
-        }
-        return existingBundleURL(named: installation.appBundleNames)
     }
 
     func externalLaunchURL(for cask: Cask) -> URL? {

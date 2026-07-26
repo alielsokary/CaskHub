@@ -77,7 +77,6 @@ nonisolated struct PackageReceiptResolver: Sendable {
             let unclaimedApps = candidate.appBundleNames.subtracting(claimedApps)
             guard !unclaimedApps.isEmpty else { continue }
             result[candidate.signature.token] = ExternalPackageInstallation(
-                receiptIdentifiers: candidate.receiptIdentifiers,
                 appBundleNames: unclaimedApps.sorted()
             )
             claimedApps.formUnion(unclaimedApps)
@@ -124,7 +123,6 @@ nonisolated struct PackageReceiptResolver: Sendable {
         }.max() ?? 0
         return PackageInstallationCandidate(
             signature: signature,
-            receiptIdentifiers: matchingReceipts,
             appBundleNames: existingApps,
             score: score
         )

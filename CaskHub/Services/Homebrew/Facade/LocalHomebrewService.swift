@@ -69,7 +69,7 @@ final class LocalHomebrewService {
     ) {
         var dependencies = LocalHomebrewDependencies()
         configureDependencies(&dependencies)
-        let operationStore = dependencies.operationStore ?? CaskOperationStore()
+        let operationStore = CaskOperationStore()
 
         fileManager = dependencies.fileManager
         self.defaults = defaults

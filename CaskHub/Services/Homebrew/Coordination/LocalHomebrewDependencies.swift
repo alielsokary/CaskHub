@@ -13,7 +13,6 @@ struct LocalHomebrewDependencies {
     var applicationDirectories: [URL]?
     var processRunner: (any BrewProcessRunning)?
     var commandExecutor: (any HomebrewCommandExecuting)?
-    var operationStore: CaskOperationStore?
     var softwareScanner: (any InstalledSoftwareScanning)?
     var applicationLauncher: (any ApplicationLaunching)?
     var brewBinaryProvider: () -> URL? = {

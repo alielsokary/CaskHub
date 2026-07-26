@@ -23,14 +23,6 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
     /// slip past the termination handler.
     func attach(
         to process: Process,
-        pipe: Pipe,
-        onChunk: @escaping @Sendable (String) -> Void
-    ) {
-        attach(to: process, readHandle: pipe.fileHandleForReading, onChunk: onChunk)
-    }
-
-    func attach(
-        to process: Process,
         readHandle handle: FileHandle,
         onChunk: @escaping @Sendable (String) -> Void
     ) {

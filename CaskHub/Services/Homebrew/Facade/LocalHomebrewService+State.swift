@@ -16,38 +16,6 @@ extension LocalHomebrewService {
         makeLocalStateResolver().isInstalled(token: token)
     }
 
-    func isPresent(_ cask: Cask) -> Bool {
-        makeLocalStateResolver().isPresent(cask)
-    }
-
-    func isAdoptable(_ cask: Cask) -> Bool {
-        makeLocalStateResolver().isAdoptable(cask)
-    }
-
-    func isAdoptableApplication(_ cask: Cask) -> Bool {
-        makeLocalStateResolver().isAdoptableApplication(cask)
-    }
-
-    func isExternalPackageInstalled(_ cask: Cask) -> Bool {
-        makeLocalStateResolver().isExternalPackageInstalled(cask)
-    }
-
-    func isMacAppStoreInstalled(_ cask: Cask) -> Bool {
-        makeLocalStateResolver().isMacAppStoreInstalled(cask)
-    }
-
-    func externalCLIPath(_ cask: Cask) -> URL? {
-        makeLocalStateResolver().externalCLIPath(cask)
-    }
-
-    func installationSource(for cask: Cask) -> CaskInstallationSource? {
-        makeLocalStateResolver().installationSource(for: cask)
-    }
-
-    func uninstallAvailability(for cask: Cask) -> CaskUninstallAvailability {
-        makeLocalStateResolver().uninstallAvailability(for: cask)
-    }
-
     func localState(for cask: Cask) -> CaskLocalState {
         makeLocalStateResolver().localState(for: cask)
     }
@@ -59,46 +27,11 @@ extension LocalHomebrewService {
         }
     }
 
-    func isOutdated(token: String, remoteVersion: String) -> Bool {
-        makeLocalStateResolver().isOutdated(
-            token: token,
-            remoteVersion: remoteVersion
-        )
-    }
-
-    func hasAvailableUpdate(
-        token: String,
-        remoteVersion: String,
-        autoUpdates: Bool?
-    ) -> Bool {
-        makeLocalStateResolver().hasAvailableUpdate(
-            token: token,
-            remoteVersion: remoteVersion,
-            autoUpdates: autoUpdates
-        )
-    }
-
-    func isZombie(_ cask: Cask) -> Bool {
-        makeLocalStateResolver().isZombie(cask)
-    }
-
-    func canOpen(_ cask: Cask) -> Bool {
-        makeLocalStateResolver().canOpen(cask)
-    }
-
     func open(_ cask: Cask) {
         clearError(for: cask.token)
         openApplication(
             at: makeLocalStateResolver().launchURL(for: cask),
             token: cask.token
-        )
-    }
-
-    func openApp(token: String) {
-        clearError(for: token)
-        openApplication(
-            at: makeLocalStateResolver().launchURL(forInstalledToken: token),
-            token: token
         )
     }
 

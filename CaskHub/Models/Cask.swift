@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ArtifactStanza: Codable, Hashable {
+struct ArtifactStanza: Decodable, Hashable {
     let keys: Set<String>
     let appNames: [String]
     let binaryNames: [String]
@@ -145,15 +145,9 @@ struct ArtifactStanza: Codable, Hashable {
         return names
     }
 
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: AnyKey.self)
-        for key in keys {
-            try container.encode(true, forKey: AnyKey(stringValue: key)!)
-        }
-    }
 }
 
-struct Cask: Codable, Identifiable, Hashable {
+struct Cask: Decodable, Identifiable, Hashable {
     let token: String
     let fullToken: String?
     let tap: String?

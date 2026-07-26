@@ -52,7 +52,4 @@ nonisolated struct CaskActionPresentation: Equatable, Sendable {
         activeAction != nil
     }
 
-    var alert: CaskActionAlert? {
-        CaskActionAlert.make(operationState: operationState)
-    }
 }

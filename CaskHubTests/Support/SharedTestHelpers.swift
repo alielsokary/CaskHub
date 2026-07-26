@@ -27,22 +27,11 @@ final class MockBrewAPIClient: BrewAPIClientProtocol {
         analyticsFetches.append(period)
         if let analyticsError { throw analyticsError }
         return analyticsResponses[period]
-            ?? CaskAnalyticsResponse(category: "", totalItems: 0, startDate: "", endDate: "", totalCount: 0, items: [])
+            ?? CaskAnalyticsResponse(items: [])
     }
 }
 
 // MARK: - Factories
-
-struct TestCaskLifecycle {
-    let deprecated: Bool
-    let disabled: Bool
-    let autoUpdates: Bool?
-
-    static let current = Self(deprecated: false, disabled: false, autoUpdates: nil)
-    static let deprecated = Self(deprecated: true, disabled: false, autoUpdates: nil)
-    static let disabled = Self(deprecated: false, disabled: true, autoUpdates: nil)
-    static let autoUpdating = Self(deprecated: false, disabled: false, autoUpdates: true)
-}
 
 @MainActor
 func makeCask(
@@ -50,7 +39,6 @@ func makeCask(
     name: String? = nil,
     desc: String? = nil,
     version: String = "1.0",
-    lifecycle: TestCaskLifecycle = .current,
     appNames: [String]? = nil,
     binaryNames: [String]? = nil,
     binarySourcePaths: [String]? = nil,
@@ -62,10 +50,7 @@ func makeCask(
         token: token,
         name: name,
         desc: desc,
-        version: version,
-        deprecated: lifecycle.deprecated,
-        disabled: lifecycle.disabled,
-        autoUpdates: lifecycle.autoUpdates
+        version: version
     )
     var artifacts: [ArtifactStanza] = []
     if let appNames { artifacts.append(ArtifactStanza(keys: ["app"], appNames: appNames)) }
@@ -92,13 +77,8 @@ func makeCask(
 @MainActor
 func analyticsResponse(_ counts: [(String, String)]) -> CaskAnalyticsResponse {
     CaskAnalyticsResponse(
-        category: "cask_install",
-        totalItems: counts.count,
-        startDate: "",
-        endDate: "",
-        totalCount: 0,
-        items: counts.enumerated().map {
-            CaskAnalyticsItem(number: $0.offset + 1, cask: $0.element.0, count: $0.element.1, percent: "0")
+        items: counts.map {
+            CaskAnalyticsItem(cask: $0.0, count: $0.1)
         }
     )
 }
@@ -274,7 +254,6 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
         version: 1,
         generatedDate: "2026-07-11",
         releaseTag: nil,
-        totalCasks: tokenToCategory.count,
         categories: categories,
         tokenToCategory: tokenToCategory,
         iconTokens: nil

@@ -107,27 +107,27 @@ final class AdoptionSurfaceTests: XCTestCase {
     func test_open_and_external_lookups_handle_missing_bundles() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("open-missing"))
 
-        service.openApp(token: "ghost")
+        service.open(makeCask("ghost"))
         XCTAssertNotNil(
-            service.operationStore.failures["ghost"]?.message,
+            service.operationStore.state(for: "ghost")?.failure?.message,
             "not installed should surface an error"
         )
         service.clearError(for: "ghost")
-        XCTAssertNil(service.operationStore.failures["ghost"])
+        XCTAssertNil(service.operationStore.state(for: "ghost")?.failure)
 
         updateInstalledCask(LocalCaskInstallation(
             token: "ghost", installedVersion: "1", installedAt: nil,
             appBundleNames: ["CaskHubTestNoSuchApp.app"]
         ), in: service)
-        service.openApp(token: "ghost")
+        service.open(makeCask("ghost"))
         XCTAssertNotNil(
-            service.operationStore.failures["ghost"]?.message,
+            service.operationStore.state(for: "ghost")?.failure?.message,
             "missing bundle should surface an error"
         )
 
         let external = makeCask("ghost2", appNames: ["CaskHubTestNoSuchApp.app"])
         service.openExternalApp(cask: external)
-        XCTAssertNotNil(service.operationStore.failures["ghost2"]?.message)
+        XCTAssertNotNil(service.operationStore.state(for: "ghost2")?.failure?.message)
         XCTAssertNil(service.externalAppVersion(for: external))
     }
 
@@ -164,7 +164,7 @@ final class AdoptionSurfaceTests: XCTestCase {
         let askpassPath = try? XCTUnwrap(runner.requests.first?.environment["SUDO_ASKPASS"])
         XCTAssertNotNil(runner.requests.first?.askpassContents)
         XCTAssertFalse(askpassPath.map(FileManager.default.fileExists(atPath:)) ?? true)
-        XCTAssertNotNil(service.operationStore.failures["firefox"])
+        XCTAssertNotNil(service.operationStore.state(for: "firefox")?.failure)
         XCTAssertNil(service.operationStore.state(for: "firefox")?.action)
     }
 
@@ -174,12 +174,12 @@ final class AdoptionSurfaceTests: XCTestCase {
         let service = makeMutationService(runner: runner)
 
         service.requestPackageAdoption(token: "zoom")
-        XCTAssertTrue(service.operationStore.pendingPackageAdoptions.contains("zoom"))
+        XCTAssertEqual(service.operationStore.state(for: "zoom"), .awaitingPackageAdoption)
 
         try await service.adoptPackage(token: "zoom")
 
         XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "zoom"]])
-        XCTAssertFalse(service.operationStore.pendingPackageAdoptions.contains("zoom"))
+        XCTAssertNil(service.operationStore.state(for: "zoom"))
         XCTAssertNil(service.operationStore.state(for: "zoom")?.action)
     }
 
@@ -257,7 +257,7 @@ final class AdoptionSurfaceTests: XCTestCase {
 
         try? await service.adopt(token: token)
 
-        XCTAssertNotNil(service.operationStore.failures[token])
+        XCTAssertNotNil(service.operationStore.state(for: token)?.failure)
         XCTAssertNil(service.operationStore.state(for: token)?.action)
         XCTAssertTrue(service.operationStore.pendingPermissions.isEmpty)
     }
@@ -304,11 +304,13 @@ final class AdoptionSurfaceTests: XCTestCase {
         try await service.adopt(cask)
 
         XCTAssertTrue(
-            service.operationStore.tokens(offering: .replaceWithHomebrew).contains(cask.token),
+            service.operationStore.state(for: cask.token)?.failure?
+                .recoveries.contains(.replaceWithHomebrew) == true,
             "should offer the safe replace path"
         )
         XCTAssertTrue(
-            service.operationStore.failures[cask.token]?.message.contains("fake-cli") == true,
+            service.operationStore.state(for: cask.token)?.failure?
+                .message.contains("fake-cli") == true,
             "error should name the missing component"
         )
         XCTAssertNil(service.operationStore.state(for: cask.token)?.action, "brew must never run")
@@ -340,10 +342,4 @@ final class AdoptionSurfaceTests: XCTestCase {
         XCTAssertNil(service.adoptBlockedByMissingBinary(cask))
     }
 
-    func test_artifact_stanza_round_trips_keys_through_codable() throws {
-        let stanza = ArtifactStanza(keys: ["app", "zap"], appNames: ["X.app"])
-        let data = try JSONEncoder().encode([stanza])
-        let decoded = try JSONDecoder().decode([ArtifactStanza].self, from: data)
-        XCTAssertEqual(decoded[0].keys, ["app", "zap"])
-    }
 }
