@@ -33,11 +33,7 @@ final class HomebrewPackageLaunchTests: XCTestCase {
     }
 
     private func makeSUT(in root: URL) throws -> SUT {
-        let variantApp = try makeApplicationBundle(
-            in: root,
-            named: "Example App Beta.app",
-            bundleIdentifier: "com.example.app.beta"
-        )
+        let variantApp = try makeInstalledApplicationBundle(in: root)
         let applications = ApplicationDiscovery()
             .scan(fileManager: .default, directories: [root])
             .applications
@@ -82,6 +78,14 @@ final class HomebrewPackageLaunchTests: XCTestCase {
             cask: cask,
             launcher: launcher,
             service: service
+        )
+    }
+
+    private func makeInstalledApplicationBundle(in root: URL) throws -> URL {
+        try makeApplicationBundle(
+            in: root,
+            named: "Example App Beta.app",
+            bundleIdentifier: "com.example.app.beta"
         )
     }
 
