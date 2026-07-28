@@ -32,12 +32,14 @@ nonisolated struct InstallationIndexBuilder: Sendable {
         catalog: CaskInstallationCatalog,
         applications: [DetectedApplication],
         binaryPaths: [String: URL],
-        installedCasks: [String: LocalCaskInstallation]
+        installedCasks: [String: LocalCaskInstallation],
+        packageInstallations: [String: ExternalPackageInstallation] = [:]
     ) -> CaskInstallationIndex {
         let homebrewApplications = resolveHomebrewApplicationState(
             signatures: catalog.applicationSignatures,
             applications: applications,
-            installedCasks: installedCasks
+            installedCasks: installedCasks,
+            packageInstallations: packageInstallations
         )
         return CaskInstallationIndex(
             catalogTokens: catalog.tokens,
@@ -99,7 +101,8 @@ nonisolated struct InstallationIndexBuilder: Sendable {
     func resolveHomebrewApplicationState(
         signatures: [CaskApplicationSignature],
         applications: [DetectedApplication],
-        installedCasks: [String: LocalCaskInstallation]
+        installedCasks: [String: LocalCaskInstallation],
+        packageInstallations: [String: ExternalPackageInstallation] = [:]
     ) -> (launchableTokens: Set<String>, zombieTokens: Set<String>) {
         let signaturesByToken = Dictionary(
             signatures.map { ($0.token, $0) },
@@ -113,6 +116,7 @@ nonisolated struct InstallationIndexBuilder: Sendable {
             guard let signature = signaturesByToken[token] else { continue }
             let launchableNames = Set(installation.appBundleNames)
                 .union(signature.launchableBundleNames)
+                .union(packageInstallations[token]?.appBundleNames ?? [])
             if !launchableNames.isDisjoint(with: validBundleNames) {
                 launchableTokens.insert(token)
             }

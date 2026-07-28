@@ -60,7 +60,8 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
             )
             let packages = packageReceiptResolver.scan(
                 signatures: request.packageSignatures,
-                availableAppNames: applications.nonStoreNames
+                availableAppNames: applications.nonStoreNames,
+                homebrewInstalledTokens: Set(installedCasks.keys)
             )
             let components = ScanComponents(
                 applications: applications,
@@ -91,7 +92,8 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
             let packages = request.packageSignatures.isEmpty ? [:] :
                 packageReceiptResolver.scan(
                     signatures: request.packageSignatures,
-                    availableAppNames: applications.nonStoreNames
+                    availableAppNames: applications.nonStoreNames,
+                    homebrewInstalledTokens: Set(current.installedCasks.keys)
                 )
             let components = ScanComponents(
                 applications: applications,
@@ -121,7 +123,8 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
             catalog: request.catalog,
             applications: components.applications.applications,
             binaryPaths: components.binaryPaths,
-            installedCasks: components.installedCasks
+            installedCasks: components.installedCasks,
+            packageInstallations: components.packages
         )
         return InstallationSnapshot(
             installedCasks: components.installedCasks,

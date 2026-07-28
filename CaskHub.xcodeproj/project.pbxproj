@@ -96,6 +96,7 @@
 		41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B130028F9F00608C7A /* CaskHubTests.swift */; };
 		C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000001 /* ExternalInstallationTests.swift */; };
 		C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */; };
+		F34000000000000000000002 /* HomebrewPackageLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34000000000000000000001 /* HomebrewPackageLaunchTests.swift */; };
 		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
 		F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25000000000000000000001 /* CaskCatalogSortTests.swift */; };
 		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
@@ -214,6 +215,7 @@
 		41DFD4B130028F9F00608C7A /* CaskHubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubTests.swift; sourceTree = "<group>"; };
 		D15000000000000000000001 /* ExternalInstallationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalInstallationTests.swift; sourceTree = "<group>"; };
 		D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalApplicationOwnershipTests.swift; sourceTree = "<group>"; };
+		F34000000000000000000001 /* HomebrewPackageLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewPackageLaunchTests.swift; sourceTree = "<group>"; };
 		41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModelTests.swift; sourceTree = "<group>"; };
 		E25000000000000000000001 /* CaskCatalogSortTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogSortTests.swift; sourceTree = "<group>"; };
 		41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestHelpers.swift; sourceTree = "<group>"; };
@@ -656,6 +658,7 @@
 				D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */,
 				D15000000000000000000001 /* ExternalInstallationTests.swift */,
 				E2900000000000000000000B /* InstallationSnapshotTests.swift */,
+				F34000000000000000000001 /* HomebrewPackageLaunchTests.swift */,
 				B12000000000000000000004 /* ZombieDetectionTests.swift */,
 			);
 			path = Detection;
@@ -942,6 +945,7 @@
 				F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */,
 				C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */,
 				C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */,
+				F34000000000000000000002 /* HomebrewPackageLaunchTests.swift in Sources */,
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
