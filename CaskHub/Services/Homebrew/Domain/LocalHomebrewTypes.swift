@@ -129,6 +129,7 @@ nonisolated struct PackageInstallationCandidate {
     let signature: PackageCaskSignature
     let appBundleNames: Set<String>
     let score: Int
+    let isHomebrewInstalled: Bool
 }
 
 nonisolated struct ExternalPackageInstallation: Hashable, Sendable {
