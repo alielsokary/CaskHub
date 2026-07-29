@@ -58,9 +58,6 @@ struct CaskHubApp: App {
             recentlyAdded: recent,
             localHomebrew: homebrew
         ))
-        terminationCoordinator.configure {
-            homebrew.hasActiveOperations
-        }
     }
 
     var body: some Scene {
@@ -72,24 +69,10 @@ struct CaskHubApp: App {
                         terminationCoordinator.requestTermination()
                     }
                 }
-                .alert(
-                    "Quit CaskHub?",
-                    isPresented: Binding(
-                        get: { terminationCoordinator.showsQuitConfirmation },
-                        set: { terminationCoordinator.showsQuitConfirmation = $0 }
-                    )
-                ) {
-                    Button("Keep Running", role: .cancel) {
-                        terminationCoordinator.keepRunning()
+                .onAppear {
+                    terminationCoordinator.configure {
+                        localHomebrew.hasActiveOperations
                     }
-                    Button("Quit CaskHub", role: .destructive) {
-                        terminationCoordinator.confirmTermination()
-                    }
-                } message: {
-                    Text("""
-                    A Homebrew operation is still in progress. Quitting while Homebrew is \
-                    working may leave the affected app in an incomplete state.
-                    """)
                 }
                 .onChange(of: selectedTheme, initial: true) { _, newValue in
                     AppTheme.apply(newValue)

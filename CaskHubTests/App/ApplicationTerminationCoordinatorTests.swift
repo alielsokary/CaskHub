@@ -13,7 +13,8 @@ final class ApplicationTerminationCoordinatorTests: XCTestCase {
     private final class Probe {
         var hasActiveOperations = false
         var requestCount = 0
-        var replies: [Bool] = []
+        var confirmationResult = false
+        var confirmationCount = 0
     }
 
     @MainActor
@@ -23,7 +24,10 @@ final class ApplicationTerminationCoordinatorTests: XCTestCase {
         ApplicationTerminationCoordinator(
             hasActiveOperations: { probe.hasActiveOperations },
             requestApplicationTermination: { probe.requestCount += 1 },
-            replyToApplicationTermination: { probe.replies.append($0) }
+            presentQuitConfirmation: {
+                probe.confirmationCount += 1
+                return probe.confirmationResult
+            }
         )
     }
 
@@ -45,45 +49,52 @@ final class ApplicationTerminationCoordinatorTests: XCTestCase {
         let reply = coordinator.applicationShouldTerminate(.shared)
 
         XCTAssertEqual(reply, .terminateNow)
-        XCTAssertFalse(coordinator.showsQuitConfirmation)
-        XCTAssertTrue(probe.replies.isEmpty)
+        XCTAssertEqual(probe.confirmationCount, 0)
     }
 
     @MainActor
-    func test_termination_waits_for_confirmation_during_an_active_operation() {
+    func test_termination_is_cancelled_when_the_user_keeps_an_active_operation_running() {
         let probe = Probe()
         probe.hasActiveOperations = true
         let coordinator = makeCoordinator(probe: probe)
 
         let reply = coordinator.applicationShouldTerminate(.shared)
 
-        XCTAssertEqual(reply, .terminateLater)
-        XCTAssertTrue(coordinator.showsQuitConfirmation)
+        XCTAssertEqual(reply, .terminateCancel)
+        XCTAssertEqual(probe.confirmationCount, 1)
     }
 
     @MainActor
-    func test_keep_running_cancels_a_pending_termination() {
+    func test_termination_proceeds_when_the_user_confirms_during_an_active_operation() {
         let probe = Probe()
         probe.hasActiveOperations = true
+        probe.confirmationResult = true
         let coordinator = makeCoordinator(probe: probe)
-        _ = coordinator.applicationShouldTerminate(.shared)
 
-        coordinator.keepRunning()
+        let reply = coordinator.applicationShouldTerminate(.shared)
 
-        XCTAssertEqual(probe.replies, [false])
-        XCTAssertFalse(coordinator.showsQuitConfirmation)
+        XCTAssertEqual(reply, .terminateNow)
+        XCTAssertEqual(probe.confirmationCount, 1)
     }
 
     @MainActor
-    func test_confirmation_completes_a_pending_termination() {
+    func test_configured_operation_provider_is_used_after_launch() {
         let probe = Probe()
-        probe.hasActiveOperations = true
-        let coordinator = makeCoordinator(probe: probe)
-        _ = coordinator.applicationShouldTerminate(.shared)
+        let coordinator = ApplicationTerminationCoordinator(
+            hasActiveOperations: { false },
+            requestApplicationTermination: {},
+            presentQuitConfirmation: {
+                probe.confirmationCount += 1
+                return false
+            }
+        )
+        coordinator.configure {
+            true
+        }
 
-        coordinator.confirmTermination()
+        let reply = coordinator.applicationShouldTerminate(.shared)
 
-        XCTAssertEqual(probe.replies, [true])
-        XCTAssertFalse(coordinator.showsQuitConfirmation)
+        XCTAssertEqual(reply, .terminateCancel)
+        XCTAssertEqual(probe.confirmationCount, 1)
     }
 }

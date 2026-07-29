@@ -6,28 +6,35 @@
 //
 
 import AppKit
-import Combine
 
 @MainActor
-final class ApplicationTerminationCoordinator: NSObject, NSApplicationDelegate, ObservableObject {
+final class ApplicationTerminationCoordinator: NSObject, NSApplicationDelegate {
     typealias ActiveOperationsProvider = @MainActor () -> Bool
     typealias TerminationRequester = @MainActor () -> Void
-    typealias TerminationReplier = @MainActor (Bool) -> Void
-
-    @Published var showsQuitConfirmation = false
+    typealias QuitConfirmationPresenter = @MainActor () -> Bool
 
     private var hasActiveOperations: ActiveOperationsProvider
     private let requestApplicationTermination: TerminationRequester
-    private let replyToApplicationTermination: TerminationReplier
-    private var isAwaitingTerminationReply = false
+    private let presentQuitConfirmation: QuitConfirmationPresenter
 
     override init() {
         hasActiveOperations = { false }
         requestApplicationTermination = {
             NSApplication.shared.terminate(nil)
         }
-        replyToApplicationTermination = { shouldTerminate in
-            NSApplication.shared.reply(toApplicationShouldTerminate: shouldTerminate)
+        presentQuitConfirmation = {
+            let alert = NSAlert()
+            alert.messageText = "Quit CaskHub?"
+            alert.informativeText = """
+            A Homebrew operation is still in progress. Quitting while Homebrew is \
+            working may leave the affected app in an incomplete state.
+            """
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Quit CaskHub")
+            alert.addButton(withTitle: "Keep Running")
+            alert.buttons.first?.hasDestructiveAction = true
+            alert.buttons.last?.keyEquivalent = "\u{1b}"
+            return alert.runModal() == .alertFirstButtonReturn
         }
         super.init()
     }
@@ -35,11 +42,11 @@ final class ApplicationTerminationCoordinator: NSObject, NSApplicationDelegate, 
     init(
         hasActiveOperations: @escaping ActiveOperationsProvider,
         requestApplicationTermination: @escaping TerminationRequester,
-        replyToApplicationTermination: @escaping TerminationReplier
+        presentQuitConfirmation: @escaping QuitConfirmationPresenter
     ) {
         self.hasActiveOperations = hasActiveOperations
         self.requestApplicationTermination = requestApplicationTermination
-        self.replyToApplicationTermination = replyToApplicationTermination
+        self.presentQuitConfirmation = presentQuitConfirmation
         super.init()
     }
 
@@ -51,29 +58,11 @@ final class ApplicationTerminationCoordinator: NSObject, NSApplicationDelegate, 
         requestApplicationTermination()
     }
 
-    func keepRunning() {
-        finishPendingTermination(shouldTerminate: false)
-    }
-
-    func confirmTermination() {
-        finishPendingTermination(shouldTerminate: true)
-    }
-
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard hasActiveOperations() else {
             return .terminateNow
         }
 
-        isAwaitingTerminationReply = true
-        showsQuitConfirmation = true
-        return .terminateLater
-    }
-
-    private func finishPendingTermination(shouldTerminate: Bool) {
-        guard isAwaitingTerminationReply else { return }
-
-        isAwaitingTerminationReply = false
-        showsQuitConfirmation = false
-        replyToApplicationTermination(shouldTerminate)
+        return presentQuitConfirmation() ? .terminateNow : .terminateCancel
     }
 }

@@ -20,7 +20,13 @@ final class ContentViewTests: XCTestCase {
 
     @MainActor
     private final class CloseProbe {
-        var requested = false
+        var terminationCoordinator: ApplicationTerminationCoordinator?
+        var confirmationCount = 0
+        var terminationReply: NSApplication.TerminateReply?
+
+        func requestTermination() {
+            terminationReply = terminationCoordinator?.applicationShouldTerminate(.shared)
+        }
     }
 
     // MARK: - Harness
@@ -127,8 +133,17 @@ final class ContentViewTests: XCTestCase {
     }
 
     @MainActor
-    func test_close_button_invokes_the_configured_app_close_request() throws {
+    func test_close_button_routes_through_active_operation_confirmation() throws {
         let probe = CloseProbe()
+        let terminationCoordinator = ApplicationTerminationCoordinator(
+            hasActiveOperations: { true },
+            requestApplicationTermination: { probe.requestTermination() },
+            presentQuitConfirmation: {
+                probe.confirmationCount += 1
+                return false
+            }
+        )
+        probe.terminationCoordinator = terminationCoordinator
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
             styleMask: [.titled, .closable],
@@ -137,7 +152,7 @@ final class ContentViewTests: XCTestCase {
         )
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: WindowCloseButtonConfigurator {
-            probe.requested = true
+            terminationCoordinator.requestTermination()
         })
         window.orderFrontRegardless()
 
@@ -151,7 +166,8 @@ final class ContentViewTests: XCTestCase {
 
         closeButton.performClick(nil)
 
-        XCTAssertTrue(probe.requested)
+        XCTAssertEqual(probe.confirmationCount, 1)
+        XCTAssertEqual(probe.terminationReply, .terminateCancel)
         window.contentView = NSView()
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         window.close()
