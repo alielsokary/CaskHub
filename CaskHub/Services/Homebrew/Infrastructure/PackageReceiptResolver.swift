@@ -20,7 +20,8 @@ nonisolated struct PackageReceiptResolver: Sendable {
     /// at least one application from the package payload still exists.
     func scan(
         signatures: [PackageCaskSignature],
-        availableAppNames: Set<String>
+        availableAppNames: Set<String>,
+        homebrewInstalledTokens: Set<String> = []
     ) -> [String: ExternalPackageInstallation] {
         guard !signatures.isEmpty,
               let receiptOutput = query(["--pkgs"])
@@ -44,7 +45,8 @@ nonisolated struct PackageReceiptResolver: Sendable {
             signatures: signatures,
             installedReceipts: installedReceipts,
             packageFileLists: fileLists,
-            availableAppNames: availableAppNames
+            availableAppNames: availableAppNames,
+            homebrewInstalledTokens: homebrewInstalledTokens
         )
     }
 
@@ -53,17 +55,22 @@ nonisolated struct PackageReceiptResolver: Sendable {
         signatures: [PackageCaskSignature],
         installedReceipts: Set<String>,
         packageFileLists: [String: String],
-        availableAppNames: Set<String>
+        availableAppNames: Set<String>,
+        homebrewInstalledTokens: Set<String> = []
     ) -> [String: ExternalPackageInstallation] {
         var candidates = signatures.compactMap {
             candidate(
                 for: $0,
                 installedReceipts: installedReceipts,
                 packageFileLists: packageFileLists,
-                availableAppNames: availableAppNames
+                availableAppNames: availableAppNames,
+                isHomebrewInstalled: homebrewInstalledTokens.contains($0.token)
             )
         }
         candidates.sort {
+            if $0.isHomebrewInstalled != $1.isHomebrewInstalled {
+                return $0.isHomebrewInstalled
+            }
             if $0.score != $1.score { return $0.score > $1.score }
             if $0.signature.token.count != $1.signature.token.count {
                 return $0.signature.token.count < $1.signature.token.count
@@ -88,7 +95,8 @@ nonisolated struct PackageReceiptResolver: Sendable {
         for signature: PackageCaskSignature,
         installedReceipts: Set<String>,
         packageFileLists: [String: String],
-        availableAppNames: Set<String>
+        availableAppNames: Set<String>,
+        isHomebrewInstalled: Bool
     ) -> PackageInstallationCandidate? {
         let matchingReceipts = Set(installedReceipts.filter { receipt in
             signature.receiptPatterns.contains {
@@ -108,7 +116,8 @@ nonisolated struct PackageReceiptResolver: Sendable {
         .filter {
             Self.payloadAppName(
                 $0,
-                matches: signature.appNameCandidates
+                matches: signature.appNameCandidates,
+                allowingVariantDifference: isHomebrewInstalled
             )
         }
         let existingApps = declaredApps.union(payloadApps)
@@ -124,13 +133,15 @@ nonisolated struct PackageReceiptResolver: Sendable {
         return PackageInstallationCandidate(
             signature: signature,
             appBundleNames: existingApps,
-            score: score
+            score: score,
+            isHomebrewInstalled: isHomebrewInstalled
         )
     }
 
     static func payloadAppName(
         _ appName: String,
-        matches candidates: [String]
+        matches candidates: [String],
+        allowingVariantDifference: Bool = false
     ) -> Bool {
         let actualTokens = nameTokens(appName)
         let variantTokens: Set = [
@@ -138,9 +149,14 @@ nonisolated struct PackageReceiptResolver: Sendable {
         ]
         return candidates.contains { candidate in
             let candidateTokens = nameTokens(candidate)
-            guard actualTokens.intersection(variantTokens)
-                == candidateTokens.intersection(variantTokens)
-            else { return false }
+            // A Caskroom entry establishes ownership even when the vendor adds
+            // a variant suffix without changing the Homebrew token. External
+            // package detection remains variant-exact.
+            if !allowingVariantDifference {
+                guard actualTokens.intersection(variantTokens)
+                    == candidateTokens.intersection(variantTokens)
+                else { return false }
+            }
             return actualTokens.isSubset(of: candidateTokens)
                 || candidateTokens.isSubset(of: actualTokens)
         }

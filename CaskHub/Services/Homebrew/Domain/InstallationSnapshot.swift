@@ -37,6 +37,7 @@ nonisolated struct InstallationSnapshot: Sendable {
     let externalBinaryPaths: [String: URL]
     let externalPackageInstallations: [String: ExternalPackageInstallation]
     let installationIndex: CaskInstallationIndex
+    let installationDatesByToken: [String: CaskInstallationDates]
     let scannedAt: Date?
 
     var externalAppNames: Set<String> {
@@ -65,6 +66,7 @@ nonisolated struct InstallationSnapshot: Sendable {
         externalBinaryPaths: [String: URL] = [:],
         externalPackageInstallations: [String: ExternalPackageInstallation] = [:],
         installationIndex: CaskInstallationIndex = .empty,
+        installationDatesByToken: [String: CaskInstallationDates] = [:],
         scannedAt: Date? = nil
     ) {
         self.installedCasks = installedCasks
@@ -72,6 +74,7 @@ nonisolated struct InstallationSnapshot: Sendable {
         self.externalBinaryPaths = externalBinaryPaths
         self.externalPackageInstallations = externalPackageInstallations
         self.installationIndex = installationIndex
+        self.installationDatesByToken = installationDatesByToken
         self.scannedAt = scannedAt
     }
 

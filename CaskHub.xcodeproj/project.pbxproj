@@ -20,6 +20,7 @@
 		41DFD48A30028F7D00608C7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD48430028F7D00608C7A /* Assets.xcassets */; };
 		41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44E30028F7D00608C7A /* Askpass.swift */; };
 		41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44F30028F7D00608C7A /* CaskHubApp.swift */; };
+		A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */; };
 		41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45130028F7D00608C7A /* BarrelMark.swift */; };
 		41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45230028F7D00608C7A /* CaskActionsView.swift */; };
 		F24000000000000000000002 /* CaskOperationCapsule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000002 /* CaskOperationCapsule.swift */; };
@@ -83,6 +84,7 @@
 		F27000000000000000000002 /* CatalogProjectionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27000000000000000000001 /* CatalogProjectionCache.swift */; };
 		F27000000000000000000004 /* CaskCatalogViewModel+Projection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27000000000000000000003 /* CaskCatalogViewModel+Projection.swift */; };
 		F2900000000000000000001B /* CatalogProjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000001B /* CatalogProjector.swift */; };
+		A29100000000000000000002 /* CaskMetadataProjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000001 /* CaskMetadataProjector.swift */; };
 		41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47830028F7D00608C7A /* SettingsView.swift */; };
 		41DFD4E230028F7D00608C7A /* AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4E130028F7D00608C7A /* AppearanceSettingsView.swift */; };
 		41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */; };
@@ -96,7 +98,9 @@
 		41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B130028F9F00608C7A /* CaskHubTests.swift */; };
 		C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000001 /* ExternalInstallationTests.swift */; };
 		C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */; };
+		F34000000000000000000002 /* HomebrewPackageLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34000000000000000000001 /* HomebrewPackageLaunchTests.swift */; };
 		41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */; };
+		A29100000000000000000004 /* CaskMetadataProjectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000003 /* CaskMetadataProjectorTests.swift */; };
 		F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25000000000000000000001 /* CaskCatalogSortTests.swift */; };
 		41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */; };
 		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
@@ -107,6 +111,7 @@
 		F29000000000000000000007 /* CaskOperationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000007 /* CaskOperationStoreTests.swift */; };
 		F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000000B /* InstallationSnapshotTests.swift */; };
 		F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000013 /* HomebrewCommandExecutorTests.swift */; };
+		A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000006 /* InstallationDateIndexTests.swift */; };
 		F29000000000000000000019 /* CaskActionPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000019 /* CaskActionPresentationTests.swift */; };
 		F2900000000000000000001F /* DownloadMetadataProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000001F /* DownloadMetadataProviderTests.swift */; };
 		F24000000000000000000004 /* BrewProcessRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000004 /* BrewProcessRunnerTests.swift */; };
@@ -114,6 +119,7 @@
 		C12000000000000000000001 /* BrewProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000001 /* BrewProcessRunner.swift */; };
 		C12000000000000000000002 /* added_dates.json in Resources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000002 /* added_dates.json */; };
 		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
+		A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -133,6 +139,7 @@
 		41AD10302F68D00100BEABB8 /* UpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterService.swift; sourceTree = "<group>"; };
 		41DFD44E30028F7D00608C7A /* Askpass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Askpass.swift; sourceTree = "<group>"; };
 		41DFD44F30028F7D00608C7A /* CaskHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubApp.swift; sourceTree = "<group>"; };
+		A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinator.swift; sourceTree = "<group>"; };
 		41DFD45130028F7D00608C7A /* BarrelMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarrelMark.swift; sourceTree = "<group>"; };
 		41DFD45230028F7D00608C7A /* CaskActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionsView.swift; sourceTree = "<group>"; };
 		E24000000000000000000002 /* CaskOperationCapsule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationCapsule.swift; sourceTree = "<group>"; };
@@ -192,6 +199,7 @@
 		F33000000000000000000001 /* LocalHomebrewDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewDependencies.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		F28000000000000000000001 /* InstallationIndexBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationIndexBuilder.swift; sourceTree = "<group>"; };
+		A29100000000000000000006 /* InstallationDateIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationDateIndexTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
 		D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Mutations.swift"; sourceTree = "<group>"; };
 		D13000000000000000000002 /* MutationRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutationRecoveryTests.swift; sourceTree = "<group>"; };
@@ -200,6 +208,7 @@
 		F27000000000000000000001 /* CatalogProjectionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogProjectionCache.swift; sourceTree = "<group>"; };
 		F27000000000000000000003 /* CaskCatalogViewModel+Projection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CaskCatalogViewModel+Projection.swift"; sourceTree = "<group>"; };
 		E2900000000000000000001B /* CatalogProjector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogProjector.swift; sourceTree = "<group>"; };
+		A29100000000000000000001 /* CaskMetadataProjector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskMetadataProjector.swift; sourceTree = "<group>"; };
 		41DFD47830028F7D00608C7A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		41DFD4E130028F7D00608C7A /* AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsView.swift; sourceTree = "<group>"; };
 		41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionAlerts.swift; sourceTree = "<group>"; };
@@ -214,7 +223,9 @@
 		41DFD4B130028F9F00608C7A /* CaskHubTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubTests.swift; sourceTree = "<group>"; };
 		D15000000000000000000001 /* ExternalInstallationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalInstallationTests.swift; sourceTree = "<group>"; };
 		D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalApplicationOwnershipTests.swift; sourceTree = "<group>"; };
+		F34000000000000000000001 /* HomebrewPackageLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewPackageLaunchTests.swift; sourceTree = "<group>"; };
 		41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModelTests.swift; sourceTree = "<group>"; };
+		A29100000000000000000003 /* CaskMetadataProjectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskMetadataProjectorTests.swift; sourceTree = "<group>"; };
 		E25000000000000000000001 /* CaskCatalogSortTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogSortTests.swift; sourceTree = "<group>"; };
 		41DFD4B730028F9F00608C7A /* SharedTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestHelpers.swift; sourceTree = "<group>"; };
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -234,6 +245,7 @@
 		D12000000000000000000001 /* BrewProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewProcessRunner.swift; sourceTree = "<group>"; };
 		D12000000000000000000002 /* added_dates.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = added_dates.json; sourceTree = "<group>"; };
 		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
+		A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinatorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -260,6 +272,7 @@
 		41DFD45030028F7D00608C7A /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */,
 				41DFD44E30028F7D00608C7A /* Askpass.swift */,
 				41DFD44F30028F7D00608C7A /* CaskHubApp.swift */,
 			);
@@ -501,6 +514,7 @@
 		F3200000000000000000001D /* Projection */ = {
 			isa = PBXGroup;
 			children = (
+				A29100000000000000000001 /* CaskMetadataProjector.swift */,
 				F27000000000000000000001 /* CatalogProjectionCache.swift */,
 				E2900000000000000000001B /* CatalogProjector.swift */,
 			);
@@ -565,6 +579,7 @@
 		41DFD4B230028F9F00608C7A /* CaskHubTests */ = {
 			isa = PBXGroup;
 			children = (
+				A29000000000000000000005 /* App */,
 				F32000000000000000000020 /* Support */,
 				F32000000000000000000021 /* Telemetry */,
 				F32000000000000000000022 /* Catalog */,
@@ -573,6 +588,14 @@
 				F32000000000000000000025 /* Homebrew */,
 			);
 			path = CaskHubTests;
+			sourceTree = "<group>";
+		};
+		A29000000000000000000005 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 		F32000000000000000000020 /* Support */ = {
@@ -595,10 +618,19 @@
 		F32000000000000000000022 /* Catalog */ = {
 			isa = PBXGroup;
 			children = (
+				A29100000000000000000005 /* Projection */,
 				E25000000000000000000001 /* CaskCatalogSortTests.swift */,
 				41DFD4B530028F9F00608C7A /* CaskCatalogViewModelTests.swift */,
 			);
 			path = Catalog;
+			sourceTree = "<group>";
+		};
+		A29100000000000000000005 /* Projection */ = {
+			isa = PBXGroup;
+			children = (
+				A29100000000000000000003 /* CaskMetadataProjectorTests.swift */,
+			);
+			path = Projection;
 			sourceTree = "<group>";
 		};
 		F32000000000000000000023 /* Views */ = {
@@ -656,6 +688,7 @@
 				D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */,
 				D15000000000000000000001 /* ExternalInstallationTests.swift */,
 				E2900000000000000000000B /* InstallationSnapshotTests.swift */,
+				F34000000000000000000001 /* HomebrewPackageLaunchTests.swift */,
 				B12000000000000000000004 /* ZombieDetectionTests.swift */,
 			);
 			path = Detection;
@@ -666,6 +699,7 @@
 			children = (
 				E24000000000000000000004 /* BrewProcessRunnerTests.swift */,
 				E29000000000000000000013 /* HomebrewCommandExecutorTests.swift */,
+				A29100000000000000000006 /* InstallationDateIndexTests.swift */,
 			);
 			path = Infrastructure;
 			sourceTree = "<group>";
@@ -853,6 +887,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */,
 				41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */,
 				41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */,
 				41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */,
@@ -920,6 +955,7 @@
 				F27000000000000000000002 /* CatalogProjectionCache.swift in Sources */,
 				F27000000000000000000004 /* CaskCatalogViewModel+Projection.swift in Sources */,
 				F2900000000000000000001B /* CatalogProjector.swift in Sources */,
+				A29100000000000000000002 /* CaskMetadataProjector.swift in Sources */,
 				41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */,
 				41DFD4E230028F7D00608C7A /* AppearanceSettingsView.swift in Sources */,
 				41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */,
@@ -936,12 +972,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */,
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
+				A29100000000000000000004 /* CaskMetadataProjectorTests.swift in Sources */,
 				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
 				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,
 				F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */,
 				C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */,
 				C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */,
+				F34000000000000000000002 /* HomebrewPackageLaunchTests.swift in Sources */,
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
@@ -952,6 +991,7 @@
 				F29000000000000000000007 /* CaskOperationStoreTests.swift in Sources */,
 				F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */,
 				F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */,
+				A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */,
 				F29000000000000000000019 /* CaskActionPresentationTests.swift in Sources */,
 				F2900000000000000000001F /* DownloadMetadataProviderTests.swift in Sources */,
 				F24000000000000000000004 /* BrewProcessRunnerTests.swift in Sources */,
@@ -1123,7 +1163,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.6.6;
+				MARKETING_VERSION = 0.6.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -1161,7 +1201,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.6.6;
+				MARKETING_VERSION = 0.6.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

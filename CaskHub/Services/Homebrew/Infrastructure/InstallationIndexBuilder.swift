@@ -32,12 +32,14 @@ nonisolated struct InstallationIndexBuilder: Sendable {
         catalog: CaskInstallationCatalog,
         applications: [DetectedApplication],
         binaryPaths: [String: URL],
-        installedCasks: [String: LocalCaskInstallation]
+        installedCasks: [String: LocalCaskInstallation],
+        packageInstallations: [String: ExternalPackageInstallation] = [:]
     ) -> CaskInstallationIndex {
         let homebrewApplications = resolveHomebrewApplicationState(
             signatures: catalog.applicationSignatures,
             applications: applications,
-            installedCasks: installedCasks
+            installedCasks: installedCasks,
+            packageInstallations: packageInstallations
         )
         return CaskInstallationIndex(
             catalogTokens: catalog.tokens,
@@ -99,7 +101,8 @@ nonisolated struct InstallationIndexBuilder: Sendable {
     func resolveHomebrewApplicationState(
         signatures: [CaskApplicationSignature],
         applications: [DetectedApplication],
-        installedCasks: [String: LocalCaskInstallation]
+        installedCasks: [String: LocalCaskInstallation],
+        packageInstallations: [String: ExternalPackageInstallation] = [:]
     ) -> (launchableTokens: Set<String>, zombieTokens: Set<String>) {
         let signaturesByToken = Dictionary(
             signatures.map { ($0.token, $0) },
@@ -113,6 +116,7 @@ nonisolated struct InstallationIndexBuilder: Sendable {
             guard let signature = signaturesByToken[token] else { continue }
             let launchableNames = Set(installation.appBundleNames)
                 .union(signature.launchableBundleNames)
+                .union(packageInstallations[token]?.appBundleNames ?? [])
             if !launchableNames.isDisjoint(with: validBundleNames) {
                 launchableTokens.insert(token)
             }
@@ -123,6 +127,56 @@ nonisolated struct InstallationIndexBuilder: Sendable {
             }
         }
         return (launchableTokens, zombieTokens)
+    }
+
+    func resolveInstallationDates(
+        installedCasks: [String: LocalCaskInstallation],
+        externalApplicationOwners: [String: DetectedApplication],
+        macAppStoreApplications: [String: DetectedApplication],
+        packageInstallations: [String: ExternalPackageInstallation],
+        applications: [DetectedApplication]
+    ) -> [String: CaskInstallationDates] {
+        var result = installedCasks.mapValues {
+            CaskInstallationDates(
+                installedAt: $0.installedAt,
+                lastUpdatedAt: $0.lastUpdatedAt,
+                basis: .homebrewMetadata
+            )
+        }
+        for (token, application) in macAppStoreApplications
+            where result[token] == nil {
+            result[token] = installationDates(for: application)
+        }
+
+        let nonStoreApplicationsByName = Dictionary(
+            grouping: applications.lazy.filter { !$0.isMacAppStore },
+            by: \.bundleName
+        )
+        for (token, installation) in packageInstallations
+            where result[token] == nil {
+            guard let application = installation.appBundleNames.lazy.compactMap({ name in
+                let candidates = nonStoreApplicationsByName[name] ?? []
+                return candidates.first(where: \.isDirectlyInApplicationDirectory)
+                    ?? candidates.first
+            }).first else { continue }
+            result[token] = installationDates(for: application)
+        }
+
+        for (token, application) in externalApplicationOwners
+            where result[token] == nil {
+            result[token] = installationDates(for: application)
+        }
+        return result
+    }
+
+    private func installationDates(
+        for application: DetectedApplication
+    ) -> CaskInstallationDates {
+        CaskInstallationDates(
+            installedAt: application.installedAt,
+            lastUpdatedAt: application.lastUpdatedAt,
+            basis: .applicationBundleAttributes
+        )
     }
 
     private func macAppStoreApplication(
