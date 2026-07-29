@@ -22,6 +22,8 @@ enum CaskHubMain {
 
 struct CaskHubApp: App {
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
+    @NSApplicationDelegateAdaptor(ApplicationTerminationCoordinator.self)
+    private var terminationCoordinator
 
     @State private var updaterService = UpdaterService()
 
@@ -30,7 +32,6 @@ struct CaskHubApp: App {
     @State private var localHomebrew: LocalHomebrewService
     @State private var imageCache: ImageCacheService
     @State private var catalog: CaskCatalogViewModel
-    @State private var showsQuitConfirmation = false
 
     init() {
         // Tooltip delay in ms; registered (not set) so it never persists to prefs.
@@ -57,6 +58,9 @@ struct CaskHubApp: App {
             recentlyAdded: recent,
             localHomebrew: homebrew
         ))
+        terminationCoordinator.configure {
+            homebrew.hasActiveOperations
+        }
     }
 
     var body: some Scene {
@@ -65,22 +69,26 @@ struct CaskHubApp: App {
                 .frame(minWidth: 1380, minHeight: 640)
                 .background {
                     WindowCloseButtonConfigurator {
-                        if localHomebrew.hasActiveOperations {
-                            showsQuitConfirmation = true
-                        } else {
-                            NSApplication.shared.terminate(nil)
-                        }
+                        terminationCoordinator.requestTermination()
                     }
                 }
-                .alert("Quit CaskHub?", isPresented: $showsQuitConfirmation) {
-                    Button("Keep Running", role: .cancel) {}
+                .alert(
+                    "Quit CaskHub?",
+                    isPresented: Binding(
+                        get: { terminationCoordinator.showsQuitConfirmation },
+                        set: { terminationCoordinator.showsQuitConfirmation = $0 }
+                    )
+                ) {
+                    Button("Keep Running", role: .cancel) {
+                        terminationCoordinator.keepRunning()
+                    }
                     Button("Quit CaskHub", role: .destructive) {
-                        NSApplication.shared.terminate(nil)
+                        terminationCoordinator.confirmTermination()
                     }
                 } message: {
                     Text("""
-                    A Homebrew operation is still in progress. Quitting now will stop it \
-                    and may leave the affected app in an incomplete state.
+                    A Homebrew operation is still in progress. Quitting while Homebrew is \
+                    working may leave the affected app in an incomplete state.
                     """)
                 }
                 .onChange(of: selectedTheme, initial: true) { _, newValue in
