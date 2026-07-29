@@ -280,13 +280,18 @@ extension HomebrewInstallationScanner {
             fileManager: fileManager,
             applicationDirectories: applicationDirectories
         )
+        let versionModifiedAt = try? versionDirectory.resourceValues(
+            forKeys: [.contentModificationDateKey]
+        ).contentModificationDate
+        let installedAt = (try? entry.resourceValues(
+            forKeys: [.creationDateKey]
+        ).creationDate) ?? receipt?.lastUpdatedAt ?? versionModifiedAt
 
         return LocalCaskInstallation(
             token: entry.lastPathComponent,
             installedVersion: versionDirectory.lastPathComponent,
-            installedAt: try? versionDirectory.resourceValues(
-                forKeys: [.contentModificationDateKey]
-            ).contentModificationDate,
+            installedAt: installedAt,
+            lastUpdatedAt: receipt?.lastUpdatedAt ?? versionModifiedAt,
             appBundleNames: receipt?.appBundleNames ?? [],
             isZombie: isZombie
         )

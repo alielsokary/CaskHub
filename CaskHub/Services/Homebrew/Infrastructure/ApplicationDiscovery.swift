@@ -23,7 +23,12 @@ nonisolated struct ApplicationDiscovery: Sendable {
         for folder in directories {
             guard let enumerator = fileManager.enumerator(
                 at: folder,
-                includingPropertiesForKeys: [.isDirectoryKey, .isPackageKey],
+                includingPropertiesForKeys: [
+                    .isDirectoryKey,
+                    .isPackageKey,
+                    .creationDateKey,
+                    .contentModificationDateKey
+                ],
                 options: [.skipsHiddenFiles, .skipsPackageDescendants]
             ) else { continue }
 
@@ -39,6 +44,10 @@ nonisolated struct ApplicationDiscovery: Sendable {
                 }
 
                 let masReceipt = entry.appendingPathComponent("Contents/_MASReceipt/receipt")
+                let dates = try? entry.resourceValues(forKeys: [
+                    .creationDateKey,
+                    .contentModificationDateKey
+                ])
                 applications.append(DetectedApplication(
                     url: entry.standardizedFileURL,
                     bundleName: entry.lastPathComponent,
@@ -46,7 +55,9 @@ nonisolated struct ApplicationDiscovery: Sendable {
                     isMacAppStore: fileManager.fileExists(atPath: masReceipt.path),
                     isDirectlyInApplicationDirectory:
                         entry.deletingLastPathComponent().standardizedFileURL
-                        == folder.standardizedFileURL
+                        == folder.standardizedFileURL,
+                    installedAt: dates?.creationDate,
+                    lastUpdatedAt: dates?.contentModificationDate
                 ))
             }
         }

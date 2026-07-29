@@ -20,6 +20,12 @@ struct TokenCategoryMapping: Codable, Hashable {
     let secondary: [CategoryID]
 }
 
+struct CaskCategoryPresentation: Equatable {
+    let mainID: CategoryID
+    let mainName: String
+    let subcategoryNames: [String]
+}
+
 struct CaskCategoryData: Decodable {
     let version: Int
     let generatedDate: String
@@ -84,6 +90,15 @@ final class CategoryService {
 
     func category(for token: String) -> CategoryID? {
         tokenMappings[token]?.primary
+    }
+
+    func presentation(for token: String) -> CaskCategoryPresentation? {
+        guard let mapping = tokenMappings[token] else { return nil }
+        return CaskCategoryPresentation(
+            mainID: mapping.primary,
+            mainName: displayName(for: mapping.primary),
+            subcategoryNames: mapping.secondary.map(displayName)
+        )
     }
 
     func displayName(for categoryID: CategoryID) -> String {

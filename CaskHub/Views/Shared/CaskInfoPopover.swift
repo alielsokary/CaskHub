@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CaskInfoPopover: View {
     let cask: Cask
+    let category: CaskCategoryPresentation?
     let downloadMetadataProvider: any DownloadMetadataProviding
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
@@ -16,10 +17,12 @@ struct CaskInfoPopover: View {
 
     init(
         cask: Cask,
+        category: CaskCategoryPresentation? = nil,
         downloadMetadataProvider: any DownloadMetadataProviding =
             DownloadMetadataProvider.shared
     ) {
         self.cask = cask
+        self.category = category
         self.downloadMetadataProvider = downloadMetadataProvider
     }
 
@@ -67,91 +70,170 @@ struct CaskInfoPopover: View {
         }
     }
 
-    private var rows: [InfoRow] {
-        var result: [InfoRow] = []
+    private var rows: [CaskInfoRow] {
+        makeRows(localHomebrew: localHomebrew, downloadSize: downloadSize)
+    }
 
-        result.append(InfoRow(property: "Token", value: cask.token))
+    func makeRows(
+        localHomebrew: LocalHomebrewService,
+        downloadSize: DownloadSizeResult?
+    ) -> [CaskInfoRow] {
+        let presentation = localHomebrew.actionPresentation(for: cask)
+        return CaskInfoRowProjection.make(CaskInfoProjectionInput(
+            cask: cask,
+            category: category,
+            downloadSize: downloadSize,
+            actionPresentation: presentation,
+            externalVersion: localHomebrew.externalAppVersion(for: cask),
+            installationDates: localHomebrew.installationDates(for: cask)
+        ))
+    }
+}
 
+struct CaskInfoRow {
+    let property: String
+    let value: String
+    var link: URL?
+}
+
+private struct CaskInfoProjectionInput {
+    let cask: Cask
+    let category: CaskCategoryPresentation?
+    let downloadSize: DownloadSizeResult?
+    let actionPresentation: CaskActionPresentation
+    let externalVersion: String?
+    let installationDates: CaskInstallationDates?
+}
+
+private enum CaskInfoRowProjection {
+    static func make(_ input: CaskInfoProjectionInput) -> [CaskInfoRow] {
+        identityRows(for: input.cask)
+            + downloadRows(for: input.cask, size: input.downloadSize)
+            + installationRows(
+                presentation: input.actionPresentation,
+                externalVersion: input.externalVersion,
+                dates: input.installationDates
+            )
+            + metadataRows(for: input.cask, category: input.category)
+    }
+
+    private static func identityRows(for cask: Cask) -> [CaskInfoRow] {
+        var rows = [CaskInfoRow(property: "Token", value: cask.token)]
         if let fullToken = cask.fullToken {
-            result.append(InfoRow(property: "Full Token", value: fullToken))
+            rows.append(CaskInfoRow(property: "Full Token", value: fullToken))
         }
-
         if let tap = cask.tap {
-            result.append(InfoRow(property: "Tap", value: tap))
+            rows.append(CaskInfoRow(property: "Tap", value: tap))
         }
-
-        result.append(InfoRow(
+        rows.append(CaskInfoRow(
             property: "Homepage",
             value: cask.homepage,
             link: URL(string: cask.homepage)
         ))
+        return rows
+    }
 
-        if let url = cask.url {
-            result.append(InfoRow(
-                property: "URL",
-                value: url,
-                link: URL(string: url)
+    private static func downloadRows(
+        for cask: Cask,
+        size: DownloadSizeResult?
+    ) -> [CaskInfoRow] {
+        guard let url = cask.url else { return [] }
+        return [
+            CaskInfoRow(property: "URL", value: url, link: URL(string: url)),
+            CaskInfoRow(property: "Download Size", value: downloadSizeValue(size))
+        ]
+    }
+
+    private static func installationRows(
+        presentation: CaskActionPresentation,
+        externalVersion: String?,
+        dates: CaskInstallationDates?
+    ) -> [CaskInfoRow] {
+        var rows = [
+            CaskInfoRow(
+                property: "Installed Version",
+                value: installedVersion(
+                    presentation: presentation,
+                    externalVersion: externalVersion
+                )
+            )
+        ]
+        if let source = presentation.localState.installationSource {
+            rows.append(CaskInfoRow(property: "Installed Via", value: source.rawValue))
+        }
+        if let installedAt = dates?.installedAt {
+            rows.append(CaskInfoRow(
+                property: "Installed",
+                value: formatted(installedAt)
             ))
-            let sizeValue: String
-            switch downloadSize {
-            case let .known(bytes): sizeValue = bytes.formatted(.byteCount(style: .file))
-            case .unknown: sizeValue = "Unknown"
-            case nil: sizeValue = "Loading…"
-            }
-            result.append(InfoRow(property: "Download Size", value: sizeValue))
         }
-
-        let presentation = localHomebrew.actionPresentation(for: cask)
-        let localInstallation = presentation.homebrewInstallation
-        let installationSource = presentation.localState.installationSource
-
-        let installedValue: String
-        if let version = localInstallation?.installedVersion {
-            installedValue = version
-        } else if let external = localHomebrew.externalAppVersion(for: cask) {
-            installedValue = external
-        } else if installationSource != nil {
-            installedValue = "Installed"
-        } else {
-            installedValue = "Not installed"
+        if let lastUpdatedAt = dates?.lastUpdatedAt {
+            rows.append(CaskInfoRow(
+                property: "Last Updated",
+                value: formatted(lastUpdatedAt)
+            ))
         }
-        result.append(InfoRow(property: "Installed Version", value: installedValue))
-        if let installationSource {
-            result.append(InfoRow(property: "Installed Via", value: installationSource.rawValue))
-        }
+        return rows
+    }
 
+    private static func metadataRows(
+        for cask: Cask,
+        category: CaskCategoryPresentation?
+    ) -> [CaskInfoRow] {
+        var rows: [CaskInfoRow] = []
         if let bundleVersion = cask.bundleVersion {
-            result.append(InfoRow(property: "Bundle Version", value: bundleVersion))
+            rows.append(CaskInfoRow(property: "Bundle Version", value: bundleVersion))
         }
-
-        if let installedAt = localInstallation?.installedAt {
-            result.append(InfoRow(
-                property: "Installation Date",
-                value: installedAt.formatted(date: .abbreviated, time: .shortened)
-            ))
+        if let shortVersion = cask.bundleShortVersion {
+            rows.append(CaskInfoRow(property: "Bundle Short Version", value: shortVersion))
         }
-
-        if let bundleShortVersion = cask.bundleShortVersion {
-            result.append(InfoRow(property: "Bundle Short Version", value: bundleShortVersion))
-        }
-
-        result.append(InfoRow(
+        rows.append(CaskInfoRow(
+            property: "Main Category",
+            value: category?.mainName ?? "Uncategorized"
+        ))
+        rows.append(CaskInfoRow(
+            property: "Subcategories",
+            value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty ?? "None"
+        ))
+        rows.append(CaskInfoRow(
             property: "Auto Updates",
             value: cask.autoUpdates.map { $0 ? "Yes" : "No" } ?? "Unknown"
         ))
+        return rows
+    }
 
-        result.append(InfoRow(property: "Outdated", value: cask.outdated ? "Yes" : "No"))
-        result.append(InfoRow(property: "Deprecated", value: cask.deprecated ? "Yes" : "No"))
-        result.append(InfoRow(property: "Disabled", value: cask.disabled ? "Yes" : "No"))
+    private static func installedVersion(
+        presentation: CaskActionPresentation,
+        externalVersion: String?
+    ) -> String {
+        if let version = presentation.homebrewInstallation?.installedVersion {
+            return version
+        }
+        if let externalVersion {
+            return externalVersion
+        }
+        return presentation.localState.installationSource == nil
+            ? "Not installed"
+            : "Installed"
+    }
 
-        return result
+    private static func downloadSizeValue(_ size: DownloadSizeResult?) -> String {
+        switch size {
+        case let .known(bytes): bytes.formatted(.byteCount(style: .file))
+        case .unknown: "Unknown"
+        case nil: "Loading…"
+        }
+    }
+
+    private static func formatted(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .shortened)
     }
 }
 
-private struct InfoRow {
-    let property: String
-    let value: String
-    var link: URL?
+private extension String {
+    var nilIfEmpty: String? {
+        isEmpty ? nil : self
+    }
 }
 
 #Preview {
@@ -171,6 +253,11 @@ private struct InfoRow {
             deprecated: false,
             disabled: false,
             autoUpdates: true
+        ),
+        category: CaskCategoryPresentation(
+            mainID: "securityPrivacy",
+            mainName: "Security & Privacy",
+            subcategoryNames: ["Productivity"]
         ),
         downloadMetadataProvider: UnavailableDownloadMetadataProvider()
     )

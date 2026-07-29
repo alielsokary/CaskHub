@@ -76,6 +76,55 @@ final class CaskActionPresentationTests: XCTestCase {
 
         XCTAssertEqual(service.actionAlert(for: "tabby"), .failure(failure))
     }
+
+    func test_info_popover_rows_show_categories_and_dates_without_lifecycle_flags() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("popover-rows"))
+        let cask = makeCask("studio")
+        let installedAt = Date(timeIntervalSince1970: 1_700_000_000)
+        let lastUpdatedAt = Date(timeIntervalSince1970: 1_710_000_000)
+        updateInstalledCask(
+            LocalCaskInstallation(
+                token: cask.token,
+                installedVersion: "3.1",
+                installedAt: installedAt,
+                lastUpdatedAt: lastUpdatedAt,
+                appBundleNames: []
+            ),
+            in: service
+        )
+        let popover = CaskInfoPopover(
+            cask: cask,
+            category: CaskCategoryPresentation(
+                mainID: "developer-tools",
+                mainName: "Developer Tools",
+                subcategoryNames: ["Productivity", "Utilities"]
+            ),
+            downloadMetadataProvider: UnavailableDownloadMetadataProvider()
+        )
+
+        let rows = popover.makeRows(
+            localHomebrew: service,
+            downloadSize: .unknown
+        )
+        let values = Dictionary(
+            rows.map { ($0.property, $0.value) },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        XCTAssertEqual(values["Main Category"], "Developer Tools")
+        XCTAssertEqual(values["Subcategories"], "Productivity, Utilities")
+        XCTAssertEqual(
+            values["Installed"],
+            installedAt.formatted(date: .abbreviated, time: .shortened)
+        )
+        XCTAssertEqual(
+            values["Last Updated"],
+            lastUpdatedAt.formatted(date: .abbreviated, time: .shortened)
+        )
+        XCTAssertNil(values["Outdated"])
+        XCTAssertNil(values["Deprecated"])
+        XCTAssertNil(values["Disabled"])
+    }
 }
 
 final class AdoptionViewRenderTests: XCTestCase {

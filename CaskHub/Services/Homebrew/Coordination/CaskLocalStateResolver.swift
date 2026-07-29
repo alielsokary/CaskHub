@@ -268,3 +268,32 @@ struct CaskLocalStateResolver {
         )
     }
 }
+
+extension CaskLocalStateResolver {
+    func installationDates(for cask: Cask) -> CaskInstallationDates? {
+        guard installationSource(for: cask) != nil else { return nil }
+        if let installation = snapshot.installedCasks[cask.token] {
+            return CaskInstallationDates(
+                installedAt: installation.installedAt,
+                lastUpdatedAt: installation.lastUpdatedAt
+            )
+        }
+
+        let application = snapshot.installationIndex
+            .macAppStoreApplications[cask.token]
+            ?? snapshot.externalApplicationOwners[cask.token]
+            ?? detectedApplication(for: cask)
+        guard let application else { return nil }
+        return CaskInstallationDates(
+            installedAt: application.installedAt,
+            lastUpdatedAt: application.lastUpdatedAt
+        )
+    }
+
+    private func detectedApplication(for cask: Cask) -> DetectedApplication? {
+        let names = Set(externalBundleNameCandidates(for: cask))
+        return snapshot.detectedApplications.first {
+            names.contains($0.bundleName)
+        }
+    }
+}

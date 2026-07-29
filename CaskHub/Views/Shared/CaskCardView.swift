@@ -10,7 +10,7 @@ import SwiftUI
 struct CaskCardView: View {
     let cask: Cask
     var downloads: String?
-    var category: (id: String, name: String)?
+    var category: CaskCategoryPresentation?
     var onSelectCategory: ((String) -> Void)?
     var localState: CaskLocalState?
 
@@ -56,9 +56,9 @@ struct CaskCardView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 if let category {
                     Button {
-                        onSelectCategory?(category.id)
+                        onSelectCategory?(category.mainID)
                     } label: {
-                        Text(category.name)
+                        Text(category.mainName)
                             .font(CHType.tag)
                             .foregroundStyle(Color.chTextBrand)
                     }
@@ -84,7 +84,7 @@ struct CaskCardView: View {
         }
         .buttonStyle(.plain)
         .popover(isPresented: $showingInfo) {
-            CaskInfoPopover(cask: cask)
+            CaskInfoPopover(cask: cask, category: category)
         }
     }
 
