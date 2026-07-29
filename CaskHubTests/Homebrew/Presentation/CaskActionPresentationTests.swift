@@ -76,7 +76,6 @@ final class CaskActionPresentationTests: XCTestCase {
 
         XCTAssertEqual(service.actionAlert(for: "tabby"), .failure(failure))
     }
-
 }
 
 final class AdoptionViewRenderTests: XCTestCase {
@@ -138,11 +137,17 @@ final class AdoptionViewRenderTests: XCTestCase {
     @MainActor
     func test_info_popover_renders_external_and_installed_versions() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-popover"))
-        render(CaskInfoPopover(cask: makeCask("mystery", appNames: ["NoSuchApp.app"])).environment(service))
+        render(
+            CaskInfoPopover(
+                cask: makeCask("mystery", appNames: ["NoSuchApp.app"]),
+                category: nil
+            )
+            .environment(service)
+        )
 
         updateInstalledCask(LocalCaskInstallation(
             token: "known", installedVersion: "3.1", installedAt: .now, appBundleNames: []
         ), in: service)
-        render(CaskInfoPopover(cask: makeCask("known")).environment(service))
+        render(CaskInfoPopover(cask: makeCask("known"), category: nil).environment(service))
     }
 }

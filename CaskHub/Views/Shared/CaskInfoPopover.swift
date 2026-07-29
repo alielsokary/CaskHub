@@ -17,7 +17,7 @@ struct CaskInfoPopover: View {
 
     init(
         cask: Cask,
-        category: CaskCategoryPresentation? = nil,
+        category: CaskCategoryPresentation?,
         downloadMetadataProvider: any DownloadMetadataProviding =
             DownloadMetadataProvider.shared
     ) {

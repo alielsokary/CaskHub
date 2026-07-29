@@ -62,6 +62,7 @@ enum CaskInfoProjector {
                 dates: input.installationDates
             )
             + metadataRows(for: input.cask, category: input.category)
+            + statusRows(for: input.cask)
     }
 
     private static func identityRows(for cask: Cask) -> [CaskInfoRow] {
@@ -150,6 +151,14 @@ enum CaskInfoProjector {
             value: cask.autoUpdates.map { $0 ? "Yes" : "No" } ?? "Unknown"
         ))
         return rows
+    }
+
+    private static func statusRows(for cask: Cask) -> [CaskInfoRow] {
+        [
+            CaskInfoRow(property: "Outdated", value: cask.outdated ? "Yes" : "No"),
+            CaskInfoRow(property: "Deprecated", value: cask.deprecated ? "Yes" : "No"),
+            CaskInfoRow(property: "Disabled", value: cask.disabled ? "Yes" : "No")
+        ]
     }
 
     private static func installedVersion(

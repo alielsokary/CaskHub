@@ -74,9 +74,13 @@ final class CaskMetadataProjectorTests: XCTestCase {
             values["Last Updated"],
             lastUpdatedAt.formatted(date: .abbreviated, time: .shortened)
         )
-        XCTAssertNil(values["Outdated"])
-        XCTAssertNil(values["Deprecated"])
-        XCTAssertNil(values["Disabled"])
+        XCTAssertEqual(values["Outdated"], "No")
+        XCTAssertEqual(values["Deprecated"], "No")
+        XCTAssertEqual(values["Disabled"], "No")
+        XCTAssertEqual(
+            rows.suffix(3).map(\.property),
+            ["Outdated", "Deprecated", "Disabled"]
+        )
     }
 
     func test_info_projection_labels_bundle_file_dates_as_best_effort_metadata() {
