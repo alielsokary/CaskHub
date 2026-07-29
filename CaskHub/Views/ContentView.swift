@@ -204,7 +204,7 @@ struct ContentView: View {
     }
 
     private func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
-        categoryService.presentation(for: cask.token)
+        viewModel.categoryPresentation(for: cask)
     }
 }
 

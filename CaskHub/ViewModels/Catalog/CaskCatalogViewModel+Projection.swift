@@ -38,6 +38,14 @@ extension CaskCatalogViewModel {
         librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
     }
 
+    func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
+        CaskCategoryProjector.make(
+            token: cask.token,
+            mappings: categoryService.tokenMappings,
+            definitions: categoryService.categoryDefinitions
+        )
+    }
+
     private var libraryCacheKey: CatalogLibraryCacheKey {
         CatalogLibraryCacheKey(
             catalogRevision: catalogRevision,

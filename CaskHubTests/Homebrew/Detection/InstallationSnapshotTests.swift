@@ -122,6 +122,46 @@ final class InstallationSnapshotTests: XCTestCase {
             Date(timeIntervalSince1970: receiptTimestamp)
         )
     }
+
+    func test_local_date_lookup_uses_the_snapshot_token_index() {
+        let indexedDate = Date(timeIntervalSince1970: 400)
+        let unrelatedDate = Date(timeIntervalSince1970: 500)
+        let unrelatedApplication = DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/Shared.app"),
+            bundleName: "Shared.app",
+            bundleIdentifier: "com.example.unrelated",
+            isMacAppStore: false,
+            isDirectlyInApplicationDirectory: true,
+            installedAt: unrelatedDate
+        )
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("indexed-installation-dates")
+        )
+        service.commitInstallationSnapshot(InstallationSnapshot(
+            applications: ApplicationInstallationSnapshot(
+                detectedApplications: [unrelatedApplication]
+            ),
+            externalPackageInstallations: [
+                "package": ExternalPackageInstallation(
+                    appBundleNames: ["Shared.app"]
+                )
+            ],
+            installationDatesByToken: [
+                "package": CaskInstallationDates(
+                    installedAt: indexedDate,
+                    lastUpdatedAt: nil,
+                    basis: .applicationBundleAttributes
+                )
+            ]
+        ))
+        let cask = makeCask(
+            "package",
+            packageIdentifiers: ["com.example.package"],
+            packageAppNames: ["Shared.app"]
+        )
+
+        XCTAssertEqual(service.installationDates(for: cask)?.installedAt, indexedDate)
+    }
 }
 
 private nonisolated struct StubInstalledSoftwareScanner: InstalledSoftwareScanning {

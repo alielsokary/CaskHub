@@ -129,6 +129,56 @@ nonisolated struct InstallationIndexBuilder: Sendable {
         return (launchableTokens, zombieTokens)
     }
 
+    func resolveInstallationDates(
+        installedCasks: [String: LocalCaskInstallation],
+        externalApplicationOwners: [String: DetectedApplication],
+        macAppStoreApplications: [String: DetectedApplication],
+        packageInstallations: [String: ExternalPackageInstallation],
+        applications: [DetectedApplication]
+    ) -> [String: CaskInstallationDates] {
+        var result = installedCasks.mapValues {
+            CaskInstallationDates(
+                installedAt: $0.installedAt,
+                lastUpdatedAt: $0.lastUpdatedAt,
+                basis: .homebrewMetadata
+            )
+        }
+        for (token, application) in macAppStoreApplications
+            where result[token] == nil {
+            result[token] = installationDates(for: application)
+        }
+
+        let nonStoreApplicationsByName = Dictionary(
+            grouping: applications.lazy.filter { !$0.isMacAppStore },
+            by: \.bundleName
+        )
+        for (token, installation) in packageInstallations
+            where result[token] == nil {
+            guard let application = installation.appBundleNames.lazy.compactMap({ name in
+                let candidates = nonStoreApplicationsByName[name] ?? []
+                return candidates.first(where: \.isDirectlyInApplicationDirectory)
+                    ?? candidates.first
+            }).first else { continue }
+            result[token] = installationDates(for: application)
+        }
+
+        for (token, application) in externalApplicationOwners
+            where result[token] == nil {
+            result[token] = installationDates(for: application)
+        }
+        return result
+    }
+
+    private func installationDates(
+        for application: DetectedApplication
+    ) -> CaskInstallationDates {
+        CaskInstallationDates(
+            installedAt: application.installedAt,
+            lastUpdatedAt: application.lastUpdatedAt,
+            basis: .applicationBundleAttributes
+        )
+    }
+
     private func macAppStoreApplication(
         _ application: DetectedApplication,
         matches signature: MacAppStoreCaskSignature

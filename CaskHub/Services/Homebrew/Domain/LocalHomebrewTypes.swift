@@ -233,9 +233,25 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
     }
 }
 
+nonisolated enum CaskInstallationDateBasis: Equatable, Sendable {
+    case homebrewMetadata
+    case applicationBundleAttributes
+}
+
 nonisolated struct CaskInstallationDates: Equatable, Sendable {
     let installedAt: Date?
     let lastUpdatedAt: Date?
+    let basis: CaskInstallationDateBasis
+
+    init(
+        installedAt: Date?,
+        lastUpdatedAt: Date?,
+        basis: CaskInstallationDateBasis = .homebrewMetadata
+    ) {
+        self.installedAt = installedAt
+        self.lastUpdatedAt = lastUpdatedAt
+        self.basis = basis
+    }
 }
 
 nonisolated enum CaskAction: Equatable, Sendable {

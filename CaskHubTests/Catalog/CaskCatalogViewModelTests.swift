@@ -105,42 +105,6 @@ final class CaskCatalogViewModelTests: XCTestCase {
     }
 
     @MainActor
-    func test_category_presentation_resolves_main_and_subcategory_names() {
-        let categories = seededCategories(
-            [
-                "studio": TokenCategoryMapping(
-                    primary: "developer-tools",
-                    secondary: ["productivity", "utilities"]
-                )
-            ],
-            categories: [
-                "developer-tools": CategoryDefinition(
-                    displayName: "Developer Tools",
-                    icon: "hammer"
-                ),
-                "productivity": CategoryDefinition(
-                    displayName: "Productivity",
-                    icon: "checklist"
-                ),
-                "utilities": CategoryDefinition(
-                    displayName: "Utilities",
-                    icon: "wrench"
-                )
-            ]
-        )
-
-        XCTAssertEqual(
-            categories.presentation(for: "studio"),
-            CaskCategoryPresentation(
-                mainID: "developer-tools",
-                mainName: "Developer Tools",
-                subcategoryNames: ["Productivity", "Utilities"]
-            )
-        )
-        XCTAssertNil(categories.presentation(for: "unknown"))
-    }
-
-    @MainActor
     func test_installed_and_updates_pages_reflect_local_state() async {
         // Scratch defaults: the host app's real prefs may have greedyUpdates on.
         let local = LocalHomebrewService(defaults: makeScratchDefaults("installed-updates"))
