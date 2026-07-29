@@ -20,6 +20,7 @@ struct TopBarView: View {
     var recentWindow: RecentlyAddedWindow?
     var onSelectWindow: ((RecentlyAddedWindow) -> Void)?
     var onUpdateAll: (() -> Void)?
+    var updateAllCount = 0
     var isUpdatingAll = false
     var greedyUpdates: Bool?
     var onToggleGreedy: ((Bool) -> Void)?
@@ -28,6 +29,7 @@ struct TopBarView: View {
 
     @State private var showSortMenu = false
     @State private var showPeriodMenu = false
+    @State private var showUpdateAllConfirmation = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -71,7 +73,7 @@ struct TopBarView: View {
 
     private var updateAllChip: some View {
         Button {
-            onUpdateAll?()
+            showUpdateAllConfirmation = true
         } label: {
             HStack(spacing: 6) {
                 if isUpdatingAll {
@@ -92,6 +94,7 @@ struct TopBarView: View {
         }
         .buttonStyle(.plain)
         .disabled(isUpdatingAll)
+        .updateAllConfirmation($showUpdateAllConfirmation, count: updateAllCount, onConfirm: onUpdateAll)
     }
 
     // MARK: - Greedy updates chip
@@ -279,5 +282,39 @@ struct TopBarView: View {
         .frame(width: 240)
         .background(Capsule().fill(Color.chSurfaceField))
         .overlay(Capsule().strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+    }
+}
+
+private struct UpdateAllConfirmationModifier: ViewModifier {
+    @Binding var isPresented: Bool
+    let count: Int
+    let onConfirm: (() -> Void)?
+
+    func body(content: Content) -> some View {
+        content.alert("Update All Apps?", isPresented: $isPresented) {
+            Button("Cancel", role: .cancel) {}
+            Button("Update All") {
+                onConfirm?()
+            }
+        } message: {
+            Text("""
+            CaskHub will update all \(count) apps currently listed on \
+            the Updates page using Homebrew.
+            """)
+        }
+    }
+}
+
+private extension View {
+    func updateAllConfirmation(
+        _ isPresented: Binding<Bool>,
+        count: Int,
+        onConfirm: (() -> Void)?
+    ) -> some View {
+        modifier(UpdateAllConfirmationModifier(
+            isPresented: isPresented,
+            count: count,
+            onConfirm: onConfirm
+        ))
     }
 }

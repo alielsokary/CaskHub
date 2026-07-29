@@ -20,6 +20,7 @@
 		41DFD48A30028F7D00608C7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD48430028F7D00608C7A /* Assets.xcassets */; };
 		41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44E30028F7D00608C7A /* Askpass.swift */; };
 		41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44F30028F7D00608C7A /* CaskHubApp.swift */; };
+		A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */; };
 		41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45130028F7D00608C7A /* BarrelMark.swift */; };
 		41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45230028F7D00608C7A /* CaskActionsView.swift */; };
 		F24000000000000000000002 /* CaskOperationCapsule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000002 /* CaskOperationCapsule.swift */; };
@@ -115,6 +116,7 @@
 		C12000000000000000000001 /* BrewProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000001 /* BrewProcessRunner.swift */; };
 		C12000000000000000000002 /* added_dates.json in Resources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000002 /* added_dates.json */; };
 		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
+		A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,6 +136,7 @@
 		41AD10302F68D00100BEABB8 /* UpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterService.swift; sourceTree = "<group>"; };
 		41DFD44E30028F7D00608C7A /* Askpass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Askpass.swift; sourceTree = "<group>"; };
 		41DFD44F30028F7D00608C7A /* CaskHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubApp.swift; sourceTree = "<group>"; };
+		A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinator.swift; sourceTree = "<group>"; };
 		41DFD45130028F7D00608C7A /* BarrelMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarrelMark.swift; sourceTree = "<group>"; };
 		41DFD45230028F7D00608C7A /* CaskActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionsView.swift; sourceTree = "<group>"; };
 		E24000000000000000000002 /* CaskOperationCapsule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationCapsule.swift; sourceTree = "<group>"; };
@@ -236,6 +239,7 @@
 		D12000000000000000000001 /* BrewProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewProcessRunner.swift; sourceTree = "<group>"; };
 		D12000000000000000000002 /* added_dates.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = added_dates.json; sourceTree = "<group>"; };
 		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
+		A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinatorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -262,6 +266,7 @@
 		41DFD45030028F7D00608C7A /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */,
 				41DFD44E30028F7D00608C7A /* Askpass.swift */,
 				41DFD44F30028F7D00608C7A /* CaskHubApp.swift */,
 			);
@@ -567,6 +572,7 @@
 		41DFD4B230028F9F00608C7A /* CaskHubTests */ = {
 			isa = PBXGroup;
 			children = (
+				A29000000000000000000005 /* App */,
 				F32000000000000000000020 /* Support */,
 				F32000000000000000000021 /* Telemetry */,
 				F32000000000000000000022 /* Catalog */,
@@ -575,6 +581,14 @@
 				F32000000000000000000025 /* Homebrew */,
 			);
 			path = CaskHubTests;
+			sourceTree = "<group>";
+		};
+		A29000000000000000000005 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 		F32000000000000000000020 /* Support */ = {
@@ -856,6 +870,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */,
 				41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */,
 				41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */,
 				41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */,
@@ -939,6 +954,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */,
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
 				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
 				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,

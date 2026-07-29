@@ -18,6 +18,17 @@ final class ContentViewTests: XCTestCase {
         func resign() { resignCount += 1 }
     }
 
+    @MainActor
+    private final class CloseProbe {
+        var terminationCoordinator: ApplicationTerminationCoordinator?
+        var confirmationCount = 0
+        var terminationReply: NSApplication.TerminateReply?
+
+        func requestTermination() {
+            terminationReply = terminationCoordinator?.applicationShouldTerminate(.shared)
+        }
+    }
+
     // MARK: - Harness
 
     @MainActor
@@ -119,6 +130,47 @@ final class ContentViewTests: XCTestCase {
         click(at: NSPoint(x: 20, y: 20), in: window)
 
         XCTAssertEqual(probe.resignCount, 0)
+    }
+
+    @MainActor
+    func test_close_button_routes_through_active_operation_confirmation() throws {
+        let probe = CloseProbe()
+        let terminationCoordinator = ApplicationTerminationCoordinator(
+            hasActiveOperations: { true },
+            requestApplicationTermination: { probe.requestTermination() },
+            presentQuitConfirmation: {
+                probe.confirmationCount += 1
+                return false
+            }
+        )
+        probe.terminationCoordinator = terminationCoordinator
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: WindowCloseButtonConfigurator {
+            terminationCoordinator.requestTermination()
+        })
+        window.orderFrontRegardless()
+
+        let closeButton = try XCTUnwrap(window.standardWindowButton(.closeButton))
+        let deadline = Date().addingTimeInterval(2)
+        while !(closeButton.target is WindowCloseButtonConfigurator.Coordinator),
+              Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
+        XCTAssertTrue(closeButton.target is WindowCloseButtonConfigurator.Coordinator)
+
+        closeButton.performClick(nil)
+
+        XCTAssertEqual(probe.confirmationCount, 1)
+        XCTAssertEqual(probe.terminationReply, .terminateCancel)
+        window.contentView = NSView()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        window.close()
     }
 }
 
