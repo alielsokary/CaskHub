@@ -11,6 +11,7 @@ import SwiftUI
 struct CaskRowView: View {
     let cask: Cask
     var downloads: String?
+    var category: CaskCategoryPresentation?
     var localState: CaskLocalState?
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
@@ -93,7 +94,7 @@ struct CaskRowView: View {
         )
         .frame(width: 24, height: 24)
         .popover(isPresented: $showingInfo) {
-            CaskInfoPopover(cask: cask)
+            CaskInfoPopover(cask: cask, category: category)
         }
     }
 

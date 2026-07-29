@@ -126,6 +126,14 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
             installedCasks: components.installedCasks,
             packageInstallations: components.packages
         )
+        let installationDatesByToken =
+            installationIndexBuilder.resolveInstallationDates(
+                installedCasks: components.installedCasks,
+                externalApplicationOwners: owners,
+                macAppStoreApplications: index.macAppStoreApplications,
+                packageInstallations: components.packages,
+                applications: components.applications.applications
+            )
         return InstallationSnapshot(
             installedCasks: components.installedCasks,
             applications: ApplicationInstallationSnapshot(
@@ -139,6 +147,7 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
             externalBinaryPaths: components.binaryPaths,
             externalPackageInstallations: components.packages,
             installationIndex: index,
+            installationDatesByToken: installationDatesByToken,
             scannedAt: current?.scannedAt ?? .now
         )
     }
@@ -280,13 +289,18 @@ extension HomebrewInstallationScanner {
             fileManager: fileManager,
             applicationDirectories: applicationDirectories
         )
+        let versionModifiedAt = try? versionDirectory.resourceValues(
+            forKeys: [.contentModificationDateKey]
+        ).contentModificationDate
+        let installedAt = (try? entry.resourceValues(
+            forKeys: [.creationDateKey]
+        ).creationDate) ?? receipt?.lastUpdatedAt ?? versionModifiedAt
 
         return LocalCaskInstallation(
             token: entry.lastPathComponent,
             installedVersion: versionDirectory.lastPathComponent,
-            installedAt: try? versionDirectory.resourceValues(
-                forKeys: [.contentModificationDateKey]
-            ).contentModificationDate,
+            installedAt: installedAt,
+            lastUpdatedAt: receipt?.lastUpdatedAt ?? versionModifiedAt,
             appBundleNames: receipt?.appBundleNames ?? [],
             isZombie: isZombie
         )

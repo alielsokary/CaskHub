@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CaskInfoPopover: View {
     let cask: Cask
+    let category: CaskCategoryPresentation?
     let downloadMetadataProvider: any DownloadMetadataProviding
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
@@ -16,10 +17,12 @@ struct CaskInfoPopover: View {
 
     init(
         cask: Cask,
+        category: CaskCategoryPresentation?,
         downloadMetadataProvider: any DownloadMetadataProviding =
             DownloadMetadataProvider.shared
     ) {
         self.cask = cask
+        self.category = category
         self.downloadMetadataProvider = downloadMetadataProvider
     }
 
@@ -67,91 +70,17 @@ struct CaskInfoPopover: View {
         }
     }
 
-    private var rows: [InfoRow] {
-        var result: [InfoRow] = []
-
-        result.append(InfoRow(property: "Token", value: cask.token))
-
-        if let fullToken = cask.fullToken {
-            result.append(InfoRow(property: "Full Token", value: fullToken))
-        }
-
-        if let tap = cask.tap {
-            result.append(InfoRow(property: "Tap", value: tap))
-        }
-
-        result.append(InfoRow(
-            property: "Homepage",
-            value: cask.homepage,
-            link: URL(string: cask.homepage)
-        ))
-
-        if let url = cask.url {
-            result.append(InfoRow(
-                property: "URL",
-                value: url,
-                link: URL(string: url)
-            ))
-            let sizeValue: String
-            switch downloadSize {
-            case let .known(bytes): sizeValue = bytes.formatted(.byteCount(style: .file))
-            case .unknown: sizeValue = "Unknown"
-            case nil: sizeValue = "Loading…"
-            }
-            result.append(InfoRow(property: "Download Size", value: sizeValue))
-        }
-
+    private var rows: [CaskInfoRow] {
         let presentation = localHomebrew.actionPresentation(for: cask)
-        let localInstallation = presentation.homebrewInstallation
-        let installationSource = presentation.localState.installationSource
-
-        let installedValue: String
-        if let version = localInstallation?.installedVersion {
-            installedValue = version
-        } else if let external = localHomebrew.externalAppVersion(for: cask) {
-            installedValue = external
-        } else if installationSource != nil {
-            installedValue = "Installed"
-        } else {
-            installedValue = "Not installed"
-        }
-        result.append(InfoRow(property: "Installed Version", value: installedValue))
-        if let installationSource {
-            result.append(InfoRow(property: "Installed Via", value: installationSource.rawValue))
-        }
-
-        if let bundleVersion = cask.bundleVersion {
-            result.append(InfoRow(property: "Bundle Version", value: bundleVersion))
-        }
-
-        if let installedAt = localInstallation?.installedAt {
-            result.append(InfoRow(
-                property: "Installation Date",
-                value: installedAt.formatted(date: .abbreviated, time: .shortened)
-            ))
-        }
-
-        if let bundleShortVersion = cask.bundleShortVersion {
-            result.append(InfoRow(property: "Bundle Short Version", value: bundleShortVersion))
-        }
-
-        result.append(InfoRow(
-            property: "Auto Updates",
-            value: cask.autoUpdates.map { $0 ? "Yes" : "No" } ?? "Unknown"
+        return CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
+            cask: cask,
+            category: category,
+            downloadSize: downloadSize,
+            actionPresentation: presentation,
+            externalVersion: localHomebrew.externalAppVersion(for: cask),
+            installationDates: localHomebrew.installationDates(for: cask)
         ))
-
-        result.append(InfoRow(property: "Outdated", value: cask.outdated ? "Yes" : "No"))
-        result.append(InfoRow(property: "Deprecated", value: cask.deprecated ? "Yes" : "No"))
-        result.append(InfoRow(property: "Disabled", value: cask.disabled ? "Yes" : "No"))
-
-        return result
     }
-}
-
-private struct InfoRow {
-    let property: String
-    let value: String
-    var link: URL?
 }
 
 #Preview {
@@ -171,6 +100,11 @@ private struct InfoRow {
             deprecated: false,
             disabled: false,
             autoUpdates: true
+        ),
+        category: CaskCategoryPresentation(
+            mainID: "securityPrivacy",
+            mainName: "Security & Privacy",
+            subcategoryNames: ["Productivity"]
         ),
         downloadMetadataProvider: UnavailableDownloadMetadataProvider()
     )

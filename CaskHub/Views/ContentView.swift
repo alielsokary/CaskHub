@@ -204,9 +204,8 @@ struct ContentView: View {
         }
     }
 
-    private func categoryInfo(for cask: Cask) -> (id: String, name: String)? {
-        guard let id = categoryService.category(for: cask.token) else { return nil }
-        return (id, categoryService.displayName(for: id))
+    private func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
+        viewModel.categoryPresentation(for: cask)
     }
 }
 
@@ -238,7 +237,7 @@ private extension ContentView {
                 HeroCard(
                     cask: hero,
                     downloads: viewModel.formattedDownloads(for: hero.token),
-                    categoryName: categoryInfo(for: hero)?.name,
+                    categoryName: categoryInfo(for: hero)?.mainName,
                     localState: viewModel.localState(for: hero)
                 )
             }
@@ -260,6 +259,7 @@ private extension ContentView {
                 CaskRowView(
                     cask: cask,
                     downloads: viewModel.formattedDownloads(for: cask.token),
+                    category: categoryInfo(for: cask),
                     localState: viewModel.localState(for: cask)
                 )
                 .padding(.vertical, 6)

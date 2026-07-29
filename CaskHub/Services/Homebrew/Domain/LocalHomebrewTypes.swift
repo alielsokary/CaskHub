@@ -17,6 +17,26 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
     let bundleIdentifier: String?
     let isMacAppStore: Bool
     let isDirectlyInApplicationDirectory: Bool
+    let installedAt: Date?
+    let lastUpdatedAt: Date?
+
+    init(
+        url: URL,
+        bundleName: String,
+        bundleIdentifier: String?,
+        isMacAppStore: Bool,
+        isDirectlyInApplicationDirectory: Bool,
+        installedAt: Date? = nil,
+        lastUpdatedAt: Date? = nil
+    ) {
+        self.url = url
+        self.bundleName = bundleName
+        self.bundleIdentifier = bundleIdentifier
+        self.isMacAppStore = isMacAppStore
+        self.isDirectlyInApplicationDirectory = isDirectlyInApplicationDirectory
+        self.installedAt = installedAt
+        self.lastUpdatedAt = lastUpdatedAt
+    }
 }
 
 nonisolated struct ExternalApplicationScan: Sendable {
@@ -185,6 +205,7 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
     let token: String
     let installedVersion: String
     let installedAt: Date?
+    let lastUpdatedAt: Date?
     let appBundleNames: [String]
 
     /// Brew still lists this cask, but its app was removed outside Homebrew
@@ -195,18 +216,41 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
         token: String,
         installedVersion: String,
         installedAt: Date?,
+        lastUpdatedAt: Date? = nil,
         appBundleNames: [String],
         isZombie: Bool = false
     ) {
         self.token = token
         self.installedVersion = installedVersion
         self.installedAt = installedAt
+        self.lastUpdatedAt = lastUpdatedAt
         self.appBundleNames = appBundleNames
         self.isZombie = isZombie
     }
 
     var id: String {
         token
+    }
+}
+
+nonisolated enum CaskInstallationDateBasis: Equatable, Sendable {
+    case homebrewMetadata
+    case applicationBundleAttributes
+}
+
+nonisolated struct CaskInstallationDates: Equatable, Sendable {
+    let installedAt: Date?
+    let lastUpdatedAt: Date?
+    let basis: CaskInstallationDateBasis
+
+    init(
+        installedAt: Date?,
+        lastUpdatedAt: Date?,
+        basis: CaskInstallationDateBasis = .homebrewMetadata
+    ) {
+        self.installedAt = installedAt
+        self.lastUpdatedAt = lastUpdatedAt
+        self.basis = basis
     }
 }
 

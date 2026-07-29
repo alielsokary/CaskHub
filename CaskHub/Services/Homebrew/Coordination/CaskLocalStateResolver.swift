@@ -195,6 +195,10 @@ struct CaskLocalStateResolver {
             ?? info["CFBundleVersion"] as? String
     }
 
+    func installationDates(for cask: Cask) -> CaskInstallationDates? {
+        snapshot.installationDatesByToken[cask.token]
+    }
+
     func existingBundleURL(named names: [String]) -> URL? {
         let nameSet = Set(names)
         if let detected = snapshot.detectedApplications.first(where: {

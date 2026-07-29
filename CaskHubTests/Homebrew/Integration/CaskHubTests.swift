@@ -58,7 +58,7 @@ final class CaskHubTests: XCTestCase {
 
     func test_install_receipt_resolves_renamed_app_bundles() throws {
         let json = """
-        {"uninstall_artifacts": [
+        {"time": 1700000000, "uninstall_artifacts": [
             {"quit": "com.openai.chat"},
             {"app": ["ChatGPT.app", {"target": "ChatGPT Classic.app"}]},
             {"app": ["Plain.app"]}
@@ -66,6 +66,10 @@ final class CaskHubTests: XCTestCase {
         """
         let receipt = try InstallReceipt(jsonData: Data(json.utf8))
         XCTAssertEqual(receipt.appBundleNames, ["ChatGPT Classic.app", "Plain.app"])
+        XCTAssertEqual(
+            receipt.lastUpdatedAt,
+            Date(timeIntervalSince1970: 1_700_000_000)
+        )
     }
 
     @MainActor

@@ -99,6 +99,7 @@ struct InstallationSnapshotFixture {
     var externalBinaryPaths: [String: URL]
     var externalPackageInstallations: [String: ExternalPackageInstallation]
     var installationIndex: CaskInstallationIndex
+    var installationDatesByToken: [String: CaskInstallationDates]
     var scannedAt: Date?
 
     init(snapshot: InstallationSnapshot) {
@@ -111,6 +112,7 @@ struct InstallationSnapshotFixture {
         externalBinaryPaths = snapshot.externalBinaryPaths
         externalPackageInstallations = snapshot.externalPackageInstallations
         installationIndex = snapshot.installationIndex
+        installationDatesByToken = snapshot.installationDatesByToken
         scannedAt = snapshot.scannedAt
     }
 
@@ -127,6 +129,7 @@ struct InstallationSnapshotFixture {
             externalBinaryPaths: externalBinaryPaths,
             externalPackageInstallations: externalPackageInstallations,
             installationIndex: installationIndex,
+            installationDatesByToken: installationDatesByToken,
             scannedAt: scannedAt
         )
     }
@@ -153,6 +156,11 @@ func updateInstalledCask(
     installedCasks[installation.token] = installation
     updateInstallationSnapshot(of: service) {
         $0.installedCasks = installedCasks
+        $0.installationDatesByToken[installation.token] = CaskInstallationDates(
+            installedAt: installation.installedAt,
+            lastUpdatedAt: installation.lastUpdatedAt,
+            basis: .homebrewMetadata
+        )
     }
 }
 

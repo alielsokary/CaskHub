@@ -87,6 +87,81 @@ final class InstallationSnapshotTests: XCTestCase {
         XCTAssertEqual(service.lastRefresh, Date(timeIntervalSince1970: 200))
         XCTAssertEqual(service.brewVersion, "Homebrew test")
     }
+
+    func test_caskroom_scan_separates_installation_and_last_update_dates() throws {
+        let fileManager = FileManager.default
+        let root = fileManager.temporaryDirectory
+            .appendingPathComponent("cask-dates-\(UUID().uuidString)")
+        let caskroom = root.appendingPathComponent("Caskroom")
+        let entry = caskroom.appendingPathComponent("firefox")
+        let version = entry.appendingPathComponent("1.0")
+        let metadata = entry.appendingPathComponent(".metadata")
+        let receiptURL = metadata.appendingPathComponent("INSTALL_RECEIPT.json")
+        defer { try? fileManager.removeItem(at: root) }
+
+        try fileManager.createDirectory(at: version, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: metadata, withIntermediateDirectories: true)
+        let receiptTimestamp: TimeInterval = 1_700_000_000
+        try Data(
+            #"{"time": 1700000000, "uninstall_artifacts": []}"#.utf8
+        ).write(to: receiptURL)
+        let expectedInstalledAt = try entry.resourceValues(
+            forKeys: [.creationDateKey]
+        ).creationDate
+
+        let installation = HomebrewInstallationScanner.scanCaskroom(
+            at: caskroom,
+            fileManager: fileManager,
+            applicationDirectories: []
+        )["firefox"]
+
+        XCTAssertNotNil(expectedInstalledAt)
+        XCTAssertEqual(installation?.installedAt, expectedInstalledAt)
+        XCTAssertEqual(
+            installation?.lastUpdatedAt,
+            Date(timeIntervalSince1970: receiptTimestamp)
+        )
+    }
+
+    func test_local_date_lookup_uses_the_snapshot_token_index() {
+        let indexedDate = Date(timeIntervalSince1970: 400)
+        let unrelatedDate = Date(timeIntervalSince1970: 500)
+        let unrelatedApplication = DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/Shared.app"),
+            bundleName: "Shared.app",
+            bundleIdentifier: "com.example.unrelated",
+            isMacAppStore: false,
+            isDirectlyInApplicationDirectory: true,
+            installedAt: unrelatedDate
+        )
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("indexed-installation-dates")
+        )
+        service.commitInstallationSnapshot(InstallationSnapshot(
+            applications: ApplicationInstallationSnapshot(
+                detectedApplications: [unrelatedApplication]
+            ),
+            externalPackageInstallations: [
+                "package": ExternalPackageInstallation(
+                    appBundleNames: ["Shared.app"]
+                )
+            ],
+            installationDatesByToken: [
+                "package": CaskInstallationDates(
+                    installedAt: indexedDate,
+                    lastUpdatedAt: nil,
+                    basis: .applicationBundleAttributes
+                )
+            ]
+        ))
+        let cask = makeCask(
+            "package",
+            packageIdentifiers: ["com.example.package"],
+            packageAppNames: ["Shared.app"]
+        )
+
+        XCTAssertEqual(service.installationDates(for: cask)?.installedAt, indexedDate)
+    }
 }
 
 private nonisolated struct StubInstalledSoftwareScanner: InstalledSoftwareScanning {

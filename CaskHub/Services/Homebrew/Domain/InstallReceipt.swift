@@ -9,10 +9,15 @@ import Foundation
 
 nonisolated struct InstallReceipt {
     let appBundleNames: [String]
+    let lastUpdatedAt: Date?
 
     init(jsonData: Data) throws {
         guard let root = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
             throw CocoaError(.fileReadCorruptFile)
+        }
+
+        lastUpdatedAt = (root["time"] as? NSNumber).map {
+            Date(timeIntervalSince1970: $0.doubleValue)
         }
 
         var apps: [String] = []

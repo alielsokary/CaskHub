@@ -47,6 +47,10 @@ extension LocalHomebrewService {
         makeLocalStateResolver().externalAppVersion(for: cask)
     }
 
+    func installationDates(for cask: Cask) -> CaskInstallationDates? {
+        makeLocalStateResolver().installationDates(for: cask)
+    }
+
     func existingBundleURL(named names: [String]) -> URL? {
         makeLocalStateResolver().existingBundleURL(named: names)
     }
