@@ -4,6 +4,22 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.6.7 — 2026-07-29
+
+### What's New
+
+- Added a confirmation before Update All that shows how many apps will be updated
+- Added a confirmation before quitting while Homebrew operations are running
+
+### Improvements
+
+- Closing the window now quits CaskHub
+- App info now shows installed and last-updated dates plus category details
+
+### Bug Fixes
+
+- Fixed some package-installed apps with variant names not being detected as launchable
+
 ## 0.6.6 — 2026-07-26
 
 ### Improvements

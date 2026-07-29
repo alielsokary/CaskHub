@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedDate": "2026-07-25",
-  "totalCasks": 11905,
+  "generatedDate": "2026-07-29",
+  "totalCasks": 11906,
   "tokenAddedDates": {
     "0-ad": "2018-05-22",
     "010-editor": "2014-12-11",
@@ -214,6 +214,7 @@
     "airscroll": "2025-11-30",
     "airserver": "2013-11-09",
     "airstream": "2014-07-18",
+    "airsync": "2026-07-27",
     "airtable": "2016-09-29",
     "airtame": "2016-07-28",
     "airtool": "2015-12-29",

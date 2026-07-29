@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-25",
+  "generatedDate": "2026-07-28",
   "totalCasks": 3831,
   "categories": {
     "developerTools": {
@@ -452,6 +452,12 @@
     "airserver": {
       "primary": "utilities",
       "secondary": []
+    },
+    "airsync": {
+      "primary": "utilities",
+      "secondary": [
+        "communication"
+      ]
     },
     "airtable": {
       "primary": "productivity",
@@ -8517,10 +8523,6 @@
       "primary": "productivity",
       "secondary": []
     },
-    "micro-sniff": {
-      "primary": "utilities",
-      "secondary": []
-    },
     "micro-snitch": {
       "primary": "securityPrivacy",
       "secondary": []
@@ -16538,7 +16540,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.07.25",
+  "releaseTag": "caskflow-v2026.07.29",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -16623,6 +16625,7 @@
     "airparrot",
     "airscroll",
     "airserver",
+    "airsync",
     "airtable",
     "airtame",
     "airtool",
