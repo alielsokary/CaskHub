@@ -18,6 +18,11 @@ final class ContentViewTests: XCTestCase {
         func resign() { resignCount += 1 }
     }
 
+    @MainActor
+    private final class CloseProbe {
+        var requested = false
+    }
+
     // MARK: - Harness
 
     @MainActor
@@ -119,6 +124,37 @@ final class ContentViewTests: XCTestCase {
         click(at: NSPoint(x: 20, y: 20), in: window)
 
         XCTAssertEqual(probe.resignCount, 0)
+    }
+
+    @MainActor
+    func test_close_button_invokes_the_configured_app_close_request() throws {
+        let probe = CloseProbe()
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: WindowCloseButtonConfigurator {
+            probe.requested = true
+        })
+        window.orderFrontRegardless()
+
+        let closeButton = try XCTUnwrap(window.standardWindowButton(.closeButton))
+        let deadline = Date().addingTimeInterval(2)
+        while !(closeButton.target is WindowCloseButtonConfigurator.Coordinator),
+              Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
+        XCTAssertTrue(closeButton.target is WindowCloseButtonConfigurator.Coordinator)
+
+        closeButton.performClick(nil)
+
+        XCTAssertTrue(probe.requested)
+        window.contentView = NSView()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        window.close()
     }
 }
 

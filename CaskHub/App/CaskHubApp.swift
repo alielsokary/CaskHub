@@ -5,6 +5,7 @@
 //  Created by Ali Elsokary on 08/02/2026.
 //
 
+import AppKit
 import SwiftUI
 
 @main
@@ -29,6 +30,7 @@ struct CaskHubApp: App {
     @State private var localHomebrew: LocalHomebrewService
     @State private var imageCache: ImageCacheService
     @State private var catalog: CaskCatalogViewModel
+    @State private var showsQuitConfirmation = false
 
     init() {
         // Tooltip delay in ms; registered (not set) so it never persists to prefs.
@@ -61,6 +63,26 @@ struct CaskHubApp: App {
         WindowGroup {
             ContentView(viewModel: catalog)
                 .frame(minWidth: 1380, minHeight: 640)
+                .background {
+                    WindowCloseButtonConfigurator {
+                        if localHomebrew.hasActiveOperations {
+                            showsQuitConfirmation = true
+                        } else {
+                            NSApplication.shared.terminate(nil)
+                        }
+                    }
+                }
+                .alert("Quit CaskHub?", isPresented: $showsQuitConfirmation) {
+                    Button("Keep Running", role: .cancel) {}
+                    Button("Quit CaskHub", role: .destructive) {
+                        NSApplication.shared.terminate(nil)
+                    }
+                } message: {
+                    Text("""
+                    A Homebrew operation is still in progress. Quitting now will stop it \
+                    and may leave the affected app in an incomplete state.
+                    """)
+                }
                 .onChange(of: selectedTheme, initial: true) { _, newValue in
                     AppTheme.apply(newValue)
                 }
@@ -82,6 +104,87 @@ struct CaskHubApp: App {
                 .environment(updaterService)
                 .environment(imageCache)
                 .environment(localHomebrew)
+        }
+    }
+}
+
+@MainActor
+struct WindowCloseButtonConfigurator: NSViewRepresentable {
+    typealias CloseAction = @MainActor @Sendable () -> Void
+
+    let onClose: CloseAction
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onClose: onClose)
+    }
+
+    func makeNSView(context: Context) -> WindowObservationView {
+        let view = WindowObservationView()
+        view.coordinator = context.coordinator
+        return view
+    }
+
+    func updateNSView(_ view: WindowObservationView, context: Context) {
+        view.coordinator = context.coordinator
+        context.coordinator.onClose = onClose
+        if let window = view.window {
+            context.coordinator.attach(to: window)
+        }
+    }
+
+    static func dismantleNSView(_ view: WindowObservationView, coordinator: Coordinator) {
+        view.coordinator = nil
+        coordinator.detach()
+    }
+
+    @MainActor
+    final class WindowObservationView: NSView {
+        weak var coordinator: Coordinator?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if let window {
+                coordinator?.attach(to: window)
+            }
+        }
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        var onClose: CloseAction
+
+        private weak var closeButton: NSButton?
+        private weak var originalTarget: AnyObject?
+        private var originalAction: Selector?
+
+        init(onClose: @escaping CloseAction) {
+            self.onClose = onClose
+        }
+
+        func detach() {
+            guard let closeButton, closeButton.target === self else { return }
+            closeButton.target = originalTarget
+            closeButton.action = originalAction
+            self.closeButton = nil
+            originalTarget = nil
+            originalAction = nil
+        }
+
+        func attach(to window: NSWindow) {
+            guard let button = window.standardWindowButton(.closeButton) else { return }
+            guard closeButton !== button || button.target !== self else { return }
+
+            detach()
+            closeButton = button
+            originalTarget = button.target
+            originalAction = button.action
+            button.target = self
+            button.action = #selector(closeButtonPressed)
+        }
+
+        @objc
+        private func closeButtonPressed() {
+            onClose()
         }
     }
 }

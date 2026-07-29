@@ -57,6 +57,10 @@ final class CaskOperationStore {
         }
     }
 
+    var hasActiveOperations: Bool {
+        isUpdatingAll || states.values.contains { $0.action != nil }
+    }
+
     var status: CaskOperationStatus? {
         CaskOperationStatus.make(
             operations: states.values.compactMap(\.progress),

@@ -66,6 +66,39 @@ final class CaskOperationStoreTests: XCTestCase {
         XCTAssertEqual(store.state(for: "firefox"), .queued(.updating))
     }
 
+    func test_active_operations_include_queued_and_running_work() {
+        let store = CaskOperationStore()
+        let progress = CaskOperationProgress(
+            token: "zoom",
+            displayName: "Zoom",
+            action: .uninstalling,
+            phase: .performing
+        )
+
+        XCTAssertFalse(store.hasActiveOperations)
+
+        store.send(.enqueue(.installing), for: "firefox")
+        XCTAssertTrue(store.hasActiveOperations)
+
+        store.send(.begin(progress, canCancel: false), for: "zoom")
+        XCTAssertTrue(store.hasActiveOperations)
+
+        store.send(.clear, for: "firefox")
+        store.send(.clear, for: "zoom")
+        XCTAssertFalse(store.hasActiveOperations)
+    }
+
+    func test_confirmation_and_failure_states_are_not_active_operations() {
+        let store = CaskOperationStore()
+        let failure = CaskOperationFailure(kind: .brewCommand, message: "failed")
+
+        store.send(.awaitPermission(force: false), for: "canva")
+        store.send(.awaitPackageAdoption, for: "zoom")
+        store.send(.fail(failure), for: "tabby")
+
+        XCTAssertFalse(store.hasActiveOperations)
+    }
+
     func test_status_is_derived_from_operation_state() {
         let store = CaskOperationStore()
         let progress = CaskOperationProgress(
@@ -91,6 +124,7 @@ final class CaskOperationStoreTests: XCTestCase {
 
         XCTAssertTrue(store.beginUpdateAll())
         XCTAssertFalse(store.beginUpdateAll())
+        XCTAssertTrue(store.hasActiveOperations)
 
         store.setUpdateAllProgress(progress)
         XCTAssertTrue(store.isUpdatingAll)
@@ -99,6 +133,7 @@ final class CaskOperationStoreTests: XCTestCase {
         store.finishUpdateAll()
         XCTAssertFalse(store.isUpdatingAll)
         XCTAssertNil(store.updateAllProgress)
+        XCTAssertFalse(store.hasActiveOperations)
     }
 
     func test_update_all_progress_is_ignored_outside_an_active_batch() {
