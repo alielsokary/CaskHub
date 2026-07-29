@@ -66,6 +66,7 @@ struct ContentView: View {
                             localHomebrew.send(.updateAll(tokens: tokens))
                         }
                         : nil,
+                    updateAllCount: viewModel.updatesCount,
                     isUpdatingAll: localHomebrew.isUpdatingAll,
                     greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
                     onToggleGreedy: { enabled in

@@ -48,6 +48,10 @@ final class LocalHomebrewService {
         operationStore.isUpdatingAll
     }
 
+    var hasActiveOperations: Bool {
+        operationStore.hasActiveOperations
+    }
+
     private(set) var brewVersion: String?
 
     private(set) var customBrewPrefix: String?
