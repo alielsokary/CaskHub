@@ -115,7 +115,10 @@ struct CaskRowView: View {
     }
 }
 
-struct CaskRowActionsMenuButton: NSViewRepresentable {
+// A plain SwiftUI button popping an NSMenu on click. Hosting an
+// NSViewRepresentable per row made every NSHostingView layout pass walk an
+// AppKit bridge for each visible row (Sentry CASKHUB-18).
+struct CaskRowActionsMenuButton: View {
     let showsUpdate: Bool
     let isBusy: Bool
     let uninstallAvailability: CaskUninstallAvailability
@@ -123,30 +126,25 @@ struct CaskRowActionsMenuButton: NSViewRepresentable {
     let onUpdate: () -> Void
     let onUninstall: () -> Void
 
+    var body: some View {
+        Button {
+            // popUp is synchronous, so the coordinator outlives the menu
+            // session even as a local.
+            makeCoordinator().showMenu()
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(Color.chTextMuted)
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help("More actions")
+        .accessibilityLabel("More actions")
+    }
+
     func makeCoordinator() -> Coordinator {
         Coordinator(configuration: self)
-    }
-
-    func makeNSView(context: Context) -> NSButton {
-        let button = NSButton()
-        button.isBordered = false
-        button.imagePosition = .imageOnly
-        button.imageScaling = .scaleProportionallyDown
-        button.image = NSImage(
-            systemSymbolName: "ellipsis.circle",
-            accessibilityDescription: "More actions"
-        )?.withSymbolConfiguration(.init(pointSize: 13, weight: .regular))
-        button.contentTintColor = NSColor(Color.chTextMuted)
-        button.focusRingType = .none
-        button.toolTip = "More actions"
-        button.target = context.coordinator
-        button.action = #selector(Coordinator.showMenu(_:))
-        button.setAccessibilityLabel("More actions")
-        return button
-    }
-
-    func updateNSView(_ button: NSButton, context: Context) {
-        context.coordinator.configuration = self
     }
 
     @MainActor
@@ -157,12 +155,11 @@ struct CaskRowActionsMenuButton: NSViewRepresentable {
             self.configuration = configuration
         }
 
-        @objc func showMenu(_ sender: NSButton) {
-            let menu = makeMenu()
-            menu.popUp(
+        func showMenu() {
+            makeMenu().popUp(
                 positioning: nil,
-                at: NSPoint(x: sender.bounds.minX, y: sender.bounds.minY - 4),
-                in: sender
+                at: NSEvent.mouseLocation,
+                in: nil
             )
         }
 
