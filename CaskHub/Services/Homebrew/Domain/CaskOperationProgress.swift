@@ -226,8 +226,9 @@ nonisolated enum BrewProgressParser {
         let cachedDownloadPath: String?
     }
 
-    private static let progressPattern =
+    private static let progressRegex = try? NSRegularExpression(pattern:
         #"Downloading\s+([0-9]+(?:\.[0-9]+)?)\s*(B|KB|MB|GB)\s*/\s*([0-9]+(?:\.[0-9]+)?)\s*(B|KB|MB|GB)"#
+    )
 
     static func parse(_ output: String) -> Update {
         let progressMatch = progressMatches(in: output).last
@@ -283,9 +284,7 @@ nonisolated enum BrewProgressParser {
     }
 
     private static func progressMatches(in output: String) -> [NSTextCheckingResult] {
-        guard let expression = try? NSRegularExpression(pattern: progressPattern) else {
-            return []
-        }
+        guard let expression = progressRegex else { return [] }
         let range = NSRange(output.startIndex..<output.endIndex, in: output)
         return expression.matches(in: output, range: range)
     }
