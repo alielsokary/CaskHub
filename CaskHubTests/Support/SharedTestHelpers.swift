@@ -11,19 +11,19 @@ import Foundation
 // MARK: - Mock API
 
 @MainActor
-final class MockBrewAPIClient: BrewAPIClientProtocol {
+final class MockBrewAPIClient: @MainActor BrewAPIClientProtocol {
     var casks: [Cask] = []
     var casksError: Error?
     var analyticsResponses: [AnalyticsPeriod: CaskAnalyticsResponse] = [:]
     var analyticsError: Error?
     private(set) var analyticsFetches: [AnalyticsPeriod] = []
 
-    func fetchAllCasks() async throws -> [Cask] {
+    @MainActor func fetchAllCasks() async throws -> [Cask] {
         if let casksError { throw casksError }
         return casks
     }
 
-    func fetchAnalytics(period: AnalyticsPeriod) async throws -> CaskAnalyticsResponse {
+    @MainActor func fetchAnalytics(period: AnalyticsPeriod) async throws -> CaskAnalyticsResponse {
         analyticsFetches.append(period)
         if let analyticsError { throw analyticsError }
         return analyticsResponses[period]

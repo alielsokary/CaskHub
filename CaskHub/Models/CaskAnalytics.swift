@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum AnalyticsPeriod: String, CaseIterable, Identifiable {
+nonisolated enum AnalyticsPeriod: String, CaseIterable, Identifiable {
     case days30 = "30d"
     case days90 = "90d"
     case days365 = "365d"
@@ -25,11 +25,11 @@ enum AnalyticsPeriod: String, CaseIterable, Identifiable {
     }
 }
 
-struct CaskAnalyticsResponse: Decodable {
+nonisolated struct CaskAnalyticsResponse: Decodable {
     let items: [CaskAnalyticsItem]
 }
 
-struct CaskAnalyticsItem: Decodable {
+nonisolated struct CaskAnalyticsItem: Decodable {
     let cask: String
     let count: String
 
