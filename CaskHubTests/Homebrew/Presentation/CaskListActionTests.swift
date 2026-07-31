@@ -115,6 +115,24 @@ final class CaskListActionTests: XCTestCase {
         XCTAssertEqual(menu.items[3].toolTip, expectedHint)
     }
 
+    func test_menu_button_press_presents_the_actions_menu() {
+        var presentedTitles: [String]?
+        let button = CaskRowActionsMenuButton(
+            showsUpdate: true,
+            isBusy: false,
+            uninstallAvailability: .available,
+            onInfo: {},
+            onUpdate: {},
+            onUninstall: {},
+            presentMenu: { presentedTitles = $0.items.map(\.title) }
+        )
+
+        render(button)
+        button.presentActionsMenu()
+
+        XCTAssertEqual(presentedTitles, ["Info", "Update", "", "Uninstall"])
+    }
+
     func test_row_action_menu_preserves_unavailable_uninstall_hint() {
         let hint = "Adopt this app first so CaskHub can manage/uninstall it."
         let coordinator = menuButton(
