@@ -3,28 +3,28 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.6.7</title>
-            <pubDate>Wed, 29 Jul 2026 17:18:15 +0000</pubDate>
-            <sparkle:version>383</sparkle:version>
-            <sparkle:shortVersionString>0.6.7</sparkle:shortVersionString>
+            <title>0.6.8</title>
+            <pubDate>Fri, 31 Jul 2026 04:31:48 +0000</pubDate>
+            <sparkle:version>418</sparkle:version>
+            <sparkle:shortVersionString>0.6.8</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Added a confirmation before Update All that shows how many apps will be updated
-- Added a confirmation before quitting while Homebrew operations are running
+- Catalog now refreshes automatically when you return to the app
 
 ### Improvements
 
-- Closing the window now quits CaskHub
-- App info now shows installed and last-updated dates plus category details
+- New casks appear in Recently Added as soon as Homebrew publishes them
+- Recently Added now orders same-day casks by exact publish time
+- Fewer UI freezes while browsing, scrolling, and during installs
 
 ### Bug Fixes
 
-- Fixed some package-installed apps with variant names not being detected as launchable
+- Fixed icons for newly published casks staying hidden for up to a day
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.7/CaskHub-0.6.7.zip" length="5413953" type="application/octet-stream" sparkle:edSignature="is8toGymhoXZeuvhAexT42aQD8rw9WABrwc2cuKys3JldnYrmf+pE46BBusUUp946v4wGYKyL165YkX1mN4FBA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.8/CaskHub-0.6.8.zip" length="5459187" type="application/octet-stream" sparkle:edSignature="Y1DXLlrxALbURPnG6PJpP7BMoYiikXVKhqaTsNR5AkW8wult+/i1Jtkvxlmkr3cyE+IH8oDTySNkeHxm/Q1UCA=="/>
         </item>
     </channel>
 </rss>
