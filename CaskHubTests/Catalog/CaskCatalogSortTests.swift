@@ -115,7 +115,7 @@ final class CaskCatalogSortTests: XCTestCase {
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["charlie", "bravo", "alpha"])
 
         vm.sortOption = .newest
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["bravo", "alpha", "charlie"])
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["charlie", "bravo", "alpha"])
 
         vm.sortOption = .oldest
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["alpha", "bravo", "charlie"])

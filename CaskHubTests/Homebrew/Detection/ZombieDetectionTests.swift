@@ -217,7 +217,7 @@ final class ZombieDetectionTests: XCTestCase {
     /// The Codex→ChatGPT rename: receipt says Codex.app (gone), but the cask's
     /// current artifact ChatGPT.app is alive on disk. Never offer deletion then.
     @MainActor
-    func test_zombie_verdict_clears_when_current_cask_app_exists() throws {
+    func test_zombie_verdict_clears_when_current_cask_app_exists() async throws {
         try makeApplicationBundle(
             in: appsDir, named: "ChatGPT.app", bundleIdentifier: "com.openai.chat"
         )
@@ -230,16 +230,13 @@ final class ZombieDetectionTests: XCTestCase {
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
             appBundleNames: ["Codex.app"], isZombie: true
         ), in: service)
-        XCTAssertFalse(
-            service.localState(for: makeCask(
-                "chatgpt",
-                appNames: ["ChatGPT.app"]
-            )).isZombie
-        )
+        let cask = makeCask("chatgpt", appNames: ["ChatGPT.app"])
+        await service.updatePackageCatalog([cask])
+        XCTAssertFalse(service.localState(for: cask).isZombie)
     }
 
     @MainActor
-    func test_zombie_verdict_holds_when_current_cask_app_is_gone_too() {
+    func test_zombie_verdict_holds_when_current_cask_app_is_gone_too() async {
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("zombie-holds")
         ) {
@@ -249,12 +246,9 @@ final class ZombieDetectionTests: XCTestCase {
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mole.app"], isZombie: true
         ), in: service)
-        XCTAssertTrue(
-            service.localState(for: makeCask(
-                "mole-app",
-                appNames: ["Mole.app"]
-            )).isZombie
-        )
+        let cask = makeCask("mole-app", appNames: ["Mole.app"])
+        await service.updatePackageCatalog([cask])
+        XCTAssertTrue(service.localState(for: cask).isZombie)
     }
 
     @MainActor
