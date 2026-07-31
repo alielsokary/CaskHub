@@ -140,11 +140,6 @@ struct CaskLocalStateResolver {
             && isOutdated(token: token, remoteVersion: remoteVersion)
     }
 
-    // isZombie and canOpen run for every cask during view updates. Before the
-    // installation index has reconciled the catalog they answer from in-memory
-    // scan results instead of probing bundles on disk, which hung the main
-    // thread (Sentry CASKHUB-Z). Zombie verdicts wait for the verified index:
-    // a false positive offers repairing an app that is alive.
     func isZombie(_ cask: Cask) -> Bool {
         guard let installation = snapshot.installedCasks[cask.token],
               installation.isZombie,
@@ -170,13 +165,10 @@ struct CaskLocalStateResolver {
                 bundleNames.contains($0.bundleName)
             }
         }
-        if snapshot.installationIndex.catalogTokens.contains(cask.token) {
-            return snapshot.installationIndex
-                .macAppStoreApplications[cask.token] != nil
-                || snapshot.externalApplicationOwners[cask.token] != nil
-                || snapshot.externalPackageInstallations[cask.token] != nil
-        }
-        return macAppStoreApplication(for: cask) != nil
+        let hasStoreApp = snapshot.installationIndex.catalogTokens.contains(cask.token)
+            ? snapshot.installationIndex.macAppStoreApplications[cask.token] != nil
+            : macAppStoreApplication(for: cask) != nil
+        return hasStoreApp
             || snapshot.externalApplicationOwners[cask.token] != nil
             || snapshot.externalPackageInstallations[cask.token] != nil
     }
