@@ -223,13 +223,23 @@ struct CaskRowActionsMenuButton: NSViewRepresentable {
                 reason = nil
             }
 
-            return menuItem(
+            let item = menuItem(
                 title: "Uninstall",
                 systemImage: "trash",
                 action: #selector(uninstall),
                 isEnabled: reason == nil,
                 toolTip: reason
             )
+            // A disabled item has no native highlight or keyboard behavior to
+            // lose, so it can safely render the reason inline, app-styled.
+            if let reason {
+                let hosting = NSHostingView(
+                    rootView: DisabledUninstallMenuRow(reason: reason)
+                )
+                hosting.sizingOptions = .intrinsicContentSize
+                item.view = hosting
+            }
+            return item
         }
 
         private func menuItem(
@@ -247,6 +257,20 @@ struct CaskRowActionsMenuButton: NSViewRepresentable {
             item.setAccessibilityHelp(toolTip)
             return item
         }
+    }
+}
+
+private struct DisabledUninstallMenuRow: View {
+    let reason: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Label("Uninstall", systemImage: "trash")
+                .foregroundStyle(.secondary)
+            HintBubble(message: reason)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 5)
     }
 }
 
