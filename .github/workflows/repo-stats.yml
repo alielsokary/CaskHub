@@ -14,4 +14,4 @@ jobs:
     steps:
       - uses: jgehrcke/github-repo-stats@306db38ad131cab2aa5f2cd3062bf6f8aa78c1aa # v1.4.2
         with:
-          ghtoken: ${{ github.token }}
+          ghtoken: ${{ secrets.GHRS_TOKEN }}
