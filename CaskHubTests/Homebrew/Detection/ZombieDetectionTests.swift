@@ -239,7 +239,7 @@ final class ZombieDetectionTests: XCTestCase {
     }
 
     @MainActor
-    func test_zombie_verdict_holds_when_current_cask_app_is_gone_too() {
+    func test_zombie_verdict_holds_when_current_cask_app_is_gone_too() async {
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("zombie-holds")
         ) {
@@ -249,12 +249,9 @@ final class ZombieDetectionTests: XCTestCase {
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
             appBundleNames: ["Mole.app"], isZombie: true
         ), in: service)
-        XCTAssertTrue(
-            service.localState(for: makeCask(
-                "mole-app",
-                appNames: ["Mole.app"]
-            )).isZombie
-        )
+        let cask = makeCask("mole-app", appNames: ["Mole.app"])
+        await service.updatePackageCatalog([cask])
+        XCTAssertTrue(service.localState(for: cask).isZombie)
     }
 
     @MainActor

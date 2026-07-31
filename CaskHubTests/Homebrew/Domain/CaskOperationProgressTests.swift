@@ -67,6 +67,43 @@ final class CaskOperationProgressTests: XCTestCase {
     }
 
     @MainActor
+    func test_rapid_progress_redraws_are_throttled_but_markers_parse_immediately() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("throttled-progress"))
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: "firefox",
+            displayName: "Firefox"
+        )
+
+        service.mutationCoordinator.consumeBrewOutput(
+            "Cask firefox    ####    Downloading    10.0MB/100.0MB",
+            token: "firefox"
+        )
+        XCTAssertEqual(
+            service.operationStore.state(for: "firefox")?.progress?.completedBytes,
+            10_000_000
+        )
+
+        service.mutationCoordinator.consumeBrewOutput(
+            "Cask firefox    ####    Downloading    20.0MB/100.0MB",
+            token: "firefox"
+        )
+        XCTAssertEqual(
+            service.operationStore.state(for: "firefox")?.progress?.completedBytes,
+            10_000_000
+        )
+
+        service.mutationCoordinator.consumeBrewOutput(
+            "==> Installing Cask firefox",
+            token: "firefox"
+        )
+        XCTAssertEqual(
+            service.operationStore.state(for: "firefox")?.progress?.phase,
+            .performing
+        )
+    }
+
+    @MainActor
     func test_brew_output_reports_cached_download_at_full_size() throws {
         let cachedDownload = FileManager.default.temporaryDirectory
             .appendingPathComponent("cached download-\(UUID().uuidString).dmg")

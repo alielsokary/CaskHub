@@ -145,34 +145,32 @@ struct CaskLocalStateResolver {
               installation.isZombie,
               !cask.appArtifactNames.isEmpty
         else { return false }
-        if snapshot.installationIndex.catalogTokens.contains(cask.token) {
-            return snapshot.installationIndex.verifiedZombieTokens.contains(
-                cask.token
-            )
+        guard snapshot.installationIndex.catalogTokens.contains(cask.token) else {
+            return false
         }
-        return existingBundleURL(named: cask.appArtifactNames) == nil
+        return snapshot.installationIndex.verifiedZombieTokens.contains(
+            cask.token
+        )
     }
 
     func canOpen(_ cask: Cask) -> Bool {
-        if snapshot.installationIndex.catalogTokens.contains(cask.token) {
-            if isInstalled(token: cask.token) {
+        if isInstalled(token: cask.token) {
+            if snapshot.installationIndex.catalogTokens.contains(cask.token) {
                 return snapshot.installationIndex.launchableHomebrewTokens.contains(
                     cask.token
                 )
             }
-            return snapshot.installationIndex
-                .macAppStoreApplications[cask.token] != nil
-                || snapshot.externalApplicationOwners[cask.token] != nil
-                || snapshot.externalPackageInstallations[cask.token] != nil
+            let bundleNames = Set(launchableBundleNames(for: cask))
+            return snapshot.detectedApplications.contains {
+                bundleNames.contains($0.bundleName)
+            }
         }
-        if !isInstalled(token: cask.token),
-           let application = macAppStoreApplication(for: cask) {
-            return applicationDiscovery.metadata(
-                at: application.url,
-                fileManager: fileManager
-            ) != nil
-        }
-        return launchURL(for: cask) != nil
+        let hasStoreApp = snapshot.installationIndex.catalogTokens.contains(cask.token)
+            ? snapshot.installationIndex.macAppStoreApplications[cask.token] != nil
+            : macAppStoreApplication(for: cask) != nil
+        return hasStoreApp
+            || snapshot.externalApplicationOwners[cask.token] != nil
+            || snapshot.externalPackageInstallations[cask.token] != nil
     }
 
     func launchURL(for cask: Cask) -> URL? {
