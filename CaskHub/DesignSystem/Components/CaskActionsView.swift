@@ -172,9 +172,6 @@ struct CaskActionsView: View {
     }
 }
 
-/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
-/// pointer remains over the view. This hint follows hover state directly, so it
-/// stays visible until the pointer actually leaves the disabled control.
 private struct DisabledUninstallControl: View {
     let message: String
 
@@ -191,25 +188,8 @@ private struct DisabledUninstallControl: View {
             .onHover { isHovering = $0 }
             .overlay(alignment: .topTrailing) {
                 if isHovering {
-                    Text(message)
-                        .font(CHType.bodySm)
-                        .foregroundStyle(Color.chTextTitle)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(width: 220, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.chSurfaceToolbar)
-                                .shadow(color: Color.chShadowCard, radius: 8, y: 3)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
-                        )
+                    HintBubble(message: message)
                         .offset(y: -48)
-                        .allowsHitTesting(false)
                 }
             }
             .zIndex(isHovering ? 10 : 0)

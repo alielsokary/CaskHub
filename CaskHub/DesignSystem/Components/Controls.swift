@@ -163,6 +163,33 @@ struct Keycap: View {
     }
 }
 
+/// App-styled hover hint. SwiftUI's `.help` tooltip dismisses on click even
+/// while the pointer stays over the view; overlay this on hover state instead.
+struct HintBubble: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(CHType.bodySm)
+            .foregroundStyle(Color.chTextTitle)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(width: 220, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.chSurfaceToolbar)
+                    .shadow(color: Color.chShadowCard, radius: 8, y: 3)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
+            )
+            .allowsHitTesting(false)
+    }
+}
+
 #Preview {
     ZStack {
         WindowBackdrop()
