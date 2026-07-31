@@ -293,6 +293,70 @@ final class ImageCacheManifestGateTests: XCTestCase {
 
         XCTAssertEqual(RequestRecordingProtocol.snapshot().first, "cdn.jsdelivr.net")
     }
+
+    @MainActor
+    func test_vouched_token_retries_a_stale_miss_sooner_than_a_day() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("icon-miss-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let diskCache = IconDiskCache(directory: directory)
+        let cache = makeCache(diskCache: diskCache)
+        let token = "gate-vouched-\(UUID().uuidString)"
+        cache.knownIconTokens = { [token] }
+
+        try await seedMiss(token, in: directory, diskCache: diskCache, age: 16 * 60)
+        RequestRecordingProtocol.reset()
+        _ = await cache.image(for: Cask.preview(token: token))
+        XCTAssertEqual(RequestRecordingProtocol.snapshot().first, "cdn.jsdelivr.net")
+
+        try await seedMiss(token, in: directory, diskCache: diskCache, age: 60)
+        RequestRecordingProtocol.reset()
+        _ = await cache.image(for: Cask.preview(token: token))
+        XCTAssertEqual(RequestRecordingProtocol.snapshot(), [])
+    }
+
+    @MainActor
+    func test_unvouched_token_keeps_the_daily_miss_retry() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("icon-miss-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let diskCache = IconDiskCache(directory: directory)
+        let cache = makeCache(diskCache: diskCache)
+        let token = "gate-unvouched-\(UUID().uuidString)"
+        cache.knownIconTokens = { [] }
+
+        try await seedMiss(token, in: directory, diskCache: diskCache, age: 16 * 60)
+        RequestRecordingProtocol.reset()
+        _ = await cache.image(for: Cask.preview(token: token))
+
+        XCTAssertEqual(RequestRecordingProtocol.snapshot(), [])
+    }
+
+    @MainActor
+    private func makeCache(diskCache: IconDiskCache) -> ImageCacheService {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [RequestRecordingProtocol.self]
+        return ImageCacheService(
+            session: URLSession(configuration: config),
+            diskCache: diskCache
+        )
+    }
+
+    private func seedMiss(
+        _ token: String,
+        in directory: URL,
+        diskCache: IconDiskCache,
+        age: TimeInterval
+    ) async throws {
+        try await diskCache.recordMiss(
+            token: token,
+            generation: diskCache.currentGeneration()
+        )
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date().addingTimeInterval(-age)],
+            ofItemAtPath: directory.appendingPathComponent("\(token).miss").path
+        )
+    }
 }
 
 @MainActor
