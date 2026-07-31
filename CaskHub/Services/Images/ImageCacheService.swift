@@ -24,6 +24,10 @@ final class ImageCacheService {
     var knownIconTokens: () -> Set<String>? = { nil }
 
     private static let missRetryInterval: TimeInterval = 24 * 60 * 60
+    // The manifest vouches the icon exists, so a recorded miss is publication
+    // or CDN lag, not absence - misses recorded before the manifest gained the
+    // token would otherwise hide the icon for a full day.
+    private static let vouchedMissRetryInterval: TimeInterval = 15 * 60
 
     init(session: URLSession = .shared, diskCache: IconDiskCache = .shared) {
         self.session = session
@@ -65,7 +69,9 @@ final class ImageCacheService {
 
         if await diskCache.hasRecentMiss(
             token: token,
-            retryInterval: Self.missRetryInterval
+            retryInterval: inManifest
+                ? Self.vouchedMissRetryInterval
+                : Self.missRetryInterval
         ) {
             return nil
         }
