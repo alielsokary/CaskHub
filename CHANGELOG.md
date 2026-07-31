@@ -4,6 +4,22 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.6.8 — 2026-07-31
+
+### What's New
+
+- Catalog now refreshes automatically when you return to the app
+
+### Improvements
+
+- New casks appear in Recently Added as soon as Homebrew publishes them
+- Recently Added now orders same-day casks by exact publish time
+- Fewer UI freezes while browsing, scrolling, and during installs
+
+### Bug Fixes
+
+- Fixed icons for newly published casks staying hidden for up to a day
+
 ## 0.6.7 — 2026-07-29
 
 ### What's New
