@@ -119,7 +119,11 @@ final class CaskCatalogViewModel {
 
     // MARK: - Data Fetching
 
+    var lastLoadedAt: Date?
+
     func load() async {
+        // Stamped up front so activations during a load don't start another.
+        lastLoadedAt = .now
         async let catalog: Void = fetchCasks()
         async let local: Void = localHomebrew.refresh()
         async let categories: Void = categoryService.refreshFromRemote()
@@ -127,8 +131,16 @@ final class CaskCatalogViewModel {
         _ = await (catalog, local, categories, addedDates)
     }
 
+    func refreshIfStale(maxAge: TimeInterval = 3600) async {
+        guard let lastLoadedAt,
+              Date.now.timeIntervalSince(lastLoadedAt) >= maxAge
+        else { return }
+        await load()
+    }
+
     func fetchCasks() async {
-        isLoading = true
+        // A background refresh keeps showing the catalog it already has.
+        isLoading = casks.isEmpty
         errorMessage = nil
         let span = CrashReporter.span(name: "catalog.fetch", operation: "http")
 
@@ -150,7 +162,7 @@ final class CaskCatalogViewModel {
             }
             span.finish()
         } catch {
-            errorMessage = error.localizedDescription
+            if casks.isEmpty { errorMessage = error.localizedDescription }
             span.finish(error: error)
             CrashReporter.capture(error)
         }

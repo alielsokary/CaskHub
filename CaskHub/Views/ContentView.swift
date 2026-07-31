@@ -119,6 +119,13 @@ struct ContentView: View {
         .task {
             await viewModel.load()
         }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSApplication.didBecomeActiveNotification
+            )
+        ) { _ in
+            Task { await viewModel.refreshIfStale() }
+        }
         .onChange(of: viewModel.selectedSidebar) { _, newValue in
             Analytics.pageOpened(newValue)
             if newValue == .discover(.topCharts) {
