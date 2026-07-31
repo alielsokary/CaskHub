@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ArtifactStanza: Decodable, Hashable {
+nonisolated struct ArtifactStanza: Decodable, Hashable {
     let keys: Set<String>
     let appNames: [String]
     let binaryNames: [String]
@@ -147,7 +147,7 @@ struct ArtifactStanza: Decodable, Hashable {
 
 }
 
-struct Cask: Decodable, Identifiable, Hashable {
+nonisolated struct Cask: Decodable, Identifiable, Hashable {
     let token: String
     let fullToken: String?
     let tap: String?
