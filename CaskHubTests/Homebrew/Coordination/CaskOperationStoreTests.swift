@@ -110,7 +110,8 @@ final class CaskOperationStoreTests: XCTestCase {
 
         store.send(.begin(progress, canCancel: false), for: "firefox")
 
-        XCTAssertEqual(store.status?.message, "Updating Firefox…")
+        let updatingLabel = CaskOperationPhase.performing.label(for: .updating)
+        XCTAssertEqual(store.status?.message, "\(updatingLabel) Firefox…")
     }
 
     func test_update_all_lifecycle_has_one_owner_and_clears_progress_atomically() {

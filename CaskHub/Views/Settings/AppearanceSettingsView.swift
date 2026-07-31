@@ -47,13 +47,13 @@ struct AppearanceSettingsView: View {
                         RoundedRectangle(cornerRadius: 14)
                             .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)
                     )
-                Text(option.rawValue)
+                Text(option.title)
                     .font(.callout)
                     .foregroundStyle(isSelected ? .primary : .secondary)
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(option.rawValue) theme")
+        .accessibilityLabel(Text("\(option.title) theme"))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

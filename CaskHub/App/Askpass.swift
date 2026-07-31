@@ -13,12 +13,12 @@ enum Askpass {
         app.setActivationPolicy(.accessory)
 
         let alert = NSAlert()
-        alert.messageText = "CaskHub needs administrator access"
+        alert.messageText = String(localized: "CaskHub needs administrator access")
         alert.informativeText = token.map {
-            "The installer for “\($0)” requires your login password."
-        } ?? "This installer requires your login password."
-        alert.addButton(withTitle: "Allow")
-        alert.addButton(withTitle: "Cancel")
+            String(localized: "The installer for “\($0)” requires your login password.")
+        } ?? String(localized: "This installer requires your login password.")
+        alert.addButton(withTitle: String(localized: "Allow"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
 
         let passwordField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 230, height: 24))
         alert.accessoryView = passwordField

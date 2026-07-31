@@ -34,7 +34,8 @@ final class CaskHubTests: XCTestCase {
 
     @MainActor
     func test_queued_action_labels_as_queued() {
-        XCTAssertEqual(CaskAction.queued.inProgressLabel, "Queued…")
+        XCTAssertEqual(CaskAction.queued.inProgressLabel, String(localized: "Queued…"))
+        XCTAssertEqual(CaskAction.queued.identifier, "queued")
     }
 
     // MARK: - Adoption
@@ -134,7 +135,9 @@ final class CaskHubTests: XCTestCase {
         updateInstallationSnapshot(of: service) {
             $0.externalAppNames = ["Adoptable.app"]
         }
-        let adoptHint = "Adopt this app first so CaskHub can manage/uninstall it."
+        let adoptHint = String(
+            localized: "Adopt this app first so CaskHub can manage/uninstall it."
+        )
         XCTAssertEqual(
             service.localState(for: adoptable).uninstallAvailability.unavailableReason,
             adoptHint
@@ -144,7 +147,12 @@ final class CaskHubTests: XCTestCase {
         updateInstallationSnapshot(of: service) {
             $0.macAppStoreAppNames = ["Store.app"]
         }
-        let storeHint = "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
+        let storeHint = String(
+            localized: """
+            Installed from the Mac App Store. \
+            Uninstall it from Finder or Launchpad.
+            """
+        )
         XCTAssertEqual(
             service.localState(for: store).uninstallAvailability.unavailableReason,
             storeHint
@@ -156,8 +164,14 @@ final class CaskHubTests: XCTestCase {
                 "external": URL(fileURLWithPath: "/usr/local/bin/external")
             ]
         }
-        let externalHint = "Installed outside Homebrew at /usr/local/bin/external. "
-            + "Remove or move that file manually before installing the Homebrew version."
+        let externalBinaryPath = "/usr/local/bin/external"
+        let externalHint = String(
+            localized: """
+            Installed outside Homebrew at \(externalBinaryPath). \
+            Remove or move that file manually before installing \
+            the Homebrew version.
+            """
+        )
         XCTAssertEqual(
             service.localState(for: external).uninstallAvailability.unavailableReason,
             externalHint
@@ -269,7 +283,9 @@ final class CaskHubTests: XCTestCase {
         let error = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "chatgpt-classic", "--adopt"], exitCode: 1, stderr: stderr
         )
-        XCTAssertTrue(error.errorDescription?.contains("App Management") == true)
+        XCTAssertTrue(
+            error.errorDescription?.contains(String(localized: "App Management")) == true
+        )
 
         let unrelated = "chmod: /opt/homebrew/bin/tool: Operation not permitted"
         XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: unrelated))

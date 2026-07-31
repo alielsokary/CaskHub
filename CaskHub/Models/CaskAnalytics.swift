@@ -18,9 +18,9 @@ nonisolated enum AnalyticsPeriod: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .days30: return "30 Days"
-        case .days90: return "90 Days"
-        case .days365: return "Year"
+        case .days30: return String(localized: "30 Days")
+        case .days90: return String(localized: "90 Days")
+        case .days365: return String(localized: "Year")
         }
     }
 }

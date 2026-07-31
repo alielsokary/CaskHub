@@ -12,12 +12,12 @@ enum CaskActionStyle {
 
     var title: String {
         switch self {
-        case .install: return "Install"
-        case .adopt: return "Adopt"
-        case .update: return "Update"
-        case .open: return "Open"
-        case .installed: return "Installed"
-        case .cleanup: return "Clean Up"
+        case .install: return String(localized: "Install")
+        case .adopt: return String(localized: "Adopt")
+        case .update: return String(localized: "Update")
+        case .open: return String(localized: "Open")
+        case .installed: return String(localized: "Installed")
+        case .cleanup: return String(localized: "Clean Up")
         }
     }
 
