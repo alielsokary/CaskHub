@@ -7,12 +7,12 @@
 
 import Foundation
 
-protocol BrewAPIClientProtocol {
+nonisolated protocol BrewAPIClientProtocol {
     func fetchAllCasks() async throws -> [Cask]
     func fetchAnalytics(period: AnalyticsPeriod) async throws -> CaskAnalyticsResponse
 }
 
-final class BrewAPIClient: BrewAPIClientProtocol {
+nonisolated final class BrewAPIClient: BrewAPIClientProtocol {
     struct HTTPError: LocalizedError {
         let statusCode: Int
 
@@ -20,12 +20,6 @@ final class BrewAPIClient: BrewAPIClientProtocol {
             "formulae.brew.sh returned HTTP \(statusCode)."
         }
     }
-
-    private let decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return decoder
-    }()
 
     func fetchAllCasks() async throws -> [Cask] {
         try await fetch(URL(string: "https://formulae.brew.sh/api/cask.json")!)
@@ -37,11 +31,15 @@ final class BrewAPIClient: BrewAPIClientProtocol {
         )!)
     }
 
-    private func fetch<T: Decodable>(_ url: URL) async throws -> T {
+    // @concurrent keeps the multi-megabyte decode off the caller's actor;
+    // plain nonisolated async would inherit MainActor and hang the UI.
+    @concurrent private func fetch<T: Decodable & Sendable>(_ url: URL) async throws -> T {
         let (data, response) = try await URLSession.shared.data(from: url)
         if let http = response as? HTTPURLResponse, !(200 ..< 300).contains(http.statusCode) {
             throw HTTPError(statusCode: http.statusCode)
         }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode(T.self, from: data)
     }
 }

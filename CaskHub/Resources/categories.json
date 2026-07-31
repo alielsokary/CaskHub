@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-28",
-  "totalCasks": 3831,
+  "generatedDate": "2026-07-30",
+  "totalCasks": 3835,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -2631,6 +2631,12 @@
     "cmpxat": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "cmtrace-open": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
     },
     "cmux": {
       "primary": "developerTools",
@@ -7791,6 +7797,18 @@
       "primary": "designGraphics",
       "secondary": []
     },
+    "luna-display": {
+      "primary": "utilities",
+      "secondary": [
+        "designGraphics"
+      ]
+    },
+    "luna-secondary": {
+      "primary": "utilities",
+      "secondary": [
+        "videoMedia"
+      ]
+    },
     "lunacy": {
       "primary": "designGraphics",
       "secondary": []
@@ -11861,6 +11879,12 @@
     "redis-insight": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "redot": {
+      "primary": "developerTools",
+      "secondary": [
+        "games"
+      ]
     },
     "refine": {
       "primary": "productivity",
@@ -16540,7 +16564,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.07.29",
+  "releaseTag": "caskflow-v2026.07.31",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -17093,6 +17117,7 @@
     "clover-chord-systems",
     "cmake-app",
     "cmd",
+    "cmtrace-open",
     "cmux",
     "cockatrice",
     "cocktail",
@@ -18179,6 +18204,8 @@
     "lulu",
     "lumide",
     "luminance-hdr",
+    "luna-display",
+    "luna-secondary",
     "lunacy",
     "lunar",
     "lunar-client",
@@ -19064,6 +19091,7 @@
     "recut",
     "redcine-x-pro",
     "redis-insight",
+    "redot",
     "refine",
     "reflect",
     "reflector",
@@ -19387,6 +19415,7 @@
     "sourcetree",
     "space-capsule",
     "spacedrive",
+    "spacejump",
     "spacelauncher",
     "spaceman",
     "spacewalker",
@@ -19631,6 +19660,7 @@
     "tiger-trade",
     "tigerjython",
     "tigervnc",
+    "tight-studio",
     "tikz-editor",
     "tiled",
     "tiles",

@@ -32,6 +32,8 @@ final class HomebrewMutationCoordinator {
     private var outputBuffers: [String: String] = [:]
     private var lastProgressUpdates: [String: Date] = [:]
 
+    private static let phaseMarkers = ["==>", "Verifying", "Already downloaded:"]
+
     init(
         operationStore: CaskOperationStore,
         commandExecutor: any HomebrewCommandExecuting,
@@ -166,6 +168,16 @@ final class HomebrewMutationCoordinator {
 
         let buffered = String(((outputBuffers[token] ?? "") + output).suffix(6_000))
         outputBuffers[token] = buffered
+
+        // The pty redraws the progress bar dozens of times per second; parsing
+        // the buffer tail for every redraw hangs the main thread. Skipped
+        // chunks stay buffered, so the next parse sees their state.
+        let hasPhaseMarker = Self.phaseMarkers.contains(where: output.contains)
+        if !hasPhaseMarker,
+           let lastUpdate = lastProgressUpdates[token],
+           Date.now.timeIntervalSince(lastUpdate) < 0.10 {
+            return
+        }
 
         let update = BrewProgressParser.parse(buffered)
         if update.phase == .checkingDownload {

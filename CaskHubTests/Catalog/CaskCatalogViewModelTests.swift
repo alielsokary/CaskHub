@@ -148,9 +148,56 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         vm.selectedSidebar = .discover(.recentlyAdded)
 
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["new-app"])
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["undated-app", "new-app"])
         vm.selectRecentlyAddedWindow(.days90)
-        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["new-app"])
+        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["undated-app", "new-app"])
+    }
+
+    @MainActor
+    func test_background_fetch_stays_silent_when_catalog_present() async {
+        let (vm, api) = await makeSUT(casks: [makeCask("first")])
+
+        api.casks = [makeCask("first"), makeCask("second")]
+        await vm.fetchCasks()
+        XCTAssertEqual(vm.casks.count, 2)
+
+        api.casksError = URLError(.notConnectedToInternet)
+        await vm.fetchCasks()
+        XCTAssertEqual(vm.casks.count, 2)
+        XCTAssertNil(vm.errorMessage)
+        XCTAssertFalse(vm.isLoading)
+    }
+
+    @MainActor
+    func test_refresh_if_stale_throttles_within_max_age_and_before_first_load() async {
+        let (vm, api) = await makeSUT(casks: [makeCask("first")])
+        api.casks = [makeCask("first"), makeCask("second")]
+
+        await vm.refreshIfStale(maxAge: 0)
+        XCTAssertEqual(vm.casks.count, 1)
+
+        vm.lastLoadedAt = .now
+        await vm.refreshIfStale()
+        XCTAssertEqual(vm.casks.count, 1)
+    }
+
+    @MainActor
+    func test_unmined_tokens_count_as_recently_added_until_dates_refresh() async {
+        let recent = RecentlyAddedService()
+        recent.addedDates = ["old-app": dateString(daysAgo: 100)]
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("old-app"), makeCask("brand-new")],
+            recentlyAdded: recent
+        )
+
+        vm.selectedSidebar = .discover(.recentlyAdded)
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["brand-new"])
+
+        let shelf = vm.browseSections.first { $0.title == "Recently Added" }
+        XCTAssertEqual(shelf?.casks.map(\.token), ["brand-new"])
+
+        recent.addedDates["brand-new"] = dateString(daysAgo: 1)
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["brand-new"])
     }
 
     // MARK: Browse sections

@@ -98,7 +98,9 @@ enum CatalogProjector {
                 title: "Recently Added",
                 destination: .discover(.recentlyAdded),
                 casks: Array(sortedByNewest(
-                    input.casks.filter { input.recentTokens.contains($0.token) },
+                    input.casks.filter {
+                        isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
+                    },
                     addedDates: input.addedDates
                 ).prefix(sectionSize))
             )
@@ -135,7 +137,9 @@ enum CatalogProjector {
         case .discover(.topCharts):
             return input.casks
         case .discover(.recentlyAdded):
-            return input.casks.filter { input.recentTokens.contains($0.token) }
+            return input.casks.filter {
+                isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
+            }
         case .library(.installed):
             return input.library.installedCasks
         case .library(.updates):
@@ -206,12 +210,23 @@ enum CatalogProjector {
         casks.sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
     }
 
+    // Catalog tokens absent from the mined dates postdate the last mine, so they
+    // are the newest casks; an empty dictionary means the data never loaded.
+    private static func isRecent(
+        _ token: String,
+        in recentTokens: Set<String>,
+        addedDates: [String: String]
+    ) -> Bool {
+        recentTokens.contains(token)
+            || (!addedDates.isEmpty && addedDates[token] == nil)
+    }
+
     private static func sortedByNewest(
         _ casks: [Cask],
         addedDates: [String: String]
     ) -> [Cask] {
         casks.sorted {
-            (addedDates[$0.token] ?? "") > (addedDates[$1.token] ?? "")
+            (addedDates[$0.token] ?? "9999") > (addedDates[$1.token] ?? "9999")
         }
     }
 }
