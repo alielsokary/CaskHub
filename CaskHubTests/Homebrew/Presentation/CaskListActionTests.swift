@@ -115,7 +115,7 @@ final class CaskListActionTests: XCTestCase {
         XCTAssertEqual(menu.items[3].toolTip, expectedHint)
     }
 
-    func test_row_action_menu_preserves_unavailable_uninstall_hint() {
+    func test_row_action_menu_preserves_unavailable_uninstall_hint() throws {
         let hint = "Adopt this app first so CaskHub can manage/uninstall it."
         let coordinator = menuButton(
             showsUpdate: false,
@@ -127,6 +127,10 @@ final class CaskListActionTests: XCTestCase {
         XCTAssertEqual(menu.items.map(\.title), ["Info", "", "Uninstall"])
         XCTAssertFalse(menu.items[2].isEnabled)
         XCTAssertEqual(menu.items[2].toolTip, hint)
+
+        let hintView = try XCTUnwrap(menu.items[2].view)
+        XCTAssertGreaterThan(hintView.frame.height, 0)
+        XCTAssertGreaterThan(hintView.frame.width, 0)
     }
 
     func test_list_rows_render_install_and_external_installation_states() {

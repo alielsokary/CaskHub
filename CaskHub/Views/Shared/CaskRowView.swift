@@ -236,7 +236,9 @@ struct CaskRowActionsMenuButton: NSViewRepresentable {
                 let hosting = NSHostingView(
                     rootView: DisabledUninstallMenuRow(reason: reason)
                 )
-                hosting.sizingOptions = .intrinsicContentSize
+                // NSMenu sizes item views from their frame; without one the
+                // item renders zero-height.
+                hosting.frame.size = hosting.fittingSize
                 item.view = hosting
             }
             return item
