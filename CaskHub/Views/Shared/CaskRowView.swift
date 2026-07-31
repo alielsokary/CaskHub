@@ -115,9 +115,6 @@ struct CaskRowView: View {
     }
 }
 
-// A plain SwiftUI button popping an NSMenu on click. Hosting an
-// NSViewRepresentable per row made every NSHostingView layout pass walk an
-// AppKit bridge for each visible row (Sentry CASKHUB-18).
 struct CaskRowActionsMenuButton: View {
     let showsUpdate: Bool
     let isBusy: Bool
@@ -125,13 +122,12 @@ struct CaskRowActionsMenuButton: View {
     let onInfo: () -> Void
     let onUpdate: () -> Void
     let onUninstall: () -> Void
+    var presentMenu: (NSMenu) -> Void = { menu in
+        menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+    }
 
     var body: some View {
-        Button {
-            // popUp is synchronous, so the coordinator outlives the menu
-            // session even as a local.
-            makeCoordinator().showMenu()
-        } label: {
+        Button(action: presentActionsMenu) {
             Image(systemName: "ellipsis.circle")
                 .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(Color.chTextMuted)
@@ -147,20 +143,16 @@ struct CaskRowActionsMenuButton: View {
         Coordinator(configuration: self)
     }
 
+    func presentActionsMenu() {
+        presentMenu(makeCoordinator().makeMenu())
+    }
+
     @MainActor
     final class Coordinator: NSObject {
         var configuration: CaskRowActionsMenuButton
 
         init(configuration: CaskRowActionsMenuButton) {
             self.configuration = configuration
-        }
-
-        func showMenu() {
-            makeMenu().popUp(
-                positioning: nil,
-                at: NSEvent.mouseLocation,
-                in: nil
-            )
         }
 
         @objc func showInfo() {
