@@ -85,9 +85,9 @@ final class SettingsViewTests: XCTestCase {
     }
 
     @MainActor
-    func test_staged_update_not_pending_when_prompt_disabled() {
+    func test_staged_update_not_pending_when_automatic_checks_disabled() {
         var gate = StagedUpdateGate()
-        gate.updateStaged(showPromptEnabled: false)
+        gate.updateStaged(automaticChecksEnabled: false)
 
         XCTAssertFalse(gate.pending)
         XCTAssertFalse(gate.consumeResume(canCheck: true))
@@ -96,7 +96,7 @@ final class SettingsViewTests: XCTestCase {
     @MainActor
     func test_staged_update_resumes_once_after_session_ends() {
         var gate = StagedUpdateGate()
-        gate.updateStaged(showPromptEnabled: true)
+        gate.updateStaged(automaticChecksEnabled: true)
 
         XCTAssertTrue(gate.pending)
         // Session still in progress: checkForUpdates() would be a no-op, so hold.
@@ -125,10 +125,8 @@ final class SettingsViewTests: XCTestCase {
     func test_settings_tabs_render() {
         render(AppearanceSettingsView())
         render(PrivacySettingsView())
-        render(AboutSettingsView())
         render(
             GeneralSettingsView()
-                .environment(UpdaterService())
                 .environment(ImageCacheService())
         )
         render(
