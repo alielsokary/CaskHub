@@ -306,7 +306,19 @@ final class HomebrewMutationCoordinator {
             error: error,
             strandedCopyExists: callbacks.strandedCopyExists()
         )
+        if Self.indicatesStateDesync(error) {
+            await callbacks.refresh()
+        }
         throw error
+    }
+
+    /// Brew rejecting the action over install state means our snapshot is stale
+    /// — without a refresh the UI keeps offering an action brew will keep failing.
+    private static func indicatesStateDesync(_ error: Error) -> Bool {
+        guard case let LocalHomebrewError.brewCommandFailed(_, _, stderr) = error else {
+            return false
+        }
+        return LocalHomebrewError.failureClass(stderr: stderr) == "not-installed"
     }
 
 }
