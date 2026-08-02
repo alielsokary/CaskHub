@@ -30,6 +30,19 @@ enum SortOption: String, CaseIterable, Identifiable {
         rawValue
     }
 
+    /// Localized label for display. `rawValue` stays language-independent so `id`
+    /// remains stable.
+    var title: String {
+        switch self {
+        case .mostPopular: return String(localized: "Most Popular")
+        case .nameAZ: return String(localized: "Name (A→Z)")
+        case .nameZA: return String(localized: "Name (Z→A)")
+        case .recentlyInstalled: return String(localized: "Recently Installed")
+        case .newest: return String(localized: "Newest")
+        case .oldest: return String(localized: "Oldest")
+        }
+    }
+
     static let standard: [SortOption] = [.mostPopular, .nameAZ, .nameZA]
     static let installed: [SortOption] = [.recentlyInstalled] + standard
 }

@@ -90,12 +90,12 @@ enum CatalogProjector {
 
         var sections = [
             BrowseSection(
-                title: "Most Popular",
+                title: String(localized: "Most Popular"),
                 destination: .discover(.topCharts),
                 casks: Array(popularityOrder.prefix(sectionSize))
             ),
             BrowseSection(
-                title: "Recently Added",
+                title: String(localized: "Recently Added"),
                 destination: .discover(.recentlyAdded),
                 casks: Array(sortedByNewest(
                     input.casks.filter {

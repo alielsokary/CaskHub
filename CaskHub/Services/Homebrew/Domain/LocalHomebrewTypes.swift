@@ -162,6 +162,18 @@ nonisolated enum CaskInstallationSource: String, Equatable, Sendable {
     case externalApplication = "External application"
     case packageInstaller = "Package installer"
     case externalExecutable = "External executable"
+
+    /// Localized label for display. `rawValue` stays language-independent.
+    /// Proper nouns are intentionally left untranslated.
+    var title: String {
+        switch self {
+        case .homebrew: return "Homebrew"
+        case .macAppStore: return "Mac App Store"
+        case .externalApplication: return String(localized: "External application")
+        case .packageInstaller: return String(localized: "Package installer")
+        case .externalExecutable: return String(localized: "External executable")
+        }
+    }
 }
 
 nonisolated enum CaskUninstallAvailability: Equatable, Sendable {
@@ -265,13 +277,27 @@ nonisolated enum CaskAction: Equatable, Sendable {
 
     var inProgressLabel: String {
         switch self {
-        case .opening: return "Opening…"
-        case .installing: return "Installing…"
-        case .adopting: return "Adopting…"
-        case .updating: return "Updating…"
-        case .uninstalling: return "Uninstalling…"
-        case .repairing: return "Repairing…"
-        case .queued: return "Queued…"
+        case .opening: return String(localized: "Opening…")
+        case .installing: return String(localized: "Installing…")
+        case .adopting: return String(localized: "Adopting…")
+        case .updating: return String(localized: "Updating…")
+        case .uninstalling: return String(localized: "Uninstalling…")
+        case .repairing: return String(localized: "Repairing…")
+        case .queued: return String(localized: "Queued…")
+        }
+    }
+
+    /// Stable key for grouping and ordering. Never shown to the user, so it stays
+    /// fixed when `inProgressLabel` changes wording.
+    var identifier: String {
+        switch self {
+        case .opening: return "opening"
+        case .installing: return "installing"
+        case .adopting: return "adopting"
+        case .updating: return "updating"
+        case .uninstalling: return "uninstalling"
+        case .repairing: return "repairing"
+        case .queued: return "queued"
         }
     }
 }
@@ -340,37 +366,56 @@ enum LocalHomebrewError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .brewBinaryNotFound:
-            return "Couldn't locate the brew binary. Is Homebrew installed?"
+            return String(
+                localized: "Couldn't locate the brew binary. Is Homebrew installed?"
+            )
         case let .appBundleNotFound(token):
-            return "Couldn't find an installed app for \(token)."
+            return String(localized: "Couldn't find an installed app for \(token).")
         case let .brewCommandFailed(args, code, stderr):
             let cmd = (["brew"] + args).joined(separator: " ")
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             if Self.isAppManagementDenial(stderr: trimmed) {
-                return "macOS blocked CaskHub from modifying apps on your Mac. "
-                    + "Enable CaskHub under System Settings → Privacy & Security → "
-                    + "App Management, then try again."
+                return String(
+                    localized: """
+                    macOS blocked CaskHub from modifying apps on your Mac. \
+                    Enable CaskHub under System Settings → Privacy & Security → \
+                    App Management, then try again.
+                    """
+                )
             }
             if Self.isStrandedApp(stderr: trimmed) {
-                return "A previous update left an old copy of the app inside Homebrew's "
-                    + "records, and Homebrew refuses every upgrade until it's cleared. "
-                    + "Repair removes the leftover copy and reinstalls the app fresh — "
-                    + "your settings and data are kept."
+                return String(
+                    localized: """
+                    A previous update left an old copy of the app inside Homebrew's \
+                    records, and Homebrew refuses every upgrade until it's cleared. \
+                    Repair removes the leftover copy and reinstalls the app fresh — \
+                    your settings and data are kept.
+                    """
+                )
             }
             if Self.isAdoptMismatch(args: args, stderr: trimmed) {
-                return "Your installed copy doesn't match the version Homebrew has on record, "
-                    + "so it can't be adopted as-is. You can replace it with Homebrew's copy "
-                    + "instead — your settings and data are kept."
+                return String(
+                    localized: """
+                    Your installed copy doesn't match the version Homebrew has on \
+                    record, so it can't be adopted as-is. You can replace it with \
+                    Homebrew's copy instead — your settings and data are kept.
+                    """
+                )
             }
             if trimmed.contains("reports different checksum") || trimmed.contains("SHA256 mismatch") {
-                return "The download doesn't match the checksum Homebrew has on record — "
-                    + "the developer likely replaced the release file after it was published. "
-                    + "This isn't a problem with your Mac; Homebrew refuses mismatched downloads "
-                    + "for security. Try again in a day or two once the cask is updated."
+                return String(
+                    localized: """
+                    The download doesn't match the checksum Homebrew has on record — \
+                    the developer likely replaced the release file after it was \
+                    published. This isn't a problem with your Mac; Homebrew refuses \
+                    mismatched downloads for security. Try again in a day or two once \
+                    the cask is updated.
+                    """
+                )
             }
             return trimmed.isEmpty
-                ? "`\(cmd)` failed (exit \(code))."
-                : "`\(cmd)` failed (exit \(code)): \(trimmed)"
+                ? String(localized: "`\(cmd)` failed (exit \(code)).")
+                : String(localized: "`\(cmd)` failed (exit \(code)): \(trimmed)")
         }
     }
 

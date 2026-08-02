@@ -17,7 +17,7 @@ nonisolated final class BrewAPIClient: BrewAPIClientProtocol {
         let statusCode: Int
 
         var errorDescription: String? {
-            "formulae.brew.sh returned HTTP \(statusCode)."
+            String(localized: "formulae.brew.sh returned HTTP \(statusCode).")
         }
     }
 

@@ -42,9 +42,10 @@ final class CaskOperationProgressTests: XCTestCase {
             token: "firefox"
         )
         XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .checkingDownload)
+        let checkingLabel = CaskOperationPhase.checkingDownload.label(for: .installing)
         XCTAssertEqual(
             service.operationStore.state(for: "firefox")?.progress?.inlineLabel,
-            "Checking download…"
+            "\(checkingLabel)…"
         )
 
         service.mutationCoordinator.consumeBrewOutput(
@@ -56,7 +57,10 @@ final class CaskOperationProgressTests: XCTestCase {
         XCTAssertEqual(downloading.completedBytes, 42_000_000)
         XCTAssertEqual(downloading.totalBytes, 100_000_000)
         XCTAssertEqual(try XCTUnwrap(downloading.fractionCompleted), 0.42, accuracy: 0.001)
-        XCTAssertTrue(service.statusBarOperation?.message.contains("Downloading Firefox") == true)
+        let downloadingLabel = CaskOperationPhase.downloading.label(for: .installing)
+        XCTAssertTrue(
+            service.statusBarOperation?.message.contains("\(downloadingLabel) Firefox") == true
+        )
 
         service.mutationCoordinator.consumeBrewOutput(
             "==> Installing Cask firefox",
@@ -131,7 +135,8 @@ final class CaskOperationProgressTests: XCTestCase {
         XCTAssertEqual(progress.completedBytes, 2_048)
         XCTAssertEqual(progress.totalBytes, 2_048)
         XCTAssertEqual(progress.fractionCompleted, 1)
-        XCTAssertEqual(progress.inlineLabel, "Using cache · 2 / 2 KB")
+        let cacheLabel = CaskOperationPhase.usingCachedDownload.label(for: .installing)
+        XCTAssertEqual(progress.inlineLabel, "\(cacheLabel) · 2 / 2 KB")
     }
 
     func test_phase_parser_does_not_treat_download_preflight_as_byte_transfer() {
@@ -188,9 +193,12 @@ final class CaskOperationProgressTests: XCTestCase {
             )
         ]
 
+        let summary = String(localized: "\(2) operations in progress")
+        let downloading = CaskOperationPhase.downloading.label(for: .installing).lowercased()
+        let updating = CaskOperationPhase.performing.label(for: .updating).lowercased()
         XCTAssertEqual(
             CaskOperationStatus.make(operations: operations, updateAll: nil)?.message,
-            "2 operations in progress · 1 downloading · 1 updating"
+            "\(summary) · 1 \(downloading) · 1 \(updating)"
         )
     }
 

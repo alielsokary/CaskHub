@@ -131,7 +131,7 @@ struct TopBarView: View {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.up.arrow.down")
                     .font(.system(size: 10, weight: .bold))
-                Text(sortOption.rawValue)
+                Text(sortOption.title)
                     .font(CHType.button)
             }
             .foregroundStyle(Color.chTextTitle)
@@ -145,7 +145,7 @@ struct TopBarView: View {
         .popover(isPresented: $showSortMenu, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(sortOptions) { option in
-                    menuRow(label: option.rawValue, isSelected: sortOption == option) {
+                    menuRow(label: option.title, isSelected: sortOption == option) {
                         if option != sortOption { Analytics.sortChanged(option) }
                         sortOption = option
                         showSortMenu = false
