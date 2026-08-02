@@ -172,7 +172,7 @@ struct CaskRowActionsMenuButton: View {
             menu.autoenablesItems = false
             menu.addItem(
                 menuItem(
-                    title: "Info",
+                    title: String(localized: "Info"),
                     systemImage: "info.circle",
                     action: #selector(showInfo)
                 )
@@ -181,12 +181,12 @@ struct CaskRowActionsMenuButton: View {
             if configuration.showsUpdate {
                 menu.addItem(
                     menuItem(
-                        title: "Update",
+                        title: String(localized: "Update"),
                         systemImage: "arrow.clockwise",
                         action: #selector(update),
                         isEnabled: !configuration.isBusy,
                         toolTip: configuration.isBusy
-                            ? "Wait for the current action to finish."
+                            ? String(localized: "Wait for the current action to finish.")
                             : nil
                     )
                 )
@@ -204,7 +204,7 @@ struct CaskRowActionsMenuButton: View {
             switch configuration.uninstallAvailability {
             case .available:
                 reason = configuration.isBusy
-                    ? "Wait for the current action to finish."
+                    ? String(localized: "Wait for the current action to finish.")
                     : nil
             case let .unavailable(unavailableReason):
                 reason = unavailableReason
@@ -213,7 +213,7 @@ struct CaskRowActionsMenuButton: View {
             }
 
             return menuItem(
-                title: "Uninstall",
+                title: String(localized: "Uninstall"),
                 systemImage: "trash",
                 action: #selector(uninstall),
                 isEnabled: reason == nil,

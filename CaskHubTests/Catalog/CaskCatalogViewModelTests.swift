@@ -193,7 +193,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
         vm.selectedSidebar = .discover(.recentlyAdded)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["brand-new"])
 
-        let shelf = vm.browseSections.first { $0.title == "Recently Added" }
+        let shelf = vm.browseSections.first { $0.destination == .discover(.recentlyAdded) }
         XCTAssertEqual(shelf?.casks.map(\.token), ["brand-new"])
 
         recent.addedDates["brand-new"] = dateString(daysAgo: 1)
@@ -222,7 +222,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         let sections = vm.browseSections
 
-        XCTAssertEqual(sections.map(\.title), ["Most Popular", "Browsers"])
+        XCTAssertEqual(sections.map(\.title), [String(localized: "Most Popular"), "Browsers"])
         XCTAssertEqual(sections[0].destination, .discover(.topCharts))
         XCTAssertEqual(sections[1].destination, .category("browsers"))
         XCTAssertEqual(sections[0].casks.count, 8)
@@ -242,7 +242,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
             recentlyAdded: recent
         )
 
-        let shelf = vm.browseSections.first { $0.title == "Recently Added" }
+        let shelf = vm.browseSections.first { $0.destination == .discover(.recentlyAdded) }
         XCTAssertEqual(shelf?.casks.map(\.token), ["new-app", "old-hit"])
     }
 

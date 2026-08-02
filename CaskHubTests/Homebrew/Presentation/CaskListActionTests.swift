@@ -70,7 +70,7 @@ final class CaskListActionTests: XCTestCase {
         let menu = coordinator.makeMenu()
 
         XCTAssertFalse(menu.autoenablesItems)
-        XCTAssertEqual(menu.items.map(\.title), ["Info"])
+        XCTAssertEqual(menu.items.map(\.title), [String(localized: "Info")])
         XCTAssertTrue(menu.items[0].isEnabled)
         XCTAssertNotNil(menu.items[0].image)
     }
@@ -85,7 +85,15 @@ final class CaskListActionTests: XCTestCase {
 
         let menu = coordinator.makeMenu()
 
-        XCTAssertEqual(menu.items.map(\.title), ["Info", "Update", "", "Uninstall"])
+        XCTAssertEqual(
+            menu.items.map(\.title),
+            [
+                String(localized: "Info"),
+                String(localized: "Update"),
+                "",
+                String(localized: "Uninstall")
+            ]
+        )
         XCTAssertTrue(menu.items[1].isEnabled)
         XCTAssertNil(menu.items[1].toolTip)
         XCTAssertTrue(menu.items[3].isEnabled)
@@ -107,7 +115,7 @@ final class CaskListActionTests: XCTestCase {
         ).makeCoordinator()
 
         let menu = coordinator.makeMenu()
-        let expectedHint = "Wait for the current action to finish."
+        let expectedHint = String(localized: "Wait for the current action to finish.")
 
         XCTAssertFalse(menu.items[1].isEnabled)
         XCTAssertEqual(menu.items[1].toolTip, expectedHint)
@@ -130,11 +138,21 @@ final class CaskListActionTests: XCTestCase {
         render(button)
         button.presentActionsMenu()
 
-        XCTAssertEqual(presentedTitles, ["Info", "Update", "", "Uninstall"])
+        XCTAssertEqual(
+            presentedTitles,
+            [
+                String(localized: "Info"),
+                String(localized: "Update"),
+                "",
+                String(localized: "Uninstall")
+            ]
+        )
     }
 
     func test_row_action_menu_preserves_unavailable_uninstall_hint() {
-        let hint = "Adopt this app first so CaskHub can manage/uninstall it."
+        let hint = String(
+            localized: "Adopt this app first so CaskHub can manage/uninstall it."
+        )
         let coordinator = menuButton(
             showsUpdate: false,
             uninstallAvailability: .unavailable(reason: hint)
@@ -142,7 +160,10 @@ final class CaskListActionTests: XCTestCase {
 
         let menu = coordinator.makeMenu()
 
-        XCTAssertEqual(menu.items.map(\.title), ["Info", "", "Uninstall"])
+        XCTAssertEqual(
+            menu.items.map(\.title),
+            [String(localized: "Info"), "", String(localized: "Uninstall")]
+        )
         XCTAssertFalse(menu.items[2].isEnabled)
         XCTAssertEqual(menu.items[2].toolTip, hint)
     }

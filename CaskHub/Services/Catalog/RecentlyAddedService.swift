@@ -18,7 +18,7 @@ enum RecentlyAddedWindow: Int, CaseIterable, Identifiable {
     }
 
     var label: String {
-        "\(rawValue) Days"
+        String(localized: "\(rawValue) Days")
     }
 }
 

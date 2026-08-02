@@ -64,22 +64,27 @@ final class CaskMetadataProjectorTests: XCTestCase {
         )
         let values = valuesByProperty(rows)
 
-        XCTAssertEqual(values["Main Category"], "Developer Tools")
-        XCTAssertEqual(values["Subcategories"], "Productivity, Utilities")
+        let no = String(localized: "No")
+        XCTAssertEqual(values[String(localized: "Main Category")], "Developer Tools")
+        XCTAssertEqual(values[String(localized: "Subcategories")], "Productivity, Utilities")
         XCTAssertEqual(
-            values["Installed"],
+            values[String(localized: "Installed")],
             installedAt.formatted(date: .abbreviated, time: .shortened)
         )
         XCTAssertEqual(
-            values["Last Updated"],
+            values[String(localized: "Last Updated")],
             lastUpdatedAt.formatted(date: .abbreviated, time: .shortened)
         )
-        XCTAssertEqual(values["Outdated"], "No")
-        XCTAssertEqual(values["Deprecated"], "No")
-        XCTAssertEqual(values["Disabled"], "No")
+        XCTAssertEqual(values[String(localized: "Outdated")], no)
+        XCTAssertEqual(values[String(localized: "Deprecated")], no)
+        XCTAssertEqual(values[String(localized: "Disabled")], no)
         XCTAssertEqual(
             rows.suffix(3).map(\.property),
-            ["Outdated", "Deprecated", "Disabled"]
+            [
+                String(localized: "Outdated"),
+                String(localized: "Deprecated"),
+                String(localized: "Disabled")
+            ]
         )
     }
 
@@ -96,15 +101,15 @@ final class CaskMetadataProjectorTests: XCTestCase {
         ))
 
         XCTAssertEqual(
-            values["Bundle Created"],
+            values[String(localized: "Bundle Created")],
             createdAt.formatted(date: .abbreviated, time: .shortened)
         )
         XCTAssertEqual(
-            values["Bundle Modified"],
+            values[String(localized: "Bundle Modified")],
             modifiedAt.formatted(date: .abbreviated, time: .shortened)
         )
-        XCTAssertNil(values["Installed"])
-        XCTAssertNil(values["Last Updated"])
+        XCTAssertNil(values[String(localized: "Installed")])
+        XCTAssertNil(values[String(localized: "Last Updated")])
     }
 
     private func makeRows(

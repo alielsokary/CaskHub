@@ -20,21 +20,44 @@ nonisolated enum CaskOperationPhase: Equatable, Sendable {
     func label(for action: CaskAction) -> String {
         switch self {
         case .queued:
-            return "Queued"
+            return String(localized: "Queued")
         case .preparing:
-            return "Preparing"
+            return String(localized: "Preparing")
         case .checkingDownload:
-            return "Checking download"
+            return String(localized: "Checking download")
         case .downloading:
-            return "Downloading"
+            return String(localized: "Downloading")
         case .usingCachedDownload:
-            return "Using cache"
+            return String(localized: "Using cache")
         case .verifying:
-            return "Verifying"
+            return String(localized: "Verifying")
         case .performing:
             return action.inProgressLabel.replacingOccurrences(of: "…", with: "")
         case .canceling:
-            return "Canceling"
+            return String(localized: "Canceling")
+        }
+    }
+
+    /// Stable key for grouping and ordering. Never shown to the user, so it stays
+    /// fixed when `label(for:)` changes wording.
+    func identifier(for action: CaskAction) -> String {
+        switch self {
+        case .queued:
+            return "queued"
+        case .preparing:
+            return "preparing"
+        case .checkingDownload:
+            return "checking-download"
+        case .downloading:
+            return "downloading"
+        case .usingCachedDownload:
+            return "using-cache"
+        case .verifying:
+            return "verifying"
+        case .performing:
+            return action.identifier
+        case .canceling:
+            return "canceling"
         }
     }
 
@@ -200,21 +223,22 @@ nonisolated struct CaskOperationStatus: Equatable, Sendable {
             return CaskOperationStatus(label: label, byteProgress: byteProgress)
         }
 
-        var counts: [String: Int] = [:]
+        var counts: [String: (count: Int, label: String)] = [:]
         for operation in sortedOperations {
+            let identifier = operation.phase.identifier(for: operation.action)
             let label = operation.phase.label(for: operation.action).lowercased()
-            counts[label, default: 0] += 1
+            counts[identifier, default: (count: 0, label: label)].count += 1
         }
         let phaseOrder = [
-            "downloading", "checking download", "using cache", "verifying", "installing",
+            "downloading", "checking-download", "using-cache", "verifying", "installing",
             "updating", "adopting", "uninstalling", "repairing", "preparing",
             "canceling", "queued"
         ]
-        let details = phaseOrder.compactMap { label -> String? in
-            guard let count = counts[label], count > 0 else { return nil }
-            return "\(count) \(label)"
+        let details = phaseOrder.compactMap { identifier -> String? in
+            guard let entry = counts[identifier], entry.count > 0 else { return nil }
+            return "\(entry.count) \(entry.label)"
         }
-        let summary = "\(sortedOperations.count) operations in progress"
+        let summary = String(localized: "\(sortedOperations.count) operations in progress")
         return CaskOperationStatus(label: ([summary] + details).joined(separator: " · "))
     }
 }
