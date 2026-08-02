@@ -3,10 +3,12 @@ name: Sync develop with master
 # Back-merge automation: every push to master opens (or reuses) a
 # "chore: master to develop" PR so develop never drifts behind releases.
 #
-# Requires the repo setting "Allow GitHub Actions to create and approve pull
-# requests" (Settings → Actions → General). Without it, gh pr create fails
-# with "GitHub Actions is not permitted to create or approve pull requests"
-# even though this workflow has pull-requests: write.
+# Uses SYNC_BOT_TOKEN (a PAT) when present so the PR is authored by the
+# owner: bot-authored PRs hold their workflow runs for manual approval,
+# which blocks required checks (learned in CaskFlow #64).
+#
+# Fallback github.token requires the repo setting "Allow GitHub Actions to
+# create and approve pull requests" (Settings → Actions → General).
 on:
   push:
     branches: [master]
@@ -23,7 +25,7 @@ jobs:
 
       - name: Open PR master -> develop
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SYNC_BOT_TOKEN || github.token }}
         run: |
           set -euo pipefail
           # ponytail: reuse the open PR if one exists; new master commits land on it automatically
