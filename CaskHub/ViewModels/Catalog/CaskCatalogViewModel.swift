@@ -53,7 +53,19 @@ final class CaskCatalogViewModel {
     }
     /// Projection reads this instead of `searchText` so each keystroke echoes in
     /// the field immediately without re-filtering the full catalog on the MainActor.
-    private(set) var appliedSearchText = ""
+    private(set) var appliedSearchText = "" {
+        didSet { if oldValue != appliedSearchText { resetReveal() } }
+    }
+    static let revealChunk = 200
+    private(set) var revealedCount = revealChunk
+
+    func revealMore() {
+        revealedCount += Self.revealChunk
+    }
+
+    private func resetReveal() {
+        revealedCount = Self.revealChunk
+    }
     @ObservationIgnored var searchDebounceInterval: Duration = .milliseconds(200)
     @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
 
@@ -77,10 +89,13 @@ final class CaskCatalogViewModel {
         return analyticsByPeriod[analyticsPeriod] ?? [:]
     }
 
-    var sortOption: SortOption = .mostPopular
+    var sortOption: SortOption = .mostPopular {
+        didSet { if oldValue != sortOption { resetReveal() } }
+    }
     var selectedSidebar: SidebarSelection = .discover(.browse) {
         didSet {
             guard oldValue != selectedSidebar else { return }
+            resetReveal()
             switch selectedSidebar {
             case .library(.installed):
                 sortOption = .recentlyInstalled

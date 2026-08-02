@@ -124,6 +124,18 @@ extension CaskCatalogViewModel {
         }
     }
 
+    /// What the grid/list actually render; `filteredCasks` stays the full result
+    /// for counts and the hero card.
+    var displayedCasks: [Cask] {
+        let filtered = filteredCasks
+        guard filtered.count > revealedCount else { return filtered }
+        return Array(filtered.prefix(revealedCount))
+    }
+
+    var hasMoreToReveal: Bool {
+        filteredCasks.count > revealedCount
+    }
+
     var filteredCasks: [Cask] {
         let key = FilteredCatalogCacheKey(
             library: libraryCacheKey,

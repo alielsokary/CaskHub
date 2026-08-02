@@ -253,7 +253,7 @@ private extension ContentView {
                     browseSectionView(section)
                 }
             } else {
-                caskGrid(viewModel.filteredCasks)
+                caskGrid(viewModel.displayedCasks)
             }
         }
         .frame(width: CHSize.contentWidth, alignment: .leading)
@@ -262,7 +262,7 @@ private extension ContentView {
 
     var listContent: some View {
         LazyVStack(spacing: 0) {
-            ForEach(viewModel.filteredCasks) { cask in
+            ForEach(viewModel.displayedCasks) { cask in
                 CaskRowView(
                     cask: cask,
                     downloads: viewModel.formattedDownloads(for: cask.token),
@@ -273,6 +273,9 @@ private extension ContentView {
 
                 Color.chHairline
                     .frame(height: 1)
+            }
+            if viewModel.hasMoreToReveal {
+                RevealSentinel { viewModel.revealMore() }
             }
         }
         .frame(width: CHSize.contentWidth)
@@ -289,6 +292,9 @@ private extension ContentView {
                     onSelectCategory: { viewModel.selectedSidebar = .category($0) },
                     localState: viewModel.localState(for: cask)
                 )
+            }
+            if viewModel.hasMoreToReveal {
+                RevealSentinel { viewModel.revealMore() }
             }
         }
     }
@@ -329,6 +335,18 @@ private extension ContentView {
                 Task { await viewModel.fetchCasks() }
             }
         }
+    }
+}
+
+/// Placed as the last item of a lazy container, so it only materializes — and
+/// reveals the next chunk — when the user scrolls to the bottom of the cap.
+private struct RevealSentinel: View {
+    let onReveal: () -> Void
+
+    var body: some View {
+        Color.clear
+            .frame(height: 1)
+            .onAppear(perform: onReveal)
     }
 }
 

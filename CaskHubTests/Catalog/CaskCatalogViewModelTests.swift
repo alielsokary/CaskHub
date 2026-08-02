@@ -115,6 +115,31 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["zoom", "uebersicht", "arc"])
     }
 
+    @MainActor
+    func test_displayed_casks_cap_at_reveal_chunk_and_reset_on_context_change() async {
+        let chunk = CaskCatalogViewModel.revealChunk
+        let (vm, _) = await makeSUT(casks: (0..<(chunk + 50)).map { makeCask("cask-\($0)") })
+
+        XCTAssertEqual(vm.filteredCasks.count, chunk + 50)
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
+        XCTAssertTrue(vm.hasMoreToReveal)
+
+        vm.revealMore()
+        XCTAssertEqual(vm.displayedCasks.count, chunk + 50)
+        XCTAssertFalse(vm.hasMoreToReveal)
+
+        vm.sortOption = .nameAZ
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
+
+        vm.revealMore()
+        vm.searchText = "cask"
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
+
+        vm.revealMore()
+        vm.selectedSidebar = .discover(.topCharts)
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
+    }
+
     // MARK: Sidebar filters
 
     @MainActor
