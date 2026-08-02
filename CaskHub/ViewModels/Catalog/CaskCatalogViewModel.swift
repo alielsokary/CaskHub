@@ -48,7 +48,14 @@ final class CaskCatalogViewModel {
     private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     private var analyticsRequestID = UUID()
     private(set) var catalogRevision = 0
-    var searchText = ""
+    var searchText = "" {
+        didSet { scheduleSearchApply() }
+    }
+    /// Projection reads this instead of `searchText` so each keystroke echoes in
+    /// the field immediately without re-filtering the full catalog on the MainActor.
+    private(set) var appliedSearchText = ""
+    @ObservationIgnored var searchDebounceInterval: Duration = .milliseconds(200)
+    @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
 
     @ObservationIgnored let libraryCache =
         MemoizedValue<CatalogLibraryCacheKey, CatalogLibrarySnapshot>()
@@ -205,6 +212,20 @@ final class CaskCatalogViewModel {
             analytics.items.map { ($0.cask, $0.downloadCount) },
             uniquingKeysWith: max
         )
+    }
+
+    private func scheduleSearchApply() {
+        searchDebounceTask?.cancel()
+        // Clearing applies instantly; only typing debounces.
+        guard !searchText.isEmpty, searchDebounceInterval > .zero else {
+            appliedSearchText = searchText
+            return
+        }
+        searchDebounceTask = Task { [interval = searchDebounceInterval] in
+            try? await Task.sleep(for: interval)
+            guard !Task.isCancelled else { return }
+            appliedSearchText = searchText
+        }
     }
 
     func formattedDownloads(for token: String) -> String? {

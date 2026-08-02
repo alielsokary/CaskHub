@@ -76,6 +76,27 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredCasks.count, 3)
     }
 
+    @MainActor
+    func test_search_projection_debounces_typing_and_clears_instantly() async throws {
+        let (vm, _) = await makeSUT(casks: [
+            makeCask("firefox", name: "Firefox", desc: "Web browser")
+        ])
+        vm.searchDebounceInterval = .milliseconds(50)
+
+        vm.searchText = "b"
+        vm.searchText = "br"
+        vm.searchText = "browser"
+        XCTAssertEqual(vm.appliedSearchText, "")
+
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertEqual(vm.appliedSearchText, "browser")
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
+
+        vm.searchText = ""
+        XCTAssertEqual(vm.appliedSearchText, "")
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
+    }
+
     // MARK: Sidebar filters
 
     @MainActor

@@ -103,7 +103,7 @@ extension CaskCatalogViewModel {
             analyticsPeriod: analyticsPeriod,
             recentlyAddedWindow: recentlyAddedWindow,
             selectedSidebar: selectedSidebar,
-            searchText: searchText,
+            searchText: appliedSearchText,
             sortOption: sortOption
         )
         return filteredCache.value(for: key) {
@@ -111,7 +111,7 @@ extension CaskCatalogViewModel {
                 casks: casks,
                 library: librarySnapshot,
                 selectedSidebar: selectedSidebar,
-                searchText: searchText,
+                searchText: appliedSearchText,
                 sortOption: sortOption,
                 downloadCounts: downloadCounts,
                 recentTokens: recentlyAdded.recentTokens(
