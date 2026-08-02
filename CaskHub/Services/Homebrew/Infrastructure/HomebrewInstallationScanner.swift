@@ -283,12 +283,14 @@ extension HomebrewInstallationScanner {
                 try? InstallReceipt(jsonData: $0)
             }
             : nil
-        let isZombie = !receiptExists || appsGoneEverywhere(
-            appNames: receipt?.appBundleNames ?? [],
-            versionDirectory: versionDirectory,
-            fileManager: fileManager,
-            applicationDirectories: applicationDirectories
-        )
+        let isZombie = !receiptExists
+            || !timestampedCaskfileExists(in: entry, fileManager: fileManager)
+            || appsGoneEverywhere(
+                appNames: receipt?.appBundleNames ?? [],
+                versionDirectory: versionDirectory,
+                fileManager: fileManager,
+                applicationDirectories: applicationDirectories
+            )
         let versionModifiedAt = try? versionDirectory.resourceValues(
             forKeys: [.contentModificationDateKey]
         ).contentModificationDate
@@ -304,6 +306,40 @@ extension HomebrewInstallationScanner {
             appBundleNames: receipt?.appBundleNames ?? [],
             isZombie: isZombie
         )
+    }
+
+    /// Brew's own installed check (`Cask#installed?`) is the presence of a
+    /// timestamped caskfile under `.metadata/<version>/<timestamp>/Casks/`.
+    /// Entries without one must not offer brew actions — brew rejects them
+    /// with "is not installed" (CASKHUB-14).
+    private static func timestampedCaskfileExists(
+        in entry: URL,
+        fileManager: FileManager
+    ) -> Bool {
+        let metadata = entry.appendingPathComponent(".metadata", isDirectory: true)
+        guard let versionDirectories = try? fileManager.contentsOfDirectory(
+            at: metadata,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else { return false }
+        for versionDirectory in versionDirectories {
+            guard let timestamps = try? fileManager.contentsOfDirectory(
+                at: versionDirectory,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles]
+            ) else { continue }
+            for timestamp in timestamps {
+                let casks = timestamp.appendingPathComponent("Casks")
+                if let files = try? fileManager.contentsOfDirectory(
+                    at: casks,
+                    includingPropertiesForKeys: nil,
+                    options: [.skipsHiddenFiles]
+                ), !files.isEmpty {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     private static func latestVersionDirectory(
