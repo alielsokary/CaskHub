@@ -108,8 +108,10 @@ You can opt out of both at any time in **Settings → Privacy**.
 Interested in contributing to CaskHub? We welcome contributions of all kinds!
 
 - **Code contributions**: Bug fixes, features, improvements
-- **Bug reports**: Found an issue? Let us know
-- **Feature requests**: Have an idea? We'd love to hear it
+- **Bug reports**: [Found an issue? Let us know](https://github.com/alielsokary/CaskHub/issues/new/choose)
+- **Feature requests**: [Have an idea? We'd love to hear it](https://github.com/alielsokary/CaskHub/issues/new/choose)
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request — note that all PRs target the `develop` branch.
 
 ## License
 
