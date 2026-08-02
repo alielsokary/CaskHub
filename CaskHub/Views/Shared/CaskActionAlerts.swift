@@ -140,7 +140,8 @@ private extension View {
                 service.send(.uninstall(token: cask.token))
             }
         } message: {
-            Text("This will run `brew uninstall --cask \(cask.token)`.")
+            Text("This will run:\n\n") +
+            Text("brew uninstall --cask \(cask.token)")
         }
     }
 
