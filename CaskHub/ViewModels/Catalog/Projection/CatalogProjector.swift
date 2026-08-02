@@ -32,6 +32,7 @@ struct CatalogFilteredProjectionInput {
     let recentTokens: Set<String>
     let addedDates: [String: String]
     let installedDates: [String: Date]
+    var searchKeys: [String: String] = [:]
 }
 
 enum CatalogProjector {
@@ -119,7 +120,7 @@ enum CatalogProjector {
         from input: CatalogFilteredProjectionInput
     ) -> [Cask] {
         let filtered = applySidebarFilter(input)
-        let searched = applySearch(input.searchText, to: filtered)
+        let searched = applySearch(input.searchText, to: filtered, keys: input.searchKeys)
         return applySort(input.sortOption, to: searched, input: input)
     }
 
@@ -153,14 +154,13 @@ enum CatalogProjector {
 
     private static func applySearch(
         _ searchText: String,
-        to casks: [Cask]
+        to casks: [Cask],
+        keys: [String: String]
     ) -> [Cask] {
         guard !searchText.isEmpty else { return casks }
         let query = searchText.lowercased()
         return casks.filter { cask in
-            cask.displayName.lowercased().contains(query)
-                || cask.token.lowercased().contains(query)
-                || (cask.desc?.lowercased().contains(query) ?? false)
+            (keys[cask.token] ?? cask.searchKey).contains(query)
         }
     }
 

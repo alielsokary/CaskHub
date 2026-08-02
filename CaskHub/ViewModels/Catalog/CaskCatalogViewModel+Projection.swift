@@ -96,6 +96,13 @@ extension CaskCatalogViewModel {
 
     // MARK: - Filtered Casks
 
+    /// One lowercase pass per catalog load instead of three per cask per search.
+    private var searchKeys: [String: String] {
+        searchKeysCache.value(for: catalogRevision) { [casks] in
+            Dictionary(casks.map { ($0.token, $0.searchKey) }) { first, _ in first }
+        }
+    }
+
     var filteredCasks: [Cask] {
         let key = FilteredCatalogCacheKey(
             library: libraryCacheKey,
@@ -119,7 +126,8 @@ extension CaskCatalogViewModel {
                 ),
                 addedDates: recentlyAdded.addedDates,
                 installedDates: localHomebrew.installationSnapshot.installedCasks
-                    .compactMapValues(\.installedAt)
+                    .compactMapValues(\.installedAt),
+                searchKeys: appliedSearchText.isEmpty ? [:] : searchKeys
             ))
         }
     }

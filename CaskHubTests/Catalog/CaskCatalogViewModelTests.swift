@@ -72,6 +72,9 @@ final class CaskCatalogViewModelTests: XCTestCase {
         vm.searchText = "SLACK"
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["slack"])
 
+        vm.searchText = "oxweb"
+        XCTAssertTrue(vm.filteredCasks.isEmpty, "query must not match across field boundaries")
+
         vm.searchText = ""
         XCTAssertEqual(vm.filteredCasks.count, 3)
     }
