@@ -100,6 +100,21 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
     }
 
+    @MainActor
+    func test_name_sort_keeps_localized_diacritic_order() async {
+        let (vm, _) = await makeSUT(casks: [
+            makeCask("zoom", name: "zoom.us"),
+            makeCask("uebersicht", name: "Übersicht"),
+            makeCask("arc", name: "Arc")
+        ])
+
+        vm.sortOption = .nameAZ
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["arc", "uebersicht", "zoom"])
+
+        vm.sortOption = .nameZA
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["zoom", "uebersicht", "arc"])
+    }
+
     // MARK: Sidebar filters
 
     @MainActor

@@ -64,6 +64,7 @@ final class CaskCatalogViewModel {
     @ObservationIgnored let browseCache =
         MemoizedValue<BrowseCatalogCacheKey, [BrowseSection]>()
     @ObservationIgnored let searchKeysCache = MemoizedValue<Int, [String: String]>()
+    @ObservationIgnored let nameRankCache = MemoizedValue<Int, [String: Int]>()
 
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"

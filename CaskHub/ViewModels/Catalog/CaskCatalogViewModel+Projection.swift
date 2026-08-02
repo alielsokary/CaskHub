@@ -103,6 +103,27 @@ extension CaskCatalogViewModel {
         }
     }
 
+    /// One locale-aware sort per catalog load; projections then order name sorts
+    /// by Int rank instead of running ICU collation per comparison.
+    private var nameRanks: [String: Int] {
+        nameRankCache.value(for: catalogRevision) { [casks] in
+            let sorted = casks.sorted {
+                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
+                    == .orderedAscending
+            }
+            return Dictionary(
+                sorted.enumerated().map { ($0.element.token, $0.offset) }
+            ) { first, _ in first }
+        }
+    }
+
+    private var sortUsesNameRanks: Bool {
+        switch sortOption {
+        case .nameAZ, .nameZA, .recentlyInstalled: return true
+        case .mostPopular, .newest, .oldest: return false
+        }
+    }
+
     var filteredCasks: [Cask] {
         let key = FilteredCatalogCacheKey(
             library: libraryCacheKey,
@@ -127,7 +148,8 @@ extension CaskCatalogViewModel {
                 addedDates: recentlyAdded.addedDates,
                 installedDates: localHomebrew.installationSnapshot.installedCasks
                     .compactMapValues(\.installedAt),
-                searchKeys: appliedSearchText.isEmpty ? [:] : searchKeys
+                searchKeys: appliedSearchText.isEmpty ? [:] : searchKeys,
+                nameRanks: sortUsesNameRanks ? nameRanks : [:]
             ))
         }
     }

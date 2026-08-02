@@ -33,6 +33,7 @@ struct CatalogFilteredProjectionInput {
     let addedDates: [String: String]
     let installedDates: [String: Date]
     var searchKeys: [String: String] = [:]
+    var nameRanks: [String: Int] = [:]
 }
 
 enum CatalogProjector {
@@ -173,15 +174,9 @@ enum CatalogProjector {
         case .mostPopular:
             return sortedByDownloads(casks, using: input.downloadCounts)
         case .nameAZ:
-            return casks.sorted {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
-                    == .orderedAscending
-            }
+            return casks.sorted { nameAscending($0, $1, ranks: input.nameRanks) }
         case .nameZA:
-            return casks.sorted {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
-                    == .orderedDescending
-            }
+            return casks.sorted { nameAscending($1, $0, ranks: input.nameRanks) }
         case .recentlyInstalled:
             return casks.sorted { lhs, rhs in
                 let lhsDate = input.installedDates[lhs.token]
@@ -190,8 +185,7 @@ enum CatalogProjector {
                     if let lhsDate, let rhsDate { return lhsDate > rhsDate }
                     return lhsDate != nil
                 }
-                return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
-                    == .orderedAscending
+                return nameAscending(lhs, rhs, ranks: input.nameRanks)
             }
         case .newest:
             return sortedByNewest(casks, addedDates: input.addedDates)
@@ -201,6 +195,20 @@ enum CatalogProjector {
                     < (input.addedDates[$1.token] ?? "9999")
             }
         }
+    }
+
+    /// Ranks carry the localized order precomputed once per catalog; the ICU
+    /// comparator is the fallback for casks outside that catalog snapshot.
+    private static func nameAscending(
+        _ lhs: Cask,
+        _ rhs: Cask,
+        ranks: [String: Int]
+    ) -> Bool {
+        if let lhsRank = ranks[lhs.token], let rhsRank = ranks[rhs.token] {
+            return lhsRank < rhsRank
+        }
+        return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
+            == .orderedAscending
     }
 
     private static func sortedByDownloads(
