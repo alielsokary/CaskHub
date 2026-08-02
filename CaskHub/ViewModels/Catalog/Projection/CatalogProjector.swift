@@ -32,8 +32,8 @@ struct CatalogFilteredProjectionInput {
     let recentTokens: Set<String>
     let addedDates: [String: String]
     let installedDates: [String: Date]
-    var searchKeys: [String: String] = [:]
-    var nameRanks: [String: Int] = [:]
+    let searchKeys: [String: String]
+    let nameRanks: [String: Int]
 }
 
 enum CatalogProjector {
