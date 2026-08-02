@@ -110,6 +110,9 @@ final class SentryProvider: CrashReporterProvider {
         SentrySDK.start { options in
             options.dsn = dsn
             options.tracesSampleRate = 1.0
+            // The SDK's auto-capture duplicates our own HTTPError reporting and
+            // files server-side 5xx outages as app errors with synthetic stacks.
+            options.enableCaptureFailedRequests = false
             #if DEBUG
             options.environment = "debug"
             #endif

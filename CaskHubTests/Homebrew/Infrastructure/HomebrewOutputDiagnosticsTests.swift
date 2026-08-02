@@ -57,11 +57,20 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         XCTAssertEqual(HomebrewOutputDiagnostics.make(from: output), output)
     }
 
-    func test_oversized_output_keeps_important_lines_and_tail() {
-        let filler = String(repeating: "x", count: 9_000)
-        let output = "Error: something broke\n" + filler
+    func test_oversized_output_keeps_the_tail() {
+        let output = String(repeating: "x", count: 9_000) + "\nError: something broke"
         let result = HomebrewOutputDiagnostics.make(from: output)
-        XCTAssertTrue(result.hasPrefix("Error: something broke"))
-        XCTAssertLessThanOrEqual(result.count, 8_192)
+        XCTAssertTrue(result.hasSuffix("Error: something broke"))
+        XCTAssertLessThanOrEqual(result.count, 4_000)
+    }
+
+    func test_error_line_survives_a_trailing_progress_flood() {
+        let frames = (0 ..< 100).map { _ in
+            "Extracting  205.4MB/205.4MB⠴ Cask parallels (26.4.0-57513)"
+        }
+        let output = (["Error: installation failed for parallels"] + frames)
+            .joined(separator: "\n")
+        let result = HomebrewOutputDiagnostics.make(from: output)
+        XCTAssertEqual(result, "Error: installation failed for parallels")
     }
 }

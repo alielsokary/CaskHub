@@ -8,26 +8,12 @@
 import Foundation
 
 nonisolated enum HomebrewOutputDiagnostics {
+    // BrewOutputCollector already caps its buffer at a 2000-char stripped tail;
+    // the suffix here is the safety net for any other caller.
     static func make(from output: String) -> String {
         let trimmed = stripProgressNoise(from: output)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let limit = 8_192
-        guard trimmed.count > limit else { return trimmed }
-
-        let important = trimmed.components(separatedBy: .newlines).filter { line in
-            let lowercase = line.lowercased()
-            return line.contains("Error:")
-                || line.contains("Warning:")
-                || lowercase.contains("failed")
-                || line.contains("Operation not permitted")
-        }
-        let importantText = String(
-            important.joined(separator: "\n").prefix(2_000)
-        )
-        let tail = String(trimmed.suffix(limit - 2_100))
-        return importantText.isEmpty
-            ? String(trimmed.suffix(limit))
-            : importantText + "\n…\n" + tail
+        return String(trimmed.suffix(4_000))
     }
 
     /// Brew rewrites download/extract progress with carriage returns; the raw
