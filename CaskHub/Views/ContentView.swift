@@ -194,9 +194,11 @@ struct ContentView: View {
         return viewModel.filteredCasks.first
     }
 
+    // Gates on the debounced value so the layout swaps in the same frame as the
+    // filtered results — raw searchText would flash an unfiltered grid first.
     private var showsBrowseSections: Bool {
         selectedSidebar == .discover(.browse)
-            && viewModel.searchText.isEmpty
+            && viewModel.appliedSearchText.isEmpty
             && viewMode == .grid
     }
 
@@ -253,7 +255,7 @@ private extension ContentView {
                     browseSectionView(section)
                 }
             } else {
-                caskGrid(viewModel.displayedCasks)
+                caskGrid(viewModel.displayedCasks, showsReveal: true)
             }
         }
         .frame(width: CHSize.contentWidth, alignment: .leading)
@@ -282,7 +284,9 @@ private extension ContentView {
         .frame(maxWidth: .infinity)
     }
 
-    func caskGrid(_ casks: [Cask]) -> some View {
+    // showsReveal must stay off for the bounded browse-section shelves — their
+    // sentinels would fire against the global reveal state, not their own casks.
+    func caskGrid(_ casks: [Cask], showsReveal: Bool = false) -> some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
             ForEach(casks) { cask in
                 CaskCardView(
@@ -293,7 +297,7 @@ private extension ContentView {
                     localState: viewModel.localState(for: cask)
                 )
             }
-            if viewModel.hasMoreToReveal {
+            if showsReveal && viewModel.hasMoreToReveal {
                 RevealSentinel { viewModel.revealMore() }
             }
         }
