@@ -87,6 +87,7 @@ final class CrashReporterTests: XCTestCase {
 
     func test_transient_network_errors_are_never_captured() {
         let codes: [URLError.Code] = [
+            .cancelled,
             .notConnectedToInternet,
             .timedOut,
             .networkConnectionLost,

@@ -30,6 +30,7 @@ enum CrashReporter {
     static var captureCounts: [String: Int] = [:]
     private static let captureLimit = 5
     private static let ignoredURLErrorCodes: Set<Int> = [
+        URLError.cancelled.rawValue,
         URLError.notConnectedToInternet.rawValue,
         URLError.timedOut.rawValue,
         URLError.networkConnectionLost.rawValue,
@@ -167,6 +168,7 @@ private struct SentrySpanHandle: CrashSpan {
     }
 
     func finish(error: Error) {
+        span.setData(value: String(describing: error), key: "error")
         span.finish(status: .internalError)
     }
 }
