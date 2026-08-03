@@ -308,10 +308,7 @@ extension HomebrewInstallationScanner {
         )
     }
 
-    /// Mirrors brew's `Caskroom.cask_installed_caskfile`: the single newest
-    /// timestamp directory across all versions must contain `Casks/<token>.rb`
-    /// or `.json`. Entries failing that must not offer brew actions — brew
-    /// rejects them with "is not installed" (CASKHUB-14).
+    /// Brew's installed check: newest timestamp dir must hold `Casks/<token>.rb|json`.
     private static func timestampedCaskfileExists(
         in entry: URL,
         fileManager: FileManager

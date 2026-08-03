@@ -94,8 +94,6 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertEqual(scan()["sequel-ace"]?.isZombie, true)
     }
 
-    /// Brew's installed check is the timestamped caskfile, not the receipt —
-    /// offering brew actions for such entries earns "Cask 'x' is not installed".
     func test_missing_timestamped_caskfile_is_zombie_even_with_receipt() throws {
         try makeEntry("thorium", receiptApps: ["Thorium.app"], caskfile: false)
         try fm.createDirectory(
@@ -104,9 +102,6 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertEqual(scan()["thorium"]?.isZombie, true)
     }
 
-    /// Brew only consults the single newest timestamp directory
-    /// (`Caskroom.cask_installed_caskfile`) — a valid caskfile in an older
-    /// timestamp does not make the cask installed.
     func test_latest_timestamp_must_contain_the_matching_caskfile() throws {
         try makeEntry("thorium", receiptApps: ["Thorium.app"])
         let newestCasks = caskroom

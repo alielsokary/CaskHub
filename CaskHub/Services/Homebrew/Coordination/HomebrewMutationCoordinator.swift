@@ -312,8 +312,7 @@ final class HomebrewMutationCoordinator {
         throw error
     }
 
-    /// Brew rejecting the action over install state means our snapshot is stale
-    /// — without a refresh the UI keeps offering an action brew will keep failing.
+    /// Brew disagreeing about install state means the snapshot is stale.
     private static func indicatesStateDesync(_ error: Error) -> Bool {
         guard case let LocalHomebrewError.brewCommandFailed(_, _, stderr) = error else {
             return false
