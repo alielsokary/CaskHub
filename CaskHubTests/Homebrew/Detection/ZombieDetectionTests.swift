@@ -35,7 +35,11 @@ final class ZombieDetectionTests: XCTestCase {
 
     /// receiptApps nil = no INSTALL_RECEIPT.json at all.
     @discardableResult
-    private func makeEntry(_ token: String, receiptApps: [String]?) throws -> URL {
+    private func makeEntry(
+        _ token: String,
+        receiptApps: [String]?,
+        caskfile: Bool = true
+    ) throws -> URL {
         let versionDir = caskroom.appendingPathComponent("\(token)/1.0")
         try fm.createDirectory(at: versionDir, withIntermediateDirectories: true)
         if let receiptApps {
@@ -44,6 +48,12 @@ final class ZombieDetectionTests: XCTestCase {
             let receipt: [String: Any] = ["uninstall_artifacts": [["app": receiptApps]]]
             let data = try JSONSerialization.data(withJSONObject: receipt)
             try data.write(to: metadata.appendingPathComponent("INSTALL_RECEIPT.json"))
+            if caskfile {
+                let casks = metadata.appendingPathComponent("1.0/20260101000000.000/Casks")
+                try fm.createDirectory(at: casks, withIntermediateDirectories: true)
+                try Data("cask \"\(token)\"\n".utf8)
+                    .write(to: casks.appendingPathComponent("\(token).rb"))
+            }
         }
         return versionDir
     }
@@ -82,6 +92,28 @@ final class ZombieDetectionTests: XCTestCase {
     func test_missing_receipt_is_zombie() throws {
         try makeEntry("sequel-ace", receiptApps: nil)
         XCTAssertEqual(scan()["sequel-ace"]?.isZombie, true)
+    }
+
+    func test_missing_timestamped_caskfile_is_zombie_even_with_receipt() throws {
+        try makeEntry("thorium", receiptApps: ["Thorium.app"], caskfile: false)
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("Thorium.app"), withIntermediateDirectories: true
+        )
+        XCTAssertEqual(scan()["thorium"]?.isZombie, true)
+    }
+
+    func test_latest_timestamp_must_contain_the_matching_caskfile() throws {
+        try makeEntry("thorium", receiptApps: ["Thorium.app"])
+        let newestCasks = caskroom
+            .appendingPathComponent("thorium/.metadata/1.0/20270101000000.000/Casks")
+        try fm.createDirectory(at: newestCasks, withIntermediateDirectories: true)
+        try Data("cask \"another-token\"\n".utf8)
+            .write(to: newestCasks.appendingPathComponent("another-token.rb"))
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("Thorium.app"), withIntermediateDirectories: true
+        )
+
+        XCTAssertEqual(scan()["thorium"]?.isZombie, true)
     }
 
     func test_cli_cask_with_appless_receipt_is_not_zombie() throws {
