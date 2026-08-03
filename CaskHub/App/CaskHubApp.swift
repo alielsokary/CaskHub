@@ -41,10 +41,14 @@ struct CaskHubApp: App {
         Analytics.start()
         AppTheme.apply(UserDefaults.standard.string(forKey: "appTheme") ?? AppTheme.system.rawValue)
 
+        // ~920KB of bundled JSON — decoded off the MainActor after the first
+        // frame instead of blocking launch inside App.init.
         let categories = CategoryService()
-        categories.loadCategories()
         let recent = RecentlyAddedService()
-        recent.loadBundledDates()
+        Task {
+            await categories.loadBundledCategoriesAsync()
+            await recent.loadBundledDatesAsync()
+        }
         let homebrew = LocalHomebrewService()
         let images = ImageCacheService()
         images.knownIconTokens = { categories.iconTokens }

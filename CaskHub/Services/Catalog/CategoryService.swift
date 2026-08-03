@@ -10,17 +10,17 @@ import Observation
 
 typealias CategoryID = String
 
-struct CategoryDefinition: Codable, Hashable {
+nonisolated struct CategoryDefinition: Codable, Hashable {
     let displayName: String
     let icon: String
 }
 
-struct TokenCategoryMapping: Codable, Hashable {
+nonisolated struct TokenCategoryMapping: Codable, Hashable {
     let primary: CategoryID
     let secondary: [CategoryID]
 }
 
-struct CaskCategoryData: Decodable {
+nonisolated struct CaskCategoryData: Decodable {
     let version: Int
     let generatedDate: String
     let releaseTag: String?
@@ -60,6 +60,22 @@ final class CategoryService {
             return
         }
         applyData(catalog)
+    }
+
+    /// Launch-path variant: decodes the ~400KB bundle off the MainActor and
+    /// never overwrites data a faster remote refresh already applied.
+    func loadBundledCategoriesAsync() async {
+        guard let catalog = await Self.decodeBundledCategories(),
+              catalog.generatedDate > generatedDate
+        else { return }
+        applyData(catalog)
+    }
+
+    @concurrent private static func decodeBundledCategories() async -> CaskCategoryData? {
+        guard let url = Bundle.main.url(forResource: "categories", withExtension: "json"),
+              let data = try? Data(contentsOf: url)
+        else { return nil }
+        return try? JSONDecoder().decode(CaskCategoryData.self, from: data)
     }
 
     func refreshFromRemote() async {

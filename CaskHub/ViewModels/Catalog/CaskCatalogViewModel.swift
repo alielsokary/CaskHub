@@ -77,6 +77,8 @@ final class CaskCatalogViewModel {
         MemoizedValue<BrowseCatalogCacheKey, [BrowseSection]>()
     @ObservationIgnored let searchKeysCache = MemoizedValue<Int, [String: String]>()
     @ObservationIgnored let nameRankCache = MemoizedValue<Int, [String: Int]>()
+    @ObservationIgnored let categoryPresentationCache =
+        MemoizedValue<CategoryPresentationCacheKey, [String: CaskCategoryPresentation]>()
 
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"
@@ -245,9 +247,14 @@ final class CaskCatalogViewModel {
         }
     }
 
+    // ponytail: en_US pin keeps the K/M suffixes stable across locales.
+    // Static so the Locale + style build once, not per visible cell per pass.
+    private static let downloadsStyle = IntegerFormatStyle<Int>.number
+        .notation(.compactName)
+        .locale(Locale(identifier: "en_US"))
+
     func formattedDownloads(for token: String) -> String? {
         guard let count = downloadCounts[token], count > 0 else { return nil }
-        // ponytail: en_US pin keeps the K/M suffixes stable across locales
-        return count.formatted(.number.notation(.compactName).locale(Locale(identifier: "en_US")))
+        return count.formatted(Self.downloadsStyle)
     }
 }

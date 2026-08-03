@@ -38,8 +38,28 @@ extension CaskCatalogViewModel {
         librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
     }
 
+    /// Built once per catalog/category revision — every visible cell asks for
+    /// this on every body pass, so the per-call projector allocations add up.
+    private var categoryPresentations: [String: CaskCategoryPresentation] {
+        let key = CategoryPresentationCacheKey(
+            catalogRevision: catalogRevision,
+            categoryRevision: categoryService.catalogStateRevision
+        )
+        return categoryPresentationCache.value(for: key) { [casks, categoryService] in
+            var result = [String: CaskCategoryPresentation](minimumCapacity: casks.count)
+            for cask in casks {
+                result[cask.token] = CaskCategoryProjector.make(
+                    token: cask.token,
+                    mappings: categoryService.tokenMappings,
+                    definitions: categoryService.categoryDefinitions
+                )
+            }
+            return result
+        }
+    }
+
     func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
-        CaskCategoryProjector.make(
+        categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
             token: cask.token,
             mappings: categoryService.tokenMappings,
             definitions: categoryService.categoryDefinitions

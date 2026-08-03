@@ -57,7 +57,7 @@ enum CatalogProjector {
                 adoptableCasks.append(cask)
             }
             if let mapping = input.categoryMappings[cask.token] {
-                for categoryID in Set([mapping.primary] + mapping.secondary) {
+                forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }
             }
@@ -84,9 +84,10 @@ enum CatalogProjector {
         var casksByCategory: [String: [Cask]] = [:]
         for cask in popularityOrder {
             guard let mapping = input.categoryMappings[cask.token] else { continue }
-            for categoryID in Set([mapping.primary] + mapping.secondary)
-                where casksByCategory[categoryID, default: []].count < sectionSize {
-                casksByCategory[categoryID, default: []].append(cask)
+            forEachUniqueCategory(in: mapping) { categoryID in
+                if casksByCategory[categoryID, default: []].count < sectionSize {
+                    casksByCategory[categoryID, default: []].append(cask)
+                }
             }
         }
 
@@ -209,6 +210,20 @@ enum CatalogProjector {
         }
         return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
             == .orderedAscending
+    }
+
+    /// Same dedup a Set gave, without allocating one per cask per pass —
+    /// secondary is 0-2 curated entries, so the prefix scan is cheaper.
+    private static func forEachUniqueCategory(
+        in mapping: TokenCategoryMapping,
+        _ body: (CategoryID) -> Void
+    ) {
+        body(mapping.primary)
+        for (index, categoryID) in mapping.secondary.enumerated()
+            where categoryID != mapping.primary
+                && !mapping.secondary[..<index].contains(categoryID) {
+            body(categoryID)
+        }
     }
 
     private static func sortedByDownloads(

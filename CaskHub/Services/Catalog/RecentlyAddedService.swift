@@ -25,7 +25,7 @@ enum RecentlyAddedWindow: Int, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class RecentlyAddedService {
-    private struct AddedDatesData: Decodable {
+    private nonisolated struct AddedDatesData: Decodable {
         let version: Int
         let generatedDate: String
         let tokenAddedDates: [String: String]
@@ -47,6 +47,23 @@ final class RecentlyAddedService {
         else { return }
 
         apply(bundled)
+    }
+
+    /// Launch-path variant: decodes the ~500KB bundle off the MainActor and
+    /// never overwrites data a faster remote refresh already applied.
+    func loadBundledDatesAsync() async {
+        guard let bundled = await Self.decodeBundledDates(),
+              bundled.version == Self.schemaVersion,
+              bundled.generatedDate > generatedDate
+        else { return }
+        apply(bundled)
+    }
+
+    @concurrent private static func decodeBundledDates() async -> AddedDatesData? {
+        guard let url = Bundle.main.url(forResource: "added_dates", withExtension: "json"),
+              let data = try? Data(contentsOf: url)
+        else { return nil }
+        return try? JSONDecoder().decode(AddedDatesData.self, from: data)
     }
 
     func refreshFromRemote() async {
