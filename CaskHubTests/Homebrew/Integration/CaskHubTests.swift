@@ -311,6 +311,23 @@ final class CaskHubTests: XCTestCase {
         XCTAssertLessThan(Date().timeIntervalSince(start), 10, "must not wait for the grandchild")
     }
 
+    func test_output_collector_keeps_error_line_through_progress_flood() async throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", "echo 'Error: real failure'; for i in $(seq 1 200); do "
+            + "printf 'Extracting  205.4MB/205.4MB⠴ Cask parallels (26.4.0)\\r'; done"]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        let collector = BrewOutputCollector()
+        collector.attach(to: process, readHandle: pipe.fileHandleForReading) { _ in }
+        try process.run()
+
+        let output = await collector.output()
+        XCTAssertTrue(output.contains("Error: real failure"))
+        XCTAssertLessThanOrEqual(output.count, 2000)
+    }
+
     func test_output_collector_captures_output_on_normal_exit() async throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")

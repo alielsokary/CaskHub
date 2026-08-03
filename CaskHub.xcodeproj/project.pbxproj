@@ -114,6 +114,7 @@
 		F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000000B /* InstallationSnapshotTests.swift */; };
 		F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000013 /* HomebrewCommandExecutorTests.swift */; };
 		A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000006 /* InstallationDateIndexTests.swift */; };
+		A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */; };
 		F29000000000000000000019 /* CaskActionPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29000000000000000000019 /* CaskActionPresentationTests.swift */; };
 		F2900000000000000000001F /* DownloadMetadataProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2900000000000000000001F /* DownloadMetadataProviderTests.swift */; };
 		F24000000000000000000004 /* BrewProcessRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000004 /* BrewProcessRunnerTests.swift */; };
@@ -202,6 +203,7 @@
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		F28000000000000000000001 /* InstallationIndexBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationIndexBuilder.swift; sourceTree = "<group>"; };
 		A29100000000000000000006 /* InstallationDateIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationDateIndexTests.swift; sourceTree = "<group>"; };
+		A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutputDiagnosticsTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
 		D13000000000000000000001 /* LocalHomebrewService+Mutations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Mutations.swift"; sourceTree = "<group>"; };
 		D13000000000000000000002 /* MutationRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutationRecoveryTests.swift; sourceTree = "<group>"; };
@@ -705,6 +707,7 @@
 			children = (
 				E24000000000000000000004 /* BrewProcessRunnerTests.swift */,
 				E29000000000000000000013 /* HomebrewCommandExecutorTests.swift */,
+				A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */,
 				A29100000000000000000006 /* InstallationDateIndexTests.swift */,
 			);
 			path = Infrastructure;
@@ -999,6 +1002,7 @@
 				F29000000000000000000007 /* CaskOperationStoreTests.swift in Sources */,
 				F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */,
 				F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */,
+				A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */,
 				A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */,
 				F29000000000000000000019 /* CaskActionPresentationTests.swift in Sources */,
 				F2900000000000000000001F /* DownloadMetadataProviderTests.swift in Sources */,
