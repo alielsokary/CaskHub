@@ -23,8 +23,8 @@ struct StagedUpdateGate {
     private(set) var pending = false
 
     // Called when a background check staged an update for install-on-quit.
-    mutating func updateStaged(showPromptEnabled: Bool) {
-        if showPromptEnabled { pending = true }
+    mutating func updateStaged(automaticChecksEnabled: Bool) {
+        if automaticChecksEnabled { pending = true }
     }
 
     // checkForUpdates() is a no-op mid-session, so we wait for canCheck to flip
@@ -38,16 +38,15 @@ struct StagedUpdateGate {
 
 @Observable
 final class UpdaterService: NSObject, SPUUpdaterDelegate {
-    static let showUpdatePromptKey = "showUpdatePromptAtLaunch"
-
     private var controller: SPUStandardUpdaterController!
     private(set) var canCheckForUpdates = false
-    @ObservationIgnored private var cancellable: AnyCancellable?
+    private(set) var isCheckingForUpdates = false
+    private(set) var lastUpdateCheckDate: Date?
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
     @ObservationIgnored private var stagedUpdate = StagedUpdateGate()
 
     override init() {
         super.init()
-        UserDefaults.standard.register(defaults: [Self.showUpdatePromptKey: true])
         controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: self,
@@ -55,16 +54,23 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
         )
         // Sparkle allows a forced launch check here, before its scheduled cycle starts.
         Self.checkForUpdatesOnLaunch(using: controller.updater)
-        cancellable = controller.updater.publisher(for: \.canCheckForUpdates)
+        controller.updater.publisher(for: \.canCheckForUpdates)
             .sink { [weak self] canCheck in
                 guard let self else { return }
                 canCheckForUpdates = canCheck
+                if canCheck { isCheckingForUpdates = false }
                 // Resume the staged update as a user-facing check: shows the
                 // ready-to-install prompt with release notes, no re-download.
                 if stagedUpdate.consumeResume(canCheck: canCheck) {
                     controller.updater.checkForUpdates()
                 }
             }
+            .store(in: &cancellables)
+        controller.updater.publisher(for: \.lastUpdateCheckDate)
+            .sink { [weak self] date in
+                self?.lastUpdateCheckDate = date
+            }
+            .store(in: &cancellables)
     }
 
     static func checkForUpdatesOnLaunch(using updater: some BackgroundUpdateChecking) {
@@ -73,6 +79,8 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
     }
 
     func checkForUpdates() {
+        guard canCheckForUpdates else { return }
+        isCheckingForUpdates = !controller.updater.sessionInProgress
         controller.updater.checkForUpdates()
     }
 
@@ -94,7 +102,7 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
         // Sparkle calls delegate methods on the main thread.
         MainActor.assumeIsolated {
             stagedUpdate.updateStaged(
-                showPromptEnabled: UserDefaults.standard.bool(forKey: Self.showUpdatePromptKey)
+                automaticChecksEnabled: updater.automaticallyChecksForUpdates
             )
         }
         return false
@@ -108,6 +116,5 @@ struct CheckForUpdatesView: View {
         Button("Check for Updates…") {
             updater.checkForUpdates()
         }
-        .disabled(!updater.canCheckForUpdates)
     }
 }
