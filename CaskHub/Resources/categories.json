@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-07-30",
-  "totalCasks": 3835,
+  "generatedDate": "2026-08-02",
+  "totalCasks": 3843,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -3422,6 +3422,10 @@
     },
     "defold": {
       "primary": "developerTools",
+      "secondary": []
+    },
+    "degr": {
+      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "dehelper": {
@@ -7609,6 +7613,13 @@
         "ai"
       ]
     },
+    "lm-studio-bionic": {
+      "primary": "productivity",
+      "secondary": [
+        "ai",
+        "developerTools"
+      ]
+    },
     "lo-rain": {
       "primary": "utilities",
       "secondary": []
@@ -8436,6 +8447,12 @@
     "memoryanalyzer": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "mend": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "developerTools"
+      ]
     },
     "mendeley-reference-manager": {
       "primary": "scienceEducation",
@@ -10212,6 +10229,12 @@
       "primary": "scienceEducation",
       "secondary": []
     },
+    "orbit": {
+      "primary": "communication",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "orbstack": {
       "primary": "developerTools",
       "secondary": []
@@ -10724,6 +10747,12 @@
     "phoenix-slides": {
       "primary": "designGraphics",
       "secondary": []
+    },
+    "phosphene": {
+      "primary": "screensaverWallpaper",
+      "secondary": [
+        "videoMedia"
+      ]
     },
     "photoninja": {
       "primary": "designGraphics",
@@ -12646,6 +12675,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "send-to-kindle": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "sensei": {
       "primary": "utilities",
       "secondary": []
@@ -13358,6 +13393,12 @@
     "spacedrive": {
       "primary": "utilities",
       "secondary": []
+    },
+    "spacejump": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
     },
     "spacelauncher": {
       "primary": "utilities",
@@ -14507,6 +14548,10 @@
     },
     "tigervnc": {
       "primary": "utilities",
+      "secondary": []
+    },
+    "tight-studio": {
+      "primary": "videoMedia",
       "secondary": []
     },
     "tikz-editor": {
@@ -16564,7 +16609,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.07.31",
+  "releaseTag": "caskflow-v2026.08.02",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -17245,6 +17290,15 @@
     "dbvisualizer",
     "dbx",
     "dcommander",
+    "dcp-o-matic",
+    "dcp-o-matic-batch-converter",
+    "dcp-o-matic-combiner",
+    "dcp-o-matic-disk-writer",
+    "dcp-o-matic-editor",
+    "dcp-o-matic-encode-server",
+    "dcp-o-matic-kdm-creator",
+    "dcp-o-matic-player",
+    "dcp-o-matic-playlist-editor",
     "dcv-viewer",
     "ddnet",
     "ddpm",
@@ -17909,6 +17963,7 @@
     "insomnia",
     "insta360-link-controller",
     "insta360-studio",
+    "install-disk-creator",
     "instantview",
     "insync",
     "integrity",
@@ -18164,6 +18219,7 @@
     "llama-app",
     "llamachat",
     "lm-studio",
+    "lm-studio-bionic",
     "lo-rain",
     "loading",
     "loaf",
@@ -18277,6 +18333,7 @@
     "mail-assistant",
     "mailbird",
     "mailbutler",
+    "mailmaster",
     "mailmate",
     "mailplane",
     "mailspring",
@@ -18406,6 +18463,7 @@
     "minecraft",
     "minecraft-education",
     "mini-program-studio",
+    "mini-vmac",
     "miniconda",
     "miniforge",
     "minisim",
@@ -18734,6 +18792,7 @@
     "oracle-data-modeler",
     "oracle-jdk",
     "orange",
+    "orbit",
     "orbstack",
     "orcasheets",
     "orcaslicer",
@@ -18832,6 +18891,7 @@
     "pearcleaner",
     "pecunia",
     "penc",
+    "pencil2d",
     "peninsula",
     "perimeter81",
     "permute",
@@ -18844,6 +18904,7 @@
     "phoenix",
     "phoenix-code",
     "phoenix-slides",
+    "phosphene",
     "photoninja",
     "photosrevive",
     "photostickies",
@@ -18908,6 +18969,7 @@
     "pocket-bard",
     "pocket-casts",
     "podman-desktop",
+    "podpisuj",
     "poe",
     "poedit",
     "pokemon-tcg-live",
@@ -19225,6 +19287,7 @@
     "scoot",
     "scrapp",
     "scratch",
+    "screaming-frog-log-file-analyser",
     "screaming-frog-seo-spider",
     "screen-studio",
     "screenflick",
@@ -19248,6 +19311,7 @@
     "sdm",
     "seadrive",
     "seafile-client",
+    "seam-app",
     "seamly2d",
     "second-life-viewer",
     "secretive",
@@ -19260,6 +19324,7 @@
     "selfcontrol",
     "senadevicemanager",
     "send-anywhere",
+    "send-to-kindle",
     "sensei",
     "sensiblesidebuttons",
     "sequel-ace",
@@ -19517,6 +19582,7 @@
     "superwhisper",
     "support",
     "supportcompanion",
+    "supremo",
     "surfshark",
     "surge",
     "surge-xt",

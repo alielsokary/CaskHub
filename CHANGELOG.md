@@ -4,6 +4,27 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.6.9 — 2026-08-03
+
+### What's New
+
+- Added an Updates tab in Settings with manual update checks and last-check status
+- Added a support card in About that links straight to the issue reporter
+
+### Improvements
+
+- Smoother scrolling while installs and downloads are running
+- Faster search with instant typing echo and quicker name sorting
+- Faster app launch on large catalogs
+- Long lists now load in chunks as you scroll instead of all at once
+- Clearer error messages when an install or update fails
+- Catalog loading retries automatically when the Homebrew server has a hiccup
+
+### Bug Fixes
+
+- Fixed the Update button appearing for apps Homebrew no longer considers installed
+- Fixed a crash risk in the main-menu update command
+
 ## 0.6.8 — 2026-07-31
 
 ### What's New
