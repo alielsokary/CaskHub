@@ -28,7 +28,7 @@ final class CaskOperationProgressTests: XCTestCase {
     }
 
     @MainActor
-    func test_brew_output_updates_download_phase_then_install_phase() throws {
+    func test_brew_output_updates_download_phase_then_install_phase() async throws {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("operation-progress"))
         service.mutationCoordinator.beginOperation(
             .installing,
@@ -41,6 +41,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "==> Downloading https://example.com/firefox.dmg",
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .checkingDownload)
         XCTAssertEqual(
             service.operationStore.state(for: "firefox")?.progress?.inlineLabel,
@@ -51,6 +52,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "Cask firefox    ########    Downloading    42.0MB/100.0MB",
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         let downloading = try XCTUnwrap(service.operationStore.state(for: "firefox")?.progress)
         XCTAssertEqual(downloading.phase, .downloading)
         XCTAssertEqual(downloading.completedBytes, 42_000_000)
@@ -62,12 +64,13 @@ final class CaskOperationProgressTests: XCTestCase {
             "==> Installing Cask firefox",
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .performing)
         XCTAssertFalse(service.operationStore.state(for: "firefox")?.canCancel == true)
     }
 
     @MainActor
-    func test_rapid_progress_redraws_are_throttled_but_markers_parse_immediately() {
+    func test_rapid_progress_redraws_are_throttled_but_markers_parse_immediately() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("throttled-progress"))
         service.mutationCoordinator.beginOperation(
             .installing,
@@ -79,6 +82,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "Cask firefox    ####    Downloading    10.0MB/100.0MB",
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         XCTAssertEqual(
             service.operationStore.state(for: "firefox")?.progress?.completedBytes,
             10_000_000
@@ -88,6 +92,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "Cask firefox    ####    Downloading    20.0MB/100.0MB",
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         XCTAssertEqual(
             service.operationStore.state(for: "firefox")?.progress?.completedBytes,
             10_000_000
@@ -97,6 +102,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "==> Installing Cask firefox",
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         XCTAssertEqual(
             service.operationStore.state(for: "firefox")?.progress?.phase,
             .performing
@@ -104,7 +110,7 @@ final class CaskOperationProgressTests: XCTestCase {
     }
 
     @MainActor
-    func test_brew_output_reports_cached_download_at_full_size() throws {
+    func test_brew_output_reports_cached_download_at_full_size() async throws {
         let cachedDownload = FileManager.default.temporaryDirectory
             .appendingPathComponent("cached download-\(UUID().uuidString).dmg")
         try Data(repeating: 0, count: 2_048).write(to: cachedDownload)
@@ -123,6 +129,7 @@ final class CaskOperationProgressTests: XCTestCase {
             """,
             token: "chatgpt-classic"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
 
         let progress = try XCTUnwrap(
             service.operationStore.state(for: "chatgpt-classic")?.progress
@@ -144,7 +151,7 @@ final class CaskOperationProgressTests: XCTestCase {
     }
 
     @MainActor
-    func test_brew_output_updates_download_phase_then_upgrade_phase() {
+    func test_brew_output_updates_download_phase_then_upgrade_phase() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("update-progress"))
         service.mutationCoordinator.beginOperation(
             .updating,
@@ -160,12 +167,14 @@ final class CaskOperationProgressTests: XCTestCase {
             """,
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .downloading)
 
         service.mutationCoordinator.consumeBrewOutput(
             "==> Upgrading firefox",
             token: "firefox"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
         XCTAssertEqual(service.operationStore.state(for: "firefox")?.progress?.phase, .performing)
         XCTAssertFalse(service.operationStore.state(for: "firefox")?.canCancel == true)
     }
@@ -221,7 +230,7 @@ final class CaskOperationProgressTests: XCTestCase {
     }
 
     @MainActor
-    func test_progress_capsule_and_status_bar_render() {
+    func test_progress_capsule_and_status_bar_render() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("progress-render"))
         service.mutationCoordinator.beginOperation(
             .installing,
@@ -232,6 +241,7 @@ final class CaskOperationProgressTests: XCTestCase {
             "Cask plain    ########    Downloading    84.0MB/245.0MB",
             token: "plain"
         )
+        await service.mutationCoordinator.awaitPendingOutput()
 
         render(CaskActionsView(cask: makeCask("plain")).environment(service))
         render(CaskActionsView(cask: makeCask("plain"), fullWidth: false).environment(service))

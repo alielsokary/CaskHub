@@ -41,8 +41,7 @@ struct CaskHubApp: App {
         Analytics.start()
         AppTheme.apply(UserDefaults.standard.string(forKey: "appTheme") ?? AppTheme.system.rawValue)
 
-        // ~920KB of bundled JSON — decoded off the MainActor after the first
-        // frame instead of blocking launch inside App.init.
+        // ~920KB of bundled JSON — keep it off the launch path.
         let categories = CategoryService()
         let recent = RecentlyAddedService()
         Task {

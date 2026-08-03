@@ -194,8 +194,7 @@ struct ContentView: View {
         return viewModel.filteredCasks.first
     }
 
-    // Gates on the debounced value so the layout swaps in the same frame as the
-    // filtered results — raw searchText would flash an unfiltered grid first.
+    // Raw searchText would swap layout before results apply and flash a stale grid.
     private var showsBrowseSections: Bool {
         selectedSidebar == .discover(.browse)
             && viewModel.appliedSearchText.isEmpty
@@ -284,8 +283,7 @@ private extension ContentView {
         .frame(maxWidth: .infinity)
     }
 
-    // showsReveal must stay off for the bounded browse-section shelves — their
-    // sentinels would fire against the global reveal state, not their own casks.
+    // showsReveal stays off for browse shelves — global reveal state, not theirs.
     func caskGrid(_ casks: [Cask], showsReveal: Bool = false) -> some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
             ForEach(casks) { cask in

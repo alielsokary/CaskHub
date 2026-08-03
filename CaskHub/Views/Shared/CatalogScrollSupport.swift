@@ -7,8 +7,7 @@
 
 import SwiftUI
 
-/// Placed as the last item of a lazy container, so it only materializes — and
-/// reveals the next chunk — when the user scrolls to the bottom of the cap.
+/// Last item of a lazy container: materializing means the user hit the cap.
 struct RevealSentinel: View {
     let onReveal: () -> Void
 

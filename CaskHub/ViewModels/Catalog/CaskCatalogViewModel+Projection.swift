@@ -38,8 +38,6 @@ extension CaskCatalogViewModel {
         librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
     }
 
-    /// Built once per catalog/category revision — every visible cell asks for
-    /// this on every body pass, so the per-call projector allocations add up.
     private var categoryPresentations: [String: CaskCategoryPresentation] {
         let key = CategoryPresentationCacheKey(
             catalogRevision: catalogRevision,
@@ -116,17 +114,13 @@ extension CaskCatalogViewModel {
 
     // MARK: - Filtered Casks
 
-    /// One lowercase pass per catalog load instead of three per cask per search.
     private var searchKeys: [String: String] {
         searchKeysCache.value(for: catalogRevision) { [casks] in
             Dictionary(casks.map { ($0.token, $0.searchKey) }) { first, _ in first }
         }
     }
 
-    /// One locale-aware sort per catalog load; projections then order name sorts
-    /// by Int rank instead of running ICU collation per comparison.
-    /// Collation-equal names share a rank so ties stay ties — a strict order
-    /// would silently reverse them in descending sorts.
+    /// Collation-equal names share a rank so descending sorts keep ties stable.
     private var nameRanks: [String: Int] {
         nameRankCache.value(for: catalogRevision) { [casks] in
             let sorted = casks.sorted {
@@ -156,8 +150,7 @@ extension CaskCatalogViewModel {
         }
     }
 
-    /// What the grid/list actually render; `filteredCasks` stays the full result
-    /// for counts and the hero card.
+    /// Render slice; `filteredCasks` stays uncapped for counts and the hero.
     var displayedCasks: [Cask] {
         let filtered = filteredCasks
         guard filtered.count > revealedCount else { return filtered }

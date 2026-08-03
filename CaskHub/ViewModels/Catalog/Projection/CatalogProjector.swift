@@ -198,8 +198,7 @@ enum CatalogProjector {
         }
     }
 
-    /// Ranks carry the localized order precomputed once per catalog; the ICU
-    /// comparator is the fallback for casks outside that catalog snapshot.
+    /// ICU comparator is the fallback for casks outside the rank snapshot.
     private static func nameAscending(
         _ lhs: Cask,
         _ rhs: Cask,
@@ -212,8 +211,6 @@ enum CatalogProjector {
             == .orderedAscending
     }
 
-    /// Same dedup a Set gave, without allocating one per cask per pass —
-    /// secondary is 0-2 curated entries, so the prefix scan is cheaper.
     private static func forEachUniqueCategory(
         in mapping: TokenCategoryMapping,
         _ body: (CategoryID) -> Void

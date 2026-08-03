@@ -62,8 +62,7 @@ final class CategoryService {
         applyData(catalog)
     }
 
-    /// Launch-path variant: decodes the ~400KB bundle off the MainActor and
-    /// never overwrites data a faster remote refresh already applied.
+    /// Off-main decode; never overwrites fresher remote data.
     func loadBundledCategoriesAsync() async {
         guard let catalog = await Self.decodeBundledCategories(),
               catalog.generatedDate > generatedDate

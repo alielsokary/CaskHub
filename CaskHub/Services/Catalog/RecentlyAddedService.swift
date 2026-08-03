@@ -49,8 +49,7 @@ final class RecentlyAddedService {
         apply(bundled)
     }
 
-    /// Launch-path variant: decodes the ~500KB bundle off the MainActor and
-    /// never overwrites data a faster remote refresh already applied.
+    /// Off-main decode; never overwrites fresher remote data.
     func loadBundledDatesAsync() async {
         guard let bundled = await Self.decodeBundledDates(),
               bundled.version == Self.schemaVersion,

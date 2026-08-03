@@ -12,8 +12,7 @@ enum CaskFlowReleases {
         string: "https://github.com/alielsokary/CaskFlow/releases/latest/download/"
     )!
 
-    // @concurrent keeps the ~1MB asset decode off the MainActor on every
-    // foreground refresh; plain static async would inherit it.
+    // @concurrent: plain static async would inherit MainActor for the ~1MB decode.
     @concurrent static func fetch<T: Decodable & Sendable>(_: T.Type, asset: String) async -> T? {
         var request = URLRequest(url: baseURL.appendingPathComponent(asset))
         request.timeoutInterval = 10

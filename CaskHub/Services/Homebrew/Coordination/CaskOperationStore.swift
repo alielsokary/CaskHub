@@ -7,9 +7,7 @@
 
 import Observation
 
-/// Per-token Observable identity: rows subscribe to their own box's `state`,
-/// so a progress tick for one cask never invalidates the other visible cells.
-/// Mirrors the isolation `ObservedStatusBarView` already does for the status bar.
+/// Per-token Observable identity: a progress tick invalidates one row, not all.
 @MainActor
 @Observable
 final class CaskOperationBox {
@@ -19,8 +17,6 @@ final class CaskOperationBox {
 @MainActor
 @Observable
 final class CaskOperationStore {
-    /// Mutated only when a token sees its first operation — per-tick updates
-    /// touch only that token's box.
     private(set) var boxes: [String: CaskOperationBox] = [:]
     private(set) var isUpdatingAll = false
     private(set) var updateAllProgress: CaskUpdateAllProgress?

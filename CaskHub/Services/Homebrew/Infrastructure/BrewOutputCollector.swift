@@ -77,8 +77,6 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
         continuation = nil
     }
 
-    // Compiled once — `.regularExpression` re-compiles per call, and chunks
-    // arrive many times per second during a download.
     private static let ansiEscapes = try? NSRegularExpression(
         pattern: "\u{001B}\\[[0-?]*[ -/]*[@-~]"
     )

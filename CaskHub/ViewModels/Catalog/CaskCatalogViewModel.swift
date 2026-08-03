@@ -51,8 +51,7 @@ final class CaskCatalogViewModel {
     var searchText = "" {
         didSet { scheduleSearchApply() }
     }
-    /// Projection reads this instead of `searchText` so each keystroke echoes in
-    /// the field immediately without re-filtering the full catalog on the MainActor.
+    /// Projection reads this; `searchText` stays instant for the field echo.
     private(set) var appliedSearchText = "" {
         didSet { if oldValue != appliedSearchText { resetReveal() } }
     }
@@ -247,8 +246,7 @@ final class CaskCatalogViewModel {
         }
     }
 
-    // ponytail: en_US pin keeps the K/M suffixes stable across locales.
-    // Static so the Locale + style build once, not per visible cell per pass.
+    // ponytail: en_US pin keeps the K/M suffixes stable across locales
     private static let downloadsStyle = IntegerFormatStyle<Int>.number
         .notation(.compactName)
         .locale(Locale(identifier: "en_US"))
