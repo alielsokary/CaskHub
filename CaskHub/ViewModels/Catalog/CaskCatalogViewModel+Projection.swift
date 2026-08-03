@@ -105,15 +105,27 @@ extension CaskCatalogViewModel {
 
     /// One locale-aware sort per catalog load; projections then order name sorts
     /// by Int rank instead of running ICU collation per comparison.
+    /// Collation-equal names share a rank so ties stay ties — a strict order
+    /// would silently reverse them in descending sorts.
     private var nameRanks: [String: Int] {
         nameRankCache.value(for: catalogRevision) { [casks] in
             let sorted = casks.sorted {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
                     == .orderedAscending
             }
-            return Dictionary(
-                sorted.enumerated().map { ($0.element.token, $0.offset) }
-            ) { first, _ in first }
+            var ranks: [String: Int] = [:]
+            ranks.reserveCapacity(sorted.count)
+            var rank = 0
+            for (index, cask) in sorted.enumerated() {
+                if index > 0,
+                   sorted[index - 1].displayName.localizedCaseInsensitiveCompare(
+                       cask.displayName
+                   ) != .orderedSame {
+                    rank = index
+                }
+                if ranks[cask.token] == nil { ranks[cask.token] = rank }
+            }
+            return ranks
         }
     }
 

@@ -91,6 +91,7 @@
 		41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47B30028F7D00608C7A /* CaskCardView.swift */; };
 		41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47C30028F7D00608C7A /* CaskIconView.swift */; };
 		41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */; };
+		A29100000000000000000207 /* CatalogScrollSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000206 /* CatalogScrollSupport.swift */; };
 		41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47E30028F7D00608C7A /* CaskRowView.swift */; };
 		41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48030028F7D00608C7A /* SidebarView.swift */; };
 		41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48230028F7D00608C7A /* ContentView.swift */; };
@@ -215,6 +216,7 @@
 		41DFD47B30028F7D00608C7A /* CaskCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCardView.swift; sourceTree = "<group>"; };
 		41DFD47C30028F7D00608C7A /* CaskIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskIconView.swift; sourceTree = "<group>"; };
 		41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskInfoPopover.swift; sourceTree = "<group>"; };
+		A29100000000000000000206 /* CatalogScrollSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogScrollSupport.swift; sourceTree = "<group>"; };
 		41DFD47E30028F7D00608C7A /* CaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskRowView.swift; sourceTree = "<group>"; };
 		41DFD48030028F7D00608C7A /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		41DFD48230028F7D00608C7A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -537,6 +539,7 @@
 				41DFD47B30028F7D00608C7A /* CaskCardView.swift */,
 				41DFD47C30028F7D00608C7A /* CaskIconView.swift */,
 				41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */,
+				A29100000000000000000206 /* CatalogScrollSupport.swift */,
 				41DFD47E30028F7D00608C7A /* CaskRowView.swift */,
 			);
 			path = Shared;
@@ -962,6 +965,7 @@
 				41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */,
 				41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */,
 				41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */,
+				A29100000000000000000207 /* CatalogScrollSupport.swift in Sources */,
 				41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */,
 				41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */,
 				41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */,

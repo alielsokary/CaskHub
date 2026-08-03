@@ -342,42 +342,6 @@ private extension ContentView {
     }
 }
 
-/// Placed as the last item of a lazy container, so it only materializes — and
-/// reveals the next chunk — when the user scrolls to the bottom of the cap.
-private struct RevealSentinel: View {
-    let onReveal: () -> Void
-
-    var body: some View {
-        Color.clear
-            .frame(height: 1)
-            .onAppear(perform: onReveal)
-    }
-}
-
-private struct ResetScrollOnChange<Trigger: Equatable>: ViewModifier {
-    let trigger: Trigger
-    @State private var position = ScrollPosition(edge: .top)
-    @State private var isAtTop = true
-
-    func body(content: Content) -> some View {
-        content
-            .scrollPosition($position)
-            .onScrollGeometryChange(for: Bool.self) { geometry in
-                geometry.contentOffset.y <= geometry.contentInsets.top + 1
-            } action: { _, newValue in
-                isAtTop = newValue
-            }
-            .onChange(of: trigger) {
-                guard !isAtTop else { return }
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    position.scrollTo(edge: .top)
-                }
-            }
-    }
-}
-
 // MARK: - Outside-Click Focus Handling
 
 struct ResignFocusOnOutsideClick: ViewModifier {

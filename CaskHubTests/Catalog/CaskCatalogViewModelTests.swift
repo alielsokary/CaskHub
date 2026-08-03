@@ -116,6 +116,22 @@ final class CaskCatalogViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func test_name_rank_path_preserves_descending_order_for_collation_ties() async {
+        let casks = [
+            makeCask("upper", name: "Foo"),
+            makeCask("lower", name: "foo"),
+            makeCask("bar", name: "Bar")
+        ]
+        let expected = casks.sorted {
+            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending
+        }
+        let (vm, _) = await makeSUT(casks: casks)
+        vm.sortOption = .nameZA
+
+        XCTAssertEqual(vm.filteredCasks.map(\.token), expected.map(\.token))
+    }
+
+    @MainActor
     func test_displayed_casks_cap_at_reveal_chunk_and_reset_on_context_change() async {
         let chunk = CaskCatalogViewModel.revealChunk
         let (vm, _) = await makeSUT(casks: (0..<(chunk + 50)).map { makeCask("cask-\($0)") })
