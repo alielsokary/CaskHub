@@ -72,8 +72,88 @@ final class CaskCatalogViewModelTests: XCTestCase {
         vm.searchText = "SLACK"
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["slack"])
 
+        vm.searchText = "oxweb"
+        XCTAssertTrue(vm.filteredCasks.isEmpty, "query must not match across field boundaries")
+
         vm.searchText = ""
         XCTAssertEqual(vm.filteredCasks.count, 3)
+    }
+
+    @MainActor
+    func test_search_projection_debounces_typing_and_clears_instantly() async throws {
+        let (vm, _) = await makeSUT(casks: [
+            makeCask("firefox", name: "Firefox", desc: "Web browser")
+        ])
+        vm.searchDebounceInterval = .milliseconds(50)
+
+        vm.searchText = "b"
+        vm.searchText = "br"
+        vm.searchText = "browser"
+        XCTAssertEqual(vm.appliedSearchText, "")
+
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertEqual(vm.appliedSearchText, "browser")
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
+
+        vm.searchText = ""
+        XCTAssertEqual(vm.appliedSearchText, "")
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
+    }
+
+    @MainActor
+    func test_name_sort_keeps_localized_diacritic_order() async {
+        let (vm, _) = await makeSUT(casks: [
+            makeCask("zoom", name: "zoom.us"),
+            makeCask("uebersicht", name: "Übersicht"),
+            makeCask("arc", name: "Arc")
+        ])
+
+        vm.sortOption = .nameAZ
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["arc", "uebersicht", "zoom"])
+
+        vm.sortOption = .nameZA
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["zoom", "uebersicht", "arc"])
+    }
+
+    @MainActor
+    func test_name_rank_path_preserves_descending_order_for_collation_ties() async {
+        let casks = [
+            makeCask("upper", name: "Foo"),
+            makeCask("lower", name: "foo"),
+            makeCask("bar", name: "Bar")
+        ]
+        let expected = casks.sorted {
+            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending
+        }
+        let (vm, _) = await makeSUT(casks: casks)
+        vm.sortOption = .nameZA
+
+        XCTAssertEqual(vm.filteredCasks.map(\.token), expected.map(\.token))
+    }
+
+    @MainActor
+    func test_displayed_casks_cap_at_reveal_chunk_and_reset_on_context_change() async {
+        let chunk = CaskCatalogViewModel.revealChunk
+        let (vm, _) = await makeSUT(casks: (0..<(chunk + 50)).map { makeCask("cask-\($0)") })
+
+        XCTAssertEqual(vm.filteredCasks.count, chunk + 50)
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
+        XCTAssertTrue(vm.hasMoreToReveal)
+
+        vm.revealMore()
+        XCTAssertEqual(vm.displayedCasks.count, chunk + 50)
+        XCTAssertFalse(vm.hasMoreToReveal)
+
+        vm.sortOption = .nameAZ
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
+
+        vm.revealMore()
+        vm.searchText = "cask"
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
+
+        vm.revealMore()
+        vm.selectedSidebar = .discover(.topCharts)
+        XCTAssertEqual(vm.displayedCasks.count, chunk)
     }
 
     // MARK: Sidebar filters

@@ -32,6 +32,8 @@ struct CatalogFilteredProjectionInput {
     let recentTokens: Set<String>
     let addedDates: [String: String]
     let installedDates: [String: Date]
+    let searchKeys: [String: String]
+    let nameRanks: [String: Int]
 }
 
 enum CatalogProjector {
@@ -55,7 +57,7 @@ enum CatalogProjector {
                 adoptableCasks.append(cask)
             }
             if let mapping = input.categoryMappings[cask.token] {
-                for categoryID in Set([mapping.primary] + mapping.secondary) {
+                forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }
             }
@@ -82,9 +84,10 @@ enum CatalogProjector {
         var casksByCategory: [String: [Cask]] = [:]
         for cask in popularityOrder {
             guard let mapping = input.categoryMappings[cask.token] else { continue }
-            for categoryID in Set([mapping.primary] + mapping.secondary)
-                where casksByCategory[categoryID, default: []].count < sectionSize {
-                casksByCategory[categoryID, default: []].append(cask)
+            forEachUniqueCategory(in: mapping) { categoryID in
+                if casksByCategory[categoryID, default: []].count < sectionSize {
+                    casksByCategory[categoryID, default: []].append(cask)
+                }
             }
         }
 
@@ -119,7 +122,7 @@ enum CatalogProjector {
         from input: CatalogFilteredProjectionInput
     ) -> [Cask] {
         let filtered = applySidebarFilter(input)
-        let searched = applySearch(input.searchText, to: filtered)
+        let searched = applySearch(input.searchText, to: filtered, keys: input.searchKeys)
         return applySort(input.sortOption, to: searched, input: input)
     }
 
@@ -153,14 +156,13 @@ enum CatalogProjector {
 
     private static func applySearch(
         _ searchText: String,
-        to casks: [Cask]
+        to casks: [Cask],
+        keys: [String: String]
     ) -> [Cask] {
         guard !searchText.isEmpty else { return casks }
         let query = searchText.lowercased()
         return casks.filter { cask in
-            cask.displayName.lowercased().contains(query)
-                || cask.token.lowercased().contains(query)
-                || (cask.desc?.lowercased().contains(query) ?? false)
+            (keys[cask.token] ?? cask.searchKey).contains(query)
         }
     }
 
@@ -173,15 +175,9 @@ enum CatalogProjector {
         case .mostPopular:
             return sortedByDownloads(casks, using: input.downloadCounts)
         case .nameAZ:
-            return casks.sorted {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
-                    == .orderedAscending
-            }
+            return casks.sorted { nameAscending($0, $1, ranks: input.nameRanks) }
         case .nameZA:
-            return casks.sorted {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
-                    == .orderedDescending
-            }
+            return casks.sorted { nameAscending($1, $0, ranks: input.nameRanks) }
         case .recentlyInstalled:
             return casks.sorted { lhs, rhs in
                 let lhsDate = input.installedDates[lhs.token]
@@ -190,8 +186,7 @@ enum CatalogProjector {
                     if let lhsDate, let rhsDate { return lhsDate > rhsDate }
                     return lhsDate != nil
                 }
-                return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
-                    == .orderedAscending
+                return nameAscending(lhs, rhs, ranks: input.nameRanks)
             }
         case .newest:
             return sortedByNewest(casks, addedDates: input.addedDates)
@@ -200,6 +195,31 @@ enum CatalogProjector {
                 (input.addedDates[$0.token] ?? "9999")
                     < (input.addedDates[$1.token] ?? "9999")
             }
+        }
+    }
+
+    /// ICU comparator is the fallback for casks outside the rank snapshot.
+    private static func nameAscending(
+        _ lhs: Cask,
+        _ rhs: Cask,
+        ranks: [String: Int]
+    ) -> Bool {
+        if let lhsRank = ranks[lhs.token], let rhsRank = ranks[rhs.token] {
+            return lhsRank < rhsRank
+        }
+        return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
+            == .orderedAscending
+    }
+
+    private static func forEachUniqueCategory(
+        in mapping: TokenCategoryMapping,
+        _ body: (CategoryID) -> Void
+    ) {
+        body(mapping.primary)
+        for (index, categoryID) in mapping.secondary.enumerated()
+            where categoryID != mapping.primary
+                && !mapping.secondary[..<index].contains(categoryID) {
+            body(categoryID)
         }
     }
 

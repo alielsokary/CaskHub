@@ -71,6 +71,11 @@ struct FilteredCatalogCacheKey: Equatable {
     let sortOption: SortOption
 }
 
+struct CategoryPresentationCacheKey: Equatable {
+    let catalogRevision: Int
+    let categoryRevision: Int
+}
+
 struct BrowseCatalogCacheKey: Equatable {
     let catalogRevision: Int
     let categoryRevision: Int

@@ -85,8 +85,14 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(spy.capturedErrors.count, 10)
     }
 
+    func test_task_cancellation_is_never_captured() {
+        CrashReporter.capture(CancellationError())
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+    }
+
     func test_transient_network_errors_are_never_captured() {
         let codes: [URLError.Code] = [
+            .cancelled,
             .notConnectedToInternet,
             .timedOut,
             .networkConnectionLost,
