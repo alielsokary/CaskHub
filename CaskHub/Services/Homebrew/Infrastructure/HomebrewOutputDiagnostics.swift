@@ -8,16 +8,13 @@
 import Foundation
 
 nonisolated enum HomebrewOutputDiagnostics {
-    // BrewOutputCollector already caps its buffer at a 2000-char stripped tail;
-    // the suffix here is the safety net for any other caller.
     static func make(from output: String) -> String {
         let trimmed = stripProgressNoise(from: output)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return String(trimmed.suffix(4_000))
     }
 
-    /// Brew rewrites download/extract progress with carriage returns; the raw
-    /// frames bury the real error line and defeat failure-class matching.
+    /// Drops brew's \r progress frames so the error line stays classifiable.
     static func stripProgressNoise(from output: String) -> String {
         output.components(separatedBy: .newlines)
             .filter { !isProgressFrame($0) }

@@ -312,26 +312,15 @@ final class CaskHubTests: XCTestCase {
     }
 
     func test_output_collector_keeps_error_line_through_progress_flood() async throws {
-        // The 2000-char tail cap must not let \r progress frames evict the
-        // error line that failure classification depends on.
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        process.arguments = [
-            "-c",
-            "echo 'Error: real failure'; "
-                + "for i in $(seq 1 200); do "
-                + "printf 'Extracting  205.4MB/205.4MB⠴ Cask parallels (26.4.0)\\r'; "
-                + "done"
-        ]
+        process.arguments = ["-c", "echo 'Error: real failure'; for i in $(seq 1 200); do "
+            + "printf 'Extracting  205.4MB/205.4MB⠴ Cask parallels (26.4.0)\\r'; done"]
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe
-
         let collector = BrewOutputCollector()
-        collector.attach(
-            to: process,
-            readHandle: pipe.fileHandleForReading
-        ) { _ in }
+        collector.attach(to: process, readHandle: pipe.fileHandleForReading) { _ in }
         try process.run()
 
         let output = await collector.output()

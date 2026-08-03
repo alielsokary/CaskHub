@@ -37,7 +37,6 @@ nonisolated final class BrewAPIClient: BrewAPIClientProtocol {
         do {
             return try await fetchOnce(url)
         } catch let error as HTTPError where (500 ..< 600).contains(error.statusCode) {
-            // formulae.brew.sh 5xxs are usually momentary; one retry rides them out.
             try await Task.sleep(for: .seconds(2))
             return try await fetchOnce(url)
         }

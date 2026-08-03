@@ -60,6 +60,10 @@ enum CrashReporter {
 
     static func capture(_ error: Error) {
         guard isEnabled, !isRunningTests else { return }
+        // Task cancellation (e.g. a view disappearing mid-fetch) is not an error.
+        if error is CancellationError {
+            return
+        }
         if let localError = error as? LocalHomebrewError, !localError.shouldReport {
             return
         }
