@@ -30,6 +30,7 @@ enum CrashReporter {
     static var captureCounts: [String: Int] = [:]
     private static let captureLimit = 5
     private static let ignoredURLErrorCodes: Set<Int> = [
+        URLError.cancelled.rawValue,
         URLError.notConnectedToInternet.rawValue,
         URLError.timedOut.rawValue,
         URLError.networkConnectionLost.rawValue,
@@ -59,6 +60,10 @@ enum CrashReporter {
 
     static func capture(_ error: Error) {
         guard isEnabled, !isRunningTests else { return }
+        // Task cancellation (e.g. a view disappearing mid-fetch) is not an error.
+        if error is CancellationError {
+            return
+        }
         if let localError = error as? LocalHomebrewError, !localError.shouldReport {
             return
         }
@@ -167,6 +172,7 @@ private struct SentrySpanHandle: CrashSpan {
     }
 
     func finish(error: Error) {
+        span.setData(value: String(describing: error), key: "error")
         span.finish(status: .internalError)
     }
 }

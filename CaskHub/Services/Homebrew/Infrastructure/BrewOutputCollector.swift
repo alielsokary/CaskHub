@@ -36,7 +36,11 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
                     if self.exited { self.finish() }
                 } else if let text = String(data: data, encoding: .utf8) {
                     let plainText = Self.plainText(text)
-                    self.tail = String((self.tail + plainText).suffix(2000))
+                    // Strip before capping, or progress frames evict the error line.
+                    self.tail = String(
+                        HomebrewOutputDiagnostics.stripProgressNoise(from: self.tail + plainText)
+                            .suffix(2000)
+                    )
                     if !plainText.isEmpty {
                         onChunk(plainText)
                     }
