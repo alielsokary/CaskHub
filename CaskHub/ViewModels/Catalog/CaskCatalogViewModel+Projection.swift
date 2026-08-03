@@ -38,8 +38,26 @@ extension CaskCatalogViewModel {
         librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
     }
 
+    private var categoryPresentations: [String: CaskCategoryPresentation] {
+        let key = CategoryPresentationCacheKey(
+            catalogRevision: catalogRevision,
+            categoryRevision: categoryService.catalogStateRevision
+        )
+        return categoryPresentationCache.value(for: key) { [casks, categoryService] in
+            var result = [String: CaskCategoryPresentation](minimumCapacity: casks.count)
+            for cask in casks {
+                result[cask.token] = CaskCategoryProjector.make(
+                    token: cask.token,
+                    mappings: categoryService.tokenMappings,
+                    definitions: categoryService.categoryDefinitions
+                )
+            }
+            return result
+        }
+    }
+
     func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
-        CaskCategoryProjector.make(
+        categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
             token: cask.token,
             mappings: categoryService.tokenMappings,
             definitions: categoryService.categoryDefinitions
@@ -96,6 +114,53 @@ extension CaskCatalogViewModel {
 
     // MARK: - Filtered Casks
 
+    private var searchKeys: [String: String] {
+        searchKeysCache.value(for: catalogRevision) { [casks] in
+            Dictionary(casks.map { ($0.token, $0.searchKey) }) { first, _ in first }
+        }
+    }
+
+    /// Collation-equal names share a rank so descending sorts keep ties stable.
+    private var nameRanks: [String: Int] {
+        nameRankCache.value(for: catalogRevision) { [casks] in
+            let sorted = casks.sorted {
+                $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
+                    == .orderedAscending
+            }
+            var ranks: [String: Int] = [:]
+            ranks.reserveCapacity(sorted.count)
+            var rank = 0
+            for (index, cask) in sorted.enumerated() {
+                if index > 0,
+                   sorted[index - 1].displayName.localizedCaseInsensitiveCompare(
+                       cask.displayName
+                   ) != .orderedSame {
+                    rank = index
+                }
+                if ranks[cask.token] == nil { ranks[cask.token] = rank }
+            }
+            return ranks
+        }
+    }
+
+    private var sortUsesNameRanks: Bool {
+        switch sortOption {
+        case .nameAZ, .nameZA, .recentlyInstalled: return true
+        case .mostPopular, .newest, .oldest: return false
+        }
+    }
+
+    /// Render slice; `filteredCasks` stays uncapped for counts and the hero.
+    var displayedCasks: [Cask] {
+        let filtered = filteredCasks
+        guard filtered.count > revealedCount else { return filtered }
+        return Array(filtered.prefix(revealedCount))
+    }
+
+    var hasMoreToReveal: Bool {
+        filteredCasks.count > revealedCount
+    }
+
     var filteredCasks: [Cask] {
         let key = FilteredCatalogCacheKey(
             library: libraryCacheKey,
@@ -103,7 +168,7 @@ extension CaskCatalogViewModel {
             analyticsPeriod: analyticsPeriod,
             recentlyAddedWindow: recentlyAddedWindow,
             selectedSidebar: selectedSidebar,
-            searchText: searchText,
+            searchText: appliedSearchText,
             sortOption: sortOption
         )
         return filteredCache.value(for: key) {
@@ -111,7 +176,7 @@ extension CaskCatalogViewModel {
                 casks: casks,
                 library: librarySnapshot,
                 selectedSidebar: selectedSidebar,
-                searchText: searchText,
+                searchText: appliedSearchText,
                 sortOption: sortOption,
                 downloadCounts: downloadCounts,
                 recentTokens: recentlyAdded.recentTokens(
@@ -119,7 +184,9 @@ extension CaskCatalogViewModel {
                 ),
                 addedDates: recentlyAdded.addedDates,
                 installedDates: localHomebrew.installationSnapshot.installedCasks
-                    .compactMapValues(\.installedAt)
+                    .compactMapValues(\.installedAt),
+                searchKeys: appliedSearchText.isEmpty ? [:] : searchKeys,
+                nameRanks: sortUsesNameRanks ? nameRanks : [:]
             ))
         }
     }

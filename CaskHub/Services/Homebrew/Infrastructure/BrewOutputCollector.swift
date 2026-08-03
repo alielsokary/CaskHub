@@ -81,13 +81,21 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
         continuation = nil
     }
 
+    private static let ansiEscapes = try? NSRegularExpression(
+        pattern: "\u{001B}\\[[0-?]*[ -/]*[@-~]"
+    )
+
     private static func plainText(_ text: String) -> String {
-        text
-            .replacingOccurrences(
-                of: "\u{001B}\\[[0-?]*[ -/]*[@-~]",
-                with: "",
-                options: .regularExpression
+        let stripped: String
+        if let ansiEscapes {
+            stripped = ansiEscapes.stringByReplacingMatches(
+                in: text,
+                range: NSRange(text.startIndex..., in: text),
+                withTemplate: ""
             )
-            .replacingOccurrences(of: "\r", with: "\n")
+        } else {
+            stripped = text
+        }
+        return stripped.replacingOccurrences(of: "\r", with: "\n")
     }
 }

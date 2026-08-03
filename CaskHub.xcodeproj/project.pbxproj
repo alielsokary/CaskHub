@@ -71,6 +71,7 @@
 		F31000000000000000000002 /* HomebrewMutationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000001 /* HomebrewMutationCoordinator.swift */; };
 		F31000000000000000000004 /* CaskOperationFailureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000003 /* CaskOperationFailureFactory.swift */; };
 		F31000000000000000000006 /* HomebrewOutputDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000005 /* HomebrewOutputDiagnostics.swift */; };
+		A29100000000000000000307 /* BrewOutputAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000306 /* BrewOutputAggregator.swift */; };
 		F31000000000000000000008 /* ApplicationLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000007 /* ApplicationLauncher.swift */; };
 		F3100000000000000000000A /* CaskLocalStateResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000009 /* CaskLocalStateResolver.swift */; };
 		F33000000000000000000002 /* LocalHomebrewDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33000000000000000000001 /* LocalHomebrewDependencies.swift */; };
@@ -92,6 +93,7 @@
 		41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47B30028F7D00608C7A /* CaskCardView.swift */; };
 		41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47C30028F7D00608C7A /* CaskIconView.swift */; };
 		41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */; };
+		A29100000000000000000207 /* CatalogScrollSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000206 /* CatalogScrollSupport.swift */; };
 		41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47E30028F7D00608C7A /* CaskRowView.swift */; };
 		41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48030028F7D00608C7A /* SidebarView.swift */; };
 		41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD48230028F7D00608C7A /* ContentView.swift */; };
@@ -197,6 +199,7 @@
 		F31000000000000000000001 /* HomebrewMutationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewMutationCoordinator.swift; sourceTree = "<group>"; };
 		F31000000000000000000003 /* CaskOperationFailureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationFailureFactory.swift; sourceTree = "<group>"; };
 		F31000000000000000000005 /* HomebrewOutputDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutputDiagnostics.swift; sourceTree = "<group>"; };
+		A29100000000000000000306 /* BrewOutputAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewOutputAggregator.swift; sourceTree = "<group>"; };
 		F31000000000000000000007 /* ApplicationLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationLauncher.swift; sourceTree = "<group>"; };
 		F31000000000000000000009 /* CaskLocalStateResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskLocalStateResolver.swift; sourceTree = "<group>"; };
 		F33000000000000000000001 /* LocalHomebrewDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewDependencies.swift; sourceTree = "<group>"; };
@@ -220,6 +223,7 @@
 		41DFD47B30028F7D00608C7A /* CaskCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCardView.swift; sourceTree = "<group>"; };
 		41DFD47C30028F7D00608C7A /* CaskIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskIconView.swift; sourceTree = "<group>"; };
 		41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskInfoPopover.swift; sourceTree = "<group>"; };
+		A29100000000000000000206 /* CatalogScrollSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogScrollSupport.swift; sourceTree = "<group>"; };
 		41DFD47E30028F7D00608C7A /* CaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskRowView.swift; sourceTree = "<group>"; };
 		41DFD48030028F7D00608C7A /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		41DFD48230028F7D00608C7A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -500,6 +504,7 @@
 				E2900000000000000000000F /* HomebrewInstallationScanner.swift */,
 				F30000000000000000000005 /* HomebrewLocator.swift */,
 				F31000000000000000000005 /* HomebrewOutputDiagnostics.swift */,
+				A29100000000000000000306 /* BrewOutputAggregator.swift */,
 				F30000000000000000000007 /* HomebrewVersionLoader.swift */,
 				F28000000000000000000001 /* InstallationIndexBuilder.swift */,
 				F30000000000000000000003 /* PackageReceiptResolver.swift */,
@@ -544,6 +549,7 @@
 				41DFD47B30028F7D00608C7A /* CaskCardView.swift */,
 				41DFD47C30028F7D00608C7A /* CaskIconView.swift */,
 				41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */,
+				A29100000000000000000206 /* CatalogScrollSupport.swift */,
 				41DFD47E30028F7D00608C7A /* CaskRowView.swift */,
 			);
 			path = Shared;
@@ -951,6 +957,7 @@
 				F31000000000000000000002 /* HomebrewMutationCoordinator.swift in Sources */,
 				F31000000000000000000004 /* CaskOperationFailureFactory.swift in Sources */,
 				F31000000000000000000006 /* HomebrewOutputDiagnostics.swift in Sources */,
+				A29100000000000000000307 /* BrewOutputAggregator.swift in Sources */,
 				F31000000000000000000008 /* ApplicationLauncher.swift in Sources */,
 				F3100000000000000000000A /* CaskLocalStateResolver.swift in Sources */,
 				F33000000000000000000002 /* LocalHomebrewDependencies.swift in Sources */,
@@ -972,6 +979,7 @@
 				41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */,
 				41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */,
 				41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */,
+				A29100000000000000000207 /* CatalogScrollSupport.swift in Sources */,
 				41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */,
 				41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */,
 				41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */,
