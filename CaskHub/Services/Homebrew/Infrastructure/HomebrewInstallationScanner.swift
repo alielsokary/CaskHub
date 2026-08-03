@@ -308,10 +308,10 @@ extension HomebrewInstallationScanner {
         )
     }
 
-    /// Brew's own installed check (`Cask#installed?`) is the presence of a
-    /// timestamped caskfile under `.metadata/<version>/<timestamp>/Casks/`.
-    /// Entries without one must not offer brew actions — brew rejects them
-    /// with "is not installed" (CASKHUB-14).
+    /// Mirrors brew's `Caskroom.cask_installed_caskfile`: the single newest
+    /// timestamp directory across all versions must contain `Casks/<token>.rb`
+    /// or `.json`. Entries failing that must not offer brew actions — brew
+    /// rejects them with "is not installed" (CASKHUB-14).
     private static func timestampedCaskfileExists(
         in entry: URL,
         fileManager: FileManager
@@ -319,27 +319,26 @@ extension HomebrewInstallationScanner {
         let metadata = entry.appendingPathComponent(".metadata", isDirectory: true)
         guard let versionDirectories = try? fileManager.contentsOfDirectory(
             at: metadata,
-            includingPropertiesForKeys: [.isDirectoryKey],
+            includingPropertiesForKeys: nil,
             options: [.skipsHiddenFiles]
         ) else { return false }
-        for versionDirectory in versionDirectories {
-            guard let timestamps = try? fileManager.contentsOfDirectory(
-                at: versionDirectory,
-                includingPropertiesForKeys: nil,
-                options: [.skipsHiddenFiles]
-            ) else { continue }
-            for timestamp in timestamps {
-                let casks = timestamp.appendingPathComponent("Casks")
-                if let files = try? fileManager.contentsOfDirectory(
-                    at: casks,
+        let newestTimestamp = versionDirectories
+            .flatMap { versionDirectory in
+                (try? fileManager.contentsOfDirectory(
+                    at: versionDirectory,
                     includingPropertiesForKeys: nil,
                     options: [.skipsHiddenFiles]
-                ), !files.isEmpty {
-                    return true
-                }
+                )) ?? []
             }
+            .max { $0.lastPathComponent < $1.lastPathComponent }
+        guard let newestTimestamp else { return false }
+        let token = entry.lastPathComponent
+        return ["rb", "json"].contains { fileExtension in
+            fileManager.fileExists(
+                atPath: newestTimestamp
+                    .appendingPathComponent("Casks/\(token).\(fileExtension)").path
+            )
         }
-        return false
     }
 
     private static func latestVersionDirectory(

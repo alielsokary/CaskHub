@@ -104,6 +104,23 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertEqual(scan()["thorium"]?.isZombie, true)
     }
 
+    /// Brew only consults the single newest timestamp directory
+    /// (`Caskroom.cask_installed_caskfile`) — a valid caskfile in an older
+    /// timestamp does not make the cask installed.
+    func test_latest_timestamp_must_contain_the_matching_caskfile() throws {
+        try makeEntry("thorium", receiptApps: ["Thorium.app"])
+        let newestCasks = caskroom
+            .appendingPathComponent("thorium/.metadata/1.0/20270101000000.000/Casks")
+        try fm.createDirectory(at: newestCasks, withIntermediateDirectories: true)
+        try Data("cask \"another-token\"\n".utf8)
+            .write(to: newestCasks.appendingPathComponent("another-token.rb"))
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("Thorium.app"), withIntermediateDirectories: true
+        )
+
+        XCTAssertEqual(scan()["thorium"]?.isZombie, true)
+    }
+
     func test_cli_cask_with_appless_receipt_is_not_zombie() throws {
         try makeEntry("some-cli", receiptApps: [])
         XCTAssertEqual(scan()["some-cli"]?.isZombie, false)
