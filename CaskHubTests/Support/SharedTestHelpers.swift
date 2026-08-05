@@ -215,13 +215,15 @@ func makeViewModel(
     localHomebrew: LocalHomebrewService? = nil,
     defaults: UserDefaults? = nil
 ) -> CaskCatalogViewModel {
-    CaskCatalogViewModel(
+    let vm = CaskCatalogViewModel(
         apiClient: api,
         categoryService: categories ?? CategoryService(),
         recentlyAdded: recentlyAdded ?? RecentlyAddedService(),
         localHomebrew: localHomebrew ?? LocalHomebrewService(),
         defaults: defaults ?? makeScratchDefaults("viewmodel-scratch")
     )
+    vm.searchDebounceInterval = .zero
+    return vm
 }
 
 func makeScratchDefaults(_ name: String = #function) -> UserDefaults {

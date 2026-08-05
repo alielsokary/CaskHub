@@ -3,28 +3,33 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.6.8</title>
-            <pubDate>Fri, 31 Jul 2026 04:31:48 +0000</pubDate>
-            <sparkle:version>418</sparkle:version>
-            <sparkle:shortVersionString>0.6.8</sparkle:shortVersionString>
+            <title>0.6.9</title>
+            <pubDate>Mon, 03 Aug 2026 04:07:15 +0000</pubDate>
+            <sparkle:version>466</sparkle:version>
+            <sparkle:shortVersionString>0.6.9</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Catalog now refreshes automatically when you return to the app
+- Added an Updates tab in Settings with manual update checks and last-check status
+- Added a support card in About that links straight to the issue reporter
 
 ### Improvements
 
-- New casks appear in Recently Added as soon as Homebrew publishes them
-- Recently Added now orders same-day casks by exact publish time
-- Fewer UI freezes while browsing, scrolling, and during installs
+- Smoother scrolling while installs and downloads are running
+- Faster search with instant typing echo and quicker name sorting
+- Faster app launch on large catalogs
+- Long lists now load in chunks as you scroll instead of all at once
+- Clearer error messages when an install or update fails
+- Catalog loading retries automatically when the Homebrew server has a hiccup
 
 ### Bug Fixes
 
-- Fixed icons for newly published casks staying hidden for up to a day
+- Fixed the Update button appearing for apps Homebrew no longer considers installed
+- Fixed a crash risk in the main-menu update command
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.8/CaskHub-0.6.8.zip" length="5459187" type="application/octet-stream" sparkle:edSignature="Y1DXLlrxALbURPnG6PJpP7BMoYiikXVKhqaTsNR5AkW8wult+/i1Jtkvxlmkr3cyE+IH8oDTySNkeHxm/Q1UCA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.9/CaskHub-0.6.9.zip" length="5507885" type="application/octet-stream" sparkle:edSignature="9EBk1GT6c7wYWMQfStwOpNWwxyYfomJ2a1SSbFAeLnd66ONsU+CH4XfBBxLwdcMKKg2GPRM+tIa0UDC7eW4/DA=="/>
         </item>
     </channel>
 </rss>

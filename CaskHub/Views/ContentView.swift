@@ -194,9 +194,10 @@ struct ContentView: View {
         return viewModel.filteredCasks.first
     }
 
+    // Raw searchText would swap layout before results apply and flash a stale grid.
     private var showsBrowseSections: Bool {
         selectedSidebar == .discover(.browse)
-            && viewModel.searchText.isEmpty
+            && viewModel.appliedSearchText.isEmpty
             && viewMode == .grid
     }
 
@@ -253,7 +254,7 @@ private extension ContentView {
                     browseSectionView(section)
                 }
             } else {
-                caskGrid(viewModel.filteredCasks)
+                caskGrid(viewModel.displayedCasks, showsReveal: true)
             }
         }
         .frame(width: CHSize.contentWidth, alignment: .leading)
@@ -262,7 +263,7 @@ private extension ContentView {
 
     var listContent: some View {
         LazyVStack(spacing: 0) {
-            ForEach(viewModel.filteredCasks) { cask in
+            ForEach(viewModel.displayedCasks) { cask in
                 CaskRowView(
                     cask: cask,
                     downloads: viewModel.formattedDownloads(for: cask.token),
@@ -274,12 +275,16 @@ private extension ContentView {
                 Color.chHairline
                     .frame(height: 1)
             }
+            if viewModel.hasMoreToReveal {
+                RevealSentinel { viewModel.revealMore() }
+            }
         }
         .frame(width: CHSize.contentWidth)
         .frame(maxWidth: .infinity)
     }
 
-    func caskGrid(_ casks: [Cask]) -> some View {
+    // showsReveal stays off for browse shelves — global reveal state, not theirs.
+    func caskGrid(_ casks: [Cask], showsReveal: Bool = false) -> some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
             ForEach(casks) { cask in
                 CaskCardView(
@@ -289,6 +294,9 @@ private extension ContentView {
                     onSelectCategory: { viewModel.selectedSidebar = .category($0) },
                     localState: viewModel.localState(for: cask)
                 )
+            }
+            if showsReveal && viewModel.hasMoreToReveal {
+                RevealSentinel { viewModel.revealMore() }
             }
         }
     }
@@ -329,30 +337,6 @@ private extension ContentView {
                 Task { await viewModel.fetchCasks() }
             }
         }
-    }
-}
-
-private struct ResetScrollOnChange<Trigger: Equatable>: ViewModifier {
-    let trigger: Trigger
-    @State private var position = ScrollPosition(edge: .top)
-    @State private var isAtTop = true
-
-    func body(content: Content) -> some View {
-        content
-            .scrollPosition($position)
-            .onScrollGeometryChange(for: Bool.self) { geometry in
-                geometry.contentOffset.y <= geometry.contentInsets.top + 1
-            } action: { _, newValue in
-                isAtTop = newValue
-            }
-            .onChange(of: trigger) {
-                guard !isAtTop else { return }
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    position.scrollTo(edge: .top)
-                }
-            }
     }
 }
 

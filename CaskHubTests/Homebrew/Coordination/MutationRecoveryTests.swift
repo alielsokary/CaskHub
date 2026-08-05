@@ -86,6 +86,28 @@ final class MutationRecoveryTests: XCTestCase {
         }
     }
 
+    func test_failed_upgrade_for_uninstalled_cask_refreshes_stale_local_state() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "Error: Cask 'thorium' is not installed."
+        )]
+        let service = makeService(runner: runner)
+        updateInstalledCask(installation("thorium", version: "1.0"), in: service)
+        let thorium = makeCask("thorium")
+        XCTAssertTrue(service.localState(for: thorium).isPresent)
+
+        do {
+            try await service.upgrade(token: "thorium")
+            XCTFail("expected failure")
+        } catch {}
+
+        XCTAssertFalse(
+            service.localState(for: thorium).isPresent,
+            "brew disagreeing about install state must trigger a snapshot refresh"
+        )
+    }
+
     func test_brew_error_diagnostics_keep_error_before_long_cleanup_tail() async {
         let runner = StubBrewProcessRunner()
         let cleanupTail = (1...30).map { "formula-\($0)" }.joined(separator: "\n")

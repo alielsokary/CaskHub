@@ -283,4 +283,54 @@ final class TopBarViewTests: XCTestCase {
         renderTopBar(isUpdatingAll: false, greedyUpdates: true)
         renderTopBar(isUpdatingAll: false, greedyUpdates: false)
     }
+
+    /// Production-boundary check for the reveal sentinel: the browse landing
+    /// page's bounded shelves share `caskGrid` with the capped flat grid and
+    /// must never fire the global `revealMore()`.
+    @MainActor
+    func test_browse_landing_page_does_not_consume_reveal_budget() async throws {
+        let chunk = CaskCatalogViewModel.revealChunk
+        let api = MockBrewAPIClient()
+        api.casks = (0 ..< (chunk + 50)).map { makeCask("cask-\($0)") }
+        let categories = CategoryService()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("reveal-probe"))
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await vm.fetchCasks()
+        XCTAssertTrue(vm.hasMoreToReveal)
+
+        let storedViewMode = UserDefaults.standard.string(forKey: "viewMode")
+        UserDefaults.standard.set(ViewMode.grid.rawValue, forKey: "viewMode")
+
+        // Tall enough that every browse shelf — and any sentinel wrongly attached
+        // to one — materializes inside the lazy containers.
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 900, height: 3000),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
+            .environment(categories)
+            .environment(local)
+            .environment(ImageCacheService()))
+        window.orderFrontRegardless()
+
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        }
+
+        addTeardownBlock { @MainActor in
+            UserDefaults.standard.set(storedViewMode, forKey: "viewMode")
+            window.contentView = NSView()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            window.close()
+        }
+
+        XCTAssertEqual(
+            vm.revealedCount, chunk,
+            "browse shelves must not trigger the flat grid's reveal sentinel"
+        )
+    }
 }
