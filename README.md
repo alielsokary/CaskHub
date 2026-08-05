@@ -113,6 +113,11 @@ Interested in contributing to CaskHub? We welcome contributions of all kinds!
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request — note that all PRs target the `develop` branch.
 
+## Acknowledgements
+
+- [CaskFlow](https://github.com/alielsokary/CaskFlow) — the data pipeline behind CaskHub's categories, Recently Added dates, and app icons
+- [Homebrew](https://brew.sh) — the package manager CaskHub is built on
+
 ## License
 
 CaskHub is released under the [MIT License](LICENSE).
