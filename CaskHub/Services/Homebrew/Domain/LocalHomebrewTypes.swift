@@ -308,6 +308,11 @@ enum LocalHomebrewError: LocalizedError {
     }
 
     private static let failurePatterns: [(fragment: String, classification: String)] = [
+        // First: a declined askpass prompt is the terminal cause even when the
+        // stderr also carries fragments of later patterns (e.g. brew's
+        // incidental "already a Binary at" warnings).
+        ("sudo: no password was provided", "sudo-declined"),
+        ("sudo: a password is required", "sudo-declined"),
         ("is not there", "missing-artifact-source"),
         ("different from the one being installed", "adopt-version-mismatch"),
         ("No Cask with this name exists", "unknown-cask"),
@@ -328,7 +333,8 @@ enum LocalHomebrewError: LocalizedError {
         "checksum-mismatch",
         "network-failure",
         "permission-denied",
-        "stranded-caskroom-app"
+        "stranded-caskroom-app",
+        "sudo-declined"
     ]
 
     /// A previous interrupted operation parked the real .app inside the Caskroom
@@ -361,6 +367,10 @@ enum LocalHomebrewError: LocalizedError {
                 return "Your installed copy doesn't match the version Homebrew has on record, "
                     + "so it can't be adopted as-is. You can replace it with Homebrew's copy "
                     + "instead — your settings and data are kept."
+            }
+            if Self.failureClass(stderr: trimmed) == "sudo-declined" {
+                return "This step needs your administrator password. "
+                    + "Try again and enter your password when CaskHub asks for it."
             }
             if trimmed.contains("reports different checksum") || trimmed.contains("SHA256 mismatch") {
                 return "The download doesn't match the checksum Homebrew has on record — "

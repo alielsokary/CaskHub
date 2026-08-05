@@ -24,6 +24,10 @@ enum Askpass {
         alert.accessoryView = passwordField
         alert.window.initialFirstResponder = passwordField
 
+        // Accessory process under cooperative activation: without the floating
+        // level + forced activation the prompt can open behind other windows.
+        alert.window.level = .floating
+        NSRunningApplication.current.activate(options: [.activateIgnoringOtherApps])
         app.activate()
         guard alert.runModal() == .alertFirstButtonReturn else { exit(1) }
         print(passwordField.stringValue)

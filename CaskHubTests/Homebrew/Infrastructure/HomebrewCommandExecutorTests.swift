@@ -71,4 +71,3 @@ private final class SuspendingHomebrewCommandExecutor: HomebrewCommandExecuting 
         continuation = nil
     }
 }
-

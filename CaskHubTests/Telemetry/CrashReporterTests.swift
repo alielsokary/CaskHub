@@ -198,7 +198,24 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(cls("curl: (6) Could not resolve host: example.com"), "network-failure")
         XCTAssertEqual(cls("It seems there is already a Binary at '/opt/homebrew/bin/x'."), "binary-conflict")
         XCTAssertEqual(cls("It seems there is already an App at '/Applications/X.app'."), "app-conflict")
+        XCTAssertEqual(cls("sudo: no password was provided"), "sudo-declined")
+        XCTAssertEqual(cls("sudo: a password is required"), "sudo-declined")
+        XCTAssertEqual(
+            cls("Warning: It seems there is already a Binary at '/usr/local/bin/docker'.\n"
+                + "sudo: a password is required"),
+            "sudo-declined",
+            "a declined prompt is the terminal cause even with incidental conflict warnings"
+        )
         XCTAssertEqual(cls("something novel"), "uncategorized")
+    }
+
+    func test_declined_sudo_prompt_is_not_reported() {
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["uninstall", "--cask", "wetype"],
+            exitCode: 1,
+            stderr: "sudo: no password was provided\nsudo: a password is required"
+        ))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
     func test_other_errors_keep_default_grouping() {
