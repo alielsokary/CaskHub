@@ -248,7 +248,7 @@ private extension ContentView {
             if let hero = heroCask {
                 HeroCard(
                     cask: hero,
-                    downloadCount: viewModel.downloadCount(for: hero.token),
+                    downloads: viewModel.formattedDownloads(for: hero.token),
                     categoryName: categoryInfo(for: hero)?.mainName,
                     localState: viewModel.localState(for: hero)
                 )

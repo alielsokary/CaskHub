@@ -245,11 +245,6 @@ final class CaskCatalogViewModel {
         )
     }
 
-    func downloadCount(for token: String) -> Int? {
-        guard let count = downloadCounts[token], count > 0 else { return nil }
-        return count
-    }
-
     private func scheduleSearchApply() {
         searchDebounceTask?.cancel()
         // Clearing applies instantly; only typing debounces.

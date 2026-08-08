@@ -4,6 +4,7 @@
     "": {
       "shouldTranslate": false
     },
+    "%@ pours": {},
     "%@ theme": {},
     "%@ was installed using a package outside Homebrew. Adopting it will download and run Homebrew's package installer again, which may replace the existing application. After it finishes, Homebrew will manage the installation.": {},
     "%@ was removed outside Homebrew, but Homebrew still has records for it. Clean Up removes the leftover data.": {},
@@ -34,28 +35,6 @@
       }
     },
     "%lld operations in progress": {},
-    "%lld pours": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld pour"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld pours"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "30 Days": {},
     "90 Days": {},
     ">_": {
