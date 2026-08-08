@@ -202,6 +202,12 @@ final class AdoptionSurfaceTests: XCTestCase {
         )
         XCTAssertNil(runner.requests[0].environment["HOMEBREW_NO_AUTOREMOVE"])
         XCTAssertNil(runner.requests[2].environment["HOMEBREW_NO_AUTOREMOVE"])
+        XCTAssertTrue(
+            runner.requests.dropFirst().allSatisfy {
+                $0.environment["HOMEBREW_NO_ASK"] == "1"
+            },
+            "ask-mode prompts EOF on the nulled stdin and abort the run"
+        )
     }
 
     func test_askpass_scripts_are_unique_shell_safe_and_removable() throws {
