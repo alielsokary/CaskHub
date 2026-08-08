@@ -480,4 +480,22 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(garbled.analyticsPeriod, .days365)
         XCTAssertEqual(garbled.recentlyAddedWindow, .days30)
     }
+
+    @MainActor
+    func test_recent_tokens_memoize_and_invalidate_on_data_change() {
+        let service = RecentlyAddedService()
+        service.addedDates = [
+            "new-cask": dateString(daysAgo: 1),
+            "old-cask": dateString(daysAgo: 400)
+        ]
+        XCTAssertEqual(service.recentTokens(within: 30), ["new-cask"])
+        XCTAssertEqual(service.recentTokens(within: 30), ["new-cask"])
+
+        service.addedDates["another"] = dateString(daysAgo: 2)
+        XCTAssertEqual(
+            service.recentTokens(within: 30),
+            ["new-cask", "another"]
+        )
+        XCTAssertEqual(service.recentTokens(within: 90), ["new-cask", "another"])
+    }
 }

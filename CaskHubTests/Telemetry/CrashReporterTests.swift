@@ -131,6 +131,29 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
+    func test_disk_full_and_truncated_payloads_are_never_captured() {
+        CrashReporter.capture(NSError(
+            domain: NSCocoaErrorDomain,
+            code: CocoaError.fileWriteOutOfSpace.rawValue
+        ))
+        CrashReporter.capture(NSError(domain: NSPOSIXErrorDomain, code: Int(ENOSPC)))
+        CrashReporter.capture(DecodingError.dataCorrupted(DecodingError.Context(
+            codingPath: [],
+            debugDescription: "The given data was not valid JSON.",
+            underlyingError: NSError(
+                domain: NSCocoaErrorDomain,
+                code: NSPropertyListReadCorruptError
+            )
+        )))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+
+        CrashReporter.capture(DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(codingPath: [], debugDescription: "schema break")
+        ))
+        XCTAssertEqual(spy.capturedErrors.count, 1, "real schema breaks still report")
+    }
+
     func test_recoverable_brew_failures_are_never_captured() {
         let failures = [
             "It seems the existing App is different from the one being installed.",
