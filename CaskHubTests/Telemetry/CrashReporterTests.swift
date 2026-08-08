@@ -289,6 +289,12 @@ final class CrashReporterTests: XCTestCase {
                 + "Catalina, Big Sur, Monterey, Ventura, Sonoma, Sequoia and Tahoe."),
             "platform-unsupported"
         )
+    }
+
+    func test_failure_classes_cover_field_mined_brew_env_errors() {
+        func cls(_ stderr: String) -> String {
+            LocalHomebrewError.failureClass(stderr: stderr)
+        }
         XCTAssertEqual(cls("Error: Another `brew update` process is already running."), "brew-busy")
         XCTAssertEqual(
             cls("Error: A `brew uninstall --cask cursor --force` process has already locked "
