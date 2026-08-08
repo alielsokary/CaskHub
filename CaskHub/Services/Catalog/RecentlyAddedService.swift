@@ -74,24 +74,13 @@ final class RecentlyAddedService {
         apply(remote)
     }
 
-    private struct RecentTokensKey: Equatable {
-        let revision: Int
-        let days: Int
-        let cutoff: String
-    }
-
     // Full-dictionary filter per projection recompute hangs slow machines.
     @ObservationIgnored
-    private let recentTokensCache = MemoizedValue<RecentTokensKey, Set<String>>()
+    private let recentTokensCache = MemoizedValue<String, Set<String>>()
 
     func recentTokens(within days: Int) -> Set<String> {
         let cutoff = Self.dateString(daysAgo: days)
-        let key = RecentTokensKey(
-            revision: catalogStateRevision,
-            days: days,
-            cutoff: cutoff
-        )
-        return recentTokensCache.value(for: key) { [addedDates] in
+        return recentTokensCache.value(for: "\(catalogStateRevision)|\(cutoff)") { [addedDates] in
             Set(addedDates.filter { $0.value >= cutoff }.keys)
         }
     }

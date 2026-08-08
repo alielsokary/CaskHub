@@ -76,9 +76,6 @@ enum CrashReporter {
            nsError.code == CocoaError.fileWriteOutOfSpace.rawValue {
             return
         }
-        if nsError.domain == NSPOSIXErrorDomain, nsError.code == Int(ENOSPC) {
-            return
-        }
         // Truncated CDN body only; garbage-but-complete payloads still report.
         if case let DecodingError.dataCorrupted(context) = error,
            let underlying = context.underlyingError as NSError?,

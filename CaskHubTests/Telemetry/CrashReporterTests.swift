@@ -132,22 +132,23 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_disk_full_and_truncated_payloads_are_never_captured() {
+        func corrupt(_ debug: String) -> DecodingError {
+            .dataCorrupted(DecodingError.Context(
+                codingPath: [],
+                debugDescription: "The given data was not valid JSON.",
+                underlyingError: NSError(
+                    domain: NSCocoaErrorDomain,
+                    code: NSPropertyListReadCorruptError,
+                    userInfo: [NSDebugDescriptionErrorKey: debug]
+                )
+            ))
+        }
+
         CrashReporter.capture(NSError(
             domain: NSCocoaErrorDomain,
             code: CocoaError.fileWriteOutOfSpace.rawValue
         ))
-        CrashReporter.capture(NSError(domain: NSPOSIXErrorDomain, code: Int(ENOSPC)))
-        CrashReporter.capture(DecodingError.dataCorrupted(DecodingError.Context(
-            codingPath: [],
-            debugDescription: "The given data was not valid JSON.",
-            underlyingError: NSError(
-                domain: NSCocoaErrorDomain,
-                code: NSPropertyListReadCorruptError,
-                userInfo: [
-                    NSDebugDescriptionErrorKey: "Unexpected end of file during JSON parse."
-                ]
-            )
-        )))
+        CrashReporter.capture(corrupt("Unexpected end of file during JSON parse."))
         XCTAssertTrue(spy.capturedErrors.isEmpty)
 
         CrashReporter.capture(DecodingError.typeMismatch(
@@ -156,17 +157,7 @@ final class CrashReporterTests: XCTestCase {
         ))
         XCTAssertEqual(spy.capturedErrors.count, 1, "real schema breaks still report")
 
-        CrashReporter.capture(DecodingError.dataCorrupted(DecodingError.Context(
-            codingPath: [],
-            debugDescription: "The given data was not valid JSON.",
-            underlyingError: NSError(
-                domain: NSCocoaErrorDomain,
-                code: NSPropertyListReadCorruptError,
-                userInfo: [
-                    NSDebugDescriptionErrorKey: "Invalid value around line 1, column 0."
-                ]
-            )
-        )))
+        CrashReporter.capture(corrupt("Invalid value around line 1, column 0."))
         XCTAssertEqual(
             spy.capturedErrors.count, 2,
             "garbage-but-complete payloads are not truncation and still report"

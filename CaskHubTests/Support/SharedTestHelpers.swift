@@ -300,7 +300,6 @@ nonisolated struct EmptyInstalledSoftwareScanner: InstalledSoftwareScanning {
 @MainActor
 final class RecordingHomebrewCommandExecutor: HomebrewCommandExecuting {
     private(set) var requests: [HomebrewCommandRequest] = []
-    var result = BrewProcessResult(exitCode: 0, output: "")
 
     func execute(
         _ request: HomebrewCommandRequest,
@@ -309,7 +308,7 @@ final class RecordingHomebrewCommandExecutor: HomebrewCommandExecuting {
     ) async throws -> BrewProcessResult {
         requests.append(request)
         onStart()
-        return result
+        return BrewProcessResult(exitCode: 0, output: "")
     }
 
     func cancel(token _: String) -> Bool { false }
