@@ -58,8 +58,6 @@ struct SettingsView: View {
 }
 
 struct AboutSettingsView: View {
-    static let issuesURL = CaskHubLinks.issues
-
     private var version: String {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "—"
@@ -103,7 +101,7 @@ struct AboutSettingsView: View {
 
                         Spacer()
 
-                        Link("View", destination: Self.issuesURL)
+                        Link("View", destination: CaskHubLinks.issues)
                             .buttonStyle(.bordered)
                     }
                     .frame(maxWidth: .infinity)

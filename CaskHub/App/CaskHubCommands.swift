@@ -112,20 +112,10 @@ struct CaskHubHelpCommands: Commands {
 
             Divider()
 
-            Button(HelpTopic.homebrew.helpMenuTitle) {
-                show(.homebrew)
-            }
-
-            Button(HelpTopic.adoption.helpMenuTitle) {
-                show(.adoption)
-            }
-
-            Button(HelpTopic.installAndUpdate.helpMenuTitle) {
-                show(.installAndUpdate)
-            }
-
-            Button(HelpTopic.permissions.helpMenuTitle) {
-                show(.permissions)
+            ForEach([HelpTopic.homebrew, .adoption, .installAndUpdate, .permissions]) { topic in
+                Button(topic.helpMenuTitle) {
+                    show(topic)
+                }
             }
 
             Divider()
