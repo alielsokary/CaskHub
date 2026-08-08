@@ -216,10 +216,11 @@ final class CrashReporterTests: XCTestCase {
         )
     }
 
+    private func cls(_ stderr: String) -> String {
+        LocalHomebrewError.failureClass(stderr: stderr)
+    }
+
     func test_failure_classes_cover_observed_brew_errors() {
-        func cls(_ stderr: String) -> String {
-            LocalHomebrewError.failureClass(stderr: stderr)
-        }
         XCTAssertEqual(cls("Warning: Cask 'x' is unavailable: No Cask with this name exists."), "unknown-cask")
         XCTAssertEqual(cls("Error: Cask 'sequel-ace' is not installed."), "not-installed")
         XCTAssertEqual(
@@ -243,9 +244,6 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_failure_classes_cover_field_mined_brew_errors() {
-        func cls(_ stderr: String) -> String {
-            LocalHomebrewError.failureClass(stderr: stderr)
-        }
         XCTAssertEqual(
             cls("Sorry, try again.\nSorry, try again.\nsudo: 3 incorrect password attempts"),
             "sudo-wrong-password"
@@ -292,9 +290,6 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_failure_classes_cover_field_mined_brew_env_errors() {
-        func cls(_ stderr: String) -> String {
-            LocalHomebrewError.failureClass(stderr: stderr)
-        }
         XCTAssertEqual(cls("Error: Another `brew update` process is already running."), "brew-busy")
         XCTAssertEqual(
             cls("Error: A `brew uninstall --cask cursor --force` process has already locked "
@@ -309,9 +304,6 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_failure_classes_cover_field_mined_installer_and_env_errors() {
-        func cls(_ stderr: String) -> String {
-            LocalHomebrewError.failureClass(stderr: stderr)
-        }
         XCTAssertEqual(cls("hdiutil: attach failed - Resource busy"), "dmg-mount-busy")
         XCTAssertEqual(
             cls("installer: The upgrade failed. (The Installer encountered an error.)\n"

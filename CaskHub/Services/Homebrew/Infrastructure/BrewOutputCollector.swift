@@ -96,8 +96,7 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
         } else {
             stripped = text
         }
-        // The pty's ONLCR already turned \n into \r\n; fold that back first or
-        // every line doubles and halves the useful tail.
+        // The pty's ONLCR emits \r\n; fold it first or every line doubles.
         return stripped
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")

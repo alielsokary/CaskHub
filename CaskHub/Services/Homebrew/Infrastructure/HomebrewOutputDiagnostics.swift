@@ -11,11 +11,8 @@ nonisolated enum HomebrewOutputDiagnostics {
     static func make(from output: String) -> String {
         let trimmed = stripProgressNoise(from: output)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        // Sentry keeps the head of long messages while we keep the tail — slice
-        // long payloads near the last Error: line so preambles can't push it past
-        // Sentry's cap. Keep some context above it: the root cause (sudo:,
-        // hdiutil:, installer:) prints BEFORE brew's final "Failure while
-        // executing" wrapper, and classification runs on this sliced text.
+        // Sentry caps long messages from the head; keep the root-cause lines
+        // that print just above brew's final Error: wrapper.
         if trimmed.count > 1_200,
            let range = trimmed.range(of: "\nError:", options: .backwards),
            let contextStart = trimmed.index(
@@ -27,42 +24,34 @@ nonisolated enum HomebrewOutputDiagnostics {
         return String(trimmed.suffix(4_000))
     }
 
-    /// Advisory body lines matched individually as well: the collector strips
-    /// per pty chunk, so block state alone leaks lines whose trigger line
-    /// arrived in an earlier chunk.
+    /// Matched per line — the collector strips per pty chunk, so a block
+    /// trigger can arrive in a different chunk than its body.
     private static let tapTrustNoiseMarkers = [
         "taps are not trusted",
         "tap trust is required",
+        "Prefer trusting only",
+        "these taps with:",
         "To trust these taps",
         "brew trust ",
+        "Whole-tap trust",
+        "Trust whole taps",
+        "Untap them with:",
+        "brew untap ",
+        "To disable trust checks",
+        "HOMEBREW_NO_REQUIRE_TAP_TRUST",
+        "not recommended and will be removed",
+        "For more information, see:",
         "docs.brew.sh/Tap-Trust"
     ]
 
     /// Drops brew's \r progress frames and the multi-KB tap-trust advisory so
     /// the error line stays classifiable.
     static func stripProgressNoise(from output: String) -> String {
-        var insideTapTrustAdvisory = false
-        return output.components(separatedBy: .newlines)
+        output.components(separatedBy: .newlines)
             .filter { line in
-                if line.contains("The following taps are not trusted") {
-                    insideTapTrustAdvisory = true
-                }
-                if insideTapTrustAdvisory {
-                    if line.contains("docs.brew.sh/Tap-Trust") {
-                        insideTapTrustAdvisory = false
-                        return false
-                    }
-                    // Escape hatch: a truncated advisory must not swallow the error.
-                    if line.hasPrefix("Error:") || line.hasPrefix("==>") {
-                        insideTapTrustAdvisory = false
-                    } else {
-                        return false
-                    }
-                }
                 if !line.hasPrefix("Error:"),
                    tapTrustNoiseMarkers.contains(where: line.contains) { return false }
-                // --force overwrite warnings reuse the conflict-error sentence;
-                // keeping them misclassifies unrelated --force failures.
+                // brew's --force overwrite warning reuses the conflict-error sentence.
                 if line.contains("; overwriting.") { return false }
                 return !isProgressFrame(line)
             }

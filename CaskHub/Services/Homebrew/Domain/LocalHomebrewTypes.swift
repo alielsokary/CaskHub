@@ -308,16 +308,13 @@ enum LocalHomebrewError: LocalizedError {
         if stderr.contains("uninstall script"), stderr.contains("does not exist") {
             return "missing-uninstall-script"
         }
-        if let exitCode, killedExitCodes.contains(exitCode),
+        if let exitCode, [9, 15, 130].contains(exitCode),  // SIGKILL/SIGTERM/SIGINT
            stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return "process-killed"
         }
         return failurePatterns.first { stderr.contains($0.fragment) }?.classification
             ?? "uncategorized"
     }
-
-    /// SIGKILL, SIGTERM, SIGINT — brew died without writing a word.
-    private static let killedExitCodes: Set<Int32> = [9, 15, 130]
 
     private static let failurePatterns: [(fragment: String, classification: String)] = [
         // First: a failed prompt outranks incidental fragments below it.
@@ -330,13 +327,10 @@ enum LocalHomebrewError: LocalizedError {
         ("No Cask with this name exists", "unknown-cask"),
         ("No casks found", "unknown-cask"),
         ("is not installed", "not-installed"),
-        // Checksum outranks the download fragments — brew wraps some checksum
-        // failures in download-failed phrasing.
+        // Checksum above the download family: brew wraps some in download phrasing.
         ("reports different checksum", "checksum-mismatch"),
         ("SHA256 mismatch", "checksum-mismatch"),
-        // Installer/dmg failures outrank the download family: vendor pkg
-        // scripts run curl themselves, and a stray curl error must not
-        // reclassify (and suppress) a real installer failure.
+        // Installer/dmg above the download family: vendor pkg scripts run curl too.
         ("attach failed - Resource busy", "dmg-mount-busy"),
         ("installer: The install failed", "pkg-installer-failed"),
         ("installer: The upgrade failed", "pkg-installer-failed"),
@@ -353,8 +347,6 @@ enum LocalHomebrewError: LocalizedError {
         ("curl: (92)", "network-failure"),
         ("Cannot download non-corrupt", "brew-api-unavailable"),
         ("Download failed on Cask", "download-failed"),
-        // brew's --force overwrite *warning* reuses these sentences with a
-        // "; overwriting." suffix — HomebrewOutputDiagnostics strips those lines.
         ("already a Binary at", "binary-conflict"),
         ("already an App at", "app-conflict"),
         ("conflicts with", "cask-conflict"),

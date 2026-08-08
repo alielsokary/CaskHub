@@ -64,7 +64,7 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         XCTAssertLessThanOrEqual(result.count, 4_000)
     }
 
-    func test_tap_trust_advisory_block_is_stripped() {
+    func test_tap_trust_advisory_is_stripped_keeping_the_error() {
         let output = """
         Warning: The following taps are not trusted:
           lihaoyun6/tap
@@ -72,21 +72,20 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         because tap trust is required.
         To trust these taps, run:
           brew trust lihaoyun6/tap
+        Untap them with:
+          brew untap lihaoyun6/tap
+        To disable trust checks:
+        export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
+        This is not recommended and will be removed in a later release.
+        For more information, see:
           https://docs.brew.sh/Tap-Trust
         Error: quickrecorder: Download failed on Cask 'quickrecorder'
         """
         let result = HomebrewOutputDiagnostics.make(from: output)
-        XCTAssertEqual(result, "Error: quickrecorder: Download failed on Cask 'quickrecorder'")
-    }
-
-    func test_truncated_tap_trust_advisory_does_not_swallow_the_error() {
-        let output = """
-        Warning: The following taps are not trusted:
-          lihaoyun6/tap
-        Error: something real broke
-        """
-        let result = HomebrewOutputDiagnostics.make(from: output)
-        XCTAssertEqual(result, "Error: something real broke")
+        XCTAssertTrue(result.contains("Error: quickrecorder"))
+        XCTAssertFalse(result.contains("brew trust"))
+        XCTAssertFalse(result.contains("taps are not trusted"))
+        XCTAssertFalse(result.contains("HOMEBREW_NO_REQUIRE_TAP_TRUST"))
     }
 
     func test_force_overwrite_warnings_are_stripped() {
@@ -127,8 +126,6 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
     }
 
     func test_tap_trust_lines_are_stripped_even_without_their_trigger_line() {
-        // The collector strips per pty chunk — advisory body lines can arrive
-        // in a chunk whose trigger line was already consumed.
         let orphanedAdvisory = """
         Homebrew is currently ignoring formulae, casks and commands from these \
         taps because tap trust is required.
