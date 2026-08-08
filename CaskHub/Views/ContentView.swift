@@ -17,6 +17,7 @@ struct ContentView: View {
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @AppStorage("viewMode") private var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
+    @State private var sidebarVisibility: NavigationSplitViewVisibility = .all
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
 
@@ -26,7 +27,7 @@ struct ContentView: View {
     )
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $sidebarVisibility) {
             SidebarView(
                 selection: Binding(
                     get: { viewModel.selectedSidebar },
@@ -115,6 +116,9 @@ struct ContentView: View {
         .containerBackground(for: .window) {
             WindowBackdrop()
         }
+        .focusedSceneValue(\.catalogViewMode, $viewMode)
+        .focusedSceneValue(\.sidebarVisibility, $sidebarVisibility)
+        .windowToolbarFullScreenVisibility(.onHover)
         .tint(Color.chTerracotta)
         .task {
             await viewModel.load()

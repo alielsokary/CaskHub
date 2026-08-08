@@ -20,6 +20,9 @@
 		41DFD48A30028F7D00608C7A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41DFD48430028F7D00608C7A /* Assets.xcassets */; };
 		41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44E30028F7D00608C7A /* Askpass.swift */; };
 		41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD44F30028F7D00608C7A /* CaskHubApp.swift */; };
+		B08000000000000000000002 /* CaskHubCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08000000000000000000001 /* CaskHubCommands.swift */; };
+		B08000000000000000000004 /* CaskHubHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08000000000000000000003 /* CaskHubHelpView.swift */; };
+		B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09100000000000000000001 /* CaskHubHelpSearch.swift */; };
 		A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */; };
 		41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45130028F7D00608C7A /* BarrelMark.swift */; };
 		41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45230028F7D00608C7A /* CaskActionsView.swift */; };
@@ -125,6 +128,8 @@
 		C12000000000000000000002 /* added_dates.json in Resources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000002 /* added_dates.json */; };
 		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
 		A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */; };
+		B09000000000000000000002 /* ApplicationMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09000000000000000000001 /* ApplicationMenuTests.swift */; };
+		B09200000000000000000002 /* HelpViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09200000000000000000001 /* HelpViewTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -144,6 +149,9 @@
 		41AD10302F68D00100BEABB8 /* UpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterService.swift; sourceTree = "<group>"; };
 		41DFD44E30028F7D00608C7A /* Askpass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Askpass.swift; sourceTree = "<group>"; };
 		41DFD44F30028F7D00608C7A /* CaskHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubApp.swift; sourceTree = "<group>"; };
+		B08000000000000000000001 /* CaskHubCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubCommands.swift; sourceTree = "<group>"; };
+		B08000000000000000000003 /* CaskHubHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubHelpView.swift; sourceTree = "<group>"; };
+		B09100000000000000000001 /* CaskHubHelpSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubHelpSearch.swift; sourceTree = "<group>"; };
 		A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinator.swift; sourceTree = "<group>"; };
 		41DFD45130028F7D00608C7A /* BarrelMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarrelMark.swift; sourceTree = "<group>"; };
 		41DFD45230028F7D00608C7A /* CaskActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionsView.swift; sourceTree = "<group>"; };
@@ -256,6 +264,8 @@
 		D12000000000000000000002 /* added_dates.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = added_dates.json; sourceTree = "<group>"; };
 		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
 		A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinatorTests.swift; sourceTree = "<group>"; };
+		B09000000000000000000001 /* ApplicationMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMenuTests.swift; sourceTree = "<group>"; };
+		B09200000000000000000001 /* HelpViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -285,6 +295,8 @@
 				A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */,
 				41DFD44E30028F7D00608C7A /* Askpass.swift */,
 				41DFD44F30028F7D00608C7A /* CaskHubApp.swift */,
+				B08000000000000000000001 /* CaskHubCommands.swift */,
+				B09100000000000000000001 /* CaskHubHelpSearch.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -542,6 +554,14 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		B08000000000000000000005 /* Help */ = {
+			isa = PBXGroup;
+			children = (
+				B08000000000000000000003 /* CaskHubHelpView.swift */,
+			);
+			path = Help;
+			sourceTree = "<group>";
+		};
 		41DFD47F30028F7D00608C7A /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -566,6 +586,7 @@
 		41DFD48330028F7D00608C7A /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				B08000000000000000000005 /* Help */,
 				41DFD47930028F7D00608C7A /* Settings */,
 				41DFD47F30028F7D00608C7A /* Shared */,
 				41DFD48130028F7D00608C7A /* Sidebar */,
@@ -606,6 +627,7 @@
 		A29000000000000000000005 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				B09000000000000000000001 /* ApplicationMenuTests.swift */,
 				A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */,
 			);
 			path = App;
@@ -650,6 +672,7 @@
 			isa = PBXGroup;
 			children = (
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
+				B09200000000000000000001 /* HelpViewTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
 			);
@@ -905,6 +928,9 @@
 				A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */,
 				41DFD48B30028F7D00608C7A /* Askpass.swift in Sources */,
 				41DFD48C30028F7D00608C7A /* CaskHubApp.swift in Sources */,
+				B08000000000000000000002 /* CaskHubCommands.swift in Sources */,
+				B08000000000000000000004 /* CaskHubHelpView.swift in Sources */,
+				B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */,
 				41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */,
 				41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */,
 				F24000000000000000000002 /* CaskOperationCapsule.swift in Sources */,
@@ -990,6 +1016,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B09000000000000000000002 /* ApplicationMenuTests.swift in Sources */,
 				A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */,
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
 				A29100000000000000000004 /* CaskMetadataProjectorTests.swift in Sources */,
@@ -1001,6 +1028,7 @@
 				F34000000000000000000002 /* HomebrewPackageLaunchTests.swift in Sources */,
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
+				B09200000000000000000002 /* HelpViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
 				A26000000000000000000004 /* UpdateSettingsViewTests.swift in Sources */,
 				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
