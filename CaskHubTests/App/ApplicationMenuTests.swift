@@ -97,7 +97,12 @@ final class ApplicationMenuTests: XCTestCase {
         XCTAssertTrue(helpTitles.contains("Homebrew Setup"), "Help menu: \(helpTitles)")
         XCTAssertTrue(helpTitles.contains("Adopting Apps"), "Help menu: \(helpTitles)")
         XCTAssertTrue(helpTitles.contains("App Management Permission"), "Help menu: \(helpTitles)")
+    }
 
+    @MainActor
+    func test_help_menu_opens_help_window() throws {
+        let mainMenu = try XCTUnwrap(NSApp.mainMenu)
+        let helpMenu = try XCTUnwrap(mainMenu.item(withTitle: "Help")?.submenu)
         let helpItem = try XCTUnwrap(helpMenu.item(withTitle: "CaskHub Help"))
         let helpAction = try XCTUnwrap(helpItem.action)
         XCTAssertTrue(NSApp.sendAction(helpAction, to: helpItem.target, from: helpItem))
