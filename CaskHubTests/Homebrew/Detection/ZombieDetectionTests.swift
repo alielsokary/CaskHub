@@ -160,6 +160,108 @@ final class ZombieDetectionTests: XCTestCase {
         )
     }
 
+    @MainActor
+    func test_binary_conflict_offers_replace() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("bin-conflict"))
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "iina"], exitCode: 1,
+            stderr: "Error: iina: It seems there is already a Binary at '/opt/homebrew/bin/iina'."
+        )
+        service.noteFailure(token: "iina", error: error)
+        let recoveries = service.operationStore.state(for: "iina")?.failure?.recoveries
+        XCTAssertEqual(recoveries, [.replaceWithHomebrew])
+        XCTAssertTrue(error.errorDescription?.contains("Replacing") == true)
+    }
+
+    @MainActor
+    func test_app_conflict_on_install_offers_adopt_and_replace() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("app-conflict"))
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "wireshark-app"], exitCode: 1,
+            stderr: "Error: It seems there is already an App at '/Applications/Wireshark.app'."
+        )
+        service.noteFailure(token: "wireshark-app", error: error)
+        let recoveries = service.operationStore.state(for: "wireshark-app")?.failure?.recoveries
+        XCTAssertEqual(recoveries, [.adoptExisting, .replaceWithHomebrew])
+        XCTAssertTrue(error.errorDescription?.contains("Adopt") == true)
+    }
+
+    @MainActor
+    func test_app_conflict_after_failed_adopt_does_not_reoffer_adopt() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("adopt-fail"))
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "canva", "--adopt"], exitCode: 1,
+            stderr: "Error: It seems there is already an App at '/Applications/Canva.app'."
+        )
+        service.noteFailure(token: "canva", error: error)
+        let recoveries = service.operationStore.state(for: "canva")?.failure?.recoveries
+        XCTAssertEqual(recoveries, [.replaceWithHomebrew])
+    }
+
+    @MainActor
+    func test_missing_uninstall_script_offers_force_uninstall() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("no-script"))
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["uninstall", "--cask", "gpt4all"], exitCode: 1,
+            stderr: "Error: uninstall script /Applications/gpt4all/maintenancetool.app"
+                + "/Contents/MacOS/maintenancetool does not exist."
+        )
+        service.noteFailure(token: "gpt4all", error: error)
+        let recoveries = service.operationStore.state(for: "gpt4all")?.failure?.recoveries
+        XCTAssertEqual(recoveries, [.forceUninstall])
+        XCTAssertTrue(error.errorDescription?.contains("Force Uninstall") == true)
+    }
+
+    @MainActor
+    func test_missing_uninstall_script_during_update_repairs_instead_of_uninstalling() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("no-script-upgrade"))
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "lulu"], exitCode: 1,
+            stderr: "Error: uninstall script /Applications/LuLu.app"
+                + "/Contents/Resources/uninstall.sh does not exist."
+        )
+        service.noteFailure(token: "lulu", error: error)
+        let recoveries = service.operationStore.state(for: "lulu")?.failure?.recoveries
+        XCTAssertEqual(recoveries, [.repairAndReinstall])
+        XCTAssertTrue(error.errorDescription?.contains("Repair") == true)
+    }
+
+    @MainActor
+    func test_moved_app_on_upgrade_offers_repair_but_broken_staging_does_not() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("moved-app"))
+        let movedApp = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "proton-mail"], exitCode: 1,
+            stderr: "Error: proton-mail: It seems the App source "
+                + "'/Applications/Proton Mail.app' is not there."
+        )
+        service.noteFailure(token: "proton-mail", error: movedApp)
+        XCTAssertTrue(
+            service.operationStore.state(for: "proton-mail")?.failure?
+                .recoveries.contains(.repairAndReinstall) == true
+        )
+
+        let brokenStaging = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "macpar-deluxe", "--adopt"], exitCode: 1,
+            stderr: "Error: It seems the App source '/opt/homebrew/Caskroom/"
+                + "macpar-deluxe/5.1.1/MacPAR deLuxe.app' is not there."
+        )
+        service.noteFailure(token: "macpar-deluxe", error: brokenStaging)
+        XCTAssertFalse(
+            service.operationStore.state(for: "macpar-deluxe")?.failure?
+                .recoveries.contains(.repairAndReinstall) == true
+        )
+    }
+
+    func test_dependency_refusal_names_the_dependent_cask() {
+        let stderr = "Error: Refusing to uninstall pieces-os\n"
+            + "because it is required by pieces, which is currently installed."
+        XCTAssertEqual(LocalHomebrewError.dependentCask(stderr: stderr), "pieces")
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["uninstall", "--cask", "pieces-os", "--force"], exitCode: 1, stderr: stderr
+        )
+        XCTAssertTrue(error.errorDescription?.contains("“pieces”") == true)
+    }
+
     func test_stranded_app_error_message_explains_repair() {
         let error = LocalHomebrewError.brewCommandFailed(
             args: ["upgrade", "--cask", "tabby"], exitCode: 1,
