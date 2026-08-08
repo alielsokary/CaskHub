@@ -7,9 +7,10 @@
 
 import Foundation
 
-nonisolated enum CaskRecoveryAction: Hashable, Sendable {
-    case replaceWithHomebrew
+/// Declaration order is the alert button order.
+nonisolated enum CaskRecoveryAction: CaseIterable, Hashable, Sendable {
     case adoptExisting
+    case replaceWithHomebrew
     case repairAndReinstall
     case forceUninstall
     case openAppManagementSettings

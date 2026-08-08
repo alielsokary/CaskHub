@@ -190,8 +190,7 @@ private extension View {
             }
             let alert = NSAlert()
             alert.messageText = "\(cask.displayName) Failed"
-            // Long brew output overflows a fixed alert off-screen (issue #144):
-            // short messages ride natively, long ones scroll in an accessory.
+            // Long output scrolls in an accessory so buttons stay reachable (#144).
             if failure.message.count <= 500 {
                 alert.informativeText = failure.message
             } else {
@@ -208,7 +207,7 @@ private extension View {
                 alert.accessoryView = scroll
             }
             var actions: [() -> Void] = []
-            for recovery in orderedRecoveries(in: failure) {
+            for recovery in CaskRecoveryAction.allCases where failure.recoveries.contains(recovery) {
                 alert.addButton(withTitle: recovery.buttonTitle).keyEquivalent = ""
                 actions.append { recovery.perform(cask: cask, service: service) }
             }
@@ -220,17 +219,6 @@ private extension View {
                 isPresented.wrappedValue = false
             }
         }
-    }
-
-    private func orderedRecoveries(in failure: CaskOperationFailure) -> [CaskRecoveryAction] {
-        let order: [CaskRecoveryAction] = [
-            .adoptExisting,
-            .replaceWithHomebrew,
-            .repairAndReinstall,
-            .forceUninstall,
-            .openAppManagementSettings
-        ]
-        return order.filter(failure.recoveries.contains)
     }
 
     private func permissionForce(

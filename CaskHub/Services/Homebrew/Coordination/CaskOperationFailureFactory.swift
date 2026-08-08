@@ -65,13 +65,11 @@ enum CaskOperationFailureFactory {
         case "binary-conflict":
             return [.replaceWithHomebrew]
         case "app-conflict":
-            // Adopt keeps the user's copy; pointless retry after a failed --adopt.
+            // No adopt retry after a failed --adopt.
             let canAdopt = arguments.first == "install" && !arguments.contains("--adopt")
             return canAdopt ? [.adoptExisting, .replaceWithHomebrew] : [.replaceWithHomebrew]
         case "missing-uninstall-script":
-            // brew upgrade uninstalls the old version internally, so this fires
-            // on updates too — a bare force-uninstall there strands the user
-            // with no app; repair-and-reinstall completes what they asked for.
+            // Fires on upgrades too — a bare force-uninstall there strands the user.
             switch arguments.first {
             case "uninstall": return [.forceUninstall]
             case "upgrade": return [.repairAndReinstall]
@@ -79,8 +77,7 @@ enum CaskOperationFailureFactory {
             }
         case "missing-artifact-source"
             where arguments.first == "upgrade" && !stderr.contains("Caskroom"):
-            // The user moved the app; a Caskroom staging path missing means the
-            // download itself is broken and reinstalling can't help.
+            // A missing Caskroom staging path is a broken download; reinstall can't help.
             return [.repairAndReinstall]
         default:
             return []

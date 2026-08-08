@@ -362,8 +362,7 @@ enum LocalHomebrewError: LocalizedError {
         ("successfully upgraded!", "exit-nonzero-after-success")
     ]
 
-    /// binary/app-conflict joined once their recovery buttons shipped — a class
-    /// only moves here when the app offers a complete path out.
+    /// A class moves here only once the app offers a complete recovery path.
     private static let recoverableFailureClasses: Set<String> = [
         "adopt-version-mismatch",
         "app-conflict",
