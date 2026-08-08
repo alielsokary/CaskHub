@@ -10,21 +10,21 @@ import SwiftUI
 
 @MainActor
 final class CaskHubHelpSearchHandler: NSObject, NSUserInterfaceItemSearching {
-    typealias SelectionAction = @MainActor @Sendable (HelpTopic) -> Void
+    typealias SelectionAction = @MainActor (HelpTopic) -> Void
 
-    nonisolated private let items: [SearchItem]
-    nonisolated private let onSelect: SelectionAction
+    var onSelect: SelectionAction
 
-    init(onSelect: @escaping SelectionAction) {
+    nonisolated private let items = HelpTopic.allCases.map {
+        SearchItem(
+            topic: $0,
+            title: $0.helpMenuTitle,
+            searchText: ([$0.helpMenuTitle, $0.title] + $0.searchKeywords)
+                .joined(separator: " ")
+        )
+    }
+
+    init(onSelect: @escaping SelectionAction = { _ in }) {
         self.onSelect = onSelect
-        items = HelpTopic.allCases.map {
-            SearchItem(
-                topic: $0,
-                title: $0.helpMenuTitle,
-                searchText: ([$0.helpMenuTitle, $0.title] + $0.searchKeywords)
-                    .joined(separator: " ")
-            )
-        }
     }
 
     nonisolated func searchForItems(
@@ -61,9 +61,8 @@ final class CaskHubHelpSearchHandler: NSObject, NSUserInterfaceItemSearching {
 
     nonisolated func performAction(forItem item: Any) {
         guard let item = item as? SearchItem else { return }
-        let onSelect = onSelect
         Task { @MainActor in
-            onSelect(item.topic)
+            self.onSelect(item.topic)
         }
     }
 }
@@ -109,55 +108,31 @@ struct CaskHubHelpSearchRegistration: NSViewRepresentable {
     @Binding var selection: HelpTopic
     @Environment(\.openWindow) private var openWindow
 
-    func makeCoordinator() -> CaskHubHelpSearchCoordinator {
-        CaskHubHelpSearchCoordinator()
+    func makeCoordinator() -> CaskHubHelpSearchHandler {
+        CaskHubHelpSearchHandler()
     }
 
     func makeNSView(context: Context) -> NSView {
         updateSelectionAction(on: context.coordinator)
-        context.coordinator.register()
+        NSApp.registerUserInterfaceItemSearchHandler(context.coordinator)
         return NSView()
     }
 
     func updateNSView(_ view: NSView, context: Context) {
         updateSelectionAction(on: context.coordinator)
-        context.coordinator.register()
     }
 
     static func dismantleNSView(
         _ view: NSView,
-        coordinator: CaskHubHelpSearchCoordinator
+        coordinator: CaskHubHelpSearchHandler
     ) {
-        coordinator.unregister()
+        NSApp.unregisterUserInterfaceItemSearchHandler(coordinator)
     }
 
-    private func updateSelectionAction(on coordinator: CaskHubHelpSearchCoordinator) {
-        coordinator.selectionAction = { topic in
+    private func updateSelectionAction(on handler: CaskHubHelpSearchHandler) {
+        handler.onSelect = { topic in
             selection = topic
             openWindow(id: CaskHubWindowID.help)
         }
-    }
-}
-
-@MainActor
-final class CaskHubHelpSearchCoordinator {
-    typealias SelectionAction = @MainActor (HelpTopic) -> Void
-
-    var selectionAction: SelectionAction = { _ in }
-    private var isRegistered = false
-    private lazy var searchHandler = CaskHubHelpSearchHandler { [weak self] topic in
-        self?.selectionAction(topic)
-    }
-
-    func register() {
-        guard !isRegistered else { return }
-        NSApp.registerUserInterfaceItemSearchHandler(searchHandler)
-        isRegistered = true
-    }
-
-    func unregister() {
-        guard isRegistered else { return }
-        NSApp.unregisterUserInterfaceItemSearchHandler(searchHandler)
-        isRegistered = false
     }
 }

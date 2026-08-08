@@ -22,7 +22,7 @@ final class UpdateSettingsViewTests: XCTestCase {
     @MainActor
     func test_about_support_uses_caskhub_issue_chooser() {
         XCTAssertEqual(
-            AboutSettingsView.issuesURL.absoluteString,
+            CaskHubLinks.issues.absoluteString,
             "https://github.com/alielsokary/CaskHub/issues/new/choose"
         )
     }
