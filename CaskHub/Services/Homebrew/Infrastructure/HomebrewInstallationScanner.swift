@@ -256,6 +256,9 @@ extension HomebrewInstallationScanner {
                     let fileSize = values.fileSize,
                     fileSize > 0
                 else { continue }
+                // Shims into app bundles belong to that app (OrbStack docker).
+                guard !entry.resolvingSymlinksInPath().path.contains(".app/")
+                else { continue }
                 if paths[entry.lastPathComponent] == nil {
                     paths[entry.lastPathComponent] = entry
                 }

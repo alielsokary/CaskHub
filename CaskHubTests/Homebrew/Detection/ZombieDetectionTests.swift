@@ -325,6 +325,38 @@ final class ZombieDetectionTests: XCTestCase {
     }
 
     @MainActor
+    func test_zombie_uninstall_appends_force() async {
+        let executor = RecordingHomebrewCommandExecutor()
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("zombie-uninstall-force")
+        ) {
+            $0.commandExecutor = executor
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+            $0.brewVersionProvider = { "test" }
+        }
+        updateInstalledCask(LocalCaskInstallation(
+            token: "mole-app", installedVersion: "1.0", installedAt: nil,
+            appBundleNames: ["Mole.app"], isZombie: true
+        ), in: service)
+        try? await service.uninstall(token: "mole-app")
+        XCTAssertEqual(
+            executor.requests.last?.arguments,
+            ["uninstall", "--cask", "mole-app", "--force"]
+        )
+
+        updateInstalledCask(LocalCaskInstallation(
+            token: "chrome", installedVersion: "1.0", installedAt: nil,
+            appBundleNames: ["Chrome.app"], isZombie: false
+        ), in: service)
+        try? await service.uninstall(token: "chrome")
+        XCTAssertEqual(
+            executor.requests.last?.arguments,
+            ["uninstall", "--cask", "chrome"]
+        )
+    }
+
+    @MainActor
     func test_zombies_never_offer_updates() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("zombie-updates"))
         updateInstalledCask(LocalCaskInstallation(

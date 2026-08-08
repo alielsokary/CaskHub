@@ -131,6 +131,39 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
+    func test_disk_full_and_truncated_payloads_are_never_captured() {
+        func corrupt(_ debug: String) -> DecodingError {
+            .dataCorrupted(DecodingError.Context(
+                codingPath: [],
+                debugDescription: "The given data was not valid JSON.",
+                underlyingError: NSError(
+                    domain: NSCocoaErrorDomain,
+                    code: NSPropertyListReadCorruptError,
+                    userInfo: [NSDebugDescriptionErrorKey: debug]
+                )
+            ))
+        }
+
+        CrashReporter.capture(NSError(
+            domain: NSCocoaErrorDomain,
+            code: CocoaError.fileWriteOutOfSpace.rawValue
+        ))
+        CrashReporter.capture(corrupt("Unexpected end of file during JSON parse."))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+
+        CrashReporter.capture(DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(codingPath: [], debugDescription: "schema break")
+        ))
+        XCTAssertEqual(spy.capturedErrors.count, 1, "real schema breaks still report")
+
+        CrashReporter.capture(corrupt("Invalid value around line 1, column 0."))
+        XCTAssertEqual(
+            spy.capturedErrors.count, 2,
+            "garbage-but-complete payloads are not truncation and still report"
+        )
+    }
+
     func test_recoverable_brew_failures_are_never_captured() {
         let failures = [
             "It seems the existing App is different from the one being installed.",
@@ -198,7 +231,24 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(cls("curl: (6) Could not resolve host: example.com"), "network-failure")
         XCTAssertEqual(cls("It seems there is already a Binary at '/opt/homebrew/bin/x'."), "binary-conflict")
         XCTAssertEqual(cls("It seems there is already an App at '/Applications/X.app'."), "app-conflict")
+        XCTAssertEqual(cls("sudo: no password was provided"), "sudo-declined")
+        XCTAssertEqual(cls("sudo: a password is required"), "sudo-declined")
+        XCTAssertEqual(
+            cls("Warning: It seems there is already a Binary at '/usr/local/bin/docker'.\n"
+                + "sudo: a password is required"),
+            "sudo-declined",
+            "a declined prompt is the terminal cause even with incidental conflict warnings"
+        )
         XCTAssertEqual(cls("something novel"), "uncategorized")
+    }
+
+    func test_declined_sudo_prompt_is_not_reported() {
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["uninstall", "--cask", "wetype"],
+            exitCode: 1,
+            stderr: "sudo: no password was provided\nsudo: a password is required"
+        ))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
     func test_other_errors_keep_default_grouping() {

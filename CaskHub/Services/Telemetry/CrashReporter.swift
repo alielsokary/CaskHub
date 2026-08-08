@@ -71,6 +71,20 @@ enum CrashReporter {
         if nsError.domain == NSURLErrorDomain, ignoredURLErrorCodes.contains(nsError.code) {
             return
         }
+        // Disk full is user state — write paths degrade gracefully.
+        if nsError.domain == NSCocoaErrorDomain,
+           nsError.code == CocoaError.fileWriteOutOfSpace.rawValue {
+            return
+        }
+        // Truncated CDN body only; garbage-but-complete payloads still report.
+        if case let DecodingError.dataCorrupted(context) = error,
+           let underlying = context.underlyingError as NSError?,
+           underlying.domain == NSCocoaErrorDomain,
+           underlying.code == NSPropertyListReadCorruptError,
+           (underlying.userInfo[NSDebugDescriptionErrorKey] as? String)?
+               .contains("Unexpected end of file") == true {
+            return
+        }
         let signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
         let count = captureCounts[signature, default: 0]
         guard count < captureLimit else { return }

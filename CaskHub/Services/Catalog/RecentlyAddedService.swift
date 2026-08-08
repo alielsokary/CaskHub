@@ -74,9 +74,15 @@ final class RecentlyAddedService {
         apply(remote)
     }
 
+    // Full-dictionary filter per projection recompute hangs slow machines.
+    @ObservationIgnored
+    private let recentTokensCache = MemoizedValue<String, Set<String>>()
+
     func recentTokens(within days: Int) -> Set<String> {
         let cutoff = Self.dateString(daysAgo: days)
-        return Set(addedDates.filter { $0.value >= cutoff }.keys)
+        return recentTokensCache.value(for: "\(catalogStateRevision)|\(cutoff)") { [addedDates] in
+            Set(addedDates.filter { $0.value >= cutoff }.keys)
+        }
     }
 
     private static func dateString(daysAgo: Int) -> String {

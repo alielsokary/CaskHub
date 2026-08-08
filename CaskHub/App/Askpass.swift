@@ -24,7 +24,10 @@ enum Askpass {
         alert.accessoryView = passwordField
         alert.window.initialFirstResponder = passwordField
 
+        // Activation is cooperative; the floating level keeps the prompt on top.
+        alert.window.level = .floating
         app.activate()
+        app.requestUserAttention(.criticalRequest)
         guard alert.runModal() == .alertFirstButtonReturn else { exit(1) }
         print(passwordField.stringValue)
         exit(0)

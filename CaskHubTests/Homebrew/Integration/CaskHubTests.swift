@@ -182,6 +182,16 @@ final class CaskHubTests: XCTestCase {
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
         }
 
+        let appBinary = root.appendingPathComponent("OrbStack.app/Contents/MacOS/xbin/docker")
+        try FileManager.default.createDirectory(
+            at: appBinary.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: appBinary.path, contents: Data("#!/bin/sh\n".utf8))
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: appBinary.path)
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("docker"), withDestinationURL: appBinary
+        )
+
         let scan = HomebrewInstallationScanner.scanBinaryDirectories(
             fileManager: FileManager.default,
             directories: [root]
@@ -189,6 +199,10 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(Set(scan.keys), ["copilot"])
         XCTAssertEqual(scan["copilot"]?.lastPathComponent, executable.lastPathComponent)
         XCTAssertNil(scan["stale-tool"], "zero-byte executable artifacts must be ignored")
+        XCTAssertNil(
+            scan["docker"],
+            "a shim into an app bundle belongs to that app, not a standalone CLI"
+        )
     }
 
     func test_apple_silicon_detection_matches_native_build_arch() {
