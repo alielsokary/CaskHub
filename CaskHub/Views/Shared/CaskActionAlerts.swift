@@ -166,6 +166,12 @@ private extension View {
     ) -> some View {
         alert("Error", isPresented: isPresented) {
             if failure(for: cask, service: service)?
+                .recoveries.contains(.adoptExisting) == true {
+                Button("Adopt Existing App") {
+                    service.send(.adopt(cask))
+                }
+            }
+            if failure(for: cask, service: service)?
                 .recoveries.contains(.replaceWithHomebrew) == true {
                 Button("Replace with Homebrew Version") {
                     service.send(.replaceWithHomebrew(token: cask.token))
@@ -175,6 +181,12 @@ private extension View {
                 .recoveries.contains(.repairAndReinstall) == true {
                 Button("Repair & Reinstall") {
                     service.send(.repairAndReinstall(token: cask.token))
+                }
+            }
+            if failure(for: cask, service: service)?
+                .recoveries.contains(.forceUninstall) == true {
+                Button("Force Uninstall") {
+                    service.send(.repair(token: cask.token))
                 }
             }
             if failure(for: cask, service: service)?

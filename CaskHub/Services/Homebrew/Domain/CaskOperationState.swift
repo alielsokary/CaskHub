@@ -9,7 +9,9 @@ import Foundation
 
 nonisolated enum CaskRecoveryAction: Hashable, Sendable {
     case replaceWithHomebrew
+    case adoptExisting
     case repairAndReinstall
+    case forceUninstall
     case openAppManagementSettings
 }
 

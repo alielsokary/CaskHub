@@ -362,8 +362,12 @@ enum LocalHomebrewError: LocalizedError {
         ("successfully upgraded!", "exit-nonzero-after-success")
     ]
 
+    /// binary/app-conflict joined once their recovery buttons shipped — a class
+    /// only moves here when the app offers a complete path out.
     private static let recoverableFailureClasses: Set<String> = [
         "adopt-version-mismatch",
+        "app-conflict",
+        "binary-conflict",
         "checksum-mismatch",
         "network-failure",
         "permission-denied",
@@ -371,6 +375,15 @@ enum LocalHomebrewError: LocalizedError {
         "sudo-declined",
         "sudo-wrong-password"
     ]
+
+    /// "…because it is required by <token>, which is currently installed."
+    static func dependentCask(stderr: String) -> String? {
+        guard let range = stderr.range(
+            of: #"required by ([A-Za-z0-9@._+-]+)"#,
+            options: .regularExpression
+        ) else { return nil }
+        return String(stderr[range].dropFirst("required by ".count))
+    }
 
     /// A previous interrupted operation parked the real .app inside the Caskroom
     /// version directory; every upgrade then fails until the copy is cleared.
@@ -404,6 +417,28 @@ enum LocalHomebrewError: LocalizedError {
                     + "instead — your settings and data are kept."
             }
             switch Self.failureClass(stderr: trimmed, exitCode: code) {
+            case "binary-conflict":
+                return "A leftover command-line tool from a previous installation "
+                    + "is in the way. Replacing with Homebrew's version overwrites it — "
+                    + "your settings and data are kept."
+            case "app-conflict":
+                return "This app is already on your Mac, but Homebrew doesn't manage "
+                    + "it yet. Adopt keeps your current copy and hands management to "
+                    + "Homebrew; Replace installs Homebrew's copy fresh. Settings and "
+                    + "data are kept either way."
+            case "cask-dependency":
+                let dependent = Self.dependentCask(stderr: trimmed)
+                return "This can't be uninstalled because "
+                    + (dependent.map { "“\($0)” needs it" } ?? "another installed app needs it")
+                    + ". Uninstall \(dependent.map { "“\($0)”" } ?? "that app") first, "
+                    + "then try again."
+            case "missing-uninstall-script" where args.first == "upgrade":
+                return "The app's uninstall helper is missing, which blocks the "
+                    + "update. Repair & Reinstall clears it and installs the new "
+                    + "version fresh — your settings and data are kept."
+            case "missing-uninstall-script":
+                return "The app's uninstall helper is missing, so Homebrew can't run "
+                    + "its normal cleanup. Force Uninstall removes the app anyway."
             case "sudo-declined":
                 return "This step needs your administrator password. "
                     + "Try again and enter your password when CaskHub asks for it."
