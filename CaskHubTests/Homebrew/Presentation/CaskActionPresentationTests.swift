@@ -150,4 +150,98 @@ final class AdoptionViewRenderTests: XCTestCase {
         ), in: service)
         render(CaskInfoPopover(cask: makeCask("known"), category: nil).environment(service))
     }
+
+    @MainActor
+    func test_uninstall_alert_shows_copyable_command_with_destructive_button() {
+        let alert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina", name: "IINA"))
+
+        XCTAssertEqual(alert.messageText, "Uninstall IINA?")
+        XCTAssertEqual(alert.informativeText, "This will run:")
+        XCTAssertNotNil(alert.accessoryView)
+        XCTAssertEqual(alert.buttons.map(\.title), ["Uninstall", "Cancel"])
+        XCTAssertTrue(alert.buttons[0].hasDestructiveAction)
+    }
+
+    @MainActor
+    func test_error_alert_orders_recovery_buttons_before_ok() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("alert-buttons"))
+        let failure = CaskOperationFailure(
+            kind: .brewCommand,
+            message: "short message",
+            recoveries: [.replaceWithHomebrew, .adoptExisting]
+        )
+
+        let (alert, actions) = CaskActionAlertFactory.errorAlert(
+            for: makeCask("wireshark-app", name: "Wireshark"), failure: failure, service: service
+        )
+
+        XCTAssertEqual(alert.messageText, "Wireshark Failed")
+        XCTAssertEqual(alert.informativeText, "short message")
+        XCTAssertNil(alert.accessoryView)
+        XCTAssertEqual(
+            alert.buttons.map(\.title),
+            ["Adopt Existing App", "Replace with Homebrew Version", "OK"]
+        )
+        XCTAssertEqual(actions.count, alert.buttons.count)
+    }
+
+    @MainActor
+    func test_error_alert_scrolls_long_output_instead_of_growing() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("alert-scroll"))
+        let message = String(repeating: "brew output line\n", count: 60)
+        let failure = CaskOperationFailure(kind: .brewCommand, message: message)
+
+        let (alert, _) = CaskActionAlertFactory.errorAlert(
+            for: makeCask("kdrive"), failure: failure, service: service
+        )
+
+        XCTAssertEqual(alert.informativeText, "")
+        let scroll = try? XCTUnwrap(alert.accessoryView as? NSScrollView)
+        let textView = scroll?.documentView as? NSTextView
+        XCTAssertEqual(textView?.string, message)
+        XCTAssertEqual(textView?.isEditable, false)
+        XCTAssertLessThanOrEqual(scroll?.frame.height ?? .infinity, 200)
+    }
+
+    @MainActor
+    func test_error_alert_covers_every_recovery_button_title_and_action() async {
+        let runner = StubBrewProcessRunner()
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("alert-titles")) {
+            $0.fileManager = NoFilesFileManager()
+            $0.processRunner = runner
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+            $0.brewVersionProvider = { "test" }
+        }
+        service.permissionProbe = { .denied }
+        let failure = CaskOperationFailure(
+            kind: .brewCommand,
+            message: "short",
+            recoveries: Set(CaskRecoveryAction.allCases)
+        )
+
+        let (alert, actions) = CaskActionAlertFactory.errorAlert(
+            for: makeCask("firefox"), failure: failure, service: service
+        )
+
+        XCTAssertEqual(alert.buttons.map(\.title), [
+            "Adopt Existing App",
+            "Replace with Homebrew Version",
+            "Repair & Reinstall",
+            "Force Uninstall",
+            "Open System Settings",
+            "OK"
+        ])
+        XCTAssertEqual(actions.count, 6)
+
+        // Every action except Open System Settings (launches the real app) and OK.
+        for action in actions[0...3] {
+            action()
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        XCTAssertTrue(
+            runner.requests.contains { $0.arguments.contains("--force") },
+            "force uninstall reached the runner"
+        )
+        actions.last?()
+    }
 }

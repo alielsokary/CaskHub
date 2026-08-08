@@ -183,13 +183,26 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
-    func test_unexpected_brew_conflicts_remain_reportable() {
+    func test_conflicts_with_recovery_buttons_are_no_longer_captured() {
         CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "x"],
             exitCode: 1,
             stderr: "It seems there is already a Binary at '/opt/homebrew/bin/x'."
         ))
-        XCTAssertEqual(spy.capturedErrors.count, 1)
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "x"],
+            exitCode: 1,
+            stderr: "Error: It seems there is already an App at '/Applications/X.app'."
+        ))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "x"],
+            exitCode: 1,
+            stderr: "Error: x: Download failed on Cask 'x' with message: "
+                + "curl: (22) The requested URL returned error: 404"
+        ))
+        XCTAssertEqual(spy.capturedErrors.count, 1, "classes without a recovery path still report")
     }
 
     // MARK: - Fingerprinting

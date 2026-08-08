@@ -107,6 +107,8 @@ final class HomebrewMutationCoordinator {
 
         var environment = ProcessInfo.processInfo.environment
         environment.merge(environmentOverrides) { _, override in override }
+        // brew 6 ask-mode default prompts on our pty; stdin is nulled, so it EOF-aborts.
+        environment["HOMEBREW_NO_ASK"] = "1"
         if let askpass {
             environment["SUDO_ASKPASS"] = askpass.path
         }
