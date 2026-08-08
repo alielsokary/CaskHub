@@ -134,13 +134,30 @@ private extension View {
         service: LocalHomebrewService,
         isPresented: Binding<Bool>
     ) -> some View {
-        alert("Uninstall \(cask.displayName)?", isPresented: isPresented) {
-            Button("Cancel", role: .cancel) {}
-            Button("Uninstall", role: .destructive) {
-                service.send(.uninstall(token: cask.token))
+        onChange(of: isPresented.wrappedValue) { _, show in
+            guard show else { return }
+            guard let window = NSApp.keyWindow else {
+                isPresented.wrappedValue = false
+                return
             }
-        } message: {
-            Text("This will run `brew uninstall --cask \(cask.token)`.")
+            let alert = NSAlert()
+            alert.messageText = "Uninstall \(cask.displayName)?"
+            alert.informativeText = "This will run:"
+            let command = NSHostingView(
+                rootView: CommandBlock(command: "brew uninstall --cask \(cask.token)")
+            )
+            command.setFrameSize(command.fittingSize)
+            alert.accessoryView = command
+            let uninstall = alert.addButton(withTitle: "Uninstall")
+            uninstall.hasDestructiveAction = true
+            uninstall.keyEquivalent = ""
+            alert.addButton(withTitle: "Cancel")
+            alert.beginSheetModal(for: window) { response in
+                if response == .alertFirstButtonReturn {
+                    service.send(.uninstall(token: cask.token))
+                }
+                isPresented.wrappedValue = false
+            }
         }
     }
 
@@ -164,41 +181,56 @@ private extension View {
         service: LocalHomebrewService,
         isPresented: Binding<Bool>
     ) -> some View {
-        alert("Error", isPresented: isPresented) {
-            if failure(for: cask, service: service)?
-                .recoveries.contains(.adoptExisting) == true {
-                Button("Adopt Existing App") {
-                    service.send(.adopt(cask))
-                }
+        onChange(of: isPresented.wrappedValue) { _, show in
+            guard show else { return }
+            guard let window = NSApp.keyWindow,
+                  let failure = failure(for: cask, service: service) else {
+                isPresented.wrappedValue = false
+                return
             }
-            if failure(for: cask, service: service)?
-                .recoveries.contains(.replaceWithHomebrew) == true {
-                Button("Replace with Homebrew Version") {
-                    service.send(.replaceWithHomebrew(token: cask.token))
+            let alert = NSAlert()
+            alert.messageText = "\(cask.displayName) Failed"
+            // Long brew output overflows a fixed alert off-screen (issue #144):
+            // short messages ride natively, long ones scroll in an accessory.
+            if failure.message.count <= 500 {
+                alert.informativeText = failure.message
+            } else {
+                let scroll = NSTextView.scrollableTextView()
+                if let textView = scroll.documentView as? NSTextView {
+                    textView.string = failure.message
+                    textView.isEditable = false
+                    textView.font = .monospacedSystemFont(
+                        ofSize: NSFont.smallSystemFontSize, weight: .regular
+                    )
+                    textView.textContainerInset = NSSize(width: 6, height: 6)
                 }
+                scroll.frame = NSRect(x: 0, y: 0, width: 440, height: 200)
+                alert.accessoryView = scroll
             }
-            if failure(for: cask, service: service)?
-                .recoveries.contains(.repairAndReinstall) == true {
-                Button("Repair & Reinstall") {
-                    service.send(.repairAndReinstall(token: cask.token))
-                }
+            var actions: [() -> Void] = []
+            for recovery in orderedRecoveries(in: failure) {
+                alert.addButton(withTitle: recovery.buttonTitle).keyEquivalent = ""
+                actions.append { recovery.perform(cask: cask, service: service) }
             }
-            if failure(for: cask, service: service)?
-                .recoveries.contains(.forceUninstall) == true {
-                Button("Force Uninstall") {
-                    service.send(.repair(token: cask.token))
-                }
+            alert.addButton(withTitle: "OK")
+            actions.append {}
+            alert.beginSheetModal(for: window) { response in
+                let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+                if actions.indices.contains(index) { actions[index]() }
+                isPresented.wrappedValue = false
             }
-            if failure(for: cask, service: service)?
-                .recoveries.contains(.openAppManagementSettings) == true {
-                Button("Open System Settings") {
-                    AppManagementPermission.openSystemSettings()
-                }
-            }
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(failure(for: cask, service: service)?.message ?? "")
         }
+    }
+
+    private func orderedRecoveries(in failure: CaskOperationFailure) -> [CaskRecoveryAction] {
+        let order: [CaskRecoveryAction] = [
+            .adoptExisting,
+            .replaceWithHomebrew,
+            .repairAndReinstall,
+            .forceUninstall,
+            .openAppManagementSettings
+        ]
+        return order.filter(failure.recoveries.contains)
     }
 
     private func permissionForce(
@@ -219,6 +251,66 @@ private extension View {
             return nil
         }
         return failure
+    }
+}
+
+private extension CaskRecoveryAction {
+    var buttonTitle: String {
+        switch self {
+        case .adoptExisting: "Adopt Existing App"
+        case .replaceWithHomebrew: "Replace with Homebrew Version"
+        case .repairAndReinstall: "Repair & Reinstall"
+        case .forceUninstall: "Force Uninstall"
+        case .openAppManagementSettings: "Open System Settings"
+        }
+    }
+
+    @MainActor
+    func perform(cask: Cask, service: LocalHomebrewService) {
+        switch self {
+        case .adoptExisting:
+            service.send(.adopt(cask))
+        case .replaceWithHomebrew:
+            service.send(.replaceWithHomebrew(token: cask.token))
+        case .repairAndReinstall:
+            service.send(.repairAndReinstall(token: cask.token))
+        case .forceUninstall:
+            service.send(.repair(token: cask.token))
+        case .openAppManagementSettings:
+            AppManagementPermission.openSystemSettings()
+        }
+    }
+}
+
+private struct CommandBlock: View {
+    let command: String
+    @State private var copied = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(verbatim: command)
+                .font(.callout.monospaced())
+                .textSelection(.enabled)
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(command, forType: .string)
+                copied = true
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    copied = false
+                }
+            } label: {
+                Image(systemName: copied ? "checkmark.circle.fill" : "document.on.document")
+                    .foregroundStyle(copied ? Color.green : Color.secondary)
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: 16, height: 16)
+            }
+            .buttonStyle(.borderless)
+            .help("Copy Command")
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
     }
 }
 
