@@ -156,9 +156,13 @@ final class SentryProvider: CrashReporterProvider {
     /// domain+code — one issue per way brew fails, so a rare destructive failure
     /// can't hide inside a busy catch-all group.
     static func fingerprint(for error: Error) -> [String]? {
-        guard case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error,
+        guard case let LocalHomebrewError.brewCommandFailed(args, exitCode, stderr) = error,
               let subcommand = args.first else { return nil }
-        return ["brewCommandFailed", subcommand, LocalHomebrewError.failureClass(stderr: stderr)]
+        return [
+            "brewCommandFailed",
+            subcommand,
+            LocalHomebrewError.failureClass(stderr: stderr, exitCode: exitCode)
+        ]
     }
 
     func setTag(_ key: String, value: String) {
