@@ -99,13 +99,46 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         XCTAssertNotEqual(LocalHomebrewError.failureClass(stderr: result), "app-conflict")
     }
 
-    func test_long_payload_slices_from_the_last_error_line() {
+    func test_long_payload_slices_near_the_last_error_line_keeping_context() {
         let preamble = (0..<60).map { "==> Installing dependency step \($0)" }
             .joined(separator: "\n")
         let output = preamble + "\nError: the decisive line\nfollow-up detail"
         let result = HomebrewOutputDiagnostics.make(from: output)
-        XCTAssertTrue(result.hasPrefix("Error: the decisive line"))
+        XCTAssertTrue(result.contains("Error: the decisive line"))
         XCTAssertTrue(result.hasSuffix("follow-up detail"))
+        XCTAssertFalse(result.contains("step 0"), "distant preamble is dropped")
+        XCTAssertLessThan(result.count, 700, "decisive line stays within Sentry's head cap")
+    }
+
+    func test_slice_keeps_subprocess_root_cause_above_the_wrapper_error() {
+        let preamble = (0..<50).map { "==> Running installer step \($0)" }
+            .joined(separator: "\n")
+        let output = preamble + "\nSorry, try again.\nSorry, try again.\n"
+            + "sudo: 3 incorrect password attempts\n"
+            + "Error: Failure while executing; `/usr/bin/sudo -A -E -- "
+            + "/usr/sbin/installer -pkg /private/tmp/x.pkg -target /` exited with 1."
+        let result = HomebrewOutputDiagnostics.make(from: output)
+        XCTAssertTrue(result.contains("sudo: 3 incorrect password attempts"))
+        XCTAssertEqual(
+            LocalHomebrewError.failureClass(stderr: result),
+            "sudo-wrong-password",
+            "slicing must not strip the lines classification depends on"
+        )
+    }
+
+    func test_tap_trust_lines_are_stripped_even_without_their_trigger_line() {
+        // The collector strips per pty chunk — advisory body lines can arrive
+        // in a chunk whose trigger line was already consumed.
+        let orphanedAdvisory = """
+        Homebrew is currently ignoring formulae, casks and commands from these \
+        taps because tap trust is required.
+        To trust these taps, run:
+          brew trust lihaoyun6/tap
+          https://docs.brew.sh/Tap-Trust
+        Error: something real broke
+        """
+        let result = HomebrewOutputDiagnostics.make(from: orphanedAdvisory)
+        XCTAssertEqual(result, "Error: something real broke")
     }
 
     func test_short_payload_keeps_context_above_the_error_line() {

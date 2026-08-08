@@ -319,6 +319,14 @@ final class CrashReporterTests: XCTestCase {
                 + "/usr/sbin/installer -pkg /private/tmp/x.pkg -target /` exited with 1."),
             "pkg-installer-failed"
         )
+        XCTAssertEqual(
+            cls("curl: (7) Failed to connect to updates.vendor.com port 443\n"
+                + "installer: The install failed. (The Installer encountered an error.)\n"
+                + "Error: Failure while executing; `/usr/bin/sudo -A -E -- "
+                + "/usr/sbin/installer -pkg /private/tmp/vendor.pkg -target /` exited with 1."),
+            "pkg-installer-failed",
+            "a vendor installer's own curl chatter must not reclassify the failure"
+        )
         XCTAssertEqual(cls("Error: Not upgrading 1 pinned package:\nmarkedit 1.33.0"), "upgrade-refused")
         XCTAssertEqual(
             cls("🍺  proton-mail was successfully upgraded!\n==> Upgraded 1 outdated package"),

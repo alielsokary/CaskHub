@@ -334,6 +334,13 @@ enum LocalHomebrewError: LocalizedError {
         // failures in download-failed phrasing.
         ("reports different checksum", "checksum-mismatch"),
         ("SHA256 mismatch", "checksum-mismatch"),
+        // Installer/dmg failures outrank the download family: vendor pkg
+        // scripts run curl themselves, and a stray curl error must not
+        // reclassify (and suppress) a real installer failure.
+        ("attach failed - Resource busy", "dmg-mount-busy"),
+        ("installer: The install failed", "pkg-installer-failed"),
+        ("installer: The upgrade failed", "pkg-installer-failed"),
+        ("/usr/sbin/installer -pkg", "pkg-installer-failed"),
         // HTTP errors (curl 22) split out: persistent 404s flag dead casks.
         ("The requested URL returned error:", "download-broken"),
         ("curl: (5)", "network-failure"),
@@ -358,10 +365,6 @@ enum LocalHomebrewError: LocalizedError {
         ("is already running", "brew-busy"),
         ("Please wait for it to finish", "brew-busy"),
         ("not writable by your user", "homebrew-not-writable"),
-        ("attach failed - Resource busy", "dmg-mount-busy"),
-        ("installer: The install failed", "pkg-installer-failed"),
-        ("installer: The upgrade failed", "pkg-installer-failed"),
-        ("/usr/sbin/installer -pkg", "pkg-installer-failed"),
         ("Error: Not upgrading", "upgrade-refused"),
         // Last: success text must never outrank a real error line above.
         ("successfully upgraded!", "exit-nonzero-after-success")
