@@ -140,18 +140,7 @@ private extension View {
                 isPresented.wrappedValue = false
                 return
             }
-            let alert = NSAlert()
-            alert.messageText = "Uninstall \(cask.displayName)?"
-            alert.informativeText = "This will run:"
-            let command = NSHostingView(
-                rootView: CommandBlock(command: "brew uninstall --cask \(cask.token)")
-            )
-            command.setFrameSize(command.fittingSize)
-            alert.accessoryView = command
-            let uninstall = alert.addButton(withTitle: "Uninstall")
-            uninstall.hasDestructiveAction = true
-            uninstall.keyEquivalent = ""
-            alert.addButton(withTitle: "Cancel")
+            let alert = CaskActionAlertFactory.uninstallAlert(for: cask)
             alert.beginSheetModal(for: window) { response in
                 if response == .alertFirstButtonReturn {
                     service.send(.uninstall(token: cask.token))
@@ -188,31 +177,9 @@ private extension View {
                 isPresented.wrappedValue = false
                 return
             }
-            let alert = NSAlert()
-            alert.messageText = "\(cask.displayName) Failed"
-            // Long output scrolls in an accessory so buttons stay reachable (#144).
-            if failure.message.count <= 500 {
-                alert.informativeText = failure.message
-            } else {
-                let scroll = NSTextView.scrollableTextView()
-                if let textView = scroll.documentView as? NSTextView {
-                    textView.string = failure.message
-                    textView.isEditable = false
-                    textView.font = .monospacedSystemFont(
-                        ofSize: NSFont.smallSystemFontSize, weight: .regular
-                    )
-                    textView.textContainerInset = NSSize(width: 6, height: 6)
-                }
-                scroll.frame = NSRect(x: 0, y: 0, width: 440, height: 200)
-                alert.accessoryView = scroll
-            }
-            var actions: [() -> Void] = []
-            for recovery in CaskRecoveryAction.allCases where failure.recoveries.contains(recovery) {
-                alert.addButton(withTitle: recovery.buttonTitle).keyEquivalent = ""
-                actions.append { recovery.perform(cask: cask, service: service) }
-            }
-            alert.addButton(withTitle: "OK")
-            actions.append {}
+            let (alert, actions) = CaskActionAlertFactory.errorAlert(
+                for: cask, failure: failure, service: service
+            )
             alert.beginSheetModal(for: window) { response in
                 let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
                 if actions.indices.contains(index) { actions[index]() }
@@ -239,6 +206,57 @@ private extension View {
             return nil
         }
         return failure
+    }
+}
+
+@MainActor
+enum CaskActionAlertFactory {
+    static func uninstallAlert(for cask: Cask) -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = "Uninstall \(cask.displayName)?"
+        alert.informativeText = "This will run:"
+        let command = NSHostingView(
+            rootView: CommandBlock(command: "brew uninstall --cask \(cask.token)")
+        )
+        command.setFrameSize(command.fittingSize)
+        alert.accessoryView = command
+        let uninstall = alert.addButton(withTitle: "Uninstall")
+        uninstall.hasDestructiveAction = true
+        uninstall.keyEquivalent = ""
+        alert.addButton(withTitle: "Cancel")
+        return alert
+    }
+
+    static func errorAlert(
+        for cask: Cask,
+        failure: CaskOperationFailure,
+        service: LocalHomebrewService
+    ) -> (alert: NSAlert, actions: [() -> Void]) {
+        let alert = NSAlert()
+        alert.messageText = "\(cask.displayName) Failed"
+        if failure.message.count <= 500 {
+            alert.informativeText = failure.message
+        } else {
+            let scroll = NSTextView.scrollableTextView()
+            if let textView = scroll.documentView as? NSTextView {
+                textView.string = failure.message
+                textView.isEditable = false
+                textView.font = .monospacedSystemFont(
+                    ofSize: NSFont.smallSystemFontSize, weight: .regular
+                )
+                textView.textContainerInset = NSSize(width: 6, height: 6)
+            }
+            scroll.frame = NSRect(x: 0, y: 0, width: 440, height: 200)
+            alert.accessoryView = scroll
+        }
+        var actions: [() -> Void] = []
+        for recovery in CaskRecoveryAction.allCases where failure.recoveries.contains(recovery) {
+            alert.addButton(withTitle: recovery.buttonTitle).keyEquivalent = ""
+            actions.append { recovery.perform(cask: cask, service: service) }
+        }
+        alert.addButton(withTitle: "OK")
+        actions.append {}
+        return (alert, actions)
     }
 }
 
