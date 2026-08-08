@@ -8,40 +8,57 @@
 import AppKit
 import SwiftUI
 
+enum SettingsSection: Hashable {
+    case general
+    case appearance
+    case homebrew
+    case privacy
+    case updates
+    case about
+}
+
 struct SettingsView: View {
+    @Binding var selection: SettingsSection
+
     var body: some View {
-        TabView {
+        TabView(selection: $selection) {
             GeneralSettingsView()
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
+                .tag(SettingsSection.general)
             AppearanceSettingsView()
                 .tabItem {
                     Label("Appearance", systemImage: "paintbrush")
                 }
+                .tag(SettingsSection.appearance)
             HomebrewSettingsView()
                 .tabItem {
                     Label("Homebrew", systemImage: "shippingbox")
                 }
+                .tag(SettingsSection.homebrew)
             PrivacySettingsView()
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")
                 }
+                .tag(SettingsSection.privacy)
             UpdateSettingsView()
                 .tabItem {
                     Label("Updates", systemImage: "arrow.triangle.2.circlepath")
                 }
+                .tag(SettingsSection.updates)
             AboutSettingsView()
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }
+                .tag(SettingsSection.about)
         }
         .frame(width: 460, height: 480)
     }
 }
 
 struct AboutSettingsView: View {
-    static let issuesURL = URL(string: "https://github.com/alielsokary/CaskHub/issues/new/choose")!
+    static let issuesURL = CaskHubLinks.issues
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -68,8 +85,7 @@ struct AboutSettingsView: View {
                 .font(.callout)
                 .padding(.top, 4)
 
-            Link("github.com/alielsokary/CaskHub",
-                 destination: URL(string: "https://github.com/alielsokary/CaskHub")!)
+            Link("github.com/alielsokary/CaskHub", destination: CaskHubLinks.repository)
                 .font(.callout)
 
             Spacer()
@@ -375,7 +391,7 @@ struct PrivacySettingsView: View {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(selection: .constant(.general))
         .environment(UpdaterService())
         .environment(ImageCacheService())
         .environment(LocalHomebrewService())

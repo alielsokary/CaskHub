@@ -172,6 +172,23 @@ final class ContentViewTests: XCTestCase {
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         window.close()
     }
+
+    func test_sidebar_command_toggles_between_visible_and_hidden() {
+        XCTAssertEqual(
+            CaskHubViewCommand.sidebarVisibility(afterToggling: .all),
+            .detailOnly
+        )
+        XCTAssertEqual(
+            CaskHubViewCommand.sidebarVisibility(afterToggling: .detailOnly),
+            .all
+        )
+    }
+
+    func test_sidebar_command_title_describes_the_next_action() {
+        XCTAssertEqual(CaskHubViewCommand.sidebarTitle(for: .all), "Hide Sidebar")
+        XCTAssertEqual(CaskHubViewCommand.sidebarTitle(for: .detailOnly), "Show Sidebar")
+    }
+
 }
 
 final class SidebarViewTests: XCTestCase {
