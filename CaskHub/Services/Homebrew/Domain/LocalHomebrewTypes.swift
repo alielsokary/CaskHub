@@ -294,36 +294,72 @@ enum LocalHomebrewError: LocalizedError {
             return false
         case .appBundleNotFound:
             return true
-        case let .brewCommandFailed(_, _, stderr):
-            return !Self.recoverableFailureClasses.contains(Self.failureClass(stderr: stderr))
+        case let .brewCommandFailed(_, code, stderr):
+            return !Self.recoverableFailureClasses.contains(
+                Self.failureClass(stderr: stderr, exitCode: code)
+            )
         }
     }
 
     /// Coarse classes for Sentry grouping — one issue per way brew fails, not per cask.
-    static func failureClass(stderr: String) -> String {
+    static func failureClass(stderr: String, exitCode: Int32? = nil) -> String {
         if isStrandedApp(stderr: stderr) { return "stranded-caskroom-app" }
         if isAppManagementDenial(stderr: stderr) { return "permission-denied" }
+        if stderr.contains("uninstall script"), stderr.contains("does not exist") {
+            return "missing-uninstall-script"
+        }
+        if let exitCode, [9, 15, 130].contains(exitCode),  // SIGKILL/SIGTERM/SIGINT
+           stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "process-killed"
+        }
         return failurePatterns.first { stderr.contains($0.fragment) }?.classification
             ?? "uncategorized"
     }
 
     private static let failurePatterns: [(fragment: String, classification: String)] = [
-        // First: a declined prompt outranks incidental fragments below it.
+        // First: a failed prompt outranks incidental fragments below it.
         ("sudo: no password was provided", "sudo-declined"),
         ("sudo: a password is required", "sudo-declined"),
+        ("incorrect password attempt", "sudo-wrong-password"),
+        ("is not in the sudoers file", "sudo-not-admin"),
         ("is not there", "missing-artifact-source"),
         ("different from the one being installed", "adopt-version-mismatch"),
         ("No Cask with this name exists", "unknown-cask"),
         ("No casks found", "unknown-cask"),
         ("is not installed", "not-installed"),
+        // Checksum above the download family: brew wraps some in download phrasing.
         ("reports different checksum", "checksum-mismatch"),
         ("SHA256 mismatch", "checksum-mismatch"),
+        // Installer/dmg above the download family: vendor pkg scripts run curl too.
+        ("attach failed - Resource busy", "dmg-mount-busy"),
+        ("installer: The install failed", "pkg-installer-failed"),
+        ("installer: The upgrade failed", "pkg-installer-failed"),
+        ("/usr/sbin/installer -pkg", "pkg-installer-failed"),
+        // HTTP errors (curl 22) split out: persistent 404s flag dead casks.
+        ("The requested URL returned error:", "download-broken"),
         ("curl: (5)", "network-failure"),
         ("curl: (6)", "network-failure"),
         ("curl: (7)", "network-failure"),
+        ("curl: (18)", "network-failure"),
         ("curl: (28)", "network-failure"),
+        ("curl: (35)", "network-failure"),
+        ("curl: (56)", "network-failure"),
+        ("curl: (92)", "network-failure"),
+        ("Cannot download non-corrupt", "brew-api-unavailable"),
+        ("Download failed on Cask", "download-failed"),
         ("already a Binary at", "binary-conflict"),
-        ("already an App at", "app-conflict")
+        ("already an App at", "app-conflict"),
+        ("conflicts with", "cask-conflict"),
+        ("Refusing to uninstall", "cask-dependency"),
+        ("This cask does not run on macOS versions", "platform-unsupported"),
+        ("depends on hardware architecture", "platform-unsupported"),
+        ("requires Linux", "platform-unsupported"),
+        ("is already running", "brew-busy"),
+        ("Please wait for it to finish", "brew-busy"),
+        ("not writable by your user", "homebrew-not-writable"),
+        ("Error: Not upgrading", "upgrade-refused"),
+        // Last: success text must never outrank a real error line above.
+        ("successfully upgraded!", "exit-nonzero-after-success")
     ]
 
     private static let recoverableFailureClasses: Set<String> = [
@@ -332,7 +368,8 @@ enum LocalHomebrewError: LocalizedError {
         "network-failure",
         "permission-denied",
         "stranded-caskroom-app",
-        "sudo-declined"
+        "sudo-declined",
+        "sudo-wrong-password"
     ]
 
     /// A previous interrupted operation parked the real .app inside the Caskroom
@@ -366,9 +403,21 @@ enum LocalHomebrewError: LocalizedError {
                     + "so it can't be adopted as-is. You can replace it with Homebrew's copy "
                     + "instead — your settings and data are kept."
             }
-            if Self.failureClass(stderr: trimmed) == "sudo-declined" {
+            switch Self.failureClass(stderr: trimmed, exitCode: code) {
+            case "sudo-declined":
                 return "This step needs your administrator password. "
                     + "Try again and enter your password when CaskHub asks for it."
+            case "sudo-wrong-password":
+                return "The password wasn't accepted. "
+                    + "Try again and re-enter your administrator password."
+            case "sudo-not-admin":
+                return "This step needs an administrator account. "
+                    + "Your macOS user doesn't have administrator rights, so Homebrew "
+                    + "can't complete it."
+            case "process-killed":
+                return "The operation was interrupted before it finished. Try again."
+            default:
+                break
             }
             if trimmed.contains("reports different checksum") || trimmed.contains("SHA256 mismatch") {
                 return "The download doesn't match the checksum Homebrew has on record — "
@@ -384,7 +433,8 @@ enum LocalHomebrewError: LocalizedError {
 
     /// The App Management (TCC) permission gating modification of other apps' bundles.
     static func isAppManagementDenial(stderr: String) -> Bool {
-        stderr.components(separatedBy: .newlines).contains { line in
+        if stderr.contains("does not have App Management permissions") { return true }
+        return stderr.components(separatedBy: .newlines).contains { line in
             line.contains("Operation not permitted")
                 && line.contains("/Applications/")
                 && line.contains(".app")

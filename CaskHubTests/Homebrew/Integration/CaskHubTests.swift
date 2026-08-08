@@ -301,6 +301,11 @@ final class CaskHubTests: XCTestCase {
         XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: "curl: (6) Could not resolve host"))
     }
 
+    func test_output_collector_folds_pty_crlf_instead_of_doubling() {
+        XCTAssertEqual(BrewOutputCollector.plainText("line one\r\nline two\r\n"), "line one\nline two\n")
+        XCTAssertEqual(BrewOutputCollector.plainText("frame\rframe\r"), "frame\nframe\n")
+    }
+
     func test_output_collector_finishes_when_grandchild_keeps_pipe_open() async throws {
         // Reproduces the stuck adopt spinner: sh exits but its backgrounded child
         // inherits the pipe's write end, so EOF never arrives.
