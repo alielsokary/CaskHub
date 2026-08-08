@@ -324,8 +324,6 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertEqual(launcher.lastOpenedURL?.lastPathComponent, "ChatGPT.app")
     }
 
-    /// Plain `brew uninstall` rejects caskfile-less entries with
-    /// "Cask 'x' is not installed" — zombies must route through --force.
     @MainActor
     func test_zombie_uninstall_appends_force() async {
         let executor = RecordingHomebrewCommandExecutor()

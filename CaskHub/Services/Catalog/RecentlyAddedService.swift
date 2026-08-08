@@ -80,8 +80,7 @@ final class RecentlyAddedService {
         let cutoff: String
     }
 
-    // Called from projection recomputes on the main thread; the full-dictionary
-    // filter is hang material on slow machines (CASKHUB-2H).
+    // Full-dictionary filter per projection recompute hangs slow machines.
     @ObservationIgnored
     private let recentTokensCache = MemoizedValue<RecentTokensKey, Set<String>>()
 

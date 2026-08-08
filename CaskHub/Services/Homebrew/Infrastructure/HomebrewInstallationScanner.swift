@@ -256,10 +256,7 @@ extension HomebrewInstallationScanner {
                     let fileSize = values.fileSize,
                     fileSize > 0
                 else { continue }
-                // A symlink into an app bundle belongs to that app, not to a
-                // standalone CLI — OrbStack's docker shims otherwise mark
-                // docker-desktop as installed. App ownership is attributed
-                // by the application scan with real bundle matching.
+                // Shims into app bundles belong to that app (OrbStack docker).
                 guard !entry.resolvingSymlinksInPath().path.contains(".app/")
                 else { continue }
                 if paths[entry.lastPathComponent] == nil {

@@ -18,8 +18,7 @@ extension LocalHomebrewService {
     }
 
     func uninstall(token: String) async throws {
-        // Zombie entries lack brew's timestamped caskfile, so plain uninstall
-        // is rejected with "Cask 'x' is not installed"; --force still works.
+        // Brew rejects plain uninstall for caskfile-less zombies; --force works.
         let force = installedCasks[token]?.isZombie == true
         try await runMutation(
             .uninstalling,

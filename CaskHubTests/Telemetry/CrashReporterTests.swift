@@ -142,7 +142,10 @@ final class CrashReporterTests: XCTestCase {
             debugDescription: "The given data was not valid JSON.",
             underlyingError: NSError(
                 domain: NSCocoaErrorDomain,
-                code: NSPropertyListReadCorruptError
+                code: NSPropertyListReadCorruptError,
+                userInfo: [
+                    NSDebugDescriptionErrorKey: "Unexpected end of file during JSON parse."
+                ]
             )
         )))
         XCTAssertTrue(spy.capturedErrors.isEmpty)
@@ -152,6 +155,22 @@ final class CrashReporterTests: XCTestCase {
             DecodingError.Context(codingPath: [], debugDescription: "schema break")
         ))
         XCTAssertEqual(spy.capturedErrors.count, 1, "real schema breaks still report")
+
+        CrashReporter.capture(DecodingError.dataCorrupted(DecodingError.Context(
+            codingPath: [],
+            debugDescription: "The given data was not valid JSON.",
+            underlyingError: NSError(
+                domain: NSCocoaErrorDomain,
+                code: NSPropertyListReadCorruptError,
+                userInfo: [
+                    NSDebugDescriptionErrorKey: "Invalid value around line 1, column 0."
+                ]
+            )
+        )))
+        XCTAssertEqual(
+            spy.capturedErrors.count, 2,
+            "garbage-but-complete payloads are not truncation and still report"
+        )
     }
 
     func test_recoverable_brew_failures_are_never_captured() {

@@ -13,9 +13,7 @@ nonisolated struct ApplicationInstallationSnapshot: Sendable {
     let macAppStoreAppNames: Set<String>
     let macAppStoreBundleIdentifiers: [String: Set<String>]
     let detectedApplications: [DetectedApplication]
-    /// Built once per scan so per-cask resolver lookups stay O(1); linear
-    /// scans over detectedApplications inside view bodies were hang material
-    /// (CASKHUB-Z / CASKHUB-23).
+    /// Built once per scan so per-cask resolver lookups stay O(1).
     let detectedApplicationsByBundleName: [String: [DetectedApplication]]
 
     init(

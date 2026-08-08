@@ -308,9 +308,7 @@ enum LocalHomebrewError: LocalizedError {
     }
 
     private static let failurePatterns: [(fragment: String, classification: String)] = [
-        // First: a declined askpass prompt is the terminal cause even when the
-        // stderr also carries fragments of later patterns (e.g. brew's
-        // incidental "already a Binary at" warnings).
+        // First: a declined prompt outranks incidental fragments below it.
         ("sudo: no password was provided", "sudo-declined"),
         ("sudo: a password is required", "sudo-declined"),
         ("is not there", "missing-artifact-source"),
