@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HeroCard: View {
     let cask: Cask
-    var downloads: String?
+    var downloadCount: Int?
     var categoryName: String?
     var localState: CaskLocalState?
 
@@ -65,7 +65,7 @@ struct HeroCard: View {
 
     private var metaLine: String {
         var parts: [String] = []
-        if let downloads { parts.append(String(localized: "\(downloads) pours")) }
+        if let downloadCount { parts.append(String(localized: "\(downloadCount) pours")) }
         parts.append("v\(cask.displayVersion)")
         if let categoryName { parts.append(categoryName) }
         return parts.joined(separator: " · ")

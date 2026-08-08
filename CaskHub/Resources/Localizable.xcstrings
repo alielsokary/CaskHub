@@ -4,8 +4,6 @@
     "": {
       "shouldTranslate": false
     },
-    "%@ casks": {},
-    "%@ pours": {},
     "%@ theme": {},
     "%@ was installed using a package outside Homebrew. Adopting it will download and run Homebrew's package installer again, which may replace the existing application. After it finishes, Homebrew will manage the installation.": {},
     "%@ was removed outside Homebrew, but Homebrew still has records for it. Clean Up removes the leftover data.": {},
@@ -13,7 +11,51 @@
       "shouldTranslate": false
     },
     "%lld Days": {},
+    "%lld casks": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld cask"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld casks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld operations in progress": {},
+    "%lld pours": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld pour"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld pours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "30 Days": {},
     "90 Days": {},
     ">_": {
@@ -104,7 +146,6 @@
     },
     "Info": {},
     "Install": {},
-    "Installed": {},
     "Installed (%@)": {},
     "Installed Casks": {},
     "Installed Version": {},
@@ -192,6 +233,7 @@
     "Update All Apps?": {},
     "Updates": {},
     "Updates always download in the background. When this is off, they install silently the next time you quit CaskHub instead of showing what's new first.": {},
+    "Updating %lld of %lld": {},
     "Updating…": {},
     "Using cache": {},
     "Value": {},
@@ -205,6 +247,42 @@
     "Your installed copy of %@ is missing a component Homebrew's version includes (%@), so it can't be adopted as-is. You can replace it with Homebrew's copy instead — your settings and data are kept.": {},
     "`%@` failed (exit %d).": {},
     "`%@` failed (exit %d): %@": {},
+    "cask.action.installed": {
+      "comment": "Disabled action button state after a cask is installed",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed"
+          }
+        }
+      }
+    },
+    "cask.dateLabel.installed": {
+      "comment": "Label for the installation date row, shown next to Last Updated",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed"
+          }
+        }
+      }
+    },
+    "cask.state.installed": {
+      "comment": "Installation state shown as the version value when the version is unknown",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed"
+          }
+        }
+      }
+    },
     "formulae.brew.sh returned HTTP %lld.": {},
     "github.com/alielsokary/CaskHub": {
       "shouldTranslate": false
@@ -212,6 +290,30 @@
     "macOS blocked CaskHub from modifying apps on your Mac. Enable CaskHub under System Settings → Privacy & Security → App Management, then try again.": {},
     "macOS only lets CaskHub modify other apps once you grant it the App Management permission, and adopting %@ may need to do that. Enable CaskHub under System Settings → Privacy & Security → App Management (a system notification may also offer it), then come back — the adoption will finish on its own.": {},
     "search": {},
+    "sidebar.installed": {
+      "comment": "Sidebar library item listing installed casks",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed"
+          }
+        }
+      }
+    },
+    "sidebar.updates": {
+      "comment": "Sidebar library item listing casks with available updates",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates"
+          }
+        }
+      }
+    },
     "© 2026 Ali Elsokary. All rights reserved.": {
       "shouldTranslate": false
     },

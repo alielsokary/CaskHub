@@ -220,6 +220,11 @@ final class CaskCatalogViewModel {
         )
     }
 
+    func downloadCount(for token: String) -> Int? {
+        guard let count = downloadCounts[token], count > 0 else { return nil }
+        return count
+    }
+
     func formattedDownloads(for token: String) -> String? {
         guard let count = downloadCounts[token], count > 0 else { return nil }
         // ponytail: en_US pin keeps the K/M suffixes stable across locales
