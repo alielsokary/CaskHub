@@ -36,7 +36,11 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
                     if self.exited { self.finish() }
                 } else if let text = String(data: data, encoding: .utf8) {
                     let plainText = Self.plainText(text)
-                    self.tail = String((self.tail + plainText).suffix(2000))
+                    // Strip before capping, or progress frames evict the error line.
+                    self.tail = String(
+                        HomebrewOutputDiagnostics.stripProgressNoise(from: self.tail + plainText)
+                            .suffix(2000)
+                    )
                     if !plainText.isEmpty {
                         onChunk(plainText)
                     }
@@ -77,13 +81,24 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
         continuation = nil
     }
 
-    private static func plainText(_ text: String) -> String {
-        text
-            .replacingOccurrences(
-                of: "\u{001B}\\[[0-?]*[ -/]*[@-~]",
-                with: "",
-                options: .regularExpression
+    private static let ansiEscapes = try? NSRegularExpression(
+        pattern: "\u{001B}\\[[0-?]*[ -/]*[@-~]"
+    )
+
+    static func plainText(_ text: String) -> String {
+        let stripped: String
+        if let ansiEscapes {
+            stripped = ansiEscapes.stringByReplacingMatches(
+                in: text,
+                range: NSRange(text.startIndex..., in: text),
+                withTemplate: ""
             )
+        } else {
+            stripped = text
+        }
+        // The pty's ONLCR emits \r\n; fold it first or every line doubles.
+        return stripped
+            .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
     }
 }

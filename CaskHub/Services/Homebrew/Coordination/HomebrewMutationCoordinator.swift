@@ -29,10 +29,7 @@ final class HomebrewMutationCoordinator {
     private let brewBinaryProvider: () -> URL?
     private let fileManager: FileManager
 
-    private var outputBuffers: [String: String] = [:]
-    private var lastProgressUpdates: [String: Date] = [:]
-
-    private static let phaseMarkers = ["==>", "Verifying", "Already downloaded:"]
+    private let outputAggregator: BrewOutputAggregator
 
     init(
         operationStore: CaskOperationStore,
@@ -44,6 +41,7 @@ final class HomebrewMutationCoordinator {
         self.commandExecutor = commandExecutor
         self.brewBinaryProvider = brewBinaryProvider
         self.fileManager = fileManager
+        outputAggregator = BrewOutputAggregator(fileManager: fileManager)
     }
 
     func run(
@@ -109,6 +107,8 @@ final class HomebrewMutationCoordinator {
 
         var environment = ProcessInfo.processInfo.environment
         environment.merge(environmentOverrides) { _, override in override }
+        // brew 6 ask-mode default prompts on our pty; stdin is nulled, so it EOF-aborts.
+        environment["HOMEBREW_NO_ASK"] = "1"
         if let askpass {
             environment["SUDO_ASKPASS"] = askpass.path
         }
@@ -157,35 +157,38 @@ final class HomebrewMutationCoordinator {
     }
 
     func clearOperationResources(token: String) {
-        outputBuffers[token] = nil
-        lastProgressUpdates[token] = nil
+        outputAggregator.clear(token: token)
     }
 
     func consumeBrewOutput(_ output: String, token: String) {
+        outputAggregator.ingest(output, token: token) { [weak self] parsed in
+            self?.applyParsedOutput(parsed, token: token)
+        }
+    }
+
+    func awaitPendingOutput() async {
+        await outputAggregator.drain()
+    }
+
+    func applyParsedOutput(_ parsed: BrewOutputAggregator.Parsed, token: String) {
         guard var progress = operationStore.state(for: token)?.progress,
               progress.phase != .canceling
         else { return }
 
-        let buffered = String(((outputBuffers[token] ?? "") + output).suffix(6_000))
-        outputBuffers[token] = buffered
-
-        // The pty redraws the progress bar dozens of times per second; parsing
-        // the buffer tail for every redraw hangs the main thread. Skipped
-        // chunks stay buffered, so the next parse sees their state.
-        let hasPhaseMarker = Self.phaseMarkers.contains(where: output.contains)
-        if !hasPhaseMarker,
-           let lastUpdate = lastProgressUpdates[token],
-           Date.now.timeIntervalSince(lastUpdate) < 0.10 {
-            return
-        }
-
-        let update = BrewProgressParser.parse(buffered)
+        let update = parsed.update
         if update.phase == .checkingDownload {
             progress.completedBytes = nil
             progress.totalBytes = nil
         }
-        applyByteProgress(update, to: &progress, token: token)
-        applyCachedDownload(update, to: &progress)
+        if let bytes = update.byteProgress {
+            progress.phase = .downloading
+            progress.completedBytes = bytes.completed
+            progress.totalBytes = bytes.total
+        }
+        if update.phase == .usingCachedDownload {
+            progress.completedBytes = parsed.cachedDownloadBytes
+            progress.totalBytes = parsed.cachedDownloadBytes
+        }
         if let phase = update.phase {
             progress.phase = phase
             if phase == .performing {
@@ -234,40 +237,6 @@ final class HomebrewMutationCoordinator {
         }
     }
 
-    private func applyByteProgress(
-        _ update: BrewProgressParser.Update,
-        to progress: inout CaskOperationProgress,
-        token: String
-    ) {
-        guard let bytes = update.byteProgress else { return }
-        let now = Date.now
-        let shouldPublish = lastProgressUpdates[token].map {
-            now.timeIntervalSince($0) >= 0.10
-        } ?? true
-        guard shouldPublish || bytes.completed >= bytes.total else { return }
-
-        progress.phase = .downloading
-        progress.completedBytes = bytes.completed
-        progress.totalBytes = bytes.total
-        lastProgressUpdates[token] = now
-    }
-
-    private func applyCachedDownload(
-        _ update: BrewProgressParser.Update,
-        to progress: inout CaskOperationProgress
-    ) {
-        guard update.phase == .usingCachedDownload else { return }
-        progress.completedBytes = nil
-        progress.totalBytes = nil
-        guard let path = update.cachedDownloadPath,
-              let attributes = try? fileManager.attributesOfItem(atPath: path),
-              let size = attributes[.size] as? NSNumber,
-              size.int64Value > 0
-        else { return }
-        progress.completedBytes = size.int64Value
-        progress.totalBytes = size.int64Value
-    }
-
     private func handleFailure(
         _ error: Error,
         request: HomebrewMutationRequest,
@@ -306,7 +275,18 @@ final class HomebrewMutationCoordinator {
             error: error,
             strandedCopyExists: callbacks.strandedCopyExists()
         )
+        if Self.indicatesStateDesync(error) {
+            await callbacks.refresh()
+        }
         throw error
+    }
+
+    /// Brew disagreeing about install state means the snapshot is stale.
+    private static func indicatesStateDesync(_ error: Error) -> Bool {
+        guard case let LocalHomebrewError.brewCommandFailed(_, _, stderr) = error else {
+            return false
+        }
+        return LocalHomebrewError.failureClass(stderr: stderr) == "not-installed"
     }
 
 }

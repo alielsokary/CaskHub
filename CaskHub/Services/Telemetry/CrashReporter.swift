@@ -30,6 +30,7 @@ enum CrashReporter {
     static var captureCounts: [String: Int] = [:]
     private static let captureLimit = 5
     private static let ignoredURLErrorCodes: Set<Int> = [
+        URLError.cancelled.rawValue,
         URLError.notConnectedToInternet.rawValue,
         URLError.timedOut.rawValue,
         URLError.networkConnectionLost.rawValue,
@@ -59,11 +60,29 @@ enum CrashReporter {
 
     static func capture(_ error: Error) {
         guard isEnabled, !isRunningTests else { return }
+        // Task cancellation (e.g. a view disappearing mid-fetch) is not an error.
+        if error is CancellationError {
+            return
+        }
         if let localError = error as? LocalHomebrewError, !localError.shouldReport {
             return
         }
         let nsError = error as NSError
         if nsError.domain == NSURLErrorDomain, ignoredURLErrorCodes.contains(nsError.code) {
+            return
+        }
+        // Disk full is user state — write paths degrade gracefully.
+        if nsError.domain == NSCocoaErrorDomain,
+           nsError.code == CocoaError.fileWriteOutOfSpace.rawValue {
+            return
+        }
+        // Truncated CDN body only; garbage-but-complete payloads still report.
+        if case let DecodingError.dataCorrupted(context) = error,
+           let underlying = context.underlyingError as NSError?,
+           underlying.domain == NSCocoaErrorDomain,
+           underlying.code == NSPropertyListReadCorruptError,
+           (underlying.userInfo[NSDebugDescriptionErrorKey] as? String)?
+               .contains("Unexpected end of file") == true {
             return
         }
         let signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
@@ -137,9 +156,13 @@ final class SentryProvider: CrashReporterProvider {
     /// domain+code — one issue per way brew fails, so a rare destructive failure
     /// can't hide inside a busy catch-all group.
     static func fingerprint(for error: Error) -> [String]? {
-        guard case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error,
+        guard case let LocalHomebrewError.brewCommandFailed(args, exitCode, stderr) = error,
               let subcommand = args.first else { return nil }
-        return ["brewCommandFailed", subcommand, LocalHomebrewError.failureClass(stderr: stderr)]
+        return [
+            "brewCommandFailed",
+            subcommand,
+            LocalHomebrewError.failureClass(stderr: stderr, exitCode: exitCode)
+        ]
     }
 
     func setTag(_ key: String, value: String) {
@@ -167,6 +190,7 @@ private struct SentrySpanHandle: CrashSpan {
     }
 
     func finish(error: Error) {
+        span.setData(value: String(describing: error), key: "error")
         span.finish(status: .internalError)
     }
 }

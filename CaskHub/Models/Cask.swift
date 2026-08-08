@@ -224,6 +224,11 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
         name.first ?? token
     }
 
+    /// Newline separators keep a query from matching across field boundaries.
+    var searchKey: String {
+        "\(displayName)\n\(token)\n\(desc ?? "")".lowercased()
+    }
+
     var displayVersion: String {
         let base = version.split(separator: ",", maxSplits: 1).first.map(String.init) ?? version
 

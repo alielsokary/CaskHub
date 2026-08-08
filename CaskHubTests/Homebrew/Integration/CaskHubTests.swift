@@ -196,6 +196,16 @@ final class CaskHubTests: XCTestCase {
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
         }
 
+        let appBinary = root.appendingPathComponent("OrbStack.app/Contents/MacOS/xbin/docker")
+        try FileManager.default.createDirectory(
+            at: appBinary.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: appBinary.path, contents: Data("#!/bin/sh\n".utf8))
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: appBinary.path)
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("docker"), withDestinationURL: appBinary
+        )
+
         let scan = HomebrewInstallationScanner.scanBinaryDirectories(
             fileManager: FileManager.default,
             directories: [root]
@@ -203,6 +213,10 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(Set(scan.keys), ["copilot"])
         XCTAssertEqual(scan["copilot"]?.lastPathComponent, executable.lastPathComponent)
         XCTAssertNil(scan["stale-tool"], "zero-byte executable artifacts must be ignored")
+        XCTAssertNil(
+            scan["docker"],
+            "a shim into an app bundle belongs to that app, not a standalone CLI"
+        )
     }
 
     func test_apple_silicon_detection_matches_native_build_arch() {
@@ -303,6 +317,11 @@ final class CaskHubTests: XCTestCase {
         XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: "curl: (6) Could not resolve host"))
     }
 
+    func test_output_collector_folds_pty_crlf_instead_of_doubling() {
+        XCTAssertEqual(BrewOutputCollector.plainText("line one\r\nline two\r\n"), "line one\nline two\n")
+        XCTAssertEqual(BrewOutputCollector.plainText("frame\rframe\r"), "frame\nframe\n")
+    }
+
     func test_output_collector_finishes_when_grandchild_keeps_pipe_open() async throws {
         // Reproduces the stuck adopt spinner: sh exits but its backgrounded child
         // inherits the pipe's write end, so EOF never arrives.
@@ -325,6 +344,23 @@ final class CaskHubTests: XCTestCase {
         XCTAssertTrue(output.contains("hello"))
         XCTAssertFalse(process.isRunning)
         XCTAssertLessThan(Date().timeIntervalSince(start), 10, "must not wait for the grandchild")
+    }
+
+    func test_output_collector_keeps_error_line_through_progress_flood() async throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", "echo 'Error: real failure'; for i in $(seq 1 200); do "
+            + "printf 'Extracting  205.4MB/205.4MB⠴ Cask parallels (26.4.0)\\r'; done"]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        let collector = BrewOutputCollector()
+        collector.attach(to: process, readHandle: pipe.fileHandleForReading) { _ in }
+        try process.run()
+
+        let output = await collector.output()
+        XCTAssertTrue(output.contains("Error: real failure"))
+        XCTAssertLessThanOrEqual(output.count, 2000)
     }
 
     func test_output_collector_captures_output_on_normal_exit() async throws {

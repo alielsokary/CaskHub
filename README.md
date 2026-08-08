@@ -17,7 +17,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 
 ## Install
 
-<a href="https://github.com/alielsokary/CaskHub/releases/download/0.6.8/CaskHub-0.6.8.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
+<a href="https://github.com/alielsokary/CaskHub/releases/download/0.6.9/CaskHub-0.6.9.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
 
 Or install with Homebrew:
 
@@ -108,8 +108,15 @@ You can opt out of both at any time in **Settings → Privacy**.
 Interested in contributing to CaskHub? We welcome contributions of all kinds!
 
 - **Code contributions**: Bug fixes, features, improvements
-- **Bug reports**: Found an issue? Let us know
-- **Feature requests**: Have an idea? We'd love to hear it
+- **Bug reports**: [Found an issue? Let us know](https://github.com/alielsokary/CaskHub/issues/new/choose)
+- **Feature requests**: [Have an idea? We'd love to hear it](https://github.com/alielsokary/CaskHub/issues/new/choose)
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request — note that all PRs target the `develop` branch.
+
+## Acknowledgements
+
+- [CaskFlow](https://github.com/alielsokary/CaskFlow) — the data pipeline behind CaskHub's categories, Recently Added dates, and app icons
+- [Homebrew](https://brew.sh) — the package manager CaskHub is built on
 
 ## License
 
