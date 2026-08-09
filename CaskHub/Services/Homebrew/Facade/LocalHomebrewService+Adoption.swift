@@ -34,12 +34,14 @@ extension LocalHomebrewService {
     func adopt(_ cask: Cask, bypassPermissionCheck: Bool = false) async throws {
         if let missing = adoptBlockedByMissingBinary(cask) {
             let message = String(
-                localized: """
+                localized: "error.adoptMissingComponent",
+                defaultValue: """
                 Your installed copy of \(cask.displayName) is missing a component \
                 Homebrew's version includes (\(missing)), so it can't be adopted \
                 as-is. You can replace it with Homebrew's copy instead — your \
                 settings and data are kept.
-                """
+                """,
+                comment: "Error when adoption is blocked by a missing binary the cask ships"
             )
             operationStore.send(
                 .fail(CaskOperationFailure(

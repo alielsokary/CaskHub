@@ -19,10 +19,14 @@ struct UpdateSettingsView: View {
                     isOn: $updater.automaticallyChecksForUpdates
                 )
 
-                Text("""
-                When automatic checks are enabled, CaskHub downloads updates in the \
-                background and always shows the update prompt before installation.
-                """)
+                Text(String(
+                    localized: "settings.updates.automaticChecks",
+                    defaultValue: """
+                    When automatic checks are enabled, CaskHub downloads updates in the \
+                    background and always shows the update prompt before installation.
+                    """,
+                    comment: "Settings footnote for the automatic update checks toggle"
+                ))
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }

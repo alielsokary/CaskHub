@@ -157,11 +157,15 @@ struct GeneralSettingsView: View {
                         }
                     }
                 }
-                Text("""
-                Needed to adopt or update apps whose casks modify the app bundle \
-                (macOS otherwise blocks CaskHub from modifying other apps). Enable \
-                CaskHub under System Settings → Privacy & Security → App Management.
-                """)
+                Text(String(
+                    localized: "settings.appManagement.description",
+                    defaultValue: """
+                    Needed to adopt or update apps whose casks modify the app bundle \
+                    (macOS otherwise blocks CaskHub from modifying other apps). Enable \
+                    CaskHub under System Settings → Privacy & Security → App Management.
+                    """,
+                    comment: "Settings footnote explaining the App Management permission"
+                ))
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -171,7 +175,11 @@ struct GeneralSettingsView: View {
                         Task { await imageCache.clearCache() }
                     }
                 }
-                Text("Removes cached app icons. They re-download the next time each app is shown.")
+                Text(String(
+                    localized: "settings.storage.clearIconCache",
+                    defaultValue: "Removes cached app icons. They re-download the next time each app is shown.",
+                    comment: "Settings footnote under the Clear Cache button"
+                ))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -357,10 +365,14 @@ struct PrivacySettingsView: View {
                     isOn: $analyticsEnabled
                 )
 
-                Text("""
-                Sends anonymized usage signals through TelemetryDeck. No personal \
-                information is collected.
-                """)
+                Text(String(
+                    localized: "settings.privacy.usageAnalytics",
+                    defaultValue: """
+                    Sends anonymized usage signals through TelemetryDeck. No personal \
+                    information is collected.
+                    """,
+                    comment: "Settings footnote for the usage analytics toggle"
+                ))
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -371,10 +383,14 @@ struct PrivacySettingsView: View {
                     isOn: $crashReportingEnabled
                 )
 
-                Text("""
-                Sends crash reports and technical diagnostics through Sentry to help \
-                identify and fix problems.
-                """)
+                Text(String(
+                    localized: "settings.privacy.crashReports",
+                    defaultValue: """
+                    Sends crash reports and technical diagnostics through Sentry to help \
+                    identify and fix problems.
+                    """,
+                    comment: "Settings footnote for the crash reports toggle"
+                ))
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
