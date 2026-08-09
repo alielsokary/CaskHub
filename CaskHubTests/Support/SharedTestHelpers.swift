@@ -215,13 +215,15 @@ func makeViewModel(
     localHomebrew: LocalHomebrewService? = nil,
     defaults: UserDefaults? = nil
 ) -> CaskCatalogViewModel {
-    CaskCatalogViewModel(
+    let vm = CaskCatalogViewModel(
         apiClient: api,
         categoryService: categories ?? CategoryService(),
         recentlyAdded: recentlyAdded ?? RecentlyAddedService(),
         localHomebrew: localHomebrew ?? LocalHomebrewService(),
         defaults: defaults ?? makeScratchDefaults("viewmodel-scratch")
     )
+    vm.searchDebounceInterval = .zero
+    return vm
 }
 
 func makeScratchDefaults(_ name: String = #function) -> UserDefaults {
@@ -280,6 +282,36 @@ final class RecordingApplicationLauncher: ApplicationLaunching {
     func open(_ url: URL) {
         openedURLs.append(url)
     }
+}
+
+nonisolated struct EmptyInstalledSoftwareScanner: InstalledSoftwareScanning {
+    func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
+        .empty
+    }
+
+    func reconcileCatalog(
+        _ request: InstalledSoftwareScanRequest,
+        with current: InstallationSnapshot
+    ) async -> InstallationSnapshot {
+        current
+    }
+}
+
+@MainActor
+final class RecordingHomebrewCommandExecutor: HomebrewCommandExecuting {
+    private(set) var requests: [HomebrewCommandRequest] = []
+
+    func execute(
+        _ request: HomebrewCommandRequest,
+        onStart: @escaping @MainActor @Sendable () -> Void,
+        onChunk _: @escaping @MainActor @Sendable (String) -> Void
+    ) async throws -> BrewProcessResult {
+        requests.append(request)
+        onStart()
+        return BrewProcessResult(exitCode: 0, output: "")
+    }
+
+    func cancel(token _: String) -> Bool { false }
 }
 
 // MARK: - Crash-reporting spies

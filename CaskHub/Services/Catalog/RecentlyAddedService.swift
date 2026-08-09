@@ -25,7 +25,7 @@ enum RecentlyAddedWindow: Int, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class RecentlyAddedService {
-    private struct AddedDatesData: Decodable {
+    private nonisolated struct AddedDatesData: Decodable {
         let version: Int
         let generatedDate: String
         let tokenAddedDates: [String: String]
@@ -49,6 +49,22 @@ final class RecentlyAddedService {
         apply(bundled)
     }
 
+    /// Off-main decode; never overwrites fresher remote data.
+    func loadBundledDatesAsync() async {
+        guard let bundled = await Self.decodeBundledDates(),
+              bundled.version == Self.schemaVersion,
+              bundled.generatedDate > generatedDate
+        else { return }
+        apply(bundled)
+    }
+
+    @concurrent private static func decodeBundledDates() async -> AddedDatesData? {
+        guard let url = Bundle.main.url(forResource: "added_dates", withExtension: "json"),
+              let data = try? Data(contentsOf: url)
+        else { return nil }
+        return try? JSONDecoder().decode(AddedDatesData.self, from: data)
+    }
+
     func refreshFromRemote() async {
         guard let remote = await CaskFlowReleases.fetch(AddedDatesData.self, asset: "added_dates.json"),
               remote.version == Self.schemaVersion,
@@ -58,9 +74,15 @@ final class RecentlyAddedService {
         apply(remote)
     }
 
+    // Full-dictionary filter per projection recompute hangs slow machines.
+    @ObservationIgnored
+    private let recentTokensCache = MemoizedValue<String, Set<String>>()
+
     func recentTokens(within days: Int) -> Set<String> {
         let cutoff = Self.dateString(daysAgo: days)
-        return Set(addedDates.filter { $0.value >= cutoff }.keys)
+        return recentTokensCache.value(for: "\(catalogStateRevision)|\(cutoff)") { [addedDates] in
+            Set(addedDates.filter { $0.value >= cutoff }.keys)
+        }
     }
 
     private static func dateString(daysAgo: Int) -> String {

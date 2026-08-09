@@ -16,6 +16,7 @@ enum CaskHubMain {
                 ? CommandLine.arguments[flagIndex + 1] : nil
             Askpass.runDialog(token: token)
         }
+        NSWindow.allowsAutomaticWindowTabbing = false
         CaskHubApp.main()
     }
 }
@@ -26,6 +27,8 @@ struct CaskHubApp: App {
     private var terminationCoordinator
 
     @State private var updaterService = UpdaterService()
+    @State private var helpTopic: HelpTopic = .gettingStarted
+    @State private var settingsSection: SettingsSection = .general
 
     @State private var categoryService: CategoryService
     @State private var recentlyAdded: RecentlyAddedService
@@ -41,10 +44,13 @@ struct CaskHubApp: App {
         Analytics.start()
         AppTheme.apply(UserDefaults.standard.string(forKey: "appTheme") ?? AppTheme.system.rawValue)
 
+        // ~920KB of bundled JSON — keep it off the launch path.
         let categories = CategoryService()
-        categories.loadCategories()
         let recent = RecentlyAddedService()
-        recent.loadBundledDates()
+        Task {
+            await categories.loadBundledCategoriesAsync()
+            await recent.loadBundledDatesAsync()
+        }
         let homebrew = LocalHomebrewService()
         let images = ImageCacheService()
         images.knownIconTokens = { categories.iconTokens }
@@ -61,13 +67,16 @@ struct CaskHubApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        Window("CaskHub", id: CaskHubWindowID.main) {
             ContentView(viewModel: catalog)
                 .frame(minWidth: 1380, minHeight: 640)
                 .background {
                     WindowCloseButtonConfigurator {
                         terminationCoordinator.requestTermination()
                     }
+                }
+                .background {
+                    CaskHubHelpSearchRegistration(selection: $helpTopic)
                 }
                 .onAppear {
                     terminationCoordinator.configure {
@@ -84,17 +93,40 @@ struct CaskHubApp: App {
         }
         .defaultSize(width: 1360, height: 880)
         .windowStyle(.hiddenTitleBar)
+        .commandsRemoved()
         .commands {
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updater: updaterService)
-            }
+            CommandGroup(replacing: .newItem) {}
+            CaskHubApplicationCommands(updater: updaterService)
+            CaskHubViewCommands()
+            CaskHubHelpCommands(selection: $helpTopic)
+        }
+
+        Window("CaskHub Help", id: CaskHubWindowID.help) {
+            CaskHubHelpView(
+                selection: $helpTopic,
+                settingsSelection: $settingsSection,
+                navigateToCatalog: { catalog.selectedSidebar = $0 }
+            )
+            .environment(localHomebrew)
+            .frame(minWidth: 760, minHeight: 520)
+        }
+        .defaultSize(width: 880, height: 620)
+        .windowResizability(.contentMinSize)
+        .commandsRemoved()
+        .commands {
+            CaskHubApplicationCommands(updater: updaterService)
+            CaskHubHelpCommands(selection: $helpTopic)
         }
 
         Settings {
-            SettingsView()
+            SettingsView(selection: $settingsSection)
                 .environment(updaterService)
                 .environment(imageCache)
                 .environment(localHomebrew)
+        }
+        .commands {
+            CaskHubApplicationCommands(updater: updaterService)
+            CaskHubHelpCommands(selection: $helpTopic)
         }
     }
 }

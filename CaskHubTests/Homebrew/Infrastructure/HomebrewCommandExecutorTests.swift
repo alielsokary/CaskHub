@@ -71,16 +71,3 @@ private final class SuspendingHomebrewCommandExecutor: HomebrewCommandExecuting 
         continuation = nil
     }
 }
-
-private nonisolated struct EmptyInstalledSoftwareScanner: InstalledSoftwareScanning {
-    func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
-        .empty
-    }
-
-    func reconcileCatalog(
-        _ request: InstalledSoftwareScanRequest,
-        with current: InstallationSnapshot
-    ) async -> InstallationSnapshot {
-        current
-    }
-}

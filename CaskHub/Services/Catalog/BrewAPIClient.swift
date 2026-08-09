@@ -34,6 +34,15 @@ nonisolated final class BrewAPIClient: BrewAPIClientProtocol {
     // @concurrent keeps the multi-megabyte decode off the caller's actor;
     // plain nonisolated async would inherit MainActor and hang the UI.
     @concurrent private func fetch<T: Decodable & Sendable>(_ url: URL) async throws -> T {
+        do {
+            return try await fetchOnce(url)
+        } catch let error as HTTPError where (500 ..< 600).contains(error.statusCode) {
+            try await Task.sleep(for: .seconds(2))
+            return try await fetchOnce(url)
+        }
+    }
+
+    @concurrent private func fetchOnce<T: Decodable & Sendable>(_ url: URL) async throws -> T {
         let (data, response) = try await URLSession.shared.data(from: url)
         if let http = response as? HTTPURLResponse, !(200 ..< 300).contains(http.statusCode) {
             throw HTTPError(statusCode: http.statusCode)

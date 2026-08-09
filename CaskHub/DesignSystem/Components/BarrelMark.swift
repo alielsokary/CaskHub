@@ -26,6 +26,7 @@ struct BarrelMark: View {
             barrel.addCurve(to: CGPoint(x: 8.3, y: 13.5), control1: CGPoint(x: 7.2, y: 28), control2: CGPoint(x: 7.2, y: 20))
             barrel.addCurve(to: CGPoint(x: 24, y: 4.5), control1: CGPoint(x: 9.4, y: 6.4), control2: CGPoint(x: 15, y: 4.5))
             barrel.closeSubpath()
+            ctx.stroke(barrel, with: .color(.chCream), lineWidth: 7)
             ctx.fill(barrel, with: .color(.chTerracotta))
             ctx.stroke(barrel, with: .color(outline), lineWidth: 2.6)
 

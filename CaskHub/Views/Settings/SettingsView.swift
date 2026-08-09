@@ -8,29 +8,50 @@
 import AppKit
 import SwiftUI
 
+enum SettingsSection: Hashable {
+    case general
+    case appearance
+    case homebrew
+    case privacy
+    case updates
+    case about
+}
+
 struct SettingsView: View {
+    @Binding var selection: SettingsSection
+
     var body: some View {
-        TabView {
+        TabView(selection: $selection) {
             GeneralSettingsView()
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
+                .tag(SettingsSection.general)
             AppearanceSettingsView()
                 .tabItem {
                     Label("Appearance", systemImage: "paintbrush")
                 }
+                .tag(SettingsSection.appearance)
             HomebrewSettingsView()
                 .tabItem {
                     Label("Homebrew", systemImage: "shippingbox")
                 }
+                .tag(SettingsSection.homebrew)
             PrivacySettingsView()
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")
                 }
+                .tag(SettingsSection.privacy)
+            UpdateSettingsView()
+                .tabItem {
+                    Label("Updates", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .tag(SettingsSection.updates)
             AboutSettingsView()
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }
+                .tag(SettingsSection.about)
         }
         .frame(width: 460, height: 480)
     }
@@ -62,11 +83,33 @@ struct AboutSettingsView: View {
                 .font(.callout)
                 .padding(.top, 4)
 
-            Link("github.com/alielsokary/CaskHub",
-                 destination: URL(string: "https://github.com/alielsokary/CaskHub")!)
+            Link("github.com/alielsokary/CaskHub", destination: CaskHubLinks.repository)
                 .font(.callout)
 
             Spacer()
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Support")
+                    .font(.headline)
+
+                GroupBox {
+                    HStack(spacing: 12) {
+                        Image(systemName: "ladybug")
+                            .accessibilityHidden(true)
+
+                        Text("Submit a bug or feature request")
+
+                        Spacer()
+
+                        Link("View", destination: CaskHubLinks.issues)
+                            .buttonStyle(.bordered)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 12)
 
             Text("© 2026 Ali Elsokary. All rights reserved.")
                 .font(.footnote)
@@ -78,18 +121,15 @@ struct AboutSettingsView: View {
 }
 
 struct GeneralSettingsView: View {
-    @Environment(UpdaterService.self) private var updater
     @Environment(ImageCacheService.self) private var imageCache
     @State private var settingsModel: GeneralSettingsModel
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
-    @AppStorage(UpdaterService.showUpdatePromptKey) private var showUpdatePrompt = true
 
     init(settingsModel: GeneralSettingsModel? = nil) {
         _settingsModel = State(initialValue: settingsModel ?? GeneralSettingsModel())
     }
 
     var body: some View {
-        @Bindable var updater = updater
         Form {
             Section("Startup") {
                 Toggle(
@@ -99,17 +139,6 @@ struct GeneralSettingsView: View {
                         set: { settingsModel.setLaunchAtLogin($0) }
                     )
                 )
-            }
-            Section("Updates") {
-                Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
-                Toggle("Show update notification at launch", isOn: $showUpdatePrompt)
-                Text("""
-                Updates always download in the background. When this is off, they \
-                install silently the next time you quit CaskHub instead of showing \
-                what's new first.
-                """)
-                .font(.callout)
-                .foregroundStyle(.secondary)
             }
             Section("Sidebar") {
                 Toggle("Show Adopt Apps", isOn: $showAdoptApps)
@@ -238,24 +267,38 @@ private struct HomebrewSettingsContent: View {
                 )
             }
             Section("Custom Location") {
-                LabeledContent("Custom Path") {
-                    HStack(spacing: 10) {
-                        TextField("", text: $locationModel.customPathField, prompt: Text(""))
-                            .textFieldStyle(.roundedBorder)
-                            .frame(minWidth: 220)
-                            .onSubmit {
-                                Task { await locationModel.applyTypedPath() }
-                            }
-                        Button("Choose…") { chooseCustomPrefix() }
+                HStack(alignment: .center, spacing: 10) {
+                    TextField(
+                        "",
+                        text: $locationModel.customPathField,
+                        prompt: Text("Homebrew path")
+                    )
+                    .labelsHidden()
+                    .accessibilityLabel("Homebrew path")
+                    .font(.body.monospaced())
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: .infinity)
+                    .layoutPriority(1)
+                    .onSubmit {
+                        Task { await locationModel.applyTypedPath() }
+                    }
+
+                    Button("Choose…") { chooseCustomPrefix() }
+                        .fixedSize()
+                }
+                .frame(maxWidth: .infinity)
+                .controlSize(.regular)
+
+                if localHomebrew.customBrewPrefix != nil {
+                    Button("Use Automatic Location") {
+                        locationModel.customPathField = ""
+                        Task { await locationModel.applyTypedPath() }
                     }
                 }
-                Text("""
-                Point CaskHub at a Homebrew installed outside the standard locations \
-                (/opt/homebrew and /usr/local). Select the brew binary or its \
-                installation folder.
-                """)
-                .font(.callout)
-                .foregroundStyle(.secondary)
+
+                Text("Only needed when Homebrew is installed outside /opt/homebrew or /usr/local.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -308,32 +351,36 @@ struct PrivacySettingsView: View {
 
     var body: some View {
         Form {
-            LabeledContent("Analytics:") {
-                checkboxRow(
+            Section("Usage Analytics") {
+                Toggle(
                     "Share anonymous usage analytics",
-                    isOn: $analyticsEnabled,
-                    description: """
-                    Helps improve CaskHub by sending anonymized usage signals \
-                    via TelemetryDeck. No personal data is collected and it \
-                    cannot be used to identify you.
-                    """
+                    isOn: $analyticsEnabled
                 )
+
+                Text("""
+                Sends anonymized usage signals through TelemetryDeck. No personal \
+                information is collected.
+                """)
+                .font(.callout)
+                .foregroundStyle(.secondary)
             }
-            LabeledContent("Crash Report:") {
-                checkboxRow(
+
+            Section("Crash Reports") {
+                Toggle(
                     "Share crash reports",
-                    isOn: $crashReportingEnabled,
-                    description: """
-                    Helps improve CaskHub's stability by sending crash reports \
-                    and error diagnostics to Sentry so bugs get found and \
-                    fixed faster.
-                    """
+                    isOn: $crashReportingEnabled
                 )
+
+                Text("""
+                Sends crash reports and technical diagnostics through Sentry to help \
+                identify and fix problems.
+                """)
+                .font(.callout)
+                .foregroundStyle(.secondary)
             }
         }
-        .formStyle(.columns)
-        .padding(24)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .formStyle(.grouped)
+        .padding()
         .onChange(of: analyticsEnabled) { _, isOn in
             Analytics.refresh()
             if isOn { Analytics.analyticsReEnabled() }
@@ -342,27 +389,10 @@ struct PrivacySettingsView: View {
             CrashReporter.refresh()
         }
     }
-
-    private func checkboxRow(
-        _ title: LocalizedStringKey,
-        isOn: Binding<Bool>,
-        description: LocalizedStringKey
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Toggle(title, isOn: isOn)
-                .toggleStyle(.checkbox)
-            Text(description)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, 20)
-        }
-        .padding(.bottom, 12)
-    }
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(selection: .constant(.general))
         .environment(UpdaterService())
         .environment(ImageCacheService())
         .environment(LocalHomebrewService())

@@ -7,22 +7,35 @@
 
 import Observation
 
+/// Per-token Observable identity: a progress tick invalidates one row, not all.
+@MainActor
+@Observable
+final class CaskOperationBox {
+    fileprivate(set) var state: CaskOperationState?
+}
+
 @MainActor
 @Observable
 final class CaskOperationStore {
-    private(set) var states: [String: CaskOperationState] = [:]
+    private(set) var boxes: [String: CaskOperationBox] = [:]
     private(set) var isUpdatingAll = false
     private(set) var updateAllProgress: CaskUpdateAllProgress?
 
     func state(for token: String) -> CaskOperationState? {
-        states[token]
+        boxes[token]?.state
     }
 
     func send(_ event: CaskOperationEvent, for token: String) {
-        let current = states[token]
-        let next = CaskOperationStateMachine.transition(from: current, on: event)
-        guard next != current else { return }
-        states[token] = next
+        let box: CaskOperationBox
+        if let existing = boxes[token] {
+            box = existing
+        } else {
+            box = CaskOperationBox()
+            boxes[token] = box
+        }
+        let next = CaskOperationStateMachine.transition(from: box.state, on: event)
+        guard next != box.state else { return }
+        box.state = next
     }
 
     func beginUpdateAll() -> Bool {
@@ -44,26 +57,26 @@ final class CaskOperationStore {
     }
 
     func canBeginOperation(for token: String) -> Bool {
-        guard let state = states[token] else { return true }
+        guard let state = boxes[token]?.state else { return true }
         if case .running = state { return false }
         return true
     }
 
     var pendingPermissions: [String: Bool] {
-        states.reduce(into: [:]) { result, entry in
-            if case let .awaitingPermission(force) = entry.value {
+        boxes.reduce(into: [:]) { result, entry in
+            if case let .awaitingPermission(force) = entry.value.state {
                 result[entry.key] = force
             }
         }
     }
 
     var hasActiveOperations: Bool {
-        isUpdatingAll || states.values.contains { $0.action != nil }
+        isUpdatingAll || boxes.values.contains { $0.state?.action != nil }
     }
 
     var status: CaskOperationStatus? {
         CaskOperationStatus.make(
-            operations: states.values.compactMap(\.progress),
+            operations: boxes.values.compactMap(\.state?.progress),
             updateAll: updateAllProgress
         )
     }

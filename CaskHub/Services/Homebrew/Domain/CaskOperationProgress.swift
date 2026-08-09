@@ -200,7 +200,7 @@ nonisolated struct CaskOperationStatus: Equatable, Sendable {
     ) -> CaskOperationStatus? {
         if let updateAll {
             let label = [
-                "Updating \(updateAll.currentIndex) of \(updateAll.totalCount)",
+                String(localized: "Updating \(updateAll.currentIndex) of \(updateAll.totalCount)"),
                 updateAll.currentDisplayName
             ].joined(separator: " · ")
             let current = operations.first(where: { $0.token == updateAll.currentToken })

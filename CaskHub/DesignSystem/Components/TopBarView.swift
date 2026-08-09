@@ -37,7 +37,7 @@ struct TopBarView: View {
                 .font(CHType.topBarTitle)
                 .foregroundStyle(Color.chTextTitle)
 
-            Text("\(caskCount.formatted()) casks")
+            Text("\(caskCount) casks")
                 .font(CHType.countMeta)
                 .foregroundStyle(Color.chTextMuted)
 

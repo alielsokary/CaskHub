@@ -61,7 +61,25 @@ final class CaskCatalogViewModel {
     private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     private var analyticsRequestID = UUID()
     private(set) var catalogRevision = 0
-    var searchText = ""
+    var searchText = "" {
+        didSet { scheduleSearchApply() }
+    }
+    /// Projection reads this; `searchText` stays instant for the field echo.
+    private(set) var appliedSearchText = "" {
+        didSet { if oldValue != appliedSearchText { resetReveal() } }
+    }
+    static let revealChunk = 200
+    private(set) var revealedCount = revealChunk
+
+    func revealMore() {
+        revealedCount += Self.revealChunk
+    }
+
+    private func resetReveal() {
+        revealedCount = Self.revealChunk
+    }
+    @ObservationIgnored var searchDebounceInterval: Duration = .milliseconds(200)
+    @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
 
     @ObservationIgnored let libraryCache =
         MemoizedValue<CatalogLibraryCacheKey, CatalogLibrarySnapshot>()
@@ -69,6 +87,10 @@ final class CaskCatalogViewModel {
         BoundedMemoizedValues<FilteredCatalogCacheKey, [Cask]>(capacity: 16)
     @ObservationIgnored let browseCache =
         MemoizedValue<BrowseCatalogCacheKey, [BrowseSection]>()
+    @ObservationIgnored let searchKeysCache = MemoizedValue<Int, [String: String]>()
+    @ObservationIgnored let nameRankCache = MemoizedValue<Int, [String: Int]>()
+    @ObservationIgnored let categoryPresentationCache =
+        MemoizedValue<CategoryPresentationCacheKey, [String: CaskCategoryPresentation]>()
 
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"
@@ -81,10 +103,13 @@ final class CaskCatalogViewModel {
         return analyticsByPeriod[analyticsPeriod] ?? [:]
     }
 
-    var sortOption: SortOption = .mostPopular
+    var sortOption: SortOption = .mostPopular {
+        didSet { if oldValue != sortOption { resetReveal() } }
+    }
     var selectedSidebar: SidebarSelection = .discover(.browse) {
         didSet {
             guard oldValue != selectedSidebar else { return }
+            resetReveal()
             switch selectedSidebar {
             case .library(.installed):
                 sortOption = .recentlyInstalled
@@ -220,9 +245,27 @@ final class CaskCatalogViewModel {
         )
     }
 
+    private func scheduleSearchApply() {
+        searchDebounceTask?.cancel()
+        // Clearing applies instantly; only typing debounces.
+        guard !searchText.isEmpty, searchDebounceInterval > .zero else {
+            appliedSearchText = searchText
+            return
+        }
+        searchDebounceTask = Task { [interval = searchDebounceInterval] in
+            try? await Task.sleep(for: interval)
+            guard !Task.isCancelled else { return }
+            appliedSearchText = searchText
+        }
+    }
+
+    // ponytail: en_US pin keeps the K/M suffixes stable across locales
+    private static let downloadsStyle = IntegerFormatStyle<Int>.number
+        .notation(.compactName)
+        .locale(Locale(identifier: "en_US"))
+
     func formattedDownloads(for token: String) -> String? {
         guard let count = downloadCounts[token], count > 0 else { return nil }
-        // ponytail: en_US pin keeps the K/M suffixes stable across locales
-        return count.formatted(.number.notation(.compactName).locale(Locale(identifier: "en_US")))
+        return count.formatted(Self.downloadsStyle)
     }
 }

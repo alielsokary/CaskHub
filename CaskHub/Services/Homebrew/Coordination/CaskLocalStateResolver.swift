@@ -170,9 +170,8 @@ struct CaskLocalStateResolver {
                     cask.token
                 )
             }
-            let bundleNames = Set(launchableBundleNames(for: cask))
-            return snapshot.detectedApplications.contains {
-                bundleNames.contains($0.bundleName)
+            return launchableBundleNames(for: cask).contains {
+                snapshot.detectedApplicationsByBundleName[$0] != nil
             }
         }
         let hasStoreApp = snapshot.installationIndex.catalogTokens.contains(cask.token)
@@ -208,14 +207,14 @@ struct CaskLocalStateResolver {
     }
 
     func existingBundleURL(named names: [String]) -> URL? {
-        let nameSet = Set(names)
-        if let detected = snapshot.detectedApplications.first(where: {
-            nameSet.contains($0.bundleName)
-                && applicationDiscovery.metadata(
+        if let detected = names.lazy
+            .flatMap({ snapshot.detectedApplicationsByBundleName[$0] ?? [] })
+            .first(where: {
+                applicationDiscovery.metadata(
                     at: $0.url,
                     fileManager: fileManager
                 ) != nil
-        }) {
+            }) {
             return detected.url
         }
 
@@ -249,19 +248,16 @@ struct CaskLocalStateResolver {
         if snapshot.installationIndex.catalogTokens.contains(cask.token) {
             return snapshot.installationIndex.macAppStoreApplications[cask.token]
         }
-        let matchingNames = Set(
-            cask.appArtifactNames + cask.packageAppNameCandidates
-        )
-        return snapshot.detectedApplications.first { application in
-            guard application.isMacAppStore,
-                  matchingNames.contains(application.bundleName)
-            else { return false }
-            guard cask.hasPackageArtifact else { return true }
-            guard let bundleIdentifier = application.bundleIdentifier else {
-                return false
+        return (cask.appArtifactNames + cask.packageAppNameCandidates).lazy
+            .flatMap { snapshot.detectedApplicationsByBundleName[$0] ?? [] }
+            .first { application in
+                guard application.isMacAppStore else { return false }
+                guard cask.hasPackageArtifact else { return true }
+                guard let bundleIdentifier = application.bundleIdentifier else {
+                    return false
+                }
+                return storeBundleIdentifier(bundleIdentifier, matches: cask)
             }
-            return storeBundleIdentifier(bundleIdentifier, matches: cask)
-        }
     }
 
     private func storeBundleIdentifier(
