@@ -89,12 +89,7 @@ private extension View {
                 service.send(.confirmPackageAdoption(token: cask.token))
             }
         } message: {
-            Text("""
-            \(cask.displayName) was installed using a package outside Homebrew. \
-            Adopting it will download and run Homebrew's package installer again, \
-            which may replace the existing application. After it finishes, \
-            Homebrew will manage the installation.
-            """)
+            Text(.alertAdoptPackageInstaller(cask.displayName))
         }
     }
 
@@ -119,13 +114,7 @@ private extension View {
                 service.send(.cancelPermission(token: cask.token))
             }
         } message: {
-            Text("""
-            macOS only lets CaskHub modify other apps once you grant it the \
-            App Management permission, and adopting \(cask.displayName) may \
-            need to do that. Enable CaskHub under System Settings → Privacy \
-            & Security → App Management (a system notification may also \
-            offer it), then come back — the adoption will finish on its own.
-            """)
+            Text(.alertAppManagementNeeded(cask.displayName))
         }
     }
 
@@ -157,11 +146,7 @@ private extension View {
             }
             Button("OK", role: .cancel) {}
         } message: {
-            Text("""
-            CaskHub uses Homebrew to install and manage apps, and it doesn't \
-            seem to be installed on this Mac. Install it from brew.sh, then \
-            come back. CaskHub will pick it up automatically.
-            """)
+            Text(.alertHomebrewMissing)
         }
     }
 

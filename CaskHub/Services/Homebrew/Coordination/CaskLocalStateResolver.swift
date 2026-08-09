@@ -93,23 +93,12 @@ struct CaskLocalStateResolver {
         }
         if isMacAppStoreInstalled(cask) {
             return .unavailable(
-                reason: String(
-                    localized: """
-                    Installed from the Mac App Store. \
-                    Uninstall it from Finder or Launchpad.
-                    """
-                )
+                reason: String(localized: .stateUninstallMasInstalled)
             )
         }
         if let externalPath = externalCLIPath(cask) {
             return .unavailable(
-                reason: String(
-                    localized: """
-                    Installed outside Homebrew at \(externalPath.path). \
-                    Remove or move that file manually before installing \
-                    the Homebrew version.
-                    """
-                )
+                reason: String(localized: .stateUninstallExternalCLI(externalPath.path))
             )
         }
         return .notApplicable

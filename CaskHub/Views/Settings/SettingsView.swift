@@ -157,11 +157,7 @@ struct GeneralSettingsView: View {
                         }
                     }
                 }
-                Text("""
-                Needed to adopt or update apps whose casks modify the app bundle \
-                (macOS otherwise blocks CaskHub from modifying other apps). Enable \
-                CaskHub under System Settings → Privacy & Security → App Management.
-                """)
+                Text(.settingsAppManagementDescription)
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -171,7 +167,7 @@ struct GeneralSettingsView: View {
                         Task { await imageCache.clearCache() }
                     }
                 }
-                Text("Removes cached app icons. They re-download the next time each app is shown.")
+                Text(.settingsStorageClearIconCache)
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -357,10 +353,7 @@ struct PrivacySettingsView: View {
                     isOn: $analyticsEnabled
                 )
 
-                Text("""
-                Sends anonymized usage signals through TelemetryDeck. No personal \
-                information is collected.
-                """)
+                Text(.settingsPrivacyUsageAnalytics)
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -371,10 +364,7 @@ struct PrivacySettingsView: View {
                     isOn: $crashReportingEnabled
                 )
 
-                Text("""
-                Sends crash reports and technical diagnostics through Sentry to help \
-                identify and fix problems.
-                """)
+                Text(.settingsPrivacyCrashReports)
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }

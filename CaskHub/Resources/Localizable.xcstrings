@@ -1,302 +1,2524 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "": {
-      "shouldTranslate": false
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+      "shouldTranslate" : false
     },
-    "%@ pours": {},
-    "%@ theme": {},
-    "%@ was installed using a package outside Homebrew. Adopting it will download and run Homebrew's package installer again, which may replace the existing application. After it finishes, Homebrew will manage the installation.": {},
-    "%@ was removed outside Homebrew, but Homebrew still has records for it. Clean Up removes the leftover data.": {},
-    "%lld": {
-      "shouldTranslate": false
+    "%@ pours" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 次下载"
+          }
+        }
+      }
     },
-    "%lld Days": {},
-    "%lld casks": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld cask"
+    "%@ theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 主题"
+          }
+        }
+      }
+    },
+    "%lld" : {
+      "shouldTranslate" : false
+    },
+    "%lld Days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 天"
+          }
+        }
+      }
+    },
+    "%lld casks" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cask"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld casks"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld casks"
                 }
               }
             }
           }
-        }
-      }
-    },
-    "%lld operations in progress": {},
-    "30 Days": {},
-    "90 Days": {},
-    ">_": {
-      "shouldTranslate": false
-    },
-    "A Homebrew operation is still in progress. Quitting while Homebrew is working may leave the affected app in an incomplete state.": {},
-    "A previous update left an old copy of the app inside Homebrew's records, and Homebrew refuses every upgrade until it's cleared. Repair removes the leftover copy and reinstalls the app fresh — your settings and data are kept.": {},
-    "About": {},
-    "Adopt": {},
-    "Adopt %@?": {},
-    "Adopt Anyway": {},
-    "Adopt Apps": {},
-    "Adopt Apps lists installed apps that Homebrew can start managing for you.": {},
-    "Adopt this app first so CaskHub can manage/uninstall it.": {},
-    "Adopting…": {},
-    "Allow": {},
-    "Also list apps that update themselves (brew upgrade --greedy)": {},
-    "Analytics:": {},
-    "App Management": {},
-    "App Theme": {},
-    "Appearance": {},
-    "Architecture": {},
-    "Auto Updates": {},
-    "Automatically check for updates": {},
-    "Brew Binary": {},
-    "Browse": {},
-    "Bundle Created": {},
-    "Bundle Modified": {},
-    "Bundle Short Version": {},
-    "Bundle Version": {},
-    "CATEGORIES": {},
-    "Cancel": {},
-    "Cancel operation": {},
-    "Canceling": {},
-    "Canceling…": {},
-    "Cask": {
-      "shouldTranslate": false
-    },
-    "CaskHub": {
-      "shouldTranslate": false
-    },
-    "CaskHub needs administrator access": {},
-    "CaskHub uses Homebrew to install and manage apps, and it doesn't seem to be installed on this Mac. Install it from brew.sh, then come back. CaskHub will pick it up automatically.": {},
-    "CaskHub will update all %lld apps currently listed on the Updates page using Homebrew.": {},
-    "Caskroom": {
-      "shouldTranslate": false
-    },
-    "Check for Updates…": {},
-    "Checking download": {},
-    "Choose…": {},
-    "Clean Up": {},
-    "Clear Cache": {},
-    "Clear cached app icons": {},
-    "Clear search": {},
-    "Couldn't find an installed app for %@.": {},
-    "Couldn't locate the brew binary. Is Homebrew installed?": {},
-    "Crash Report:": {},
-    "Custom Location": {},
-    "Custom Path": {},
-    "DISCOVER": {},
-    "Dark": {},
-    "Deprecated": {},
-    "Disabled": {},
-    "Download Size": {},
-    "Downloading": {},
-    "Error": {},
-    "External application": {},
-    "External executable": {},
-    "Featured": {},
-    "Frosted panel": {
-      "shouldTranslate": false
-    },
-    "General": {},
-    "Go to brew.sh": {},
-    "Granted": {},
-    "Greedy": {
-      "shouldTranslate": false
-    },
-    "Helps improve CaskHub by sending anonymized usage signals via TelemetryDeck. No personal data is collected and it cannot be used to identify you.": {},
-    "Helps improve CaskHub's stability by sending crash reports and error diagnostics to Sentry so bugs get found and fixed faster.": {},
-    "Homebrew": {
-      "shouldTranslate": false
-    },
-    "Homebrew Not Found": {},
-    "Homepage": {},
-    "Hub": {
-      "shouldTranslate": false
-    },
-    "Info": {},
-    "Install": {},
-    "Installed (%@)": {},
-    "Installed Casks": {},
-    "Installed Version": {},
-    "Installed Via": {},
-    "Installed from the Mac App Store. Uninstall it from Finder or Launchpad.": {},
-    "Installed outside Homebrew at %@. Remove or move that file manually before installing the Homebrew version.": {},
-    "Installing…": {},
-    "Keep Running": {},
-    "LIBRARY": {},
-    "Last Scan": {},
-    "Last Updated": {},
-    "Launch CaskHub at login": {},
-    "Library": {},
-    "Light": {},
-    "Loading casks…": {},
-    "Loading…": {},
-    "Made with ❤️ by Ali Elsokary": {
-      "shouldTranslate": false
-    },
-    "Main Category": {},
-    "More actions": {},
-    "Most Popular": {},
-    "Name (A→Z)": {},
-    "Name (Z→A)": {},
-    "Needed to adopt or update apps whose casks modify the app bundle (macOS otherwise blocks CaskHub from modifying other apps). Enable CaskHub under System Settings → Privacy & Security → App Management.": {},
-    "Never": {},
-    "Newest": {},
-    "No": {},
-    "No Homebrew There": {},
-    "None": {},
-    "Not Found": {},
-    "Not Granted": {},
-    "Not found": {},
-    "Not installed": {},
-    "OK": {},
-    "Oldest": {},
-    "Open": {},
-    "Open System Settings": {},
-    "Opening…": {},
-    "Outdated": {},
-    "Package installer": {},
-    "Paths": {},
-    "Permission Needed": {},
-    "Permissions": {},
-    "Point CaskHub at a Homebrew installed outside the standard locations (/opt/homebrew and /usr/local). Select the brew binary or its installation folder.": {},
-    "Preparing": {},
-    "Privacy": {},
-    "Property": {},
-    "Queued": {},
-    "Queued…": {},
-    "Quit CaskHub": {},
-    "Quit CaskHub?": {},
-    "Recently Added": {},
-    "Recently Installed": {},
-    "Removes cached app icons. They re-download the next time each app is shown.": {},
-    "Repair & Reinstall": {},
-    "Repairing…": {},
-    "Replace with Homebrew Version": {},
-    "Results for “%@”": {},
-    "Search apps…": {},
-    "Select the brew binary or the Homebrew installation folder": {},
-    "Share anonymous usage analytics": {},
-    "Share crash reports": {},
-    "Show Adopt Apps": {},
-    "Show update notification at launch": {},
-    "Sidebar": {},
-    "Startup": {},
-    "Status": {},
-    "Storage": {},
-    "Subcategories": {},
-    "System": {},
-    "The download doesn't match the checksum Homebrew has on record — the developer likely replaced the release file after it was published. This isn't a problem with your Mac; Homebrew refuses mismatched downloads for security. Try again in a day or two once the cask is updated.": {},
-    "The installer for “%@” requires your login password.": {},
-    "The selected location doesn't contain a brew binary.": {},
-    "This installer requires your login password.": {},
-    "This will run `brew uninstall --cask %@`.": {},
-    "Top Charts": {},
-    "Uncategorized": {},
-    "Uninstall": {},
-    "Uninstall %@?": {},
-    "Uninstalling…": {},
-    "Unknown": {},
-    "Update": {},
-    "Update All": {},
-    "Update All Apps?": {},
-    "Updates": {},
-    "Updates always download in the background. When this is off, they install silently the next time you quit CaskHub instead of showing what's new first.": {},
-    "Updating %lld of %lld": {},
-    "Updating…": {},
-    "Using cache": {},
-    "Value": {},
-    "Verifying": {},
-    "Version %@ (%@)": {},
-    "View All": {},
-    "Wait for the current action to finish.": {},
-    "Year": {},
-    "Yes": {},
-    "Your installed copy doesn't match the version Homebrew has on record, so it can't be adopted as-is. You can replace it with Homebrew's copy instead — your settings and data are kept.": {},
-    "Your installed copy of %@ is missing a component Homebrew's version includes (%@), so it can't be adopted as-is. You can replace it with Homebrew's copy instead — your settings and data are kept.": {},
-    "`%@` failed (exit %d).": {},
-    "`%@` failed (exit %d): %@": {},
-    "cask.action.installed": {
-      "comment": "Disabled action button state after a cask is installed",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installed"
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个 Cask"
           }
         }
       }
     },
-    "cask.dateLabel.installed": {
-      "comment": "Label for the installation date row, shown next to Last Updated",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installed"
+    "%lld operations in progress" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 项操作进行中"
           }
         }
       }
     },
-    "cask.state.installed": {
-      "comment": "Installation state shown as the version value when the version is unknown",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installed"
+    "30 Days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 天"
           }
         }
       }
     },
-    "formulae.brew.sh returned HTTP %lld.": {},
-    "github.com/alielsokary/CaskHub": {
-      "shouldTranslate": false
-    },
-    "macOS blocked CaskHub from modifying apps on your Mac. Enable CaskHub under System Settings → Privacy & Security → App Management, then try again.": {},
-    "macOS only lets CaskHub modify other apps once you grant it the App Management permission, and adopting %@ may need to do that. Enable CaskHub under System Settings → Privacy & Security → App Management (a system notification may also offer it), then come back — the adoption will finish on its own.": {},
-    "search": {},
-    "sidebar.installed": {
-      "comment": "Sidebar library item listing installed casks",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Installed"
+    "90 Days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "90 天"
           }
         }
       }
     },
-    "sidebar.updates": {
-      "comment": "Sidebar library item listing casks with available updates",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Updates"
+    ">_" : {
+      "shouldTranslate" : false
+    },
+    "About" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
           }
         }
       }
     },
-    "© 2026 Ali Elsokary. All rights reserved.": {
-      "shouldTranslate": false
+    "About CaskHub" : {
+      "comment" : "A label for the \"About CaskHub\" menu item.",
+      "isCommentAutoGenerated" : true
     },
-    "✷ HOUSE PICK": {}
+    "Adopt" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接管"
+          }
+        }
+      }
+    },
+    "Adopt %@?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接管 %@？"
+          }
+        }
+      }
+    },
+    "Adopt Anyway" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仍要接管"
+          }
+        }
+      }
+    },
+    "Adopt Apps" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接管应用"
+          }
+        }
+      }
+    },
+    "Adopt Apps lists installed apps that Homebrew can start managing for you." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「接管应用」会列出 Homebrew 可以开始为你管理的已安装应用。"
+          }
+        }
+      }
+    },
+    "Adopt this app first so CaskHub can manage/uninstall it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先接管此应用，CaskHub 才能管理或卸载它。"
+          }
+        }
+      }
+    },
+    "Adopting Apps" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接管应用"
+          }
+        }
+      }
+    },
+    "Adopting…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在接管…"
+          }
+        }
+      }
+    },
+    "Allow" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许"
+          }
+        }
+      }
+    },
+    "Also list apps that update themselves (brew upgrade --greedy)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同时列出会自我更新的应用（brew upgrade --greedy）"
+          }
+        }
+      }
+    },
+    "App Management" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App 管理"
+          }
+        }
+      }
+    },
+    "App Management Permission" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App 管理权限"
+          }
+        }
+      }
+    },
+    "App Theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用主题"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
+    "Architecture" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "架构"
+          }
+        }
+      }
+    },
+    "Auto Updates" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动更新"
+          }
+        }
+      }
+    },
+    "Automatic Updates" : {
+      "comment" : "A section that allows the user to enable automatic checking for updates.",
+      "isCommentAutoGenerated" : true
+    },
+    "Automatically check for updates" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动检查更新"
+          }
+        }
+      }
+    },
+    "Brew Binary" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew 可执行文件"
+          }
+        }
+      }
+    },
+    "Browse" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览"
+          }
+        }
+      }
+    },
+    "Browse Apps" : {},
+    "Bundle Created" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bundle 创建时间"
+          }
+        }
+      }
+    },
+    "Bundle Modified" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bundle 修改时间"
+          }
+        }
+      }
+    },
+    "Bundle Short Version" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bundle 短版本"
+          }
+        }
+      }
+    },
+    "Bundle Version" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bundle 版本"
+          }
+        }
+      }
+    },
+    "CATEGORIES" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分类"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Cancel operation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消操作"
+          }
+        }
+      }
+    },
+    "Canceling" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在取消"
+          }
+        }
+      }
+    },
+    "Canceling…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在取消…"
+          }
+        }
+      }
+    },
+    "Cask" : {
+      "shouldTranslate" : false
+    },
+    "CaskHub" : {
+      "shouldTranslate" : false
+    },
+    "CaskHub Help" : {
+      "comment" : "The title of the help window.",
+      "isCommentAutoGenerated" : true
+    },
+    "CaskHub Website" : {},
+    "CaskHub needs administrator access" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 需要管理员权限"
+          }
+        }
+      }
+    },
+    "Caskroom" : {
+      "shouldTranslate" : false
+    },
+    "Check Homebrew Setup" : {},
+    "Check Now" : {
+      "comment" : "A button that checks for updates.",
+      "isCommentAutoGenerated" : true
+    },
+    "Check for Updates…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查更新…"
+          }
+        }
+      }
+    },
+    "Checking download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查下载"
+          }
+        }
+      }
+    },
+    "Checking for updates" : {
+      "comment" : "A button that checks for updates.",
+      "isCommentAutoGenerated" : true
+    },
+    "Checking…" : {
+      "comment" : "A label displayed when checking for updates.",
+      "isCommentAutoGenerated" : true
+    },
+    "Choose…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择…"
+          }
+        }
+      }
+    },
+    "Clean Up" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理"
+          }
+        }
+      }
+    },
+    "Clear Cache" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除缓存"
+          }
+        }
+      }
+    },
+    "Clear cached app icons" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除已缓存的应用图标"
+          }
+        }
+      }
+    },
+    "Clear search" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除搜索"
+          }
+        }
+      }
+    },
+    "Copy Command" : {
+      "comment" : "A button that copies a command to the clipboard.",
+      "isCommentAutoGenerated" : true
+    },
+    "Couldn't find an installed app for %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 %@ 已安装的应用。"
+          }
+        }
+      }
+    },
+    "Couldn't locate the brew binary. Is Homebrew installed?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 brew 可执行文件。是否已安装 Homebrew？"
+          }
+        }
+      }
+    },
+    "Crash Reports" : {
+      "comment" : "A toggle that enables or disables crash reporting.",
+      "isCommentAutoGenerated" : true
+    },
+    "Current Status" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前状态"
+          }
+        }
+      }
+    },
+    "Custom Location" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义位置"
+          }
+        }
+      }
+    },
+    "Custom Locations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义位置"
+          }
+        }
+      }
+    },
+    "DISCOVER" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        }
+      }
+    },
+    "Deprecated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已弃用"
+          }
+        }
+      }
+    },
+    "Disabled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已禁用"
+          }
+        }
+      }
+    },
+    "Download Size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载大小"
+          }
+        }
+      }
+    },
+    "Downloading" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下载"
+          }
+        }
+      }
+    },
+    "External application" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外部应用"
+          }
+        }
+      }
+    },
+    "External executable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外部可执行文件"
+          }
+        }
+      }
+    },
+    "Featured" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "精选"
+          }
+        }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通用"
+          }
+        }
+      }
+    },
+    "Getting Started" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速入门"
+          }
+        }
+      }
+    },
+    "Go to brew.sh" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往 brew.sh"
+          }
+        }
+      }
+    },
+    "Granted" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授权"
+          }
+        }
+      }
+    },
+    "Greedy" : {
+      "shouldTranslate" : false
+    },
+    "Greedy Updates" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Greedy 更新"
+          }
+        }
+      }
+    },
+    "Grid" : {
+      "comment" : "A toggle to switch to a grid view.",
+      "isCommentAutoGenerated" : true
+    },
+    "Homebrew" : {
+      "shouldTranslate" : false
+    },
+    "Homebrew Not Found" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到 Homebrew"
+          }
+        }
+      }
+    },
+    "Homebrew Setup" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 设置"
+          }
+        }
+      }
+    },
+    "Homebrew is available: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 可用：%@"
+          }
+        }
+      }
+    },
+    "Homebrew path" : {
+      "comment" : "A prompt displayed in the text field.",
+      "isCommentAutoGenerated" : true
+    },
+    "Homebrew was not found on this Mac." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Mac 上未找到 Homebrew。"
+          }
+        }
+      }
+    },
+    "Homepage" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主页"
+          }
+        }
+      }
+    },
+    "How to Grant It" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如何授予"
+          }
+        }
+      }
+    },
+    "Hub" : {
+      "shouldTranslate" : false
+    },
+    "Info" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "详情"
+          }
+        }
+      }
+    },
+    "Install" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装"
+          }
+        }
+      }
+    },
+    "Install & Update" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装与更新"
+          }
+        }
+      }
+    },
+    "Installed (%@)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装（%@）"
+          }
+        }
+      }
+    },
+    "Installed Casks" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装的 Cask"
+          }
+        }
+      }
+    },
+    "Installed Version" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装版本"
+          }
+        }
+      }
+    },
+    "Installed Via" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装方式"
+          }
+        }
+      }
+    },
+    "Installing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装"
+          }
+        }
+      }
+    },
+    "Installing…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安装…"
+          }
+        }
+      }
+    },
+    "Keep Running" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续运行"
+          }
+        }
+      }
+    },
+    "LIBRARY" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的库"
+          }
+        }
+      }
+    },
+    "Last Scan" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次扫描"
+          }
+        }
+      }
+    },
+    "Last Updated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次更新"
+          }
+        }
+      }
+    },
+    "Launch CaskHub at login" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时启动 CaskHub"
+          }
+        }
+      }
+    },
+    "Library" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "库"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
+          }
+        }
+      }
+    },
+    "List" : {
+      "comment" : "A button that displays a list of items.",
+      "isCommentAutoGenerated" : true
+    },
+    "Loading casks…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载 Cask…"
+          }
+        }
+      }
+    },
+    "Loading…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加载中…"
+          }
+        }
+      }
+    },
+    "Made with ❤️ by Ali Elsokary" : {
+      "shouldTranslate" : false
+    },
+    "Main Category" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主分类"
+          }
+        }
+      }
+    },
+    "Manage" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理"
+          }
+        }
+      }
+    },
+    "More actions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多操作"
+          }
+        }
+      }
+    },
+    "Most Popular" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最热门"
+          }
+        }
+      }
+    },
+    "Name (A→Z)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称（A→Z）"
+          }
+        }
+      }
+    },
+    "Name (Z→A)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称（Z→A）"
+          }
+        }
+      }
+    },
+    "Never" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从未"
+          }
+        }
+      }
+    },
+    "Newest" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新"
+          }
+        }
+      }
+    },
+    "No" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "否"
+          }
+        }
+      }
+    },
+    "No Homebrew There" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该位置没有 Homebrew"
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无"
+          }
+        }
+      }
+    },
+    "Not Found" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到"
+          }
+        }
+      }
+    },
+    "Not Granted" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未授权"
+          }
+        }
+      }
+    },
+    "Not found" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到"
+          }
+        }
+      }
+    },
+    "Not installed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
+    "Oldest" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最早"
+          }
+        }
+      }
+    },
+    "Only needed when Homebrew is installed outside /opt/homebrew or /usr/local." : {
+      "comment" : "A description of the custom Homebrew location setting.",
+      "isCommentAutoGenerated" : true
+    },
+    "Open" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开"
+          }
+        }
+      }
+    },
+    "Open Homebrew Settings" : {},
+    "Open System Settings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置"
+          }
+        }
+      }
+    },
+    "Open brew.sh" : {},
+    "Opening…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在打开…"
+          }
+        }
+      }
+    },
+    "Outdated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已过期"
+          }
+        }
+      }
+    },
+    "Package Installers" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "软件包安装器"
+          }
+        }
+      }
+    },
+    "Package installer" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装包"
+          }
+        }
+      }
+    },
+    "Paths" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "路径"
+          }
+        }
+      }
+    },
+    "Permission Denied" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限被拒绝"
+          }
+        }
+      }
+    },
+    "Permission Needed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要权限"
+          }
+        }
+      }
+    },
+    "Permissions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限"
+          }
+        }
+      }
+    },
+    "Preparing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备中"
+          }
+        }
+      }
+    },
+    "Privacy" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私"
+          }
+        }
+      }
+    },
+    "Property" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "属性"
+          }
+        }
+      }
+    },
+    "Queued" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排队中"
+          }
+        }
+      }
+    },
+    "Queued…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排队中…"
+          }
+        }
+      }
+    },
+    "Quit CaskHub" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 CaskHub"
+          }
+        }
+      }
+    },
+    "Quit CaskHub?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要退出 CaskHub 吗？"
+          }
+        }
+      }
+    },
+    "Recently Added" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近新增"
+          }
+        }
+      }
+    },
+    "Recently Installed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近安装"
+          }
+        }
+      }
+    },
+    "Repair or Replace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修复或替换"
+          }
+        }
+      }
+    },
+    "Repairing…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在修复…"
+          }
+        }
+      }
+    },
+    "Report an Issue" : {
+      "comment" : "A link to report an issue with CaskHub.",
+      "isCommentAutoGenerated" : true
+    },
+    "Results for “%@”" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” 的搜索结果"
+          }
+        }
+      }
+    },
+    "Search apps…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索应用…"
+          }
+        }
+      }
+    },
+    "Select the brew binary or the Homebrew installation folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择 brew 可执行文件或 Homebrew 安装目录"
+          }
+        }
+      }
+    },
+    "Share anonymous usage analytics" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共享匿名使用统计"
+          }
+        }
+      }
+    },
+    "Share crash reports" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共享崩溃报告"
+          }
+        }
+      }
+    },
+    "Show Adopt Apps" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示可接管的应用"
+          }
+        }
+      }
+    },
+    "Show Adoptable Apps" : {},
+    "Show Available Updates" : {},
+    "Sidebar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "边栏"
+          }
+        }
+      }
+    },
+    "Startup" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "状态"
+          }
+        }
+      }
+    },
+    "Storage" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储"
+          }
+        }
+      }
+    },
+    "Subcategories" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "子分类"
+          }
+        }
+      }
+    },
+    "Submit a bug or feature request" : {
+      "comment" : "A button that opens a link to submit a bug or feature request.",
+      "isCommentAutoGenerated" : true
+    },
+    "Support" : {
+      "comment" : "A section of the settings view that allows the user to report bugs or request features.",
+      "isCommentAutoGenerated" : true
+    },
+    "System" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "The installer for “%@” requires your login password." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” 的安装程序需要你的登录密码。"
+          }
+        }
+      }
+    },
+    "The selected location doesn't contain a brew binary." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选位置中没有 brew 可执行文件。"
+          }
+        }
+      }
+    },
+    "This installer requires your login password." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此安装程序需要你的登录密码。"
+          }
+        }
+      }
+    },
+    "Top Charts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排行榜"
+          }
+        }
+      }
+    },
+    "Troubleshooting" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "故障排除"
+          }
+        }
+      }
+    },
+    "Uncategorized" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未分类"
+          }
+        }
+      }
+    },
+    "Uninstall" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载"
+          }
+        }
+      }
+    },
+    "Uninstalling…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在卸载…"
+          }
+        }
+      }
+    },
+    "Unknown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知"
+          }
+        }
+      }
+    },
+    "Update" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
+    "Update All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部更新"
+          }
+        }
+      }
+    },
+    "Update All Apps?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新所有应用？"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
+    "Updating" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
+    "Updating %lld of %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在更新 %lld/%lld"
+          }
+        }
+      }
+    },
+    "Updating…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在更新…"
+          }
+        }
+      }
+    },
+    "Usage Analytics" : {
+      "comment" : "A toggle that enables or disables sending usage analytics.",
+      "isCommentAutoGenerated" : true
+    },
+    "Use Automatic Location" : {
+      "comment" : "A button that resets the custom Homebrew location to the automatic one.",
+      "isCommentAutoGenerated" : true
+    },
+    "Using cache" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用缓存"
+          }
+        }
+      }
+    },
+    "Value" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "值"
+          }
+        }
+      }
+    },
+    "Verifying" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "校验中"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本 %@（%@）"
+          }
+        }
+      }
+    },
+    "View" : {
+      "comment" : "A button that opens a link.",
+      "isCommentAutoGenerated" : true
+    },
+    "View All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看全部"
+          }
+        }
+      }
+    },
+    "View Permission Status" : {},
+    "Wait for the current action to finish." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请等待当前操作完成。"
+          }
+        }
+      }
+    },
+    "Welcome to CaskHub" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欢迎使用 CaskHub"
+          }
+        }
+      }
+    },
+    "What Changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有哪些变化"
+          }
+        }
+      }
+    },
+    "When Adoption Cannot Continue" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法继续接管时"
+          }
+        }
+      }
+    },
+    "Why It Is Needed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为何需要"
+          }
+        }
+      }
+    },
+    "Year" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一年"
+          }
+        }
+      }
+    },
+    "Yes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是"
+          }
+        }
+      }
+    },
+    "`%@` failed (exit %d)." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "`%@` 执行失败（退出码 %d）。"
+          }
+        }
+      }
+    },
+    "`%@` failed (exit %d): %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "`%@` 执行失败（退出码 %d）：%@"
+          }
+        }
+      }
+    },
+    "action.cleanup.zombieHelp" : {
+      "comment" : "Tooltip on the Clean Up button for a zombie cask",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ was removed outside Homebrew, but Homebrew still has records for it. Clean Up removes the leftover data."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 已在 Homebrew 之外被移除，但 Homebrew 仍保留着它的记录。「清理」会删除残留数据。"
+          }
+        }
+      }
+    },
+    "alert.adopt.packageInstaller" : {
+      "comment" : "Alert body before adopting an app installed via pkg installer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ was installed using a package outside Homebrew. Adopting it will download and run Homebrew's package installer again, which may replace the existing application. After it finishes, Homebrew will manage the installation."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 是通过 Homebrew 之外的安装包安装的。接管它会重新下载并运行 Homebrew 的安装包，可能会替换现有应用。完成后将由 Homebrew 管理该安装。"
+          }
+        }
+      }
+    },
+    "alert.appManagementNeeded" : {
+      "comment" : "Alert body asking for the App Management permission before adoption",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS only lets CaskHub modify other apps once you grant it the App Management permission, and adopting %@ may need to do that. Enable CaskHub under System Settings → Privacy & Security → App Management (a system notification may also offer it), then come back — the adoption will finish on its own."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有在你授予「App 管理」权限后，macOS 才允许 CaskHub 修改其他应用，而接管 %@ 可能需要该权限。请在「系统设置 → 隐私与安全性 → App 管理」中启用 CaskHub（系统通知也可能直接提供该选项），然后回到这里——接管会自动完成。"
+          }
+        }
+      }
+    },
+    "alert.homebrewMissing" : {
+      "comment" : "Alert body when no Homebrew installation is detected",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub uses Homebrew to install and manage apps, and it doesn't seem to be installed on this Mac. Install it from brew.sh, then come back. CaskHub will pick it up automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 依靠 Homebrew 来安装和管理应用，但这台 Mac 上似乎尚未安装。请从 brew.sh 安装后再回来，CaskHub 会自动识别。"
+          }
+        }
+      }
+    },
+    "alert.quitDuringOperation" : {
+      "comment" : "Quit confirmation body while a brew operation is running",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Homebrew operation is still in progress. Quitting while Homebrew is working may leave the affected app in an incomplete state."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 操作仍在进行中。此时退出可能会让相关应用处于不完整状态。"
+          }
+        }
+      }
+    },
+    "alert.updateAll.confirmation" : {
+      "comment" : "Confirmation body before updating every app on the Updates page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub will update all %lld apps currently listed on the Updates page using Homebrew."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 将使用 Homebrew 更新「更新」页面上当前列出的全部 %lld 个应用。"
+          }
+        }
+      }
+    },
+    "cask.action.installed" : {
+      "comment" : "Disabled action button state after a cask is installed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装"
+          }
+        }
+      }
+    },
+    "cask.dateLabel.installed" : {
+      "comment" : "Label for the installation date row, shown next to Last Updated",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装时间"
+          }
+        }
+      }
+    },
+    "cask.state.installed" : {
+      "comment" : "Installation state shown as the version value when the version is unknown",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装"
+          }
+        }
+      }
+    },
+    "error.adoptMissingComponent" : {
+      "comment" : "Error when adoption is blocked by a missing binary the cask ships",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your installed copy of %@ is missing a component Homebrew's version includes (%@), so it can't be adopted as-is. You can replace it with Homebrew's copy instead — your settings and data are kept."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你已安装的 %@ 缺少 Homebrew 版本包含的组件（%@），因此无法直接接管。你可以改为用 Homebrew 的版本替换它——你的设置和数据会被保留。"
+          }
+        }
+      }
+    },
+    "error.adoptVersionMismatch" : {
+      "comment" : "Error when adoption fails because installed version differs from the cask",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your installed copy doesn't match the version Homebrew has on record, so it can't be adopted as-is. You can replace it with Homebrew's copy instead — your settings and data are kept."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你已安装的版本与 Homebrew 记录的版本不一致，因此无法直接接管。你可以改为用 Homebrew 的版本替换它——你的设置和数据会被保留。"
+          }
+        }
+      }
+    },
+    "error.appManagementDenied" : {
+      "comment" : "Error when the App Management permission blocks a brew operation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS blocked CaskHub from modifying apps on your Mac. Enable CaskHub under System Settings → Privacy & Security → App Management, then try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 阻止了 CaskHub 修改这台 Mac 上的应用。请在「系统设置 → 隐私与安全性 → App 管理」中启用 CaskHub，然后重试。"
+          }
+        }
+      }
+    },
+    "error.checksumMismatch" : {
+      "comment" : "Error when a cask download fails Homebrew's checksum verification",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download doesn't match the checksum Homebrew has on record — the developer likely replaced the release file after it was published. This isn't a problem with your Mac; Homebrew refuses mismatched downloads for security. Try again in a day or two once the cask is updated."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载内容与 Homebrew 记录的校验和不一致——开发者很可能在发布后替换了发行文件。这不是你的 Mac 的问题；出于安全考虑，Homebrew 会拒绝校验和不匹配的下载。请等该 Cask 更新后，过一两天再试。"
+          }
+        }
+      }
+    },
+    "error.staleUpgradeRecord" : {
+      "comment" : "Error when a stranded old app copy blocks every upgrade",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A previous update left an old copy of the app inside Homebrew's records, and Homebrew refuses every upgrade until it's cleared. Repair removes the leftover copy and reinstalls the app fresh — your settings and data are kept."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一次更新在 Homebrew 的记录中残留了该应用的旧副本，在清除之前 Homebrew 会拒绝所有升级。「修复」会移除残留副本并重新全新安装——你的设置和数据会被保留。"
+          }
+        }
+      }
+    },
+    "formulae.brew.sh returned HTTP %lld." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "formulae.brew.sh 返回 HTTP %lld。"
+          }
+        }
+      }
+    },
+    "github.com/alielsokary/CaskHub" : {
+      "shouldTranslate" : false
+    },
+    "help.adopt.mismatch" : {
+      "comment" : "Help: adoption cannot-continue section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the installed bundle does not match the cask, CaskHub can offer Homebrew's version instead. Review that recovery action before accepting it."
+          }
+        }
+      }
+    },
+    "help.adopt.packageInstallers" : {
+      "comment" : "Help: adoption Package Installers section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps installed from a package may need Homebrew's installer to run again. CaskHub explains this and asks before continuing."
+          }
+        }
+      }
+    },
+    "help.adopt.whatChanges" : {
+      "comment" : "Help: adoption What Changes section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub asks Homebrew to create its management records for the existing app. Your documents, accounts, and app preferences stay in their normal locations."
+          }
+        }
+      }
+    },
+    "help.adoption.subtitle" : {
+      "comment" : "Help: Adopting Apps page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adoption brings a compatible app installed outside Homebrew under Homebrew management."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接管可将 Homebrew 之外安装的兼容应用纳入 Homebrew 管理。"
+          }
+        }
+      }
+    },
+    "help.browse.overview" : {
+      "comment" : "Help: Browse section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explore featured apps, top charts, recent releases, and categories. Browsing does not require Homebrew to be installed."
+          }
+        }
+      }
+    },
+    "help.gettingStarted.subtitle" : {
+      "comment" : "Help: Getting Started page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browse the Homebrew catalog freely, then use your local Homebrew installation to manage apps."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自由浏览 Homebrew 目录，然后使用本机安装的 Homebrew 管理应用。"
+          }
+        }
+      }
+    },
+    "help.homebrew.customLocation" : {
+      "comment" : "Help: Custom Locations section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If Homebrew lives outside /opt/homebrew or /usr/local, choose its binary or installation folder in CaskHub Settings."
+          }
+        }
+      }
+    },
+    "help.homebrew.install" : {
+      "comment" : "Help: shown when no Homebrew installation is detected",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Homebrew from its official website, return to CaskHub, and the app will detect it automatically."
+          }
+        }
+      }
+    },
+    "help.homebrew.subtitle" : {
+      "comment" : "Help: Homebrew Setup page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew is only required when CaskHub needs to install, update, adopt, repair, or uninstall an app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅当 CaskHub 需要安装、更新、接管、修复或卸载应用时才需要 Homebrew。"
+          }
+        }
+      }
+    },
+    "help.install.howTo" : {
+      "comment" : "Help: Installing section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Install on any catalog card. CaskHub shows live progress and lets you cancel downloads while Homebrew supports cancellation safely."
+          }
+        }
+      }
+    },
+    "help.installAndUpdate.subtitle" : {
+      "comment" : "Help: Install & Update page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub runs operations through your real brew binary, so the same apps remain manageable from Terminal."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 通过本机的 brew 可执行文件执行操作，因此这些应用仍可在终端中管理。"
+          }
+        }
+      }
+    },
+    "help.manage.overview" : {
+      "comment" : "Help: Manage section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install new apps, update Homebrew-managed apps, or adopt compatible apps already installed on your Mac."
+          }
+        }
+      }
+    },
+    "help.permissions.grant" : {
+      "comment" : "Help: how to grant App Management permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings → Privacy & Security → App Management, then enable CaskHub. Return to CaskHub afterward; a pending adoption can resume automatically."
+          }
+        }
+      }
+    },
+    "help.permissions.subtitle" : {
+      "comment" : "Help: App Management Permission page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS may require permission before CaskHub can modify an application installed in /Applications."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 CaskHub 修改安装于 /Applications 的应用之前，macOS 可能要求授权。"
+          }
+        }
+      }
+    },
+    "help.permissions.why" : {
+      "comment" : "Help: why App Management permission is needed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some adoption and update operations need to replace or modify another app's bundle. macOS protects those changes with App Management permission."
+          }
+        }
+      }
+    },
+    "help.troubleshooting.homebrewMissing" : {
+      "comment" : "Help: troubleshooting Homebrew Not Found body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm Homebrew is installed. If it uses a custom prefix, select that location in Homebrew Settings."
+          }
+        }
+      }
+    },
+    "help.troubleshooting.permissionDenied" : {
+      "comment" : "Help: troubleshooting Permission Denied body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant App Management permission and retry. CaskHub only requests this when an operation may modify another app bundle."
+          }
+        }
+      }
+    },
+    "help.troubleshooting.recovery" : {
+      "comment" : "Help: troubleshooting Repair or Replace body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrupted or mismatched installations can expose Repair & Reinstall or Replace with Homebrew Version. These actions appear only when they match the detected failure."
+          }
+        }
+      }
+    },
+    "help.troubleshooting.subtitle" : {
+      "comment" : "Help: Troubleshooting page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with the recovery action CaskHub presents for the affected app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先尝试 CaskHub 为受影响应用提供的恢复操作。"
+          }
+        }
+      }
+    },
+    "help.updates.greedy" : {
+      "comment" : "Help: Greedy Updates section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Greedy to include casks that normally update themselves. Leave it off when you prefer each app's built-in updater."
+          }
+        }
+      }
+    },
+    "help.updates.overview" : {
+      "comment" : "Help: Updating section body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Updates page lists Homebrew-managed apps with meaningful updates. Update All asks for confirmation before starting the batch."
+          }
+        }
+      }
+    },
+    "search" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索"
+          }
+        }
+      }
+    },
+    "settings.appManagement.description" : {
+      "comment" : "Settings footnote explaining the App Management permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needed to adopt or update apps whose casks modify the app bundle (macOS otherwise blocks CaskHub from modifying other apps). Enable CaskHub under System Settings → Privacy & Security → App Management."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接管或更新那些会修改应用包的 Cask 时需要此权限（否则 macOS 会阻止 CaskHub 修改其他应用）。请在「系统设置 → 隐私与安全性 → App 管理」中启用 CaskHub。"
+          }
+        }
+      }
+    },
+    "settings.privacy.crashReports" : {
+      "comment" : "Settings footnote for the crash reports toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends crash reports and technical diagnostics through Sentry to help identify and fix problems."
+          }
+        }
+      }
+    },
+    "settings.privacy.usageAnalytics" : {
+      "comment" : "Settings footnote for the usage analytics toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends anonymized usage signals through TelemetryDeck. No personal information is collected."
+          }
+        }
+      }
+    },
+    "settings.storage.clearIconCache" : {
+      "comment" : "Settings footnote under the Clear Cache button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removes cached app icons. They re-download the next time each app is shown."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除已缓存的应用图标。下次显示各应用时会重新下载。"
+          }
+        }
+      }
+    },
+    "settings.updates.automaticChecks" : {
+      "comment" : "Settings footnote for the automatic update checks toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When automatic checks are enabled, CaskHub downloads updates in the background and always shows the update prompt before installation."
+          }
+        }
+      }
+    },
+    "sidebar.installed" : {
+      "comment" : "Sidebar library item listing installed casks",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装"
+          }
+        }
+      }
+    },
+    "sidebar.updates" : {
+      "comment" : "Sidebar library item listing casks with available updates",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
+    "state.uninstall.externalCLI" : {
+      "comment" : "Why uninstall is unavailable when an external CLI copy exists",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed outside Homebrew at %@. Remove or move that file manually before installing the Homebrew version."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在 Homebrew 之外安装于 %@。请先手动删除或移动该文件，再安装 Homebrew 版本。"
+          }
+        }
+      }
+    },
+    "state.uninstall.masInstalled" : {
+      "comment" : "Why uninstall is unavailable for a Mac App Store copy",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 Mac App Store 安装。请在访达或启动台中卸载。"
+          }
+        }
+      }
+    },
+    "© 2026 Ali Elsokary. All rights reserved." : {
+      "shouldTranslate" : false
+    },
+    "✷ HOUSE PICK" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✷ 编辑精选"
+          }
+        }
+      }
+    }
   },
-  "version": "1.0"
+  "version" : "1.1"
 }

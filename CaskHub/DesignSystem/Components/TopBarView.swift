@@ -297,10 +297,7 @@ private struct UpdateAllConfirmationModifier: ViewModifier {
                 onConfirm?()
             }
         } message: {
-            Text("""
-            CaskHub will update all \(count) apps currently listed on \
-            the Updates page using Homebrew.
-            """)
+            Text(.alertUpdateAllConfirmation(count))
         }
     }
 }

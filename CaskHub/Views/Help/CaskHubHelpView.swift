@@ -26,12 +26,12 @@ enum HelpTopic: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .gettingStarted: "Getting Started"
-        case .homebrew: "Homebrew Setup"
-        case .installAndUpdate: "Install & Update"
-        case .adoption: "Adopting Apps"
-        case .permissions: "Permissions"
-        case .troubleshooting: "Troubleshooting"
+        case .gettingStarted: String(localized: "Getting Started")
+        case .homebrew: String(localized: "Homebrew Setup")
+        case .installAndUpdate: String(localized: "Install & Update")
+        case .adoption: String(localized: "Adopting Apps")
+        case .permissions: String(localized: "Permissions")
+        case .troubleshooting: String(localized: "Troubleshooting")
         }
     }
 
@@ -83,17 +83,14 @@ struct CaskHubHelpView: View {
         case .gettingStarted:
             HelpPage(
                 title: "Welcome to CaskHub",
-                subtitle: "Browse the Homebrew catalog freely, then use your local Homebrew installation to manage apps."
+                subtitle: .helpGettingStartedSubtitle
             ) {
                 HelpSection(title: "Browse", icon: "square.grid.2x2") {
-                    Text("""
-                    Explore featured apps, top charts, recent releases, and categories. Browsing does not require \
-                    Homebrew to be installed.
-                    """)
+                    Text(.helpBrowseOverview)
                 }
 
                 HelpSection(title: "Manage", icon: "shippingbox") {
-                    Text("Install new apps, update Homebrew-managed apps, or adopt compatible apps already installed on your Mac.")
+                    Text(.helpManageOverview)
                 }
 
                 HStack {
@@ -111,21 +108,18 @@ struct CaskHubHelpView: View {
         case .homebrew:
             HelpPage(
                 title: "Homebrew Setup",
-                subtitle: "Homebrew is only required when CaskHub needs to install, update, adopt, repair, or uninstall an app."
+                subtitle: .helpHomebrewSubtitle
             ) {
                 HelpSection(title: "Current Status", icon: homebrewStatusIcon) {
                     Text(homebrewStatusText)
 
                     if localHomebrew.brewVersion == nil {
-                        Text("Install Homebrew from its official website, return to CaskHub, and the app will detect it automatically.")
+                        Text(.helpHomebrewInstall)
                     }
                 }
 
                 HelpSection(title: "Custom Locations", icon: "folder") {
-                    Text("""
-                    If Homebrew lives outside /opt/homebrew or /usr/local, choose its binary or installation folder \
-                    in CaskHub Settings.
-                    """)
+                    Text(.helpHomebrewCustomLocation)
                 }
 
                 HStack {
@@ -141,27 +135,18 @@ struct CaskHubHelpView: View {
         case .installAndUpdate:
             HelpPage(
                 title: "Install & Update",
-                subtitle: "CaskHub runs operations through your real brew binary, so the same apps remain manageable from Terminal."
+                subtitle: .helpInstallAndUpdateSubtitle
             ) {
                 HelpSection(title: "Installing", icon: "arrow.down.circle") {
-                    Text("""
-                    Choose Install on any catalog card. CaskHub shows live progress and lets you cancel downloads \
-                    while Homebrew supports cancellation safely.
-                    """)
+                    Text(.helpInstallHowTo)
                 }
 
                 HelpSection(title: "Updating", icon: "arrow.triangle.2.circlepath") {
-                    Text("""
-                    The Updates page lists Homebrew-managed apps with meaningful updates. Update All asks for \
-                    confirmation before starting the batch.
-                    """)
+                    Text(.helpUpdatesOverview)
                 }
 
                 HelpSection(title: "Greedy Updates", icon: "checkmark.circle") {
-                    Text("""
-                    Enable Greedy to include casks that normally update themselves. Leave it off when you prefer \
-                    each app's built-in updater.
-                    """)
+                    Text(.helpUpdatesGreedy)
                 }
 
                 Button("Show Available Updates") {
@@ -173,27 +158,18 @@ struct CaskHubHelpView: View {
         case .adoption:
             HelpPage(
                 title: "Adopting Apps",
-                subtitle: "Adoption brings a compatible app installed outside Homebrew under Homebrew management."
+                subtitle: .helpAdoptionSubtitle
             ) {
                 HelpSection(title: "What Changes", icon: "arrow.triangle.2.circlepath") {
-                    Text("""
-                    CaskHub asks Homebrew to create its management records for the existing app. Your documents, \
-                    accounts, and app preferences stay in their normal locations.
-                    """)
+                    Text(.helpAdoptWhatChanges)
                 }
 
                 HelpSection(title: "Package Installers", icon: "shippingbox.fill") {
-                    Text("""
-                    Apps installed from a package may need Homebrew's installer to run again. CaskHub explains \
-                    this and asks before continuing.
-                    """)
+                    Text(.helpAdoptPackageInstallers)
                 }
 
                 HelpSection(title: "When Adoption Cannot Continue", icon: "exclamationmark.triangle") {
-                    Text("""
-                    If the installed bundle does not match the cask, CaskHub can offer Homebrew's version instead. \
-                    Review that recovery action before accepting it.
-                    """)
+                    Text(.helpAdoptMismatch)
                 }
 
                 Button("Show Adoptable Apps") {
@@ -206,20 +182,14 @@ struct CaskHubHelpView: View {
         case .permissions:
             HelpPage(
                 title: "App Management Permission",
-                subtitle: "macOS may require permission before CaskHub can modify an application installed in /Applications."
+                subtitle: .helpPermissionsSubtitle
             ) {
                 HelpSection(title: "Why It Is Needed", icon: "hand.raised") {
-                    Text("""
-                    Some adoption and update operations need to replace or modify another app's bundle. macOS \
-                    protects those changes with App Management permission.
-                    """)
+                    Text(.helpPermissionsWhy)
                 }
 
                 HelpSection(title: "How to Grant It", icon: "gearshape") {
-                    Text("""
-                    Open System Settings → Privacy & Security → App Management, then enable CaskHub. Return to \
-                    CaskHub afterward; a pending adoption can resume automatically.
-                    """)
+                    Text(.helpPermissionsGrant)
                 }
 
                 HStack {
@@ -237,24 +207,18 @@ struct CaskHubHelpView: View {
         case .troubleshooting:
             HelpPage(
                 title: "Troubleshooting",
-                subtitle: "Start with the recovery action CaskHub presents for the affected app."
+                subtitle: .helpTroubleshootingSubtitle
             ) {
                 HelpSection(title: "Homebrew Not Found", icon: "magnifyingglass") {
-                    Text("Confirm Homebrew is installed. If it uses a custom prefix, select that location in Homebrew Settings.")
+                    Text(.helpTroubleshootingHomebrewMissing)
                 }
 
                 HelpSection(title: "Permission Denied", icon: "lock") {
-                    Text("""
-                    Grant App Management permission and retry. CaskHub only requests this when an operation may \
-                    modify another app bundle.
-                    """)
+                    Text(.helpTroubleshootingPermissionDenied)
                 }
 
                 HelpSection(title: "Repair or Replace", icon: "wrench.and.screwdriver") {
-                    Text("""
-                    Interrupted or mismatched installations can expose Repair & Reinstall or Replace with Homebrew \
-                    Version. These actions appear only when they match the detected failure.
-                    """)
+                    Text(.helpTroubleshootingRecovery)
                 }
 
                 HStack {
@@ -276,9 +240,9 @@ struct CaskHubHelpView: View {
 
     private var homebrewStatusText: String {
         guard let version = localHomebrew.brewVersion else {
-            return "Homebrew was not found on this Mac."
+            return String(localized: "Homebrew was not found on this Mac.")
         }
-        return "Homebrew is available: \(version)"
+        return String(localized: "Homebrew is available: \(version)")
     }
 
     private func openCatalog(_ destination: SidebarSelection) {
@@ -293,8 +257,8 @@ struct CaskHubHelpView: View {
 }
 
 private struct HelpPage<Content: View>: View {
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringResource
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -314,7 +278,7 @@ private struct HelpPage<Content: View>: View {
 }
 
 private struct HelpSection<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     @ViewBuilder let content: Content
 
