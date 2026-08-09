@@ -149,6 +149,29 @@ final class CaskListActionTests: XCTestCase {
         )
     }
 
+    func test_presented_menu_keeps_item_targets_alive_after_presentation() throws {
+        let recorder = ActionRecorder()
+        var presentedMenu: NSMenu?
+        let button = CaskRowActionsMenuButton(
+            showsUpdate: true,
+            isBusy: false,
+            uninstallAvailability: .available,
+            onInfo: { recorder.calls.append("info") },
+            onUpdate: { recorder.calls.append("update") },
+            onUninstall: { recorder.calls.append("uninstall") },
+            presentMenu: { presentedMenu = $0 }
+        )
+
+        button.presentActionsMenu()
+
+        let menu = try XCTUnwrap(presentedMenu)
+        XCTAssertTrue(menu.items.allSatisfy { $0.isSeparatorItem || $0.target != nil })
+        menu.performActionForItem(at: 0)
+        menu.performActionForItem(at: 1)
+        menu.performActionForItem(at: 3)
+        XCTAssertEqual(recorder.calls, ["info", "update", "uninstall"])
+    }
+
     func test_row_action_menu_preserves_unavailable_uninstall_hint() {
         let hint = String(
             localized: "Adopt this app first so CaskHub can manage/uninstall it."
