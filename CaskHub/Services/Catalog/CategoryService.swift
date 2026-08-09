@@ -10,6 +10,12 @@ import Observation
 
 typealias CategoryID = String
 
+/// Falls back to the pipeline's English name when the catalog has no
+/// `category.<id>` entry yet (e.g. a new category shipped via data sync).
+nonisolated func localizedCategoryName(_ id: CategoryID, fallback: String) -> String {
+    Bundle.main.localizedString(forKey: "category.\(id)", value: fallback, table: nil)
+}
+
 nonisolated struct CategoryDefinition: Codable, Hashable {
     let displayName: String
     let icon: String
@@ -47,7 +53,9 @@ final class CategoryService {
             .sorted { lhs, rhs in
                 if lhs.key == "other" { return false }
                 if rhs.key == "other" { return true }
-                return lhs.value.displayName.localizedCaseInsensitiveCompare(rhs.value.displayName) == .orderedAscending
+                let lhsName = localizedCategoryName(lhs.key, fallback: lhs.value.displayName)
+                let rhsName = localizedCategoryName(rhs.key, fallback: rhs.value.displayName)
+                return lhsName.localizedCaseInsensitiveCompare(rhsName) == .orderedAscending
             }
             .map { (id: $0.key, definition: $0.value) }
     }
@@ -102,6 +110,7 @@ final class CategoryService {
     }
 
     func displayName(for categoryID: CategoryID) -> String {
-        categoryDefinitions[categoryID]?.displayName ?? categoryID
+        guard let definition = categoryDefinitions[categoryID] else { return categoryID }
+        return localizedCategoryName(categoryID, fallback: definition.displayName)
     }
 }

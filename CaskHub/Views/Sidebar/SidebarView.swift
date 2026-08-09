@@ -43,7 +43,7 @@ struct SidebarView: View {
                     ForEach(categoryService.orderedCategories, id: \.id) { entry in
                         row(
                             .category(entry.id),
-                            title: entry.definition.displayName,
+                            title: categoryService.displayName(for: entry.id),
                             icon: entry.definition.icon,
                             count: categoryCounts[entry.id]
                         )

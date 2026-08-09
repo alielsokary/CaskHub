@@ -100,7 +100,7 @@ extension CaskCatalogViewModel {
                     annualDownloadCounts: analyticsByPeriod[.days365] ?? [:],
                     categoryMappings: categoryService.tokenMappings,
                     orderedCategories: categoryService.orderedCategories.map {
-                        (id: $0.id, displayName: $0.definition.displayName)
+                        (id: $0.id, displayName: categoryService.displayName(for: $0.id))
                     },
                     recentTokens: recentlyAdded.recentTokens(
                         within: recentlyAddedWindow.rawValue

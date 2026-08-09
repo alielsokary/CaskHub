@@ -103,6 +103,17 @@ CaskHub also sends anonymous crash reports through [Sentry](https://sentry.io) t
 
 You can opt out of both at any time in **Settings → Privacy**.
 
+## Localization
+
+CaskHub speaks your language. Currently available in:
+
+- 🇬🇧 **English**
+- 🇨🇳 **简体中文 (Simplified Chinese)** — translated by [@carty900-jpg](https://github.com/carty900-jpg)
+
+macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.
+
+Want CaskHub in your language? Translations live in a single [String Catalog](CaskHub/Resources/Localizable.xcstrings) — open an issue or PR to add yours.
+
 ## Contributing
 
 Interested in contributing to CaskHub? We welcome contributions of all kinds!
