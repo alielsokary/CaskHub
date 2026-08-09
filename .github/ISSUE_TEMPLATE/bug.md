@@ -1,6 +1,7 @@
 ---
 name: 🐛 Bug Report
 about: Something in the app is broken or misbehaving
+title: "[BUG] "
 labels: bug
 ---
 
