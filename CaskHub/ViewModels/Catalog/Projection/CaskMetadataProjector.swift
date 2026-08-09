@@ -33,7 +33,8 @@ enum CaskCategoryProjector {
         for categoryID: CategoryID,
         definitions: [CategoryID: CategoryDefinition]
     ) -> String {
-        definitions[categoryID]?.displayName ?? categoryID
+        guard let definition = definitions[categoryID] else { return categoryID }
+        return localizedCategoryName(categoryID, fallback: definition.displayName)
     }
 }
 
