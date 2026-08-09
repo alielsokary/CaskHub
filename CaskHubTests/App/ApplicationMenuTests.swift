@@ -100,8 +100,30 @@ final class ApplicationMenuTests: XCTestCase {
     }
 
     @MainActor
+    func test_opening_application_menu_preserves_its_items() throws {
+        let applicationMenu = try XCTUnwrap(NSApp.mainMenu?.items.first?.submenu)
+        let expectedItems = applicationMenuContract(applicationMenu)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            applicationMenu.cancelTracking()
+        }
+        _ = applicationMenu.popUp(
+            positioning: nil,
+            at: NSPoint(x: 20, y: 20),
+            in: nil
+        )
+
+        let openedItems = applicationMenuContract(applicationMenu)
+        XCTAssertGreaterThanOrEqual(openedItems.count, expectedItems.count)
+        XCTAssertEqual(Array(openedItems.prefix(expectedItems.count)), expectedItems)
+    }
+
+    @MainActor
     func test_help_menu_opens_help_window() throws {
         let mainMenu = try XCTUnwrap(NSApp.mainMenu)
+        let applicationMenu = try XCTUnwrap(mainMenu.items.first?.submenu)
+        let expectedApplicationItems = applicationMenuContract(applicationMenu)
+        let expectedApplicationItemIDs = applicationMenu.items.map(ObjectIdentifier.init)
         let helpMenu = try XCTUnwrap(mainMenu.item(withTitle: "Help")?.submenu)
         let helpItem = try XCTUnwrap(helpMenu.item(withTitle: "CaskHub Help"))
         let helpAction = try XCTUnwrap(helpItem.action)
@@ -115,8 +137,55 @@ final class ApplicationMenuTests: XCTestCase {
         let helpWindow = try XCTUnwrap(
             NSApp.windows.first(where: { $0.title == "CaskHub Help" })
         )
+        helpWindow.makeKeyAndOrderFront(nil)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+
+        let activeApplicationItems = applicationMenuContract(applicationMenu)
+        XCTAssertEqual(
+            Array(activeApplicationItems.prefix(expectedApplicationItems.count)),
+            expectedApplicationItems
+        )
+        XCTAssertEqual(
+            Array(applicationMenu.items.map(ObjectIdentifier.init)
+                .prefix(expectedApplicationItemIDs.count)),
+            expectedApplicationItemIDs
+        )
         addTeardownBlock { @MainActor in
             helpWindow.close()
+        }
+    }
+
+    @MainActor
+    func test_settings_window_keeps_application_menu_items_stable() throws {
+        let applicationMenu = try XCTUnwrap(NSApp.mainMenu?.items.first?.submenu)
+        let expectedItems = applicationMenuContract(applicationMenu)
+        let expectedItemIDs = applicationMenu.items.map(ObjectIdentifier.init)
+        let existingWindowIDs = Set(NSApp.windows.map(ObjectIdentifier.init))
+        let settingsItem = try XCTUnwrap(applicationMenu.item(withTitle: "Settings…"))
+        let settingsAction = try XCTUnwrap(settingsItem.action)
+
+        XCTAssertTrue(NSApp.sendAction(settingsAction, to: settingsItem.target, from: settingsItem))
+
+        let deadline = Date().addingTimeInterval(2)
+        while NSApp.windows.allSatisfy({ existingWindowIDs.contains(ObjectIdentifier($0)) }),
+              Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
+
+        let settingsWindow = try XCTUnwrap(
+            NSApp.windows.first(where: { !existingWindowIDs.contains(ObjectIdentifier($0)) })
+        )
+        settingsWindow.makeKeyAndOrderFront(nil)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+
+        let activeItems = applicationMenuContract(applicationMenu)
+        XCTAssertEqual(Array(activeItems.prefix(expectedItems.count)), expectedItems)
+        XCTAssertEqual(
+            Array(applicationMenu.items.map(ObjectIdentifier.init).prefix(expectedItemIDs.count)),
+            expectedItemIDs
+        )
+        addTeardownBlock { @MainActor in
+            settingsWindow.close()
         }
     }
 
@@ -134,4 +203,27 @@ final class ApplicationMenuTests: XCTestCase {
         )
         return results
     }
+
+    @MainActor
+    private func applicationMenuContract(_ menu: NSMenu) -> [ApplicationMenuItemContract] {
+        menu.items.map {
+            ApplicationMenuItemContract(
+                title: $0.title,
+                isSeparator: $0.isSeparatorItem,
+                keyEquivalent: $0.keyEquivalent,
+                keyEquivalentModifierMask: $0.keyEquivalentModifierMask,
+                hasImage: $0.image != nil,
+                hasSubmenu: $0.submenu != nil
+            )
+        }
+    }
+}
+
+private struct ApplicationMenuItemContract: Equatable {
+    let title: String
+    let isSeparator: Bool
+    let keyEquivalent: String
+    let keyEquivalentModifierMask: NSEvent.ModifierFlags
+    let hasImage: Bool
+    let hasSubmenu: Bool
 }
