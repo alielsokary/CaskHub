@@ -13,6 +13,7 @@ struct CaskRowView: View {
     var downloads: String?
     var category: CaskCategoryPresentation?
     var localState: CaskLocalState?
+    var eyebrow: LocalizedStringKey?
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var showDeleteConfirmation = false
@@ -37,6 +38,13 @@ struct CaskRowView: View {
 
     private var appInfo: some View {
         VStack(alignment: .leading, spacing: 2) {
+            if let eyebrow {
+                Text(eyebrow)
+                    .font(CHType.labelSm)
+                    .kerning(CHType.trackingLabel)
+                    .foregroundStyle(Color.chTextBrand)
+                    .padding(.bottom, 4)
+            }
             Text(cask.displayName)
                 .font(CHType.cardTitle)
                 .foregroundStyle(Color.chTextTitle)
