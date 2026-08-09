@@ -26,12 +26,12 @@ enum HelpTopic: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .gettingStarted: "Getting Started"
-        case .homebrew: "Homebrew Setup"
-        case .installAndUpdate: "Install & Update"
-        case .adoption: "Adopting Apps"
-        case .permissions: "Permissions"
-        case .troubleshooting: "Troubleshooting"
+        case .gettingStarted: String(localized: "Getting Started")
+        case .homebrew: String(localized: "Homebrew Setup")
+        case .installAndUpdate: String(localized: "Install & Update")
+        case .adoption: String(localized: "Adopting Apps")
+        case .permissions: String(localized: "Permissions")
+        case .troubleshooting: String(localized: "Troubleshooting")
         }
     }
 
@@ -83,7 +83,7 @@ struct CaskHubHelpView: View {
         case .gettingStarted:
             HelpPage(
                 title: "Welcome to CaskHub",
-                subtitle: "Browse the Homebrew catalog freely, then use your local Homebrew installation to manage apps."
+                subtitle: .helpGettingStartedSubtitle
             ) {
                 HelpSection(title: "Browse", icon: "square.grid.2x2") {
                     Text(.helpBrowseOverview)
@@ -108,7 +108,7 @@ struct CaskHubHelpView: View {
         case .homebrew:
             HelpPage(
                 title: "Homebrew Setup",
-                subtitle: "Homebrew is only required when CaskHub needs to install, update, adopt, repair, or uninstall an app."
+                subtitle: .helpHomebrewSubtitle
             ) {
                 HelpSection(title: "Current Status", icon: homebrewStatusIcon) {
                     Text(homebrewStatusText)
@@ -135,7 +135,7 @@ struct CaskHubHelpView: View {
         case .installAndUpdate:
             HelpPage(
                 title: "Install & Update",
-                subtitle: "CaskHub runs operations through your real brew binary, so the same apps remain manageable from Terminal."
+                subtitle: .helpInstallAndUpdateSubtitle
             ) {
                 HelpSection(title: "Installing", icon: "arrow.down.circle") {
                     Text(.helpInstallHowTo)
@@ -158,7 +158,7 @@ struct CaskHubHelpView: View {
         case .adoption:
             HelpPage(
                 title: "Adopting Apps",
-                subtitle: "Adoption brings a compatible app installed outside Homebrew under Homebrew management."
+                subtitle: .helpAdoptionSubtitle
             ) {
                 HelpSection(title: "What Changes", icon: "arrow.triangle.2.circlepath") {
                     Text(.helpAdoptWhatChanges)
@@ -182,7 +182,7 @@ struct CaskHubHelpView: View {
         case .permissions:
             HelpPage(
                 title: "App Management Permission",
-                subtitle: "macOS may require permission before CaskHub can modify an application installed in /Applications."
+                subtitle: .helpPermissionsSubtitle
             ) {
                 HelpSection(title: "Why It Is Needed", icon: "hand.raised") {
                     Text(.helpPermissionsWhy)
@@ -207,7 +207,7 @@ struct CaskHubHelpView: View {
         case .troubleshooting:
             HelpPage(
                 title: "Troubleshooting",
-                subtitle: "Start with the recovery action CaskHub presents for the affected app."
+                subtitle: .helpTroubleshootingSubtitle
             ) {
                 HelpSection(title: "Homebrew Not Found", icon: "magnifyingglass") {
                     Text(.helpTroubleshootingHomebrewMissing)
@@ -240,9 +240,9 @@ struct CaskHubHelpView: View {
 
     private var homebrewStatusText: String {
         guard let version = localHomebrew.brewVersion else {
-            return "Homebrew was not found on this Mac."
+            return String(localized: "Homebrew was not found on this Mac.")
         }
-        return "Homebrew is available: \(version)"
+        return String(localized: "Homebrew is available: \(version)")
     }
 
     private func openCatalog(_ destination: SidebarSelection) {
@@ -257,8 +257,8 @@ struct CaskHubHelpView: View {
 }
 
 private struct HelpPage<Content: View>: View {
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringResource
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -278,7 +278,7 @@ private struct HelpPage<Content: View>: View {
 }
 
 private struct HelpSection<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     @ViewBuilder let content: Content
 
