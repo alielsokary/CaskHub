@@ -107,8 +107,8 @@ You can opt out of both at any time in **Settings → Privacy**.
 
 CaskHub speaks your language. Currently available in:
 
-- **English**
-- **简体中文 (Simplified Chinese)** — translated by [@carty900-jpg](https://github.com/carty900-jpg)
+- 🇬🇧 **English**
+- 🇨🇳 **简体中文 (Simplified Chinese)** — translated by [@carty900-jpg](https://github.com/carty900-jpg)
 
 macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.
 
