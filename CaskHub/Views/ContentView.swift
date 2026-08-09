@@ -202,7 +202,6 @@ struct ContentView: View {
     private var showsBrowseSections: Bool {
         selectedSidebar == .discover(.browse)
             && viewModel.appliedSearchText.isEmpty
-            && viewMode == .grid
     }
 
     private var sortOptions: [SortOption] {
@@ -265,26 +264,56 @@ private extension ContentView {
         .frame(maxWidth: .infinity)
     }
 
+    @ViewBuilder
     var listContent: some View {
-        LazyVStack(spacing: 0) {
-            ForEach(viewModel.displayedCasks) { cask in
-                CaskRowView(
-                    cask: cask,
-                    downloads: viewModel.formattedDownloads(for: cask.token),
-                    category: categoryInfo(for: cask),
-                    localState: viewModel.localState(for: cask)
-                )
-                .padding(.vertical, 6)
+        if showsBrowseSections {
+            VStack(alignment: .leading, spacing: CHSpace.s4) {
+                if let hero = heroCask {
+                    VStack(spacing: 0) {
+                        CaskRowView(
+                            cask: hero,
+                            downloads: viewModel.formattedDownloads(for: hero.token),
+                            category: categoryInfo(for: hero),
+                            localState: viewModel.localState(for: hero),
+                            eyebrow: "✷ HOUSE PICK"
+                        )
+                        .padding(.vertical, 6)
 
-                Color.chHairline
-                    .frame(height: 1)
+                        Color.chHairline
+                            .frame(height: 1)
+                    }
+                }
+                ForEach(viewModel.browseSections) { section in
+                    browseSectionView(section)
+                }
             }
-            if viewModel.hasMoreToReveal {
-                RevealSentinel { viewModel.revealMore() }
+            .frame(width: CHSize.contentWidth, alignment: .leading)
+            .frame(maxWidth: .infinity)
+        } else {
+            LazyVStack(spacing: 0) {
+                caskList(viewModel.displayedCasks)
+                if viewModel.hasMoreToReveal {
+                    RevealSentinel { viewModel.revealMore() }
+                }
             }
+            .frame(width: CHSize.contentWidth)
+            .frame(maxWidth: .infinity)
         }
-        .frame(width: CHSize.contentWidth)
-        .frame(maxWidth: .infinity)
+    }
+
+    func caskList(_ casks: [Cask]) -> some View {
+        ForEach(casks) { cask in
+            CaskRowView(
+                cask: cask,
+                downloads: viewModel.formattedDownloads(for: cask.token),
+                category: categoryInfo(for: cask),
+                localState: viewModel.localState(for: cask)
+            )
+            .padding(.vertical, 6)
+
+            Color.chHairline
+                .frame(height: 1)
+        }
     }
 
     // showsReveal stays off for browse shelves — global reveal state, not theirs.
@@ -322,7 +351,14 @@ private extension ContentView {
                 }
                 .buttonStyle(.plain)
             }
-            caskGrid(section.casks)
+            switch viewMode {
+            case .grid:
+                caskGrid(section.casks)
+            case .list:
+                LazyVStack(spacing: 0) {
+                    caskList(section.casks)
+                }
+            }
         }
         .padding(.top, CHSpace.s3)
     }
