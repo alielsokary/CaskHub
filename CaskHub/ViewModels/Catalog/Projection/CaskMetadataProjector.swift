@@ -190,11 +190,7 @@ enum CaskInfoProjector {
         }
         return presentation.localState.installationSource == nil
             ? String(localized: "Not installed")
-            : String(
-                localized: "cask.state.installed",
-                defaultValue: "Installed",
-                comment: "Installation state shown as the version value when the version is unknown"
-            )
+            : String(localized: .caskStateInstalled)
     }
 
     private static func downloadSizeValue(_ size: DownloadSizeResult?) -> String {
@@ -211,11 +207,7 @@ enum CaskInfoProjector {
         switch basis {
         case .homebrewMetadata:
             return (
-                String(
-                    localized: "cask.dateLabel.installed",
-                    defaultValue: "Installed",
-                    comment: "Label for the installation date row, shown next to Last Updated"
-                ),
+                String(localized: .caskDateLabelInstalled),
                 String(localized: "Last Updated")
             )
         case .applicationBundleAttributes:

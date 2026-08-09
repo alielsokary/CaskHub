@@ -52,16 +52,8 @@ enum LibraryItem: String, CaseIterable, Identifiable {
     /// Localized label for display. See `DiscoverItem.title`.
     var title: String {
         switch self {
-        case .installed: return String(
-            localized: "sidebar.installed",
-            defaultValue: "Installed",
-            comment: "Sidebar library item listing installed casks"
-        )
-        case .updates: return String(
-            localized: "sidebar.updates",
-            defaultValue: "Updates",
-            comment: "Sidebar library item listing casks with available updates"
-        )
+        case .installed: return String(localized: .sidebarInstalled)
+        case .updates: return String(localized: .sidebarUpdates)
         case .adopt: return String(localized: "Adopt Apps")
         }
     }

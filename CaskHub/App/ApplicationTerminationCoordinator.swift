@@ -25,14 +25,7 @@ final class ApplicationTerminationCoordinator: NSObject, NSApplicationDelegate {
         presentQuitConfirmation = {
             let alert = NSAlert()
             alert.messageText = String(localized: "Quit CaskHub?")
-            alert.informativeText = String(
-                localized: "alert.quitDuringOperation",
-                defaultValue: """
-                A Homebrew operation is still in progress. Quitting while Homebrew is \
-                working may leave the affected app in an incomplete state.
-                """,
-                comment: "Quit confirmation body while a brew operation is running"
-            )
+            alert.informativeText = String(localized: .alertQuitDuringOperation)
             alert.alertStyle = .warning
             alert.addButton(withTitle: String(localized: "Quit CaskHub"))
             alert.addButton(withTitle: String(localized: "Keep Running"))

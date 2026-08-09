@@ -89,16 +89,7 @@ private extension View {
                 service.send(.confirmPackageAdoption(token: cask.token))
             }
         } message: {
-            Text(String(
-                localized: "alert.adopt.packageInstaller",
-                defaultValue: """
-                \(cask.displayName) was installed using a package outside Homebrew. \
-                Adopting it will download and run Homebrew's package installer again, \
-                which may replace the existing application. After it finishes, \
-                Homebrew will manage the installation.
-                """,
-                comment: "Alert body before adopting an app installed via pkg installer"
-            ))
+            Text(.alertAdoptPackageInstaller(cask.displayName))
         }
     }
 
@@ -123,17 +114,7 @@ private extension View {
                 service.send(.cancelPermission(token: cask.token))
             }
         } message: {
-            Text(String(
-                localized: "alert.appManagementNeeded",
-                defaultValue: """
-                macOS only lets CaskHub modify other apps once you grant it the \
-                App Management permission, and adopting \(cask.displayName) may \
-                need to do that. Enable CaskHub under System Settings → Privacy \
-                & Security → App Management (a system notification may also \
-                offer it), then come back — the adoption will finish on its own.
-                """,
-                comment: "Alert body asking for the App Management permission before adoption"
-            ))
+            Text(.alertAppManagementNeeded(cask.displayName))
         }
     }
 
@@ -165,15 +146,7 @@ private extension View {
             }
             Button("OK", role: .cancel) {}
         } message: {
-            Text(String(
-                localized: "alert.homebrewMissing",
-                defaultValue: """
-                CaskHub uses Homebrew to install and manage apps, and it doesn't \
-                seem to be installed on this Mac. Install it from brew.sh, then \
-                come back. CaskHub will pick it up automatically.
-                """,
-                comment: "Alert body when no Homebrew installation is detected"
-            ))
+            Text(.alertHomebrewMissing)
         }
     }
 

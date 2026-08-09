@@ -428,38 +428,13 @@ enum LocalHomebrewError: LocalizedError {
             let cmd = (["brew"] + args).joined(separator: " ")
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             if Self.isAppManagementDenial(stderr: trimmed) {
-                return String(
-                    localized: "error.appManagementDenied",
-                    defaultValue: """
-                    macOS blocked CaskHub from modifying apps on your Mac. \
-                    Enable CaskHub under System Settings → Privacy & Security → \
-                    App Management, then try again.
-                    """,
-                    comment: "Error when the App Management permission blocks a brew operation"
-                )
+                return String(localized: .errorAppManagementDenied)
             }
             if Self.isStrandedApp(stderr: trimmed) {
-                return String(
-                    localized: "error.staleUpgradeRecord",
-                    defaultValue: """
-                    A previous update left an old copy of the app inside Homebrew's \
-                    records, and Homebrew refuses every upgrade until it's cleared. \
-                    Repair removes the leftover copy and reinstalls the app fresh — \
-                    your settings and data are kept.
-                    """,
-                    comment: "Error when a stranded old app copy blocks every upgrade"
-                )
+                return String(localized: .errorStaleUpgradeRecord)
             }
             if Self.isAdoptMismatch(args: args, stderr: trimmed) {
-                return String(
-                    localized: "error.adoptVersionMismatch",
-                    defaultValue: """
-                    Your installed copy doesn't match the version Homebrew has on \
-                    record, so it can't be adopted as-is. You can replace it with \
-                    Homebrew's copy instead — your settings and data are kept.
-                    """,
-                    comment: "Error when adoption fails because installed version differs from the cask"
-                )
+                return String(localized: .errorAdoptVersionMismatch)
             }
             switch Self.failureClass(stderr: trimmed, exitCode: code) {
             case "binary-conflict":
@@ -500,17 +475,7 @@ enum LocalHomebrewError: LocalizedError {
                 break
             }
             if trimmed.contains("reports different checksum") || trimmed.contains("SHA256 mismatch") {
-                return String(
-                    localized: "error.checksumMismatch",
-                    defaultValue: """
-                    The download doesn't match the checksum Homebrew has on record — \
-                    the developer likely replaced the release file after it was \
-                    published. This isn't a problem with your Mac; Homebrew refuses \
-                    mismatched downloads for security. Try again in a day or two once \
-                    the cask is updated.
-                    """,
-                    comment: "Error when a cask download fails Homebrew's checksum verification"
-                )
+                return String(localized: .errorChecksumMismatch)
             }
             return trimmed.isEmpty
                 ? String(localized: "`\(cmd)` failed (exit \(code)).")

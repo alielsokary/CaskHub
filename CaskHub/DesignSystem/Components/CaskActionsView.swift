@@ -89,14 +89,7 @@ struct CaskActionsView: View {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
                 localHomebrew.send(.repair(token: cask.token))
             }
-            .help(String(
-                localized: "action.cleanup.zombieHelp",
-                defaultValue: """
-                \(cask.displayName) was removed outside Homebrew, but Homebrew still \
-                has records for it. Clean Up removes the leftover data.
-                """,
-                comment: "Tooltip on the Clean Up button for a zombie cask"
-            ))
+            .help(String(localized: .actionCleanupZombieHelp(cask.displayName)))
         } else {
             managedActions(state)
         }

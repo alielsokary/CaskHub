@@ -68,7 +68,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
         XCTAssertEqual(values[String(localized: "Main Category")], "Developer Tools")
         XCTAssertEqual(values[String(localized: "Subcategories")], "Productivity, Utilities")
         XCTAssertEqual(
-            values[String(localized: "cask.dateLabel.installed", defaultValue: "Installed")],
+            values[String(localized: .caskDateLabelInstalled)],
             installedAt.formatted(date: .abbreviated, time: .shortened)
         )
         XCTAssertEqual(
@@ -108,7 +108,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
             values[String(localized: "Bundle Modified")],
             modifiedAt.formatted(date: .abbreviated, time: .shortened)
         )
-        XCTAssertNil(values[String(localized: "cask.dateLabel.installed", defaultValue: "Installed")])
+        XCTAssertNil(values[String(localized: .caskDateLabelInstalled)])
         XCTAssertNil(values[String(localized: "Last Updated")])
     }
 
