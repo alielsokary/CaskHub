@@ -100,9 +100,11 @@ final class HomebrewMutationCoordinator {
             throw LocalHomebrewError.brewBinaryNotFound
         }
 
-        let askpass = AskpassScriptManager.create(token: token)
+        let askpass = await AskpassScriptManager.create(token: token)
         defer {
-            if let askpass { AskpassScriptManager.remove(at: askpass) }
+            if let askpass {
+                Task { await AskpassScriptManager.remove(at: askpass) }
+            }
         }
 
         var environment = ProcessInfo.processInfo.environment

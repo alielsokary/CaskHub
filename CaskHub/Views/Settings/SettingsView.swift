@@ -336,7 +336,8 @@ private struct HomebrewSettingsContent: View {
         panel.message = String(
             localized: "Select the brew binary or the Homebrew installation folder"
         )
-        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let response = CrashReporter.withHangTrackingPaused { panel.runModal() }
+        guard response == .OK, let url = panel.url else { return }
         Task { await locationModel.applySelection(url) }
     }
 }

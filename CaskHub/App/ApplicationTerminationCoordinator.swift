@@ -31,7 +31,9 @@ final class ApplicationTerminationCoordinator: NSObject, NSApplicationDelegate {
             alert.addButton(withTitle: String(localized: "Keep Running"))
             alert.buttons.first?.hasDestructiveAction = true
             alert.buttons.last?.keyEquivalent = "\u{1b}"
-            return alert.runModal() == .alertFirstButtonReturn
+            return CrashReporter.withHangTrackingPaused {
+                alert.runModal()
+            } == .alertFirstButtonReturn
         }
         super.init()
     }
