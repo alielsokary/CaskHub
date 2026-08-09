@@ -268,7 +268,17 @@ final class ZombieDetectionTests: XCTestCase {
             stderr: "Error: tabby: It seems there is already an App at "
                 + "'/opt/homebrew/Caskroom/tabby/1.0.230/Tabby.app'."
         )
-        XCTAssertTrue(error.errorDescription?.contains("Repair") == true)
+        XCTAssertEqual(
+            error.errorDescription,
+            String(
+                localized: """
+                A previous update left an old copy of the app inside Homebrew's \
+                records, and Homebrew refuses every upgrade until it's cleared. \
+                Repair removes the leftover copy and reinstalls the app fresh — \
+                your settings and data are kept.
+                """
+            )
+        )
     }
 
     func test_stranded_copy_detection_reads_the_filesystem() throws {

@@ -19,6 +19,17 @@ enum DiscoverItem: String, CaseIterable, Identifiable {
         rawValue
     }
 
+    /// Localized label for display. `rawValue` stays language-independent so
+    /// `id` and analytics keys are unaffected by the UI language.
+    var title: String {
+        switch self {
+        case .browse: return String(localized: "Browse")
+        case .featured: return String(localized: "Featured")
+        case .topCharts: return String(localized: "Top Charts")
+        case .recentlyAdded: return String(localized: "Recently Added")
+        }
+    }
+
     var icon: String {
         switch self {
         case .browse: return "square.grid.2x2"
@@ -36,6 +47,23 @@ enum LibraryItem: String, CaseIterable, Identifiable {
 
     var id: String {
         rawValue
+    }
+
+    /// Localized label for display. See `DiscoverItem.title`.
+    var title: String {
+        switch self {
+        case .installed: return String(
+            localized: "sidebar.installed",
+            defaultValue: "Installed",
+            comment: "Sidebar library item listing installed casks"
+        )
+        case .updates: return String(
+            localized: "sidebar.updates",
+            defaultValue: "Updates",
+            comment: "Sidebar library item listing casks with available updates"
+        )
+        case .adopt: return String(localized: "Adopt Apps")
+        }
     }
 
     var icon: String {

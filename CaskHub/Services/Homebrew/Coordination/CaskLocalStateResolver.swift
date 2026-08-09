@@ -86,20 +86,30 @@ struct CaskLocalStateResolver {
         }
         if isAdoptable(cask) {
             return .unavailable(
-                reason: "Adopt this app first so CaskHub can manage/uninstall it."
+                reason: String(
+                    localized: "Adopt this app first so CaskHub can manage/uninstall it."
+                )
             )
         }
         if isMacAppStoreInstalled(cask) {
             return .unavailable(
-                reason: "Installed from the Mac App Store. "
-                    + "Uninstall it from Finder or Launchpad."
+                reason: String(
+                    localized: """
+                    Installed from the Mac App Store. \
+                    Uninstall it from Finder or Launchpad.
+                    """
+                )
             )
         }
         if let externalPath = externalCLIPath(cask) {
             return .unavailable(
-                reason: "Installed outside Homebrew at \(externalPath.path). "
-                    + "Remove or move that file manually before installing "
-                    + "the Homebrew version."
+                reason: String(
+                    localized: """
+                    Installed outside Homebrew at \(externalPath.path). \
+                    Remove or move that file manually before installing \
+                    the Homebrew version.
+                    """
+                )
             )
         }
         return .notApplicable

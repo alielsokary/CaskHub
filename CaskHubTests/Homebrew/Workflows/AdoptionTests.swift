@@ -89,15 +89,40 @@ final class AdoptionSurfaceTests: XCTestCase {
             args: ["install", "--cask", "x", "--adopt"], exitCode: 1,
             stderr: "Error: It seems the existing App is different from the one being installed."
         )
-        XCTAssertTrue(mismatch.errorDescription?.contains("replace it with Homebrew's copy") == true)
+        XCTAssertEqual(
+            mismatch.errorDescription,
+            String(
+                localized: """
+                Your installed copy doesn't match the version Homebrew has on \
+                record, so it can't be adopted as-is. You can replace it with \
+                Homebrew's copy instead — your settings and data are kept.
+                """
+            )
+        )
 
         let checksum = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "x"], exitCode: 1, stderr: "SHA256 mismatch"
         )
-        XCTAssertTrue(checksum.errorDescription?.contains("checksum") == true)
+        XCTAssertEqual(
+            checksum.errorDescription,
+            String(
+                localized: """
+                The download doesn't match the checksum Homebrew has on record — \
+                the developer likely replaced the release file after it was \
+                published. This isn't a problem with your Mac; Homebrew refuses \
+                mismatched downloads for security. Try again in a day or two once \
+                the cask is updated.
+                """
+            )
+        )
 
         let silent = LocalHomebrewError.brewCommandFailed(args: ["upgrade"], exitCode: 2, stderr: "  ")
-        XCTAssertTrue(silent.errorDescription?.contains("exit 2") == true)
+        let silentCommand = "brew upgrade"
+        let silentExitCode: Int32 = 2
+        XCTAssertEqual(
+            silent.errorDescription,
+            String(localized: "`\(silentCommand)` failed (exit \(silentExitCode)).")
+        )
 
         let generic = LocalHomebrewError.brewCommandFailed(args: ["upgrade"], exitCode: 1, stderr: "boom")
         XCTAssertTrue(generic.errorDescription?.contains("boom") == true)

@@ -65,7 +65,7 @@ struct HeroCard: View {
 
     private var metaLine: String {
         var parts: [String] = []
-        if let downloads { parts.append("\(downloads) pours") }
+        if let downloads { parts.append(String(localized: "\(downloads) pours")) }
         parts.append("v\(cask.displayVersion)")
         if let categoryName { parts.append(categoryName) }
         return parts.joined(separator: " · ")

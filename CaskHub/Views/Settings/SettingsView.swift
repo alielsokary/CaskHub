@@ -62,7 +62,7 @@ struct AboutSettingsView: View {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "—"
         let build = info?["CFBundleVersion"] as? String ?? "—"
-        return "Version \(short) (\(build))"
+        return String(localized: "Version \(short) (\(build))")
     }
 
     var body: some View {
@@ -199,7 +199,7 @@ struct GeneralSettingsView: View {
         }
     }
 
-    private func badge(_ title: String, icon: String, tint: some ShapeStyle) -> some View {
+    private func badge(_ title: LocalizedStringKey, icon: String, tint: some ShapeStyle) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
             Text(title)
@@ -262,7 +262,8 @@ private struct HomebrewSettingsContent: View {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
                 LabeledContent(
                     "Last Scan",
-                    value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened) ?? "Never"
+                    value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened)
+                        ?? String(localized: "Never")
                 )
             }
             Section("Custom Location") {
@@ -319,9 +320,9 @@ private struct HomebrewSettingsContent: View {
         }
     }
 
-    private func pathRow(_ title: String, _ path: String?) -> some View {
+    private func pathRow(_ title: LocalizedStringKey, _ path: String?) -> some View {
         LabeledContent(title) {
-            Text(path ?? "Not found")
+            Text(path ?? String(localized: "Not found"))
                 .font(.callout.monospaced())
                 .foregroundStyle(path == nil ? .secondary : .primary)
                 .textSelection(.enabled)
@@ -336,7 +337,9 @@ private struct HomebrewSettingsContent: View {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.showsHiddenFiles = true
-        panel.message = "Select the brew binary or the Homebrew installation folder"
+        panel.message = String(
+            localized: "Select the brew binary or the Homebrew installation folder"
+        )
         guard panel.runModal() == .OK, let url = panel.url else { return }
         Task { await locationModel.applySelection(url) }
     }
