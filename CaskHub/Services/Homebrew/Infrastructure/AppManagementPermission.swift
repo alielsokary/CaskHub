@@ -8,12 +8,16 @@
 import AppKit
 import Foundation
 
-/// macOS "App Management" privacy permission (System Settings → Privacy & Security
-/// → App Management). There is no query API — status is probed by asking the kernel,
-/// via `access(2)`, whether CaskHub may write inside app bundles it doesn't own.
+/// macOS "App Management" privacy permission. No query API, and `access(2)` never
+/// consults the gate (TCC enforces actual writes only), so status is probed
+/// Homebrew-style: attempt a harmless write inside protected bundles.
 enum AppManagementPermission {
     enum Status: Equatable {
         case granted, denied, unknown
+    }
+
+    enum WriteAttempt {
+        case allowed, blocked, skipped
     }
 
     @MainActor
@@ -23,24 +27,43 @@ enum AppManagementPermission {
         )
     }
 
-    /// Non-invasive probe: `access(2)` consults the App Management gate, so a bundle
-    /// whose Contents is POSIX-writable (per its ownership bits) yet fails W_OK can
-    /// only mean TCC is denying us. Nothing is written. One such bundle proves
-    /// denied; "granted" needs every candidate writable, because same-team and
-    /// never-Gatekeeper-registered bundles pass regardless of the permission.
-    /// (Never pre-filter targets with isWritableFile — it calls access(2) too, and
-    /// silently drops exactly the bundles that would report the denial.)
     nonisolated static func probe() -> Status {
-        var sawWritable = false
-        for bundle in probeTargets() {
-            let contents = bundle.appendingPathComponent("Contents").path
-            guard posixWritable(contents) else { continue }
-            if access(contents, W_OK) != 0 {
+        probe(targets: probeTargets(), attempt: attemptWrite)
+    }
+
+    /// One blocked write proves denied; allowed writes are weaker evidence (bundles
+    /// CaskHub installed itself are exempt), so granted needs three acceptances.
+    nonisolated static func probe(
+        targets: [URL],
+        attempt: (URL) -> WriteAttempt
+    ) -> Status {
+        var allowed = 0
+        for bundle in targets {
+            switch attempt(bundle) {
+            case .blocked:
                 return .denied
+            case .allowed:
+                allowed += 1
+                if allowed == 3 { return .granted }
+            case .skipped:
+                continue
             }
-            sawWritable = true
         }
-        return sawWritable ? .granted : .unknown
+        return allowed > 0 ? .granted : .unknown
+    }
+
+    /// After the posixWritable guard only the TCC gate returns EPERM; EACCES (ACLs) is not it.
+    private nonisolated static func attemptWrite(in bundle: URL) -> WriteAttempt {
+        let contents = bundle.appendingPathComponent("Contents").path
+        guard posixWritable(contents) else { return .skipped }
+        let probePath = contents + "/.com.caskhub.permission-probe." + UUID().uuidString
+        let fd = open(probePath, O_CREAT | O_WRONLY | O_EXCL, 0o644)
+        guard fd >= 0 else {
+            return errno == EPERM ? .blocked : .skipped
+        }
+        close(fd)
+        unlink(probePath)
+        return .allowed
     }
 
     /// Bundles macOS actually protects: provenance-tracked (untracked bundles aren't
