@@ -11,6 +11,7 @@ struct CatalogLibraryProjectionInput {
     let casks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
+    let adoptIgnoredTokens: Set<String>
 }
 
 struct CatalogBrowseProjectionInput {
@@ -53,7 +54,7 @@ enum CatalogProjector {
             if localState.isPresent {
                 installedCasks.append(cask)
             }
-            if localState.isAdoptable {
+            if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
             if let mapping = input.categoryMappings[cask.token] {
@@ -149,6 +150,8 @@ enum CatalogProjector {
             return input.library.updatableCasks
         case .library(.adopt):
             return input.library.adoptableCasks
+        case .shelfSetup, .maintenance:
+            return []
         case let .category(categoryID):
             return input.library.casksByCategory[categoryID] ?? []
         }

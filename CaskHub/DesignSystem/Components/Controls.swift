@@ -126,11 +126,8 @@ struct CountBadge: View {
 
     var body: some View {
         Text("\(count)")
-            .font(CHType.label)
+            .font(CHType.statusMono.bold())
             .foregroundStyle(Color.chBadgeFg)
-            .frame(minWidth: 18, minHeight: 18)
-            .background(Capsule().fill(Color.chBadgeBg))
-            .overlay(Capsule().strokeBorder(Color.chBadgeBorder, lineWidth: 1))
     }
 }
 

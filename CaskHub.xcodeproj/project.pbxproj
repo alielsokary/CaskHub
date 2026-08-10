@@ -84,6 +84,8 @@
 		B09000000000000000000002 /* ApplicationMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09000000000000000000001 /* ApplicationMenuTests.swift */; };
 		B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09100000000000000000001 /* CaskHubHelpSearch.swift */; };
 		B09200000000000000000002 /* HelpViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09200000000000000000001 /* HelpViewTests.swift */; };
+		B0C000000000000000000002 /* ShelfSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C000000000000000000001 /* ShelfSetupView.swift */; };
+		B0C000000000000000000005 /* ShelfSetupViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C000000000000000000004 /* ShelfSetupViewTests.swift */; };
 		C12000000000000000000001 /* BrewProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000001 /* BrewProcessRunner.swift */; };
 		C12000000000000000000002 /* added_dates.json in Resources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000002 /* added_dates.json */; };
 		C12000000000000000000010 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000010 /* Localizable.xcstrings */; };
@@ -221,6 +223,8 @@
 		B09000000000000000000001 /* ApplicationMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMenuTests.swift; sourceTree = "<group>"; };
 		B09100000000000000000001 /* CaskHubHelpSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubHelpSearch.swift; sourceTree = "<group>"; };
 		B09200000000000000000001 /* HelpViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewTests.swift; sourceTree = "<group>"; };
+		B0C000000000000000000001 /* ShelfSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupView.swift; sourceTree = "<group>"; };
+		B0C000000000000000000004 /* ShelfSetupViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupViewTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
@@ -433,6 +437,7 @@
 			isa = PBXGroup;
 			children = (
 				B08000000000000000000005 /* Help */,
+				B0C000000000000000000003 /* Manage */,
 				41DFD47930028F7D00608C7A /* Settings */,
 				41DFD47F30028F7D00608C7A /* Shared */,
 				41DFD48130028F7D00608C7A /* Sidebar */,
@@ -512,6 +517,14 @@
 				B08000000000000000000003 /* CaskHubHelpView.swift */,
 			);
 			path = Help;
+			sourceTree = "<group>";
+		};
+		B0C000000000000000000003 /* Manage */ = {
+			isa = PBXGroup;
+			children = (
+				B0C000000000000000000001 /* ShelfSetupView.swift */,
+			);
+			path = Manage;
 			sourceTree = "<group>";
 		};
 		F32000000000000000000010 /* Telemetry */ = {
@@ -701,6 +714,7 @@
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
 				B09200000000000000000001 /* HelpViewTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
+				B0C000000000000000000004 /* ShelfSetupViewTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
 			);
 			path = Views;
@@ -943,6 +957,7 @@
 				B08000000000000000000002 /* CaskHubCommands.swift in Sources */,
 				B08000000000000000000004 /* CaskHubHelpView.swift in Sources */,
 				B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */,
+				B0C000000000000000000002 /* ShelfSetupView.swift in Sources */,
 				41DFD48D30028F7D00608C7A /* BarrelMark.swift in Sources */,
 				41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */,
 				F24000000000000000000002 /* CaskOperationCapsule.swift in Sources */,
@@ -1042,6 +1057,7 @@
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				B09200000000000000000002 /* HelpViewTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
+				B0C000000000000000000005 /* ShelfSetupViewTests.swift in Sources */,
 				A26000000000000000000004 /* UpdateSettingsViewTests.swift in Sources */,
 				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
 				F26000000000000000000001 /* CaskListActionTests.swift in Sources */,

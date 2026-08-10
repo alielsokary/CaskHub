@@ -140,6 +140,10 @@ extension Analytics {
             return ["page": item.analyticsName]
         case let .library(item):
             return ["page": item.rawValue.lowercased()]
+        case .shelfSetup:
+            return ["page": "shelfSetup"]
+        case .maintenance:
+            return ["page": "maintenance"]
         case let .category(categoryID):
             return ["page": "category", "category": categoryID]
         }

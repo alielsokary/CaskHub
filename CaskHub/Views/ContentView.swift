@@ -42,48 +42,19 @@ struct ContentView: View {
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
         } detail: {
             VStack(spacing: 0) {
-                TopBarView(
-                    title: sectionName,
-                    caskCount: viewModel.filteredCasks.count,
-                    sortOption: $viewModel.sortOption,
-                    sortOptions: sortOptions,
-                    viewMode: $viewMode,
-                    searchText: $viewModel.searchText,
-                    searchFocus: $searchFocused,
-                    analyticsPeriod: selectedSidebar == .discover(.topCharts) ? viewModel.analyticsPeriod : nil,
-                    onSelectPeriod: { period in
-                        Analytics.topChartsPeriodChanged(period)
-                        Task { await viewModel.selectAnalyticsPeriod(period) }
-                    },
-                    recentWindow: selectedSidebar == .discover(.recentlyAdded) ? viewModel.recentlyAddedWindow : nil,
-                    onSelectWindow: {
-                        Analytics.recentWindowChanged($0)
-                        viewModel.selectRecentlyAddedWindow($0)
-                    },
-                    onUpdateAll: selectedSidebar == .library(.updates) && viewModel.updatesCount > 0
-                        ? {
-                            let tokens = viewModel.updatableCasks.map(\.token)
-                            Analytics.updateAllTapped(count: tokens.count)
-                            localHomebrew.send(.updateAll(tokens: tokens))
-                        }
-                        : nil,
-                    updateAllCount: viewModel.updatesCount,
-                    isUpdatingAll: localHomebrew.isUpdatingAll,
-                    greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
-                    onToggleGreedy: { enabled in
-                        Analytics.greedyUpdatesChanged(enabled)
-                        localHomebrew.setGreedyUpdates(enabled)
-                    },
-                    showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
-                    onSubmitSearch: {
-                        searchFocused = false
-                        showsResultsHeader = !viewModel.searchText.isEmpty
-                    }
-                )
-                .frame(maxWidth: CHSize.contentWidth)
-                .padding(.horizontal, CHSpace.s5)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, CHSpace.s4)
+                if isUtilityPage {
+                    utilityTopBar
+                        .frame(maxWidth: CHSize.contentWidth)
+                        .padding(.horizontal, CHSpace.s5)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, CHSpace.s4)
+                } else {
+                    catalogTopBar
+                        .frame(maxWidth: CHSize.contentWidth)
+                        .padding(.horizontal, CHSpace.s5)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, CHSpace.s4)
+                }
 
                 if showsResultsHeader {
                     Text("Results for “\(viewModel.searchText)”")
@@ -165,19 +136,82 @@ struct ContentView: View {
         ))
     }
 
+    // MARK: - Top Bar
+
+    private var catalogTopBar: some View {
+        TopBarView(
+            title: sectionName,
+            caskCount: viewModel.filteredCasks.count,
+            sortOption: $viewModel.sortOption,
+            sortOptions: sortOptions,
+            viewMode: $viewMode,
+            searchText: $viewModel.searchText,
+            searchFocus: $searchFocused,
+            analyticsPeriod: selectedSidebar == .discover(.topCharts) ? viewModel.analyticsPeriod : nil,
+            onSelectPeriod: { period in
+                Analytics.topChartsPeriodChanged(period)
+                Task { await viewModel.selectAnalyticsPeriod(period) }
+            },
+            recentWindow: selectedSidebar == .discover(.recentlyAdded) ? viewModel.recentlyAddedWindow : nil,
+            onSelectWindow: {
+                Analytics.recentWindowChanged($0)
+                viewModel.selectRecentlyAddedWindow($0)
+            },
+            onUpdateAll: selectedSidebar == .library(.updates) && viewModel.updatesCount > 0
+                ? {
+                    let tokens = viewModel.updatableCasks.map(\.token)
+                    Analytics.updateAllTapped(count: tokens.count)
+                    localHomebrew.send(.updateAll(tokens: tokens))
+                }
+                : nil,
+            updateAllCount: viewModel.updatesCount,
+            isUpdatingAll: localHomebrew.isUpdatingAll,
+            greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
+            onToggleGreedy: { enabled in
+                Analytics.greedyUpdatesChanged(enabled)
+                localHomebrew.setGreedyUpdates(enabled)
+            },
+            showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections,
+            onSubmitSearch: {
+                searchFocused = false
+                showsResultsHeader = !viewModel.searchText.isEmpty
+            }
+        )
+    }
+
+    private var utilityTopBar: some View {
+        UtilityTopBar(
+            title: sectionName,
+            summary: selectedSidebar == .shelfSetup
+                ? String(localized: .shelfSetupIgnoredCount(viewModel.adoptIgnoredCasks.count))
+                : nil
+        )
+    }
+
+    private var isUtilityPage: Bool {
+        selectedSidebar == .shelfSetup || selectedSidebar == .maintenance
+    }
+
     // MARK: - Detail Content
 
     @ViewBuilder
     private var detailContent: some View {
-        if viewModel.isLoading {
-            ProgressView("Loading casks…")
-                .font(CHType.body)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if let error = viewModel.errorMessage {
-            errorView(error)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
-            catalogView
+        switch selectedSidebar {
+        case .shelfSetup:
+            ShelfSetupView(viewModel: viewModel)
+        case .maintenance:
+            MaintenancePlaceholderView()
+        default:
+            if viewModel.isLoading {
+                ProgressView("Loading casks…")
+                    .font(CHType.body)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error = viewModel.errorMessage {
+                errorView(error)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                catalogView
+            }
         }
     }
 
@@ -185,6 +219,8 @@ struct ContentView: View {
         switch selectedSidebar {
         case let .discover(item): return item.rawValue
         case let .library(item): return item.rawValue
+        case .shelfSetup: return String(localized: .sidebarShelfSetup)
+        case .maintenance: return String(localized: .sidebarHealth)
         case let .category(categoryID): return categoryService.displayName(for: categoryID)
         }
     }
