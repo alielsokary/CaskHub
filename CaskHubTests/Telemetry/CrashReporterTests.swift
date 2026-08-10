@@ -439,4 +439,25 @@ final class CrashReporterTests: XCTestCase {
         span.finish()
         XCTAssertTrue(spy.spans.isEmpty)
     }
+
+    // MARK: - Hang tracking pause
+
+    func test_with_hang_tracking_paused_brackets_the_body() {
+        let value = CrashReporter.withHangTrackingPaused { 7 }
+        XCTAssertEqual(value, 7)
+        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
+    }
+
+    func test_hang_tracking_resumes_when_body_throws() {
+        XCTAssertThrowsError(
+            try CrashReporter.withHangTrackingPaused { throw URLError(.badURL) }
+        )
+        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
+    }
+
+    func test_sentry_provider_pause_resume_are_safe_without_started_sdk() {
+        let provider = SentryProvider()
+        provider.pauseHangTracking()
+        provider.resumeHangTracking()
+    }
 }

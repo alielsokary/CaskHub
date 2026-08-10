@@ -8,11 +8,13 @@
 import Foundation
 
 nonisolated enum AskpassScriptManager {
+    // @concurrent: callers are MainActor; these touch disk and must not run there.
+    @concurrent
     static func create(
         token: String,
         directory: URL? = nil,
         executableURL: URL? = Bundle.main.executableURL
-    ) -> URL? {
+    ) async -> URL? {
         guard let executablePath = executableURL?.path else { return nil }
         let safeToken = token.filter {
             $0.isLetter || $0.isNumber || "-_+@.".contains($0)
@@ -55,7 +57,8 @@ nonisolated enum AskpassScriptManager {
         return url
     }
 
-    static func remove(at url: URL) {
+    @concurrent
+    static func remove(at url: URL) async {
         try? FileManager.default.removeItem(at: url)
     }
 

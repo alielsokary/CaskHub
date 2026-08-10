@@ -50,7 +50,7 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
         controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: self,
-            userDriverDelegate: nil
+            userDriverDelegate: self
         )
         // Sparkle allows a forced launch check here, before its scheduled cycle starts.
         Self.checkForUpdatesOnLaunch(using: controller.updater)
@@ -106,6 +106,23 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
             )
         }
         return false
+    }
+}
+
+// Sparkle's error/info alerts run app-modal; pausing keeps them from being
+// reported as app hangs while the user reads the dialog.
+extension UpdaterService: SPUStandardUserDriverDelegate {
+    nonisolated func standardUserDriverWillShowModalAlert() {
+        // Sparkle calls delegate methods on the main thread.
+        MainActor.assumeIsolated {
+            CrashReporter.pauseHangTracking()
+        }
+    }
+
+    nonisolated func standardUserDriverDidShowModalAlert() {
+        MainActor.assumeIsolated {
+            CrashReporter.resumeHangTracking()
+        }
     }
 }
 

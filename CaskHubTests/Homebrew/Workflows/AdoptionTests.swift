@@ -235,19 +235,21 @@ final class AdoptionSurfaceTests: XCTestCase {
         )
     }
 
-    func test_askpass_scripts_are_unique_shell_safe_and_removable() throws {
+    func test_askpass_scripts_are_unique_shell_safe_and_removable() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("askpass-tests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let executable = URL(fileURLWithPath: "/Applications/Cask Hub's.app/Contents/MacOS/CaskHub")
 
-        let first = try XCTUnwrap(AskpassScriptManager.create(
+        let firstScript = await AskpassScriptManager.create(
             token: "first; unsafe", directory: directory, executableURL: executable
-        ))
-        let second = try XCTUnwrap(AskpassScriptManager.create(
+        )
+        let secondScript = await AskpassScriptManager.create(
             token: "second", directory: directory, executableURL: executable
-        ))
+        )
+        let first = try XCTUnwrap(firstScript)
+        let second = try XCTUnwrap(secondScript)
 
         XCTAssertNotEqual(first, second)
         XCTAssertTrue(first.lastPathComponent.hasPrefix("askpass-"))
@@ -257,8 +259,8 @@ final class AdoptionSurfaceTests: XCTestCase {
         let permissions = try FileManager.default.attributesOfItem(atPath: first.path)[.posixPermissions] as? Int
         XCTAssertEqual(permissions, 0o700)
 
-        AskpassScriptManager.remove(at: first)
-        AskpassScriptManager.remove(at: second)
+        await AskpassScriptManager.remove(at: first)
+        await AskpassScriptManager.remove(at: second)
         XCTAssertFalse(FileManager.default.fileExists(atPath: first.path))
         XCTAssertFalse(FileManager.default.fileExists(atPath: second.path))
     }
