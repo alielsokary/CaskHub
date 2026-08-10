@@ -454,4 +454,10 @@ final class CrashReporterTests: XCTestCase {
         )
         XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
     }
+
+    func test_sentry_provider_pause_resume_are_safe_without_started_sdk() {
+        let provider = SentryProvider()
+        provider.pauseHangTracking()
+        provider.resumeHangTracking()
+    }
 }
