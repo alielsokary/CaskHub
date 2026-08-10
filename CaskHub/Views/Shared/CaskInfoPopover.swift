@@ -93,6 +93,7 @@ struct CaskInfoPopover: View {
             desc: "Password manager",
             homepage: "https://1password.com/",
             url: "https://downloads.1password.com/mac/1Password-8.12.10-aarch64.zip",
+            sha256: "no_check",
             version: "8.12.10",
             bundleVersion: nil,
             bundleShortVersion: nil,
