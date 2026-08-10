@@ -39,6 +39,12 @@ struct SidebarView: View {
                         row(.library(.adopt), title: LibraryItem.adopt.title, icon: LibraryItem.adopt.icon, count: adoptableCount)
                     }
 
+                    sectionHeader("MANAGE")
+                    row(.shelfSetup, title: String(localized: .sidebarShelfSetup), icon: "slider.horizontal.3")
+
+                    sectionHeader("MAINTENANCE")
+                    row(.maintenance, title: String(localized: .sidebarHealth), icon: "stethoscope")
+
                     sectionHeader("CATEGORIES")
                     ForEach(categoryService.orderedCategories, id: \.id) { entry in
                         row(

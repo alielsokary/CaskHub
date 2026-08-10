@@ -58,7 +58,8 @@ final class CaskCatalogSortTests: XCTestCase {
                     primary: "utilities",
                     secondary: []
                 )
-            ]
+            ],
+            adoptIgnoredTokens: []
         )
 
         let library = CatalogProjector.makeLibrary(from: input)
