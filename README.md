@@ -22,7 +22,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 Or install with Homebrew:
 
 ```bash
-brew install --cask alielsokary/tap/caskhub
+brew install --cask caskhub
 ```
 
 ## Features

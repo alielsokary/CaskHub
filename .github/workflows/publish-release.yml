@@ -3,8 +3,8 @@ name: Publish release
 # When a release PR merges to master, publish the draft release that the
 # Release build workflow created. Publishing creates the tag and makes the
 # zip's download URL (already referenced by master's appcast.xml) live.
-# Then bump the Homebrew tap (alielsokary/homebrew-tap) to the new version;
-# TAP_DEPLOY_KEY is a write deploy key on the tap repo.
+# The official homebrew/homebrew-cask cask is bumped by BrewTestBot autobump
+# (livecheck on github_latest) — no tap bump needed here.
 
 on:
   push:
@@ -20,7 +20,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Publish draft release matching the merged version
-        id: publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -29,36 +28,6 @@ jobs:
           if [ "$(gh release view "$VERSION" --json isDraft --jq .isDraft 2>/dev/null)" = "true" ]; then
             gh release edit "$VERSION" --draft=false --latest
             echo "Published $VERSION"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           else
             echo "No draft release for $VERSION — nothing to publish."
-          fi
-
-      - name: Check out Homebrew tap
-        if: steps.publish.outputs.version
-        uses: actions/checkout@v4
-        with:
-          repository: alielsokary/homebrew-tap
-          ssh-key: ${{ secrets.TAP_DEPLOY_KEY }}
-          path: tap
-
-      - name: Bump caskhub cask
-        if: steps.publish.outputs.version
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.publish.outputs.version }}
-        run: |
-          gh release download "$VERSION" --pattern "CaskHub-$VERSION.zip" --output caskhub.zip
-          SHA="$(sha256sum caskhub.zip | cut -d' ' -f1)"
-          sed -i -E \
-            -e "s|^  version \".*\"|  version \"$VERSION\"|" \
-            -e "s|^  sha256 \".*\"|  sha256 \"$SHA\"|" \
-            tap/Casks/caskhub.rb
-          if git -C tap diff --quiet; then
-            echo "Cask already at $VERSION — nothing to bump."
-          else
-            git -C tap config user.name "Ali Elsokary"
-            git -C tap config user.email "ali.elsokary.w@gmail.com"
-            git -C tap commit -am "feat: bump caskhub to $VERSION"
-            git -C tap push
           fi

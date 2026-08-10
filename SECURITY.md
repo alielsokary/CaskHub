@@ -51,14 +51,14 @@ There is no bug bounty program, since CaskHub is free software with no revenue, 
 ### In scope (report privately)
 
 - The CaskHub app itself: all code in this repository
-- The release and update pipeline: GitHub Releases artifacts, the [Homebrew tap](https://github.com/alielsokary/homebrew-tap) cask, and the Sparkle appcast (releases are Developer ID-signed and notarized; updates are EdDSA-verified)
+- The release and update pipeline: GitHub Releases artifacts, the official [Homebrew cask](https://github.com/Homebrew/homebrew-cask/blob/HEAD/Casks/c/caskhub.rb), and the Sparkle appcast (releases are Developer ID-signed and notarized; updates are EdDSA-verified)
 - The [caskhub.app](https://caskhub.app) website content
 
 Examples of in-scope issues:
 
 - Executing attacker-controlled code through CaskHub, e.g. command injection via cask metadata into the `brew` commands CaskHub runs
 - Bypassing or downgrading Sparkle update signature verification
-- Tampering with CaskHub's release artifacts, appcast, or tap through the project's CI
+- Tampering with CaskHub's release artifacts or appcast through the project's CI
 - CaskHub leaking sensitive user data
 
 ### Out of scope (report elsewhere or publicly)
