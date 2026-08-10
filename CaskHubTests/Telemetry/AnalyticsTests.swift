@@ -29,6 +29,7 @@ final class AnalyticsTests: XCTestCase {
         spy = SpyAnalyticsProvider()
         originalProvider = Analytics.provider
         Analytics.provider = spy
+        Analytics.openedPages.removeAll()
         UserDefaults.standard.removeObject(forKey: Analytics.enabledKey)
     }
 
@@ -91,11 +92,17 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(lastSignal?.parameters, ["cask": "firefox", "origin": "individual"])
     }
 
-    func test_cask_action_started_records_action_token_and_origin() {
+    func test_cask_action_started_breadcrumbs_without_signaling() {
+        let crashSpy = SpyCrashReporterProvider()
+        let originalCrash = CrashReporter.provider
+        CrashReporter.provider = crashSpy
+        defer { CrashReporter.provider = originalCrash }
+
         Analytics.caskActionStarted(.updating, token: "zoom", origin: .updateAll)
 
-        XCTAssertEqual(lastSignal?.name, "Cask.actionStarted")
-        XCTAssertEqual(lastSignal?.parameters, [
+        XCTAssertTrue(spy.signals.isEmpty)
+        XCTAssertEqual(crashSpy.breadcrumbs.last?.message, "Cask.actionStarted")
+        XCTAssertEqual(crashSpy.breadcrumbs.last?.data, [
             "action": "update",
             "cask": "zoom",
             "origin": "updateAll"
@@ -169,6 +176,24 @@ final class AnalyticsTests: XCTestCase {
             lastSignal?.parameters,
             ["page": "category", "category": "productivity"]
         )
+    }
+
+    func test_page_opened_signals_once_per_page_and_breadcrumbs_repeats() {
+        let crashSpy = SpyCrashReporterProvider()
+        let originalCrash = CrashReporter.provider
+        CrashReporter.provider = crashSpy
+        defer { CrashReporter.provider = originalCrash }
+
+        Analytics.pageOpened(.discover(.browse))
+        Analytics.pageOpened(.library(.installed))
+        Analytics.pageOpened(.discover(.browse))
+
+        XCTAssertEqual(spy.signals.map(\.name), ["Page.opened", "Page.opened"])
+        XCTAssertEqual(
+            spy.signals.map(\.parameters),
+            [["page": "browse"], ["page": "installed"]]
+        )
+        XCTAssertEqual(crashSpy.breadcrumbs.count, 3)
     }
 
     func test_view_all_tapped_carries_destination_parameters() {
