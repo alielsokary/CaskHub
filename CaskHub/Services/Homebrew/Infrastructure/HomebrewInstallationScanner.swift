@@ -256,8 +256,11 @@ extension HomebrewInstallationScanner {
                     let fileSize = values.fileSize,
                     fileSize > 0
                 else { continue }
-                // Shims into app bundles belong to that app (OrbStack docker).
-                guard !entry.resolvingSymlinksInPath().path.contains(".app/")
+                // Shims into app bundles belong to that app (OrbStack docker);
+                // Cellar binaries belong to a formula (docker CLI), not a cask.
+                let resolvedPath = entry.resolvingSymlinksInPath().path
+                guard !resolvedPath.contains(".app/"),
+                      !resolvedPath.contains("/Cellar/")
                 else { continue }
                 if paths[entry.lastPathComponent] == nil {
                     paths[entry.lastPathComponent] = entry
