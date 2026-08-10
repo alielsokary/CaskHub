@@ -2,10 +2,8 @@
 # Test suites grow linearly with the features they cover, so the default
 # 250-line type cap bites test classes far earlier than app classes.
 type_body_length:
-  warning: 400
+  warning: 450
   error: 500
 
-# Test files also grow linearly with coverage; the 400-line default flags
-# healthy suites (5 files today) without indicating a real seam.
 file_length:
   warning: 600
