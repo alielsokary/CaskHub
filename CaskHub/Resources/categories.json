@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-08-02",
-  "totalCasks": 3843,
+  "generatedDate": "2026-08-09",
+  "totalCasks": 3860,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -659,6 +659,12 @@
     "anchor-wallet": {
       "primary": "financeCrypto",
       "secondary": []
+    },
+    "android-cli": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "android-commandlinetools": {
       "primary": "developerTools",
@@ -2043,6 +2049,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "canario": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "candy-crisis": {
       "primary": "games",
       "secondary": []
@@ -2089,6 +2101,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "captin": {
+      "primary": "utilities",
+      "secondary": [
+        "menuBar"
+      ]
+    },
     "capto": {
       "primary": "videoMedia",
       "secondary": []
@@ -2124,6 +2142,12 @@
     "cashnotify": {
       "primary": "financeCrypto",
       "secondary": []
+    },
+    "caskhub": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
     },
     "castr": {
       "primary": "videoMedia",
@@ -3650,6 +3674,18 @@
       "primary": "utilities",
       "secondary": []
     },
+    "diversion": {
+      "primary": "developerTools",
+      "secondary": [
+        "cloudStorage"
+      ]
+    },
+    "diversion-app": {
+      "primary": "developerTools",
+      "secondary": [
+        "games"
+      ]
+    },
     "divvy": {
       "primary": "utilities",
       "secondary": [
@@ -4359,6 +4395,12 @@
     "espanso": {
       "primary": "productivity",
       "secondary": []
+    },
+    "esphome-device-builder": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
     },
     "espresso": {
       "primary": "developerTools",
@@ -7154,6 +7196,12 @@
         "ai"
       ]
     },
+    "kirocrew": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "kitlangton-hex": {
       "primary": "productivity",
       "secondary": []
@@ -7250,6 +7298,12 @@
     "kopiaui": {
       "primary": "utilities",
       "secondary": []
+    },
+    "koreader": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
     },
     "kotlin-lsp": {
       "primary": "developerTools",
@@ -7434,6 +7488,12 @@
     "lehreroffice": {
       "primary": "scienceEducation",
       "secondary": []
+    },
+    "lemonade-server": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "lens": {
       "primary": "developerTools",
@@ -8385,6 +8445,13 @@
     "meetingbar": {
       "primary": "menuBar",
       "secondary": []
+    },
+    "meetingrecorder": {
+      "primary": "videoMedia",
+      "secondary": [
+        "productivity",
+        "ai"
+      ]
     },
     "meetmic": {
       "primary": "productivity",
@@ -13988,6 +14055,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "switchy": {
+      "primary": "utilities",
+      "secondary": [
+        "menuBar"
+      ]
+    },
     "symboliclinker": {
       "primary": "utilities",
       "secondary": []
@@ -14225,6 +14298,12 @@
     "tau": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "tauritavern": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
     },
     "tdr-kotelnikov": {
       "primary": "audioMusic",
@@ -14529,6 +14608,12 @@
     "ti-smartview-ce-for-the-ti-84-plus-family": {
       "primary": "scienceEducation",
       "secondary": []
+    },
+    "tickernotch": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
     },
     "ticktick": {
       "primary": "productivity",
@@ -15163,6 +15248,12 @@
         "games"
       ]
     },
+    "unity-cli": {
+      "primary": "developerTools",
+      "secondary": [
+        "games"
+      ]
+    },
     "unity-hub": {
       "primary": "developerTools",
       "secondary": []
@@ -15197,7 +15288,7 @@
       "primary": "utilities",
       "secondary": []
     },
-    "unraid-usb-creator-next": {
+    "unraid-usb-creator": {
       "primary": "utilities",
       "secondary": []
     },
@@ -16125,6 +16216,10 @@
       "primary": "utilities",
       "secondary": []
     },
+    "work-louder-input": {
+      "primary": "utilities",
+      "secondary": []
+    },
     "workbench": {
       "primary": "cloudStorage",
       "secondary": []
@@ -16484,6 +16579,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "zcode": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "zed": {
       "primary": "developerTools",
       "secondary": [
@@ -16609,7 +16710,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.08.02",
+  "releaseTag": "caskflow-v2026.08.09",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -17041,6 +17142,7 @@
     "camo-studio",
     "camtasia",
     "camunda-modeler",
+    "canario",
     "candy-crisis",
     "canva",
     "cap",
@@ -17048,6 +17150,7 @@
     "capcut",
     "captain",
     "captains-deck",
+    "captin",
     "capto",
     "carbide-create",
     "carbon-copy-cloner",
@@ -17057,6 +17160,7 @@
     "cardo-update",
     "cardpresso",
     "cashnotify",
+    "caskhub",
     "castr",
     "catch",
     "cate",
@@ -17363,6 +17467,7 @@
     "displaylink",
     "displays",
     "ditto",
+    "diversion-app",
     "divvy",
     "dixa",
     "djstudio",
@@ -17515,6 +17620,7 @@
     "es-de",
     "eset-cyber-security",
     "espanso",
+    "esphome-device-builder",
     "espresso",
     "ethui",
     "etrecheckpro",
@@ -18126,6 +18232,7 @@
     "kindle-previewer",
     "kiro",
     "kiro-cli",
+    "kirocrew",
     "kitlangton-hex",
     "kitty",
     "kiwi-for-gmail",
@@ -18187,6 +18294,7 @@
     "leech",
     "legcord",
     "lehreroffice",
+    "lemonade-server",
     "lens",
     "letos",
     "letter-opener",
@@ -18387,6 +18495,7 @@
     "medis",
     "meetily",
     "meetingbar",
+    "meetingrecorder",
     "meetmic",
     "mega",
     "megacmd-app",
@@ -18715,6 +18824,7 @@
     "okta-verify",
     "ollama-app",
     "ollamac",
+    "omegat",
     "omnidisksweeper",
     "omnifocus",
     "omnigraffle",
@@ -19605,6 +19715,7 @@
     "swish",
     "switch",
     "switchhosts",
+    "switchy",
     "synalyze-it-pro",
     "sync",
     "syncmate",
@@ -19652,6 +19763,7 @@
     "taskexplorer",
     "taskpaper",
     "tastytrade",
+    "tauritavern",
     "teacode",
     "teambition",
     "teamspeak-client",
@@ -19721,6 +19833,7 @@
     "thunderbird@esr",
     "ti-connect-ce",
     "ti-smartview-ce-for-the-ti-84-plus-family",
+    "tickernotch",
     "ticktick",
     "tidal",
     "tiger-trade",
@@ -19859,6 +19972,7 @@
     "universal-media-server",
     "unnaturalscrollwheels",
     "unpkg",
+    "unraid-usb-creator",
     "unraid-usb-creator-next",
     "unshaky",
     "updatest",
@@ -20056,6 +20170,7 @@
     "wordpresscom",
     "wordpresscom-studio",
     "wordservice",
+    "work-louder-input",
     "workbench",
     "workflowy",
     "worksheet-crafter",
@@ -20135,6 +20250,7 @@
     "yuque",
     "zalo",
     "zappy",
+    "zcode",
     "zed",
     "zed@preview",
     "zedis",
