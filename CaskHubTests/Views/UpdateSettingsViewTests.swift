@@ -20,6 +20,20 @@ final class UpdateSettingsViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_sparkle_modal_alert_hooks_pause_and_resume_hang_tracking() {
+        let spy = SpyCrashReporterProvider()
+        let original = CrashReporter.provider
+        defer { CrashReporter.provider = original }
+        CrashReporter.provider = spy
+
+        let updater = UpdaterService()
+        updater.standardUserDriverWillShowModalAlert()
+        updater.standardUserDriverDidShowModalAlert()
+
+        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
+    }
+
+    @MainActor
     func test_about_support_uses_caskhub_issue_chooser() {
         XCTAssertEqual(
             CaskHubLinks.issues.absoluteString,

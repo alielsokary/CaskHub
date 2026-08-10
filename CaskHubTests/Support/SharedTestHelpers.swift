@@ -342,6 +342,15 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
     var breadcrumbs: [(message: String, data: [String: String])] = []
     var tags: [String: String] = [:]
     var spans: [SpanRecord] = []
+    var hangTrackingEvents: [String] = []
+
+    func pauseHangTracking() {
+        hangTrackingEvents.append("pause")
+    }
+
+    func resumeHangTracking() {
+        hangTrackingEvents.append("resume")
+    }
 
     func start(enabled: Bool) {
         startedWith.append(enabled)

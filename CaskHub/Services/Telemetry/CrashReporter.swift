@@ -20,6 +20,13 @@ protocol CrashReporterProvider {
     func addBreadcrumb(_ message: String, data: [String: String])
     func setTag(_ key: String, value: String)
     func startSpan(name: String, operation: String) -> CrashSpan
+    func pauseHangTracking()
+    func resumeHangTracking()
+}
+
+extension CrashReporterProvider {
+    func pauseHangTracking() {}
+    func resumeHangTracking() {}
 }
 
 enum CrashReporter {
@@ -106,6 +113,23 @@ enum CrashReporter {
         guard isEnabled else { return NoOpCrashSpan() }
         return provider.startSpan(name: name, operation: operation)
     }
+
+    // Hang detection pings the main queue in the default run-loop mode; app-modal
+    // panels spin NSModalPanelRunLoopMode, so any dialog open >2s reports as a
+    // fake hang. Pause around every runModal-style nested run loop.
+    static func pauseHangTracking() {
+        provider.pauseHangTracking()
+    }
+
+    static func resumeHangTracking() {
+        provider.resumeHangTracking()
+    }
+
+    static func withHangTrackingPaused<T>(_ body: () throws -> T) rethrows -> T {
+        pauseHangTracking()
+        defer { resumeHangTracking() }
+        return try body()
+    }
 }
 
 struct NoOpCrashSpan: CrashSpan {
@@ -179,6 +203,14 @@ final class SentryProvider: CrashReporterProvider {
     func startSpan(name: String, operation: String) -> CrashSpan {
         guard started else { return NoOpCrashSpan() }
         return SentrySpanHandle(span: SentrySDK.startTransaction(name: name, operation: operation))
+    }
+
+    func pauseHangTracking() {
+        SentrySDK.pauseAppHangTracking()
+    }
+
+    func resumeHangTracking() {
+        SentrySDK.resumeAppHangTracking()
     }
 }
 
