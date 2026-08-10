@@ -238,6 +238,8 @@ struct CaskRowActionsMenuButton: View {
         ) -> NSMenuItem {
             let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
             item.target = self
+            // target is weak; menu must retain the coordinator until dismissed
+            item.representedObject = self
             item.image = NSImage(systemSymbolName: systemImage, accessibilityDescription: title)
             item.isEnabled = isEnabled
             item.toolTip = toolTip
