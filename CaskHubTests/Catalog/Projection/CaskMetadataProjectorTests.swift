@@ -116,22 +116,22 @@ final class CaskMetadataProjectorTests: XCTestCase {
         let hex = String(repeating: "ab", count: 32)
         let rows = makeDownloadRows(sha256: hex)
 
-        XCTAssertEqual(valuesByProperty(rows)["SHA-256"], hex)
+        XCTAssertEqual(valuesByProperty(rows)["SHA"], hex)
         XCTAssertEqual(
-            rows.map(\.property).filter { ["URL", "SHA-256"].contains($0) },
-            ["URL", "SHA-256"]
+            rows.map(\.property).filter { ["URL", "SHA"].contains($0) },
+            ["URL", "SHA"]
         )
     }
 
     func test_info_projection_softens_no_check_sha256() {
         XCTAssertEqual(
-            valuesByProperty(makeDownloadRows(sha256: "no_check"))["SHA-256"],
-            String(localized: "sha256 :no_check (auto-updates enabled)")
+            valuesByProperty(makeDownloadRows(sha256: "no_check"))["SHA"],
+            String(localized: "sha256 :no_check (rolling download URL)")
         )
     }
 
     func test_info_projection_omits_sha256_row_when_missing() {
-        XCTAssertNil(valuesByProperty(makeDownloadRows(sha256: nil))["SHA-256"])
+        XCTAssertNil(valuesByProperty(makeDownloadRows(sha256: nil))["SHA"])
     }
 
     private func makeDownloadRows(sha256: String?) -> [CaskInfoRow] {

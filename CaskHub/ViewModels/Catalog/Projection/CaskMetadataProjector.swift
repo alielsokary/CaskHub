@@ -90,9 +90,9 @@ enum CaskInfoProjector {
         var rows = [CaskInfoRow(property: "URL", value: url, link: URL(string: url))]
         if let sha256 = cask.sha256 {
             rows.append(CaskInfoRow(
-                property: "SHA-256",
+                property: "SHA",
                 value: sha256 == "no_check"
-                    ? String(localized: "sha256 :no_check (auto-updates enabled)")
+                    ? String(localized: "sha256 :no_check (rolling download URL)")
                     : sha256
             ))
         }
