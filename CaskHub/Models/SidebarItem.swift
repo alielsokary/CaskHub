@@ -72,12 +72,16 @@ enum LibraryItem: String, CaseIterable, Identifiable {
 enum SidebarSelection: Hashable, Identifiable {
     case discover(DiscoverItem)
     case library(LibraryItem)
+    case shelfSetup
+    case maintenance
     case category(String)
 
     var id: String {
         switch self {
         case let .discover(item): return "discover.\(item.rawValue)"
         case let .library(item): return "library.\(item.rawValue)"
+        case .shelfSetup: return "manage.shelfSetup"
+        case .maintenance: return "maintenance.health"
         case let .category(categoryID): return "category.\(categoryID)"
         }
     }

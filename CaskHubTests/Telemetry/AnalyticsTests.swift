@@ -196,6 +196,14 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(crashSpy.breadcrumbs.count, 3)
     }
 
+    func test_page_opened_maps_utility_pages() {
+        Analytics.pageOpened(.shelfSetup)
+        XCTAssertEqual(lastSignal?.parameters, ["page": "shelfSetup"])
+
+        Analytics.pageOpened(.maintenance)
+        XCTAssertEqual(lastSignal?.parameters, ["page": "maintenance"])
+    }
+
     func test_view_all_tapped_carries_destination_parameters() {
         Analytics.viewAllTapped(to: .category("developer-tools"))
         XCTAssertEqual(lastSignal?.name, "Browse.viewAllTapped")
