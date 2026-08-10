@@ -92,7 +92,7 @@ extension CaskCatalogViewModel {
                 casks: casks,
                 localStates: localHomebrew.localStates(for: casks),
                 categoryMappings: categoryService.tokenMappings,
-                adoptIgnoredTokens: localHomebrew.adoptIgnoredTokens
+                adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))
         }
     }

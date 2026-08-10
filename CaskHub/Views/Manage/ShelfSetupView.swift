@@ -56,7 +56,7 @@ struct ShelfSetupView: View {
                     .foregroundStyle(Color.chTextMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 14)
-                    .overlay(alignment: .top) { RowSeparator() }
+                    .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
             } else {
                 ForEach(viewModel.adoptIgnoredCasks) { cask in
                     ignoredRow(cask)
@@ -96,7 +96,7 @@ struct ShelfSetupView: View {
             }
         }
         .padding(.vertical, 10)
-        .overlay(alignment: .top) { RowSeparator() }
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 }
 
@@ -165,7 +165,7 @@ private struct AdoptIgnorePickerSheet: View {
                             .foregroundStyle(Color.chTextMuted)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 10)
-                            .overlay(alignment: .top) { RowSeparator() }
+                            .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
                     } else {
                         ForEach(viewModel.adoptableCasks) { cask in
                             adoptableRow(cask)
@@ -211,7 +211,7 @@ private struct AdoptIgnorePickerSheet: View {
             }
         }
         .padding(.vertical, 8)
-        .overlay(alignment: .top) { RowSeparator() }
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 }
 
@@ -236,13 +236,6 @@ private struct PillButton: View {
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-    }
-}
-
-private struct RowSeparator: View {
-    var body: some View {
-        Color.chHairline
-            .frame(height: 1)
     }
 }
 

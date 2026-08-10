@@ -40,7 +40,7 @@ struct SidebarView: View {
                     }
 
                     sectionHeader("MANAGE")
-                    row(.shelfSetup, title: String(localized: .sidebarShelfSetup), icon: "slider.horizontal.3")
+                    row(.shelfSetup, title: String(localized: .sidebarShelfSetup), icon: "books.vertical")
 
                     sectionHeader("MAINTENANCE")
                     row(.maintenance, title: String(localized: .sidebarHealth), icon: "stethoscope")

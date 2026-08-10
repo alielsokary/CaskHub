@@ -66,10 +66,6 @@ final class LocalHomebrewService {
         didSet { catalogStateRevision &+= 1 }
     }
 
-    var adoptIgnoredTokens: Set<String> {
-        Set(adoptIgnoredDates.keys)
-    }
-
     let fileManager: FileManager
     private let defaults: UserDefaults
     let applicationDirectories: [URL]

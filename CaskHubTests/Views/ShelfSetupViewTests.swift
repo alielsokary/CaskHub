@@ -58,7 +58,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         let relaunched = LocalHomebrewService(defaults: defaults)
         XCTAssertEqual(
-            relaunched.adoptIgnoredTokens, ["google-chrome"],
+            Set(relaunched.adoptIgnoredDates.keys), ["google-chrome"],
             "ignore list survives relaunch"
         )
     }
@@ -78,7 +78,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         XCTAssertEqual(vm.adoptableCasks.map(\.token), ["slack"])
         XCTAssertTrue(vm.adoptIgnoredCasks.isEmpty)
-        XCTAssertTrue(LocalHomebrewService(defaults: defaults).adoptIgnoredTokens.isEmpty)
+        XCTAssertTrue(LocalHomebrewService(defaults: defaults).adoptIgnoredDates.isEmpty)
     }
 
     @MainActor
