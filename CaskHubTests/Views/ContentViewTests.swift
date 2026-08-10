@@ -350,4 +350,68 @@ final class TopBarViewTests: XCTestCase {
             "browse shelves must not trigger the flat grid's reveal sentinel"
         )
     }
+
+    @MainActor
+    func test_catalog_renders_list_and_grid_across_pages() async {
+        let api = MockBrewAPIClient()
+        api.casks = (0 ..< 12).map { makeCask("cask-\($0)") }
+        let categories = CategoryService()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("catalog-render"))
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await vm.fetchCasks()
+
+        let storedViewMode = UserDefaults.standard.string(forKey: "viewMode")
+        addTeardownBlock { @MainActor in
+            UserDefaults.standard.set(storedViewMode, forKey: "viewMode")
+        }
+        UserDefaults.standard.set(ViewMode.list.rawValue, forKey: "viewMode")
+
+        renderInWindow(vm, categories: categories, local: local)
+
+        vm.selectedSidebar = .discover(.featured)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+
+        UserDefaults.standard.set(ViewMode.grid.rawValue, forKey: "viewMode")
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+    }
+
+    @MainActor
+    func test_error_state_renders_retry_view() async {
+        let api = MockBrewAPIClient()
+        api.casksError = URLError(.notConnectedToInternet)
+        let categories = CategoryService()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("error-render"))
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await vm.fetchCasks()
+        XCTAssertNotNil(vm.errorMessage)
+
+        renderInWindow(vm, categories: categories, local: local)
+    }
+
+    @MainActor
+    private func renderInWindow(
+        _ vm: CaskCatalogViewModel,
+        categories: CategoryService,
+        local: LocalHomebrewService
+    ) {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
+            .environment(categories)
+            .environment(local)
+            .environment(ImageCacheService()))
+        window.orderFrontRegardless()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.25))
+
+        addTeardownBlock { @MainActor in
+            window.contentView = NSView()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            window.close()
+        }
+    }
 }

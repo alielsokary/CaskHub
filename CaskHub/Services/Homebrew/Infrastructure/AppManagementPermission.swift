@@ -11,7 +11,7 @@ import Foundation
 /// macOS "App Management" privacy permission. No query API, and `access(2)` never
 /// consults the gate (TCC enforces actual writes only), so status is probed
 /// Homebrew-style: attempt a harmless write inside protected bundles.
-enum AppManagementPermission {
+nonisolated enum AppManagementPermission {
     enum Status: Equatable {
         case granted, denied, unknown
     }

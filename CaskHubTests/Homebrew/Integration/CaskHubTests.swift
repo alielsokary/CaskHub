@@ -164,10 +164,9 @@ final class CaskHubTests: XCTestCase {
                 "external": URL(fileURLWithPath: "/usr/local/bin/external")
             ]
         }
-        let externalBinaryPath = "/usr/local/bin/external"
         let externalHint = String(
             localized: """
-            Installed outside Homebrew at \(externalBinaryPath). \
+            Installed outside Homebrew at \("/usr/local/bin/external"). \
             Remove or move that file manually before installing \
             the Homebrew version.
             """

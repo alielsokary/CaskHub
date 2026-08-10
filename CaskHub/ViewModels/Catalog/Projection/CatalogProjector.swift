@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct CatalogLibraryProjectionInput {
+nonisolated struct CatalogLibraryProjectionInput {
     let casks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
     let adoptIgnoredTokens: Set<String>
 }
 
-struct CatalogBrowseProjectionInput {
+nonisolated struct CatalogBrowseProjectionInput {
     let casks: [Cask]
     let annualDownloadCounts: [String: Int]
     let categoryMappings: [String: TokenCategoryMapping]
@@ -23,7 +23,7 @@ struct CatalogBrowseProjectionInput {
     let addedDates: [String: String]
 }
 
-struct CatalogFilteredProjectionInput {
+nonisolated struct CatalogFilteredProjectionInput {
     let casks: [Cask]
     let library: CatalogLibrarySnapshot
     let selectedSidebar: SidebarSelection
@@ -37,7 +37,7 @@ struct CatalogFilteredProjectionInput {
     let nameRanks: [String: Int]
 }
 
-enum CatalogProjector {
+nonisolated enum CatalogProjector {
     static func makeLibrary(
         from input: CatalogLibraryProjectionInput
     ) -> CatalogLibrarySnapshot {
