@@ -15,13 +15,13 @@ struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(CategoryService.self) private var categoryService
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @AppStorage("viewMode") private var viewMode: ViewMode = .grid
+    @AppStorage("viewMode") var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var sidebarVisibility: NavigationSplitViewVisibility = .all
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
 
-    private let columns = Array(
+    let columns = Array(
         repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
         count: 4
     )
@@ -225,17 +225,17 @@ struct ContentView: View {
         }
     }
 
-    private var selectedSidebar: SidebarSelection {
+    var selectedSidebar: SidebarSelection {
         viewModel.selectedSidebar
     }
 
-    private var heroCask: Cask? {
+    var heroCask: Cask? {
         guard showsBrowseSections else { return nil }
         return viewModel.filteredCasks.first
     }
 
     // Raw searchText would swap layout before results apply and flash a stale grid.
-    private var showsBrowseSections: Bool {
+    var showsBrowseSections: Bool {
         selectedSidebar == .discover(.browse)
             && viewModel.appliedSearchText.isEmpty
     }
@@ -251,168 +251,8 @@ struct ContentView: View {
         }
     }
 
-    private func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
+    func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
         viewModel.categoryPresentation(for: cask)
-    }
-}
-
-// MARK: - Grid, List & Error Views
-
-private extension ContentView {
-    var catalogView: some View {
-        ScrollView {
-            catalogContent
-        }
-        .contentMargins(.bottom, 44, for: .scrollContent)
-        .scrollContentBackground(.hidden)
-        .modifier(ResetScrollOnChange(trigger: selectedSidebar))
-    }
-
-    @ViewBuilder
-    var catalogContent: some View {
-        switch viewMode {
-        case .grid:
-            gridContent
-        case .list:
-            listContent
-        }
-    }
-
-    var gridContent: some View {
-        VStack(alignment: .leading, spacing: CHSpace.s4) {
-            if let hero = heroCask {
-                HeroCard(
-                    cask: hero,
-                    downloads: viewModel.formattedDownloads(for: hero.token),
-                    categoryName: categoryInfo(for: hero)?.mainName,
-                    localState: viewModel.localState(for: hero)
-                )
-            }
-            if showsBrowseSections {
-                ForEach(viewModel.browseSections) { section in
-                    browseSectionView(section)
-                }
-            } else {
-                caskGrid(viewModel.displayedCasks, showsReveal: true)
-            }
-        }
-        .frame(width: CHSize.contentWidth, alignment: .leading)
-        .frame(maxWidth: .infinity)
-    }
-
-    @ViewBuilder
-    var listContent: some View {
-        if showsBrowseSections {
-            VStack(alignment: .leading, spacing: CHSpace.s4) {
-                if let hero = heroCask {
-                    VStack(spacing: 0) {
-                        CaskRowView(
-                            cask: hero,
-                            downloads: viewModel.formattedDownloads(for: hero.token),
-                            category: categoryInfo(for: hero),
-                            localState: viewModel.localState(for: hero),
-                            eyebrow: "✷ HOUSE PICK"
-                        )
-                        .padding(.vertical, 6)
-
-                        Color.chHairline
-                            .frame(height: 1)
-                    }
-                }
-                ForEach(viewModel.browseSections) { section in
-                    browseSectionView(section)
-                }
-            }
-            .frame(width: CHSize.contentWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
-        } else {
-            LazyVStack(spacing: 0) {
-                caskList(viewModel.displayedCasks)
-                if viewModel.hasMoreToReveal {
-                    RevealSentinel { viewModel.revealMore() }
-                }
-            }
-            .frame(width: CHSize.contentWidth)
-            .frame(maxWidth: .infinity)
-        }
-    }
-
-    func caskList(_ casks: [Cask]) -> some View {
-        ForEach(casks) { cask in
-            CaskRowView(
-                cask: cask,
-                downloads: viewModel.formattedDownloads(for: cask.token),
-                category: categoryInfo(for: cask),
-                localState: viewModel.localState(for: cask)
-            )
-            .padding(.vertical, 6)
-
-            Color.chHairline
-                .frame(height: 1)
-        }
-    }
-
-    // showsReveal stays off for browse shelves — global reveal state, not theirs.
-    func caskGrid(_ casks: [Cask], showsReveal: Bool = false) -> some View {
-        LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
-            ForEach(casks) { cask in
-                CaskCardView(
-                    cask: cask,
-                    downloads: viewModel.formattedDownloads(for: cask.token),
-                    category: categoryInfo(for: cask),
-                    onSelectCategory: { viewModel.selectedSidebar = .category($0) },
-                    localState: viewModel.localState(for: cask)
-                )
-            }
-            if showsReveal && viewModel.hasMoreToReveal {
-                RevealSentinel { viewModel.revealMore() }
-            }
-        }
-    }
-
-    func browseSectionView(_ section: BrowseSection) -> some View {
-        VStack(alignment: .leading, spacing: CHSpace.s3) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(section.title)
-                    .font(CHType.section)
-                    .foregroundStyle(Color.chTextTitle)
-                Spacer()
-                Button {
-                    Analytics.viewAllTapped(to: section.destination)
-                    viewModel.selectedSidebar = section.destination
-                } label: {
-                    Text("View All")
-                        .font(CHType.button)
-                        .foregroundStyle(Color.chTextBrand)
-                }
-                .buttonStyle(.plain)
-            }
-            switch viewMode {
-            case .grid:
-                caskGrid(section.casks)
-            case .list:
-                LazyVStack(spacing: 0) {
-                    caskList(section.casks)
-                }
-            }
-        }
-        .padding(.top, CHSpace.s3)
-    }
-
-    // MARK: - Error View
-
-    func errorView(_ error: String) -> some View {
-        VStack(spacing: 12) {
-            BarrelMark()
-                .frame(width: 56, height: 56)
-                .opacity(0.6)
-            Text(error)
-                .font(CHType.body)
-                .foregroundStyle(Color.chTextBody)
-            ActionCapsuleButton(action: .update, fullWidth: false) {
-                Task { await viewModel.fetchCasks() }
-            }
-        }
     }
 }
 

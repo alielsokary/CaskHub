@@ -7,13 +7,13 @@
 
 import Foundation
 
-struct CaskCategoryPresentation: Equatable {
+nonisolated struct CaskCategoryPresentation: Equatable {
     let mainID: CategoryID
     let mainName: String
     let subcategoryNames: [String]
 }
 
-enum CaskCategoryProjector {
+nonisolated enum CaskCategoryProjector {
     static func make(
         token: String,
         mappings: [String: TokenCategoryMapping],
@@ -38,13 +38,13 @@ enum CaskCategoryProjector {
     }
 }
 
-struct CaskInfoRow: Equatable {
+nonisolated struct CaskInfoRow: Equatable {
     let property: String
     let value: String
     var link: URL?
 }
 
-struct CaskInfoProjectionInput {
+nonisolated struct CaskInfoProjectionInput {
     let cask: Cask
     let category: CaskCategoryPresentation?
     let downloadSize: DownloadSizeResult?
@@ -53,7 +53,7 @@ struct CaskInfoProjectionInput {
     let installationDates: CaskInstallationDates?
 }
 
-enum CaskInfoProjector {
+nonisolated enum CaskInfoProjector {
     static func makeRows(from input: CaskInfoProjectionInput) -> [CaskInfoRow] {
         identityRows(for: input.cask)
             + downloadRows(for: input.cask, size: input.downloadSize)
@@ -231,7 +231,7 @@ enum CaskInfoProjector {
     }
 }
 
-private extension String {
+nonisolated private extension String {
     var nilIfEmpty: String? {
         isEmpty ? nil : self
     }

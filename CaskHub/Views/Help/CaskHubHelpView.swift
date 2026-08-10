@@ -14,7 +14,7 @@ enum CaskHubLinks {
     static let homebrew = URL(string: "https://brew.sh")!
 }
 
-enum HelpTopic: String, CaseIterable, Identifiable, Sendable {
+nonisolated enum HelpTopic: String, CaseIterable, Identifiable, Sendable {
     case gettingStarted
     case homebrew
     case installAndUpdate

@@ -67,7 +67,7 @@ final class CaskHubHelpSearchHandler: NSObject, NSUserInterfaceItemSearching {
     }
 }
 
-extension HelpTopic {
+nonisolated extension HelpTopic {
     var helpMenuTitle: String {
         switch self {
         case .gettingStarted: "CaskHub Help"

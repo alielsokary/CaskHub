@@ -4,3 +4,8 @@
 type_body_length:
   warning: 400
   error: 500
+
+# Test files also grow linearly with coverage; the 400-line default flags
+# healthy suites (5 files today) without indicating a real seam.
+file_length:
+  warning: 600
