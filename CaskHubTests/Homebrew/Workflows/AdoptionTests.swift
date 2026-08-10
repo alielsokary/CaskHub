@@ -89,15 +89,40 @@ final class AdoptionSurfaceTests: XCTestCase {
             args: ["install", "--cask", "x", "--adopt"], exitCode: 1,
             stderr: "Error: It seems the existing App is different from the one being installed."
         )
-        XCTAssertTrue(mismatch.errorDescription?.contains("replace it with Homebrew's copy") == true)
+        XCTAssertEqual(
+            mismatch.errorDescription,
+            String(
+                localized: """
+                Your installed copy doesn't match the version Homebrew has on \
+                record, so it can't be adopted as-is. You can replace it with \
+                Homebrew's copy instead — your settings and data are kept.
+                """
+            )
+        )
 
         let checksum = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "x"], exitCode: 1, stderr: "SHA256 mismatch"
         )
-        XCTAssertTrue(checksum.errorDescription?.contains("checksum") == true)
+        XCTAssertEqual(
+            checksum.errorDescription,
+            String(
+                localized: """
+                The download doesn't match the checksum Homebrew has on record — \
+                the developer likely replaced the release file after it was \
+                published. This isn't a problem with your Mac; Homebrew refuses \
+                mismatched downloads for security. Try again in a day or two once \
+                the cask is updated.
+                """
+            )
+        )
 
         let silent = LocalHomebrewError.brewCommandFailed(args: ["upgrade"], exitCode: 2, stderr: "  ")
-        XCTAssertTrue(silent.errorDescription?.contains("exit 2") == true)
+        let silentCommand = "brew upgrade"
+        let silentExitCode: Int32 = 2
+        XCTAssertEqual(
+            silent.errorDescription,
+            String(localized: "`\(silentCommand)` failed (exit \(silentExitCode)).")
+        )
 
         let generic = LocalHomebrewError.brewCommandFailed(args: ["upgrade"], exitCode: 1, stderr: "boom")
         XCTAssertTrue(generic.errorDescription?.contains("boom") == true)
@@ -202,21 +227,29 @@ final class AdoptionSurfaceTests: XCTestCase {
         )
         XCTAssertNil(runner.requests[0].environment["HOMEBREW_NO_AUTOREMOVE"])
         XCTAssertNil(runner.requests[2].environment["HOMEBREW_NO_AUTOREMOVE"])
+        XCTAssertTrue(
+            runner.requests.dropFirst().allSatisfy {
+                $0.environment["HOMEBREW_NO_ASK"] == "1"
+            },
+            "ask-mode prompts EOF on the nulled stdin and abort the run"
+        )
     }
 
-    func test_askpass_scripts_are_unique_shell_safe_and_removable() throws {
+    func test_askpass_scripts_are_unique_shell_safe_and_removable() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("askpass-tests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let executable = URL(fileURLWithPath: "/Applications/Cask Hub's.app/Contents/MacOS/CaskHub")
 
-        let first = try XCTUnwrap(AskpassScriptManager.create(
+        let firstScript = await AskpassScriptManager.create(
             token: "first; unsafe", directory: directory, executableURL: executable
-        ))
-        let second = try XCTUnwrap(AskpassScriptManager.create(
+        )
+        let secondScript = await AskpassScriptManager.create(
             token: "second", directory: directory, executableURL: executable
-        ))
+        )
+        let first = try XCTUnwrap(firstScript)
+        let second = try XCTUnwrap(secondScript)
 
         XCTAssertNotEqual(first, second)
         XCTAssertTrue(first.lastPathComponent.hasPrefix("askpass-"))
@@ -226,8 +259,8 @@ final class AdoptionSurfaceTests: XCTestCase {
         let permissions = try FileManager.default.attributesOfItem(atPath: first.path)[.posixPermissions] as? Int
         XCTAssertEqual(permissions, 0o700)
 
-        AskpassScriptManager.remove(at: first)
-        AskpassScriptManager.remove(at: second)
+        await AskpassScriptManager.remove(at: first)
+        await AskpassScriptManager.remove(at: second)
         XCTAssertFalse(FileManager.default.fileExists(atPath: first.path))
         XCTAssertFalse(FileManager.default.fileExists(atPath: second.path))
     }

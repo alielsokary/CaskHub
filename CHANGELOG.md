@@ -4,6 +4,29 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.7.0 — 2026-08-10
+
+### What's New
+
+- Added native macOS menus and an in-app help center
+- Added Simplified Chinese localization, including localized category names
+- Added a Shelf Setup page to choose which apps the Adopt scan ignores
+- Added the SHA checksum to the cask info popover
+- Joined the official Homebrew cask repository — install with `brew install --cask caskhub`
+
+### Improvements
+
+- Brought browse sections and the house pick to list view
+- Added one-click recovery actions when an install conflicts with existing files
+
+### Bug Fixes
+
+- Fixed in-app updates downloading silently instead of showing the standard update prompt
+- Fixed App Management permission shown as enabled when it was never granted
+- Fixed menu actions that were intermittently disabled or did nothing
+- Fixed Homebrew formula shims being flagged as externally installed CLI tools
+- Fixed the squared app icon on macOS 15 and icon colors in dark theme
+
 ## 0.6.9 — 2026-08-03
 
 ### What's New

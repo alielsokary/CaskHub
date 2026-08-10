@@ -7,13 +7,14 @@
 
 import Foundation
 
-struct CatalogLibraryProjectionInput {
+nonisolated struct CatalogLibraryProjectionInput {
     let casks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
+    let adoptIgnoredTokens: Set<String>
 }
 
-struct CatalogBrowseProjectionInput {
+nonisolated struct CatalogBrowseProjectionInput {
     let casks: [Cask]
     let annualDownloadCounts: [String: Int]
     let categoryMappings: [String: TokenCategoryMapping]
@@ -22,7 +23,7 @@ struct CatalogBrowseProjectionInput {
     let addedDates: [String: String]
 }
 
-struct CatalogFilteredProjectionInput {
+nonisolated struct CatalogFilteredProjectionInput {
     let casks: [Cask]
     let library: CatalogLibrarySnapshot
     let selectedSidebar: SidebarSelection
@@ -36,7 +37,7 @@ struct CatalogFilteredProjectionInput {
     let nameRanks: [String: Int]
 }
 
-enum CatalogProjector {
+nonisolated enum CatalogProjector {
     static func makeLibrary(
         from input: CatalogLibraryProjectionInput
     ) -> CatalogLibrarySnapshot {
@@ -53,7 +54,7 @@ enum CatalogProjector {
             if localState.isPresent {
                 installedCasks.append(cask)
             }
-            if localState.isAdoptable {
+            if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
             if let mapping = input.categoryMappings[cask.token] {
@@ -93,12 +94,12 @@ enum CatalogProjector {
 
         var sections = [
             BrowseSection(
-                title: "Most Popular",
+                title: String(localized: "Most Popular"),
                 destination: .discover(.topCharts),
                 casks: Array(popularityOrder.prefix(sectionSize))
             ),
             BrowseSection(
-                title: "Recently Added",
+                title: String(localized: "Recently Added"),
                 destination: .discover(.recentlyAdded),
                 casks: Array(sortedByNewest(
                     input.casks.filter {
@@ -149,6 +150,8 @@ enum CatalogProjector {
             return input.library.updatableCasks
         case .library(.adopt):
             return input.library.adoptableCasks
+        case .shelfSetup, .maintenance:
+            return []
         case let .category(categoryID):
             return input.library.casksByCategory[categoryID] ?? []
         }

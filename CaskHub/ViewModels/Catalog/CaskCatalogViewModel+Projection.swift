@@ -30,6 +30,20 @@ extension CaskCatalogViewModel {
         librarySnapshot.adoptableCasks
     }
 
+    /// Newest ignore first, matching the design's "just now" on top.
+    var adoptIgnoredCasks: [Cask] {
+        let dates = localHomebrew.adoptIgnoredDates
+        guard !dates.isEmpty else { return [] }
+        return casks
+            .filter { dates[$0.token] != nil }
+            .sorted { lhs, rhs in
+                let lhsDate = dates[lhs.token] ?? .distantPast
+                let rhsDate = dates[rhs.token] ?? .distantPast
+                if lhsDate != rhsDate { return lhsDate > rhsDate }
+                return lhs.token < rhs.token
+            }
+    }
+
     var categoryCounts: [String: Int] {
         librarySnapshot.categoryCounts
     }
@@ -77,7 +91,8 @@ extension CaskCatalogViewModel {
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
                 casks: casks,
                 localStates: localHomebrew.localStates(for: casks),
-                categoryMappings: categoryService.tokenMappings
+                categoryMappings: categoryService.tokenMappings,
+                adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))
         }
     }
@@ -100,7 +115,7 @@ extension CaskCatalogViewModel {
                     annualDownloadCounts: analyticsByPeriod[.days365] ?? [:],
                     categoryMappings: categoryService.tokenMappings,
                     orderedCategories: categoryService.orderedCategories.map {
-                        (id: $0.id, displayName: $0.definition.displayName)
+                        (id: $0.id, displayName: categoryService.displayName(for: $0.id))
                     },
                     recentTokens: recentlyAdded.recentTokens(
                         within: recentlyAddedWindow.rawValue

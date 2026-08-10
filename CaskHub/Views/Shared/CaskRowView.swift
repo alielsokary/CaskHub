@@ -13,6 +13,7 @@ struct CaskRowView: View {
     var downloads: String?
     var category: CaskCategoryPresentation?
     var localState: CaskLocalState?
+    var eyebrow: LocalizedStringKey?
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var showDeleteConfirmation = false
@@ -37,6 +38,13 @@ struct CaskRowView: View {
 
     private var appInfo: some View {
         VStack(alignment: .leading, spacing: 2) {
+            if let eyebrow {
+                Text(eyebrow)
+                    .font(CHType.labelSm)
+                    .kerning(CHType.trackingLabel)
+                    .foregroundStyle(Color.chTextBrand)
+                    .padding(.bottom, 4)
+            }
             Text(cask.displayName)
                 .font(CHType.cardTitle)
                 .foregroundStyle(Color.chTextTitle)
@@ -172,7 +180,7 @@ struct CaskRowActionsMenuButton: View {
             menu.autoenablesItems = false
             menu.addItem(
                 menuItem(
-                    title: "Info",
+                    title: String(localized: "Info"),
                     systemImage: "info.circle",
                     action: #selector(showInfo)
                 )
@@ -181,12 +189,12 @@ struct CaskRowActionsMenuButton: View {
             if configuration.showsUpdate {
                 menu.addItem(
                     menuItem(
-                        title: "Update",
+                        title: String(localized: "Update"),
                         systemImage: "arrow.clockwise",
                         action: #selector(update),
                         isEnabled: !configuration.isBusy,
                         toolTip: configuration.isBusy
-                            ? "Wait for the current action to finish."
+                            ? String(localized: "Wait for the current action to finish.")
                             : nil
                     )
                 )
@@ -204,7 +212,7 @@ struct CaskRowActionsMenuButton: View {
             switch configuration.uninstallAvailability {
             case .available:
                 reason = configuration.isBusy
-                    ? "Wait for the current action to finish."
+                    ? String(localized: "Wait for the current action to finish.")
                     : nil
             case let .unavailable(unavailableReason):
                 reason = unavailableReason
@@ -213,7 +221,7 @@ struct CaskRowActionsMenuButton: View {
             }
 
             return menuItem(
-                title: "Uninstall",
+                title: String(localized: "Uninstall"),
                 systemImage: "trash",
                 action: #selector(uninstall),
                 isEnabled: reason == nil,
@@ -230,6 +238,8 @@ struct CaskRowActionsMenuButton: View {
         ) -> NSMenuItem {
             let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
             item.target = self
+            // target is weak; menu must retain the coordinator until dismissed
+            item.representedObject = self
             item.image = NSImage(systemSymbolName: systemImage, accessibilityDescription: title)
             item.isEnabled = isEnabled
             item.toolTip = toolTip

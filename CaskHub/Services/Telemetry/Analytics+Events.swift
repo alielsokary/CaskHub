@@ -20,7 +20,7 @@ extension Analytics {
         origin: CaskActionOrigin
     ) {
         guard let verb = action.analyticsVerb else { return }
-        send("Cask.actionStarted", parameters: actionParameters(
+        CrashReporter.breadcrumb("Cask.actionStarted", data: actionParameters(
             verb: verb.base, token: token, origin: origin
         ))
     }
@@ -72,9 +72,16 @@ extension Analytics {
 
     // MARK: - Navigation
 
+    static var openedPages = Set<[String: String]>()
+
     /// Fires for every detail-page change: sidebar clicks, category clicks on cards, and View All
     static func pageOpened(_ selection: SidebarSelection) {
-        send("Page.opened", parameters: parameters(for: selection))
+        let parameters = parameters(for: selection)
+        if openedPages.insert(parameters).inserted {
+            send("Page.opened", parameters: parameters)
+        } else {
+            CrashReporter.breadcrumb("Page.opened", data: parameters)
+        }
     }
 
     /// The Browse-shelf "View All" tap, sent alongside the `Page.opened`
@@ -133,6 +140,10 @@ extension Analytics {
             return ["page": item.analyticsName]
         case let .library(item):
             return ["page": item.rawValue.lowercased()]
+        case .shelfSetup:
+            return ["page": "shelfSetup"]
+        case .maintenance:
+            return ["page": "maintenance"]
         case let .category(categoryID):
             return ["page": "category", "category": categoryID]
         }

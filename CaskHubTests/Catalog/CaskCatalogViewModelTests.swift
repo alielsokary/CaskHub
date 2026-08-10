@@ -273,7 +273,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
         vm.selectedSidebar = .discover(.recentlyAdded)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["brand-new"])
 
-        let shelf = vm.browseSections.first { $0.title == "Recently Added" }
+        let shelf = vm.browseSections.first { $0.destination == .discover(.recentlyAdded) }
         XCTAssertEqual(shelf?.casks.map(\.token), ["brand-new"])
 
         recent.addedDates["brand-new"] = dateString(daysAgo: 1)
@@ -302,7 +302,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
 
         let sections = vm.browseSections
 
-        XCTAssertEqual(sections.map(\.title), ["Most Popular", "Browsers"])
+        XCTAssertEqual(sections.map(\.title), [String(localized: "Most Popular"), "Browsers"])
         XCTAssertEqual(sections[0].destination, .discover(.topCharts))
         XCTAssertEqual(sections[1].destination, .category("browsers"))
         XCTAssertEqual(sections[0].casks.count, 8)
@@ -322,7 +322,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
             recentlyAdded: recent
         )
 
-        let shelf = vm.browseSections.first { $0.title == "Recently Added" }
+        let shelf = vm.browseSections.first { $0.destination == .discover(.recentlyAdded) }
         XCTAssertEqual(shelf?.casks.map(\.token), ["new-app", "old-hit"])
     }
 
@@ -479,5 +479,23 @@ final class CaskCatalogViewModelTests: XCTestCase {
         let garbled = makeViewModel(api: MockBrewAPIClient(), defaults: defaults)
         XCTAssertEqual(garbled.analyticsPeriod, .days365)
         XCTAssertEqual(garbled.recentlyAddedWindow, .days30)
+    }
+
+    @MainActor
+    func test_recent_tokens_memoize_and_invalidate_on_data_change() {
+        let service = RecentlyAddedService()
+        service.addedDates = [
+            "new-cask": dateString(daysAgo: 1),
+            "old-cask": dateString(daysAgo: 400)
+        ]
+        XCTAssertEqual(service.recentTokens(within: 30), ["new-cask"])
+        XCTAssertEqual(service.recentTokens(within: 30), ["new-cask"])
+
+        service.addedDates["another"] = dateString(daysAgo: 2)
+        XCTAssertEqual(
+            service.recentTokens(within: 30),
+            ["new-cask", "another"]
+        )
+        XCTAssertEqual(service.recentTokens(within: 90), ["new-cask", "another"])
     }
 }

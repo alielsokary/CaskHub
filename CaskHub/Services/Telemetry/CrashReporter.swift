@@ -20,6 +20,13 @@ protocol CrashReporterProvider {
     func addBreadcrumb(_ message: String, data: [String: String])
     func setTag(_ key: String, value: String)
     func startSpan(name: String, operation: String) -> CrashSpan
+    func pauseHangTracking()
+    func resumeHangTracking()
+}
+
+extension CrashReporterProvider {
+    func pauseHangTracking() {}
+    func resumeHangTracking() {}
 }
 
 enum CrashReporter {
@@ -71,6 +78,20 @@ enum CrashReporter {
         if nsError.domain == NSURLErrorDomain, ignoredURLErrorCodes.contains(nsError.code) {
             return
         }
+        // Disk full is user state — write paths degrade gracefully.
+        if nsError.domain == NSCocoaErrorDomain,
+           nsError.code == CocoaError.fileWriteOutOfSpace.rawValue {
+            return
+        }
+        // Truncated CDN body only; garbage-but-complete payloads still report.
+        if case let DecodingError.dataCorrupted(context) = error,
+           let underlying = context.underlyingError as NSError?,
+           underlying.domain == NSCocoaErrorDomain,
+           underlying.code == NSPropertyListReadCorruptError,
+           (underlying.userInfo[NSDebugDescriptionErrorKey] as? String)?
+               .contains("Unexpected end of file") == true {
+            return
+        }
         let signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
         let count = captureCounts[signature, default: 0]
         guard count < captureLimit else { return }
@@ -91,6 +112,23 @@ enum CrashReporter {
     static func span(name: String, operation: String) -> CrashSpan {
         guard isEnabled else { return NoOpCrashSpan() }
         return provider.startSpan(name: name, operation: operation)
+    }
+
+    // Hang detection pings the main queue in the default run-loop mode; app-modal
+    // panels spin NSModalPanelRunLoopMode, so any dialog open >2s reports as a
+    // fake hang. Pause around every runModal-style nested run loop.
+    static func pauseHangTracking() {
+        provider.pauseHangTracking()
+    }
+
+    static func resumeHangTracking() {
+        provider.resumeHangTracking()
+    }
+
+    static func withHangTrackingPaused<T>(_ body: () throws -> T) rethrows -> T {
+        pauseHangTracking()
+        defer { resumeHangTracking() }
+        return try body()
     }
 }
 
@@ -142,9 +180,13 @@ final class SentryProvider: CrashReporterProvider {
     /// domain+code — one issue per way brew fails, so a rare destructive failure
     /// can't hide inside a busy catch-all group.
     static func fingerprint(for error: Error) -> [String]? {
-        guard case let LocalHomebrewError.brewCommandFailed(args, _, stderr) = error,
+        guard case let LocalHomebrewError.brewCommandFailed(args, exitCode, stderr) = error,
               let subcommand = args.first else { return nil }
-        return ["brewCommandFailed", subcommand, LocalHomebrewError.failureClass(stderr: stderr)]
+        return [
+            "brewCommandFailed",
+            subcommand,
+            LocalHomebrewError.failureClass(stderr: stderr, exitCode: exitCode)
+        ]
     }
 
     func setTag(_ key: String, value: String) {
@@ -161,6 +203,14 @@ final class SentryProvider: CrashReporterProvider {
     func startSpan(name: String, operation: String) -> CrashSpan {
         guard started else { return NoOpCrashSpan() }
         return SentrySpanHandle(span: SentrySDK.startTransaction(name: name, operation: operation))
+    }
+
+    func pauseHangTracking() {
+        SentrySDK.pauseAppHangTracking()
+    }
+
+    func resumeHangTracking() {
+        SentrySDK.resumeAppHangTracking()
     }
 }
 

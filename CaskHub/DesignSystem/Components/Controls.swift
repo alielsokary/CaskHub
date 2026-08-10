@@ -12,12 +12,12 @@ enum CaskActionStyle {
 
     var title: String {
         switch self {
-        case .install: return "Install"
-        case .adopt: return "Adopt"
-        case .update: return "Update"
-        case .open: return "Open"
-        case .installed: return "Installed"
-        case .cleanup: return "Clean Up"
+        case .install: return String(localized: "Install")
+        case .adopt: return String(localized: "Adopt")
+        case .update: return String(localized: "Update")
+        case .open: return String(localized: "Open")
+        case .installed: return String(localized: .caskActionInstalled)
+        case .cleanup: return String(localized: "Clean Up")
         }
     }
 
@@ -126,11 +126,8 @@ struct CountBadge: View {
 
     var body: some View {
         Text("\(count)")
-            .font(CHType.label)
+            .font(CHType.statusMono.bold())
             .foregroundStyle(Color.chBadgeFg)
-            .frame(minWidth: 18, minHeight: 18)
-            .background(Capsule().fill(Color.chBadgeBg))
-            .overlay(Capsule().strokeBorder(Color.chBadgeBorder, lineWidth: 1))
     }
 }
 

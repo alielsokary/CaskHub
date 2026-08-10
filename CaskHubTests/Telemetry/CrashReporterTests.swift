@@ -131,6 +131,39 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
+    func test_disk_full_and_truncated_payloads_are_never_captured() {
+        func corrupt(_ debug: String) -> DecodingError {
+            .dataCorrupted(DecodingError.Context(
+                codingPath: [],
+                debugDescription: "The given data was not valid JSON.",
+                underlyingError: NSError(
+                    domain: NSCocoaErrorDomain,
+                    code: NSPropertyListReadCorruptError,
+                    userInfo: [NSDebugDescriptionErrorKey: debug]
+                )
+            ))
+        }
+
+        CrashReporter.capture(NSError(
+            domain: NSCocoaErrorDomain,
+            code: CocoaError.fileWriteOutOfSpace.rawValue
+        ))
+        CrashReporter.capture(corrupt("Unexpected end of file during JSON parse."))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+
+        CrashReporter.capture(DecodingError.typeMismatch(
+            String.self,
+            DecodingError.Context(codingPath: [], debugDescription: "schema break")
+        ))
+        XCTAssertEqual(spy.capturedErrors.count, 1, "real schema breaks still report")
+
+        CrashReporter.capture(corrupt("Invalid value around line 1, column 0."))
+        XCTAssertEqual(
+            spy.capturedErrors.count, 2,
+            "garbage-but-complete payloads are not truncation and still report"
+        )
+    }
+
     func test_recoverable_brew_failures_are_never_captured() {
         let failures = [
             "It seems the existing App is different from the one being installed.",
@@ -150,13 +183,26 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
-    func test_unexpected_brew_conflicts_remain_reportable() {
+    func test_conflicts_with_recovery_buttons_are_no_longer_captured() {
         CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "x"],
             exitCode: 1,
             stderr: "It seems there is already a Binary at '/opt/homebrew/bin/x'."
         ))
-        XCTAssertEqual(spy.capturedErrors.count, 1)
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "x"],
+            exitCode: 1,
+            stderr: "Error: It seems there is already an App at '/Applications/X.app'."
+        ))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "x"],
+            exitCode: 1,
+            stderr: "Error: x: Download failed on Cask 'x' with message: "
+                + "curl: (22) The requested URL returned error: 404"
+        ))
+        XCTAssertEqual(spy.capturedErrors.count, 1, "classes without a recovery path still report")
     }
 
     // MARK: - Fingerprinting
@@ -183,10 +229,11 @@ final class CrashReporterTests: XCTestCase {
         )
     }
 
+    private func cls(_ stderr: String) -> String {
+        LocalHomebrewError.failureClass(stderr: stderr)
+    }
+
     func test_failure_classes_cover_observed_brew_errors() {
-        func cls(_ stderr: String) -> String {
-            LocalHomebrewError.failureClass(stderr: stderr)
-        }
         XCTAssertEqual(cls("Warning: Cask 'x' is unavailable: No Cask with this name exists."), "unknown-cask")
         XCTAssertEqual(cls("Error: Cask 'sequel-ace' is not installed."), "not-installed")
         XCTAssertEqual(
@@ -198,7 +245,144 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(cls("curl: (6) Could not resolve host: example.com"), "network-failure")
         XCTAssertEqual(cls("It seems there is already a Binary at '/opt/homebrew/bin/x'."), "binary-conflict")
         XCTAssertEqual(cls("It seems there is already an App at '/Applications/X.app'."), "app-conflict")
+        XCTAssertEqual(cls("sudo: no password was provided"), "sudo-declined")
+        XCTAssertEqual(cls("sudo: a password is required"), "sudo-declined")
+        XCTAssertEqual(
+            cls("Warning: It seems there is already a Binary at '/usr/local/bin/docker'.\n"
+                + "sudo: a password is required"),
+            "sudo-declined",
+            "a declined prompt is the terminal cause even with incidental conflict warnings"
+        )
         XCTAssertEqual(cls("something novel"), "uncategorized")
+    }
+
+    func test_failure_classes_cover_field_mined_brew_errors() {
+        XCTAssertEqual(
+            cls("Sorry, try again.\nSorry, try again.\nsudo: 3 incorrect password attempts"),
+            "sudo-wrong-password"
+        )
+        XCTAssertEqual(
+            cls("user is not in the sudoers file.  This incident will be reported."),
+            "sudo-not-admin"
+        )
+        XCTAssertEqual(
+            cls("Error: tinymediamanager: Download failed on Cask 'tinymediamanager' "
+                + "with message: Download failed: https://example.com/tmm.dmg\n"
+                + "curl: (22) The requested URL returned error: 404"),
+            "download-broken"
+        )
+        XCTAssertEqual(
+            cls("Error: linearmouse: Download failed on Cask 'linearmouse' with message: "
+                + "Download failed: https://dl.linearmouse.org/v0.11.4/LinearMouse.dmg\n"
+                + "curl: (56) Recv failure: Connection reset by peer"),
+            "network-failure"
+        )
+        XCTAssertEqual(
+            cls("Error: Cannot download non-corrupt "
+                + "https://formulae.brew.sh/api/internal/packages.arm64_tahoe.jws.json!"),
+            "brew-api-unavailable"
+        )
+        XCTAssertEqual(
+            cls("Error: foo: Download failed on Cask 'foo' with message: mystery"),
+            "download-failed"
+        )
+        XCTAssertEqual(
+            cls("Error: microsoft-office: Cask 'microsoft-office' conflicts with 'microsoft-excel'."),
+            "cask-conflict"
+        )
+        XCTAssertEqual(
+            cls("Error: Refusing to uninstall pieces-os\n"
+                + "because it is required by pieces, which is currently installed."),
+            "cask-dependency"
+        )
+        XCTAssertEqual(
+            cls("Error: onyx: This cask does not run on macOS versions other than "
+                + "Catalina, Big Sur, Monterey, Ventura, Sonoma, Sequoia and Tahoe."),
+            "platform-unsupported"
+        )
+    }
+
+    func test_failure_classes_cover_field_mined_brew_env_errors() {
+        XCTAssertEqual(cls("Error: Another `brew update` process is already running."), "brew-busy")
+        XCTAssertEqual(
+            cls("Error: A `brew uninstall --cask cursor --force` process has already locked "
+                + "/opt/homebrew/Cellar/llvm@21.\nPlease wait for it to finish or terminate it."),
+            "brew-busy"
+        )
+        XCTAssertEqual(
+            cls("Error: The following directories are not writable by your user:\n"
+                + "/opt/homebrew/share/man/man5"),
+            "homebrew-not-writable"
+        )
+    }
+
+    func test_failure_classes_cover_field_mined_installer_and_env_errors() {
+        XCTAssertEqual(cls("hdiutil: attach failed - Resource busy"), "dmg-mount-busy")
+        XCTAssertEqual(
+            cls("installer: The upgrade failed. (The Installer encountered an error.)\n"
+                + "Error: Failure while executing; `/usr/bin/sudo -A -E -- "
+                + "/usr/sbin/installer -pkg /private/tmp/x.pkg -target /` exited with 1."),
+            "pkg-installer-failed"
+        )
+        XCTAssertEqual(
+            cls("curl: (7) Failed to connect to updates.vendor.com port 443\n"
+                + "installer: The install failed. (The Installer encountered an error.)\n"
+                + "Error: Failure while executing; `/usr/bin/sudo -A -E -- "
+                + "/usr/sbin/installer -pkg /private/tmp/vendor.pkg -target /` exited with 1."),
+            "pkg-installer-failed",
+            "a vendor installer's own curl chatter must not reclassify the failure"
+        )
+        XCTAssertEqual(cls("Error: Not upgrading 1 pinned package:\nmarkedit 1.33.0"), "upgrade-refused")
+        XCTAssertEqual(
+            cls("🍺  proton-mail was successfully upgraded!\n==> Upgraded 1 outdated package"),
+            "exit-nonzero-after-success"
+        )
+        XCTAssertEqual(
+            cls("Error: uninstall script /Applications/gpt4all/maintenancetool.app"
+                + "/Contents/MacOS/maintenancetool does not exist."),
+            "missing-uninstall-script"
+        )
+        XCTAssertEqual(
+            cls("Error: Cannot change the ownership of '/Applications/Tunnelblick.app' "
+                + "because your terminal does not have App Management permissions."),
+            "permission-denied"
+        )
+    }
+
+    func test_killed_process_with_silent_stderr_gets_its_own_class() {
+        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: "", exitCode: 9), "process-killed")
+        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: "", exitCode: 1), "uncategorized")
+        XCTAssertEqual(
+            LocalHomebrewError.failureClass(stderr: "Error: real failure", exitCode: 9),
+            "uncategorized",
+            "a kill with actual output classifies on the output"
+        )
+        let killed = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "stash"], exitCode: 9, stderr: ""
+        )
+        XCTAssertEqual(
+            SentryProvider.fingerprint(for: killed),
+            ["brewCommandFailed", "install", "process-killed"]
+        )
+        XCTAssertTrue(killed.shouldReport, "watch volume before deciding to suppress")
+    }
+
+    func test_wrong_sudo_password_is_not_reported() {
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "arq"],
+            exitCode: 1,
+            stderr: "Sorry, try again.\nsudo: 3 incorrect password attempts"
+        ))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
+    }
+
+    func test_declined_sudo_prompt_is_not_reported() {
+        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+            args: ["uninstall", "--cask", "wetype"],
+            exitCode: 1,
+            stderr: "sudo: no password was provided\nsudo: a password is required"
+        ))
+        XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
     func test_other_errors_keep_default_grouping() {
@@ -254,5 +438,26 @@ final class CrashReporterTests: XCTestCase {
         let span = CrashReporter.span(name: "install", operation: "brew")
         span.finish()
         XCTAssertTrue(spy.spans.isEmpty)
+    }
+
+    // MARK: - Hang tracking pause
+
+    func test_with_hang_tracking_paused_brackets_the_body() {
+        let value = CrashReporter.withHangTrackingPaused { 7 }
+        XCTAssertEqual(value, 7)
+        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
+    }
+
+    func test_hang_tracking_resumes_when_body_throws() {
+        XCTAssertThrowsError(
+            try CrashReporter.withHangTrackingPaused { throw URLError(.badURL) }
+        )
+        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
+    }
+
+    func test_sentry_provider_pause_resume_are_safe_without_started_sdk() {
+        let provider = SentryProvider()
+        provider.pauseHangTracking()
+        provider.resumeHangTracking()
     }
 }

@@ -29,21 +29,27 @@ struct SidebarView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     sectionHeader("DISCOVER")
                     ForEach(DiscoverItem.allCases) { item in
-                        row(.discover(item), title: item.rawValue, icon: item.icon)
+                        row(.discover(item), title: item.title, icon: item.icon)
                     }
 
                     sectionHeader("LIBRARY")
-                    row(.library(.installed), title: "Installed", icon: LibraryItem.installed.icon, count: installedCount)
-                    row(.library(.updates), title: "Updates", icon: LibraryItem.updates.icon, badge: updatesCount)
+                    row(.library(.installed), title: LibraryItem.installed.title, icon: LibraryItem.installed.icon, count: installedCount)
+                    row(.library(.updates), title: LibraryItem.updates.title, icon: LibraryItem.updates.icon, badge: updatesCount)
                     if showAdoptApps {
-                        row(.library(.adopt), title: LibraryItem.adopt.rawValue, icon: LibraryItem.adopt.icon, count: adoptableCount)
+                        row(.library(.adopt), title: LibraryItem.adopt.title, icon: LibraryItem.adopt.icon, count: adoptableCount)
                     }
+
+                    sectionHeader("MANAGE")
+                    row(.shelfSetup, title: String(localized: .sidebarShelfSetup), icon: "books.vertical")
+
+                    sectionHeader("MAINTENANCE")
+                    row(.maintenance, title: String(localized: .sidebarHealth), icon: "stethoscope")
 
                     sectionHeader("CATEGORIES")
                     ForEach(categoryService.orderedCategories, id: \.id) { entry in
                         row(
                             .category(entry.id),
-                            title: entry.definition.displayName,
+                            title: categoryService.displayName(for: entry.id),
                             icon: entry.definition.icon,
                             count: categoryCounts[entry.id]
                         )
@@ -106,7 +112,7 @@ struct SidebarView: View {
         .buttonStyle(.plain)
     }
 
-    private func sectionHeader(_ title: String) -> some View {
+    private func sectionHeader(_ title: LocalizedStringKey) -> some View {
         Text(title)
             .font(CHType.label)
             .kerning(CHType.trackingLabel)

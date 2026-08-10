@@ -9,6 +9,16 @@
 import XCTest
 
 final class CaskCatalogSortTests: XCTestCase {
+    func test_every_bundled_category_has_localized_name_entry() throws {
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "categories", withExtension: "json"))
+        let catalog = try JSONDecoder().decode(CaskCategoryData.self, from: Data(contentsOf: url))
+        let sentinel = "⟪missing⟫"
+        for id in catalog.categories.keys {
+            let value = Bundle.main.localizedString(forKey: "category.\(id)", value: sentinel, table: nil)
+            XCTAssertNotEqual(value, sentinel, "Localizable.xcstrings has no category.\(id) entry")
+        }
+    }
+
     private func detectedApplication(named name: String) -> DetectedApplication {
         DetectedApplication(
             url: URL(fileURLWithPath: "/Applications/\(name)"),
@@ -48,7 +58,8 @@ final class CaskCatalogSortTests: XCTestCase {
                     primary: "utilities",
                     secondary: []
                 )
-            ]
+            ],
+            adoptIgnoredTokens: []
         )
 
         let library = CatalogProjector.makeLibrary(from: input)

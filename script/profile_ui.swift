@@ -1,7 +1,5 @@
 #!/usr/bin/env swift
 
-// swiftlint:disable file_length
-
 import AppKit
 import ApplicationServices
 import Foundation

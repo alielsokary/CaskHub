@@ -45,6 +45,8 @@ final class SystemBrewProcessRunner: BrewProcessRunning {
         if let terminal {
             var terminalEnvironment = environment
             terminalEnvironment["TERM"] = "xterm-256color"
+            // stty can't size the pty (stdin nulled); tput honors COLUMNS, else 80-col clipping.
+            terminalEnvironment["COLUMNS"] = "180"
             process.environment = terminalEnvironment
             process.standardOutput = terminal.childHandle
             process.standardError = terminal.childHandle

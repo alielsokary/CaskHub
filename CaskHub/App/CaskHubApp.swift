@@ -16,6 +16,7 @@ enum CaskHubMain {
                 ? CommandLine.arguments[flagIndex + 1] : nil
             Askpass.runDialog(token: token)
         }
+        NSWindow.allowsAutomaticWindowTabbing = false
         CaskHubApp.main()
     }
 }
@@ -26,6 +27,8 @@ struct CaskHubApp: App {
     private var terminationCoordinator
 
     @State private var updaterService = UpdaterService()
+    @State private var helpTopic: HelpTopic = .gettingStarted
+    @State private var settingsSection: SettingsSection = .general
 
     @State private var categoryService: CategoryService
     @State private var recentlyAdded: RecentlyAddedService
@@ -64,40 +67,62 @@ struct CaskHubApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
-            ContentView(viewModel: catalog)
-                .frame(minWidth: 1380, minHeight: 640)
-                .background {
-                    WindowCloseButtonConfigurator {
-                        terminationCoordinator.requestTermination()
+        Group {
+            Window("CaskHub", id: CaskHubWindowID.main) {
+                ContentView(viewModel: catalog)
+                    .frame(minWidth: 1380, minHeight: 640)
+                    .background {
+                        WindowCloseButtonConfigurator {
+                            terminationCoordinator.requestTermination()
+                        }
                     }
-                }
-                .onAppear {
-                    terminationCoordinator.configure {
-                        localHomebrew.hasActiveOperations
+                    .background {
+                        CaskHubHelpSearchRegistration(selection: $helpTopic)
                     }
-                }
-                .onChange(of: selectedTheme, initial: true) { _, newValue in
-                    AppTheme.apply(newValue)
-                }
-                .environment(categoryService)
-                .environment(recentlyAdded)
+                    .onAppear {
+                        terminationCoordinator.configure {
+                            localHomebrew.hasActiveOperations
+                        }
+                    }
+                    .onChange(of: selectedTheme, initial: true) { _, newValue in
+                        AppTheme.apply(newValue)
+                    }
+                    .environment(categoryService)
+                    .environment(recentlyAdded)
+                    .environment(localHomebrew)
+                    .environment(imageCache)
+            }
+            .defaultSize(width: 1360, height: 880)
+            .windowStyle(.hiddenTitleBar)
+            .commandsRemoved()
+            .commands {
+                CommandGroup(replacing: .newItem) {}
+                CaskHubViewCommands()
+            }
+
+            Window("CaskHub Help", id: CaskHubWindowID.help) {
+                CaskHubHelpView(
+                    selection: $helpTopic,
+                    settingsSelection: $settingsSection,
+                    navigateToCatalog: { catalog.selectedSidebar = $0 }
+                )
                 .environment(localHomebrew)
-                .environment(imageCache)
-        }
-        .defaultSize(width: 1360, height: 880)
-        .windowStyle(.hiddenTitleBar)
-        .commands {
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updater: updaterService)
+                .frame(minWidth: 760, minHeight: 520)
+            }
+            .defaultSize(width: 880, height: 620)
+            .windowResizability(.contentMinSize)
+            .commandsRemoved()
+
+            Settings {
+                SettingsView(selection: $settingsSection)
+                    .environment(updaterService)
+                    .environment(imageCache)
+                    .environment(localHomebrew)
             }
         }
-
-        Settings {
-            SettingsView()
-                .environment(updaterService)
-                .environment(imageCache)
-                .environment(localHomebrew)
+        .commands {
+            CaskHubApplicationCommands(updater: updaterService)
+            CaskHubHelpCommands(selection: $helpTopic)
         }
     }
 }

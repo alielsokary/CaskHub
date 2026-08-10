@@ -17,12 +17,12 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 
 ## Install
 
-<a href="https://github.com/alielsokary/CaskHub/releases/download/0.6.9/CaskHub-0.6.9.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
+<a href="https://github.com/alielsokary/CaskHub/releases/download/0.7.0/CaskHub-0.7.0.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
 
 Or install with Homebrew:
 
 ```bash
-brew install --cask alielsokary/tap/caskhub
+brew install --cask caskhub
 ```
 
 ## Features
@@ -103,6 +103,17 @@ CaskHub also sends anonymous crash reports through [Sentry](https://sentry.io) t
 
 You can opt out of both at any time in **Settings → Privacy**.
 
+## Localization
+
+CaskHub speaks your language. Currently available in:
+
+- 🇬🇧 **English**
+- 🇨🇳 **简体中文 (Simplified Chinese)** — translated by [@carty900-jpg](https://github.com/carty900-jpg)
+
+macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.
+
+Want CaskHub in your language? Translations live in a single [String Catalog](CaskHub/Resources/Localizable.xcstrings) — open an issue or PR to add yours.
+
 ## Contributing
 
 Interested in contributing to CaskHub? We welcome contributions of all kinds!
@@ -112,6 +123,11 @@ Interested in contributing to CaskHub? We welcome contributions of all kinds!
 - **Feature requests**: [Have an idea? We'd love to hear it](https://github.com/alielsokary/CaskHub/issues/new/choose)
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request — note that all PRs target the `develop` branch.
+
+## Acknowledgements
+
+- [CaskFlow](https://github.com/alielsokary/CaskFlow) — the data pipeline behind CaskHub's categories, Recently Added dates, and app icons
+- [Homebrew](https://brew.sh) — the package manager CaskHub is built on
 
 ## License
 

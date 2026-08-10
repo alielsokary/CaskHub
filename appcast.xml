@@ -3,33 +3,35 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.6.9</title>
-            <pubDate>Mon, 03 Aug 2026 04:07:15 +0000</pubDate>
-            <sparkle:version>466</sparkle:version>
-            <sparkle:shortVersionString>0.6.9</sparkle:shortVersionString>
+            <title>0.7.0</title>
+            <pubDate>Mon, 10 Aug 2026 14:01:29 +0000</pubDate>
+            <sparkle:version>556</sparkle:version>
+            <sparkle:shortVersionString>0.7.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Added an Updates tab in Settings with manual update checks and last-check status
-- Added a support card in About that links straight to the issue reporter
+- Added native macOS menus and an in-app help center
+- Added Simplified Chinese localization, including localized category names
+- Added a Shelf Setup page to choose which apps the Adopt scan ignores
+- Added the SHA checksum to the cask info popover
+- Joined the official Homebrew cask repository — install with `brew install --cask caskhub`
 
 ### Improvements
 
-- Smoother scrolling while installs and downloads are running
-- Faster search with instant typing echo and quicker name sorting
-- Faster app launch on large catalogs
-- Long lists now load in chunks as you scroll instead of all at once
-- Clearer error messages when an install or update fails
-- Catalog loading retries automatically when the Homebrew server has a hiccup
+- Brought browse sections and the house pick to list view
+- Added one-click recovery actions when an install conflicts with existing files
 
 ### Bug Fixes
 
-- Fixed the Update button appearing for apps Homebrew no longer considers installed
-- Fixed a crash risk in the main-menu update command
+- Fixed in-app updates downloading silently instead of showing the standard update prompt
+- Fixed App Management permission shown as enabled when it was never granted
+- Fixed menu actions that were intermittently disabled or did nothing
+- Fixed Homebrew formula shims being flagged as externally installed CLI tools
+- Fixed the squared app icon on macOS 15 and icon colors in dark theme
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.6.9/CaskHub-0.6.9.zip" length="5507885" type="application/octet-stream" sparkle:edSignature="9EBk1GT6c7wYWMQfStwOpNWwxyYfomJ2a1SSbFAeLnd66ONsU+CH4XfBBxLwdcMKKg2GPRM+tIa0UDC7eW4/DA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.7.0/CaskHub-0.7.0.zip" length="6626635" type="application/octet-stream" sparkle:edSignature="hbD/LGbQzXP6/uYSLYyN20facDISJSZy/4nC2PoeYpGcdV4DQxq2wQP4FpNiY9F3SqvyWcA4UqpqVmMAz5LPBg=="/>
         </item>
     </channel>
 </rss>

@@ -19,6 +19,17 @@ enum DiscoverItem: String, CaseIterable, Identifiable {
         rawValue
     }
 
+    /// Localized label for display. `rawValue` stays language-independent so
+    /// `id` and analytics keys are unaffected by the UI language.
+    var title: String {
+        switch self {
+        case .browse: return String(localized: "Browse")
+        case .featured: return String(localized: "Featured")
+        case .topCharts: return String(localized: "Top Charts")
+        case .recentlyAdded: return String(localized: "Recently Added")
+        }
+    }
+
     var icon: String {
         switch self {
         case .browse: return "square.grid.2x2"
@@ -38,6 +49,15 @@ enum LibraryItem: String, CaseIterable, Identifiable {
         rawValue
     }
 
+    /// Localized label for display. See `DiscoverItem.title`.
+    var title: String {
+        switch self {
+        case .installed: return String(localized: .sidebarInstalled)
+        case .updates: return String(localized: .sidebarUpdates)
+        case .adopt: return String(localized: "Adopt Apps")
+        }
+    }
+
     var icon: String {
         switch self {
         case .installed: return "arrow.down.to.line"
@@ -52,12 +72,16 @@ enum LibraryItem: String, CaseIterable, Identifiable {
 enum SidebarSelection: Hashable, Identifiable {
     case discover(DiscoverItem)
     case library(LibraryItem)
+    case shelfSetup
+    case maintenance
     case category(String)
 
     var id: String {
         switch self {
         case let .discover(item): return "discover.\(item.rawValue)"
         case let .library(item): return "library.\(item.rawValue)"
+        case .shelfSetup: return "manage.shelfSetup"
+        case .maintenance: return "maintenance.health"
         case let .category(categoryID): return "category.\(categoryID)"
         }
     }

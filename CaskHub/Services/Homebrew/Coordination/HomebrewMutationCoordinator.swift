@@ -100,31 +100,38 @@ final class HomebrewMutationCoordinator {
             throw LocalHomebrewError.brewBinaryNotFound
         }
 
-        let askpass = AskpassScriptManager.create(token: token)
-        defer {
-            if let askpass { AskpassScriptManager.remove(at: askpass) }
-        }
+        let askpass = await AskpassScriptManager.create(token: token)
 
         var environment = ProcessInfo.processInfo.environment
         environment.merge(environmentOverrides) { _, override in override }
+        // brew 6 ask-mode default prompts on our pty; stdin is nulled, so it EOF-aborts.
+        environment["HOMEBREW_NO_ASK"] = "1"
         if let askpass {
             environment["SUDO_ASKPASS"] = askpass.path
         }
 
-        let result = try await commandExecutor.execute(
-            HomebrewCommandRequest(
-                token: token,
-                executableURL: brewURL,
-                arguments: arguments,
-                environment: environment
-            ),
-            onStart: { [self] in
-                operationStore.send(.setCancellable(cancellable), for: token)
-            },
-            onChunk: { [self] text in
-                consumeBrewOutput(text, token: token)
-            }
-        )
+        // defer can't await; remove the script deterministically on both exits.
+        let result: BrewProcessResult
+        do {
+            result = try await commandExecutor.execute(
+                HomebrewCommandRequest(
+                    token: token,
+                    executableURL: brewURL,
+                    arguments: arguments,
+                    environment: environment
+                ),
+                onStart: { [self] in
+                    operationStore.send(.setCancellable(cancellable), for: token)
+                },
+                onChunk: { [self] text in
+                    consumeBrewOutput(text, token: token)
+                }
+            )
+        } catch {
+            if let askpass { await AskpassScriptManager.remove(at: askpass) }
+            throw error
+        }
+        if let askpass { await AskpassScriptManager.remove(at: askpass) }
 
         guard result.exitCode != 0 else { return }
         throw LocalHomebrewError.brewCommandFailed(

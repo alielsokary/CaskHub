@@ -61,11 +61,17 @@ final class LocalHomebrewService {
         didSet { catalogStateRevision &+= 1 }
     }
 
+    /// Tokens the user excluded from Adopt Apps, mapped to when they ignored them.
+    private(set) var adoptIgnoredDates: [String: Date] {
+        didSet { catalogStateRevision &+= 1 }
+    }
+
     let fileManager: FileManager
     private let defaults: UserDefaults
     let applicationDirectories: [URL]
 
     private static let greedyKey = "greedyUpdates"
+    private static let adoptIgnoredKey = "adoptIgnoredDates"
 
     init(
         defaults: UserDefaults = .standard,
@@ -95,6 +101,7 @@ final class LocalHomebrewService {
         brewBinaryProvider = dependencies.brewBinaryProvider
         brewVersionProvider = dependencies.brewVersionProvider
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
+        adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]
         customBrewPrefix = defaults.string(forKey: HomebrewLocator.customPrefixKey)
         observeApplicationActivation()
     }
@@ -124,6 +131,15 @@ final class LocalHomebrewService {
     func setGreedyUpdates(_ enabled: Bool) {
         greedyUpdates = enabled
         defaults.set(enabled, forKey: Self.greedyKey)
+    }
+
+    func setAdoptIgnored(_ token: String, _ ignored: Bool) {
+        if ignored {
+            adoptIgnoredDates[token] = .now
+        } else {
+            adoptIgnoredDates.removeValue(forKey: token)
+        }
+        defaults.set(adoptIgnoredDates, forKey: Self.adoptIgnoredKey)
     }
 
     func commitInstallationSnapshot(_ snapshot: InstallationSnapshot) {

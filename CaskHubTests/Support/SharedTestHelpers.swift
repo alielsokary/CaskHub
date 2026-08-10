@@ -284,6 +284,36 @@ final class RecordingApplicationLauncher: ApplicationLaunching {
     }
 }
 
+nonisolated struct EmptyInstalledSoftwareScanner: InstalledSoftwareScanning {
+    func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
+        .empty
+    }
+
+    func reconcileCatalog(
+        _ request: InstalledSoftwareScanRequest,
+        with current: InstallationSnapshot
+    ) async -> InstallationSnapshot {
+        current
+    }
+}
+
+@MainActor
+final class RecordingHomebrewCommandExecutor: HomebrewCommandExecuting {
+    private(set) var requests: [HomebrewCommandRequest] = []
+
+    func execute(
+        _ request: HomebrewCommandRequest,
+        onStart: @escaping @MainActor @Sendable () -> Void,
+        onChunk _: @escaping @MainActor @Sendable (String) -> Void
+    ) async throws -> BrewProcessResult {
+        requests.append(request)
+        onStart()
+        return BrewProcessResult(exitCode: 0, output: "")
+    }
+
+    func cancel(token _: String) -> Bool { false }
+}
+
 // MARK: - Crash-reporting spies
 
 final class SpyCrashSpan: CrashSpan {
@@ -312,6 +342,15 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
     var breadcrumbs: [(message: String, data: [String: String])] = []
     var tags: [String: String] = [:]
     var spans: [SpanRecord] = []
+    var hangTrackingEvents: [String] = []
+
+    func pauseHangTracking() {
+        hangTrackingEvents.append("pause")
+    }
+
+    func resumeHangTracking() {
+        hangTrackingEvents.append("resume")
+    }
 
     func start(enabled: Bool) {
         startedWith.append(enabled)

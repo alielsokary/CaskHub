@@ -34,7 +34,8 @@ final class CaskHubTests: XCTestCase {
 
     @MainActor
     func test_queued_action_labels_as_queued() {
-        XCTAssertEqual(CaskAction.queued.inProgressLabel, "Queued…")
+        XCTAssertEqual(CaskAction.queued.inProgressLabel, String(localized: "Queued…"))
+        XCTAssertEqual(CaskAction.queued.identifier, "queued")
     }
 
     // MARK: - Adoption
@@ -134,7 +135,9 @@ final class CaskHubTests: XCTestCase {
         updateInstallationSnapshot(of: service) {
             $0.externalAppNames = ["Adoptable.app"]
         }
-        let adoptHint = "Adopt this app first so CaskHub can manage/uninstall it."
+        let adoptHint = String(
+            localized: "Adopt this app first so CaskHub can manage/uninstall it."
+        )
         XCTAssertEqual(
             service.localState(for: adoptable).uninstallAvailability.unavailableReason,
             adoptHint
@@ -144,7 +147,12 @@ final class CaskHubTests: XCTestCase {
         updateInstallationSnapshot(of: service) {
             $0.macAppStoreAppNames = ["Store.app"]
         }
-        let storeHint = "Installed from the Mac App Store. Uninstall it from Finder or Launchpad."
+        let storeHint = String(
+            localized: """
+            Installed from the Mac App Store. \
+            Uninstall it from Finder or Launchpad.
+            """
+        )
         XCTAssertEqual(
             service.localState(for: store).uninstallAvailability.unavailableReason,
             storeHint
@@ -156,8 +164,13 @@ final class CaskHubTests: XCTestCase {
                 "external": URL(fileURLWithPath: "/usr/local/bin/external")
             ]
         }
-        let externalHint = "Installed outside Homebrew at /usr/local/bin/external. "
-            + "Remove or move that file manually before installing the Homebrew version."
+        let externalHint = String(
+            localized: """
+            Installed outside Homebrew at \("/usr/local/bin/external"). \
+            Remove or move that file manually before installing \
+            the Homebrew version.
+            """
+        )
         XCTAssertEqual(
             service.localState(for: external).uninstallAvailability.unavailableReason,
             externalHint
@@ -182,6 +195,26 @@ final class CaskHubTests: XCTestCase {
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
         }
 
+        let appBinary = root.appendingPathComponent("OrbStack.app/Contents/MacOS/xbin/docker")
+        try FileManager.default.createDirectory(
+            at: appBinary.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: appBinary.path, contents: Data("#!/bin/sh\n".utf8))
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: appBinary.path)
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("docker"), withDestinationURL: appBinary
+        )
+
+        let cellarBinary = root.appendingPathComponent("Cellar/docker/28.0.1/bin/hugo")
+        try FileManager.default.createDirectory(
+            at: cellarBinary.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: cellarBinary.path, contents: Data("#!/bin/sh\n".utf8))
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: cellarBinary.path)
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("hugo"), withDestinationURL: cellarBinary
+        )
+
         let scan = HomebrewInstallationScanner.scanBinaryDirectories(
             fileManager: FileManager.default,
             directories: [root]
@@ -189,6 +222,14 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(Set(scan.keys), ["copilot"])
         XCTAssertEqual(scan["copilot"]?.lastPathComponent, executable.lastPathComponent)
         XCTAssertNil(scan["stale-tool"], "zero-byte executable artifacts must be ignored")
+        XCTAssertNil(
+            scan["docker"],
+            "a shim into an app bundle belongs to that app, not a standalone CLI"
+        )
+        XCTAssertNil(
+            scan["hugo"],
+            "a symlink into the Cellar belongs to a formula, not an external cask install"
+        )
     }
 
     func test_apple_silicon_detection_matches_native_build_arch() {
@@ -269,7 +310,9 @@ final class CaskHubTests: XCTestCase {
         let error = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "chatgpt-classic", "--adopt"], exitCode: 1, stderr: stderr
         )
-        XCTAssertTrue(error.errorDescription?.contains("App Management") == true)
+        XCTAssertTrue(
+            error.errorDescription?.contains(String(localized: "App Management")) == true
+        )
 
         let unrelated = "chmod: /opt/homebrew/bin/tool: Operation not permitted"
         XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: unrelated))
@@ -285,6 +328,11 @@ final class CaskHubTests: XCTestCase {
             ).shouldReport
         )
         XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: "curl: (6) Could not resolve host"))
+    }
+
+    func test_output_collector_folds_pty_crlf_instead_of_doubling() {
+        XCTAssertEqual(BrewOutputCollector.plainText("line one\r\nline two\r\n"), "line one\nline two\n")
+        XCTAssertEqual(BrewOutputCollector.plainText("frame\rframe\r"), "frame\nframe\n")
     }
 
     func test_output_collector_finishes_when_grandchild_keeps_pipe_open() async throws {

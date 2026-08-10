@@ -8,46 +8,61 @@
 import AppKit
 import SwiftUI
 
+enum SettingsSection: Hashable {
+    case general
+    case appearance
+    case homebrew
+    case privacy
+    case updates
+    case about
+}
+
 struct SettingsView: View {
+    @Binding var selection: SettingsSection
+
     var body: some View {
-        TabView {
+        TabView(selection: $selection) {
             GeneralSettingsView()
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
+                .tag(SettingsSection.general)
             AppearanceSettingsView()
                 .tabItem {
                     Label("Appearance", systemImage: "paintbrush")
                 }
+                .tag(SettingsSection.appearance)
             HomebrewSettingsView()
                 .tabItem {
                     Label("Homebrew", systemImage: "shippingbox")
                 }
+                .tag(SettingsSection.homebrew)
             PrivacySettingsView()
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")
                 }
+                .tag(SettingsSection.privacy)
             UpdateSettingsView()
                 .tabItem {
                     Label("Updates", systemImage: "arrow.triangle.2.circlepath")
                 }
+                .tag(SettingsSection.updates)
             AboutSettingsView()
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }
+                .tag(SettingsSection.about)
         }
         .frame(width: 460, height: 480)
     }
 }
 
 struct AboutSettingsView: View {
-    static let issuesURL = URL(string: "https://github.com/alielsokary/CaskHub/issues/new/choose")!
-
     private var version: String {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "—"
         let build = info?["CFBundleVersion"] as? String ?? "—"
-        return "Version \(short) (\(build))"
+        return String(localized: "Version \(short) (\(build))")
     }
 
     var body: some View {
@@ -68,8 +83,7 @@ struct AboutSettingsView: View {
                 .font(.callout)
                 .padding(.top, 4)
 
-            Link("github.com/alielsokary/CaskHub",
-                 destination: URL(string: "https://github.com/alielsokary/CaskHub")!)
+            Link("github.com/alielsokary/CaskHub", destination: CaskHubLinks.repository)
                 .font(.callout)
 
             Spacer()
@@ -87,7 +101,7 @@ struct AboutSettingsView: View {
 
                         Spacer()
 
-                        Link("View", destination: Self.issuesURL)
+                        Link("View", destination: CaskHubLinks.issues)
                             .buttonStyle(.bordered)
                     }
                     .frame(maxWidth: .infinity)
@@ -143,11 +157,7 @@ struct GeneralSettingsView: View {
                         }
                     }
                 }
-                Text("""
-                Needed to adopt or update apps whose casks modify the app bundle \
-                (macOS otherwise blocks CaskHub from modifying other apps). Enable \
-                CaskHub under System Settings → Privacy & Security → App Management.
-                """)
+                Text(.settingsAppManagementDescription)
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -157,7 +167,7 @@ struct GeneralSettingsView: View {
                         Task { await imageCache.clearCache() }
                     }
                 }
-                Text("Removes cached app icons. They re-download the next time each app is shown.")
+                Text(.settingsStorageClearIconCache)
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -185,7 +195,7 @@ struct GeneralSettingsView: View {
         }
     }
 
-    private func badge(_ title: String, icon: String, tint: some ShapeStyle) -> some View {
+    private func badge(_ title: LocalizedStringKey, icon: String, tint: some ShapeStyle) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
             Text(title)
@@ -248,7 +258,8 @@ private struct HomebrewSettingsContent: View {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
                 LabeledContent(
                     "Last Scan",
-                    value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened) ?? "Never"
+                    value: localHomebrew.lastRefresh?.formatted(date: .abbreviated, time: .shortened)
+                        ?? String(localized: "Never")
                 )
             }
             Section("Custom Location") {
@@ -305,9 +316,9 @@ private struct HomebrewSettingsContent: View {
         }
     }
 
-    private func pathRow(_ title: String, _ path: String?) -> some View {
+    private func pathRow(_ title: LocalizedStringKey, _ path: String?) -> some View {
         LabeledContent(title) {
-            Text(path ?? "Not found")
+            Text(path ?? String(localized: "Not found"))
                 .font(.callout.monospaced())
                 .foregroundStyle(path == nil ? .secondary : .primary)
                 .textSelection(.enabled)
@@ -322,8 +333,11 @@ private struct HomebrewSettingsContent: View {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.showsHiddenFiles = true
-        panel.message = "Select the brew binary or the Homebrew installation folder"
-        guard panel.runModal() == .OK, let url = panel.url else { return }
+        panel.message = String(
+            localized: "Select the brew binary or the Homebrew installation folder"
+        )
+        let response = CrashReporter.withHangTrackingPaused { panel.runModal() }
+        guard response == .OK, let url = panel.url else { return }
         Task { await locationModel.applySelection(url) }
     }
 }
@@ -340,10 +354,7 @@ struct PrivacySettingsView: View {
                     isOn: $analyticsEnabled
                 )
 
-                Text("""
-                Sends anonymized usage signals through TelemetryDeck. No personal \
-                information is collected.
-                """)
+                Text(.settingsPrivacyUsageAnalytics)
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -354,10 +365,7 @@ struct PrivacySettingsView: View {
                     isOn: $crashReportingEnabled
                 )
 
-                Text("""
-                Sends crash reports and technical diagnostics through Sentry to help \
-                identify and fix problems.
-                """)
+                Text(.settingsPrivacyCrashReports)
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -375,7 +383,7 @@ struct PrivacySettingsView: View {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(selection: .constant(.general))
         .environment(UpdaterService())
         .environment(ImageCacheService())
         .environment(LocalHomebrewService())

@@ -3,6 +3,9 @@ excluded:
   - Scripts
   - .build
 
+file_length:
+  warning: 450
+
 line_length:
   warning: 140
   error: 200

@@ -7,13 +7,13 @@
 
 import Foundation
 
-struct CaskCategoryPresentation: Equatable {
+nonisolated struct CaskCategoryPresentation: Equatable {
     let mainID: CategoryID
     let mainName: String
     let subcategoryNames: [String]
 }
 
-enum CaskCategoryProjector {
+nonisolated enum CaskCategoryProjector {
     static func make(
         token: String,
         mappings: [String: TokenCategoryMapping],
@@ -33,17 +33,18 @@ enum CaskCategoryProjector {
         for categoryID: CategoryID,
         definitions: [CategoryID: CategoryDefinition]
     ) -> String {
-        definitions[categoryID]?.displayName ?? categoryID
+        guard let definition = definitions[categoryID] else { return categoryID }
+        return localizedCategoryName(categoryID, fallback: definition.displayName)
     }
 }
 
-struct CaskInfoRow: Equatable {
+nonisolated struct CaskInfoRow: Equatable {
     let property: String
     let value: String
     var link: URL?
 }
 
-struct CaskInfoProjectionInput {
+nonisolated struct CaskInfoProjectionInput {
     let cask: Cask
     let category: CaskCategoryPresentation?
     let downloadSize: DownloadSizeResult?
@@ -52,7 +53,7 @@ struct CaskInfoProjectionInput {
     let installationDates: CaskInstallationDates?
 }
 
-enum CaskInfoProjector {
+nonisolated enum CaskInfoProjector {
     static func makeRows(from input: CaskInfoProjectionInput) -> [CaskInfoRow] {
         identityRows(for: input.cask)
             + downloadRows(for: input.cask, size: input.downloadSize)
@@ -74,7 +75,7 @@ enum CaskInfoProjector {
             rows.append(CaskInfoRow(property: "Tap", value: tap))
         }
         rows.append(CaskInfoRow(
-            property: "Homepage",
+            property: String(localized: "Homepage"),
             value: cask.homepage,
             link: URL(string: cask.homepage)
         ))
@@ -86,10 +87,20 @@ enum CaskInfoProjector {
         size: DownloadSizeResult?
     ) -> [CaskInfoRow] {
         guard let url = cask.url else { return [] }
-        return [
-            CaskInfoRow(property: "URL", value: url, link: URL(string: url)),
-            CaskInfoRow(property: "Download Size", value: downloadSizeValue(size))
-        ]
+        var rows = [CaskInfoRow(property: "URL", value: url, link: URL(string: url))]
+        if let sha256 = cask.sha256 {
+            rows.append(CaskInfoRow(
+                property: "SHA",
+                value: sha256 == "no_check"
+                    ? String(localized: "sha256 :no_check (rolling download URL)")
+                    : sha256
+            ))
+        }
+        rows.append(CaskInfoRow(
+            property: String(localized: "Download Size"),
+            value: downloadSizeValue(size)
+        ))
+        return rows
     }
 
     private static func installationRows(
@@ -99,7 +110,7 @@ enum CaskInfoProjector {
     ) -> [CaskInfoRow] {
         var rows = [
             CaskInfoRow(
-                property: "Installed Version",
+                property: String(localized: "Installed Version"),
                 value: installedVersion(
                     presentation: presentation,
                     externalVersion: externalVersion
@@ -107,7 +118,10 @@ enum CaskInfoProjector {
             )
         ]
         if let source = presentation.localState.installationSource {
-            rows.append(CaskInfoRow(property: "Installed Via", value: source.rawValue))
+            rows.append(CaskInfoRow(
+                property: String(localized: "Installed Via"),
+                value: source.title
+            ))
         }
         guard let dates else { return rows }
 
@@ -133,32 +147,43 @@ enum CaskInfoProjector {
     ) -> [CaskInfoRow] {
         var rows: [CaskInfoRow] = []
         if let bundleVersion = cask.bundleVersion {
-            rows.append(CaskInfoRow(property: "Bundle Version", value: bundleVersion))
+            rows.append(CaskInfoRow(
+                property: String(localized: "Bundle Version"),
+                value: bundleVersion
+            ))
         }
         if let shortVersion = cask.bundleShortVersion {
-            rows.append(CaskInfoRow(property: "Bundle Short Version", value: shortVersion))
+            rows.append(CaskInfoRow(
+                property: String(localized: "Bundle Short Version"),
+                value: shortVersion
+            ))
         }
         rows.append(CaskInfoRow(
-            property: "Main Category",
-            value: category?.mainName ?? "Uncategorized"
+            property: String(localized: "Main Category"),
+            value: category?.mainName ?? String(localized: "Uncategorized")
         ))
         rows.append(CaskInfoRow(
-            property: "Subcategories",
-            value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty ?? "None"
+            property: String(localized: "Subcategories"),
+            value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty
+                ?? String(localized: "None")
         ))
         rows.append(CaskInfoRow(
-            property: "Auto Updates",
-            value: cask.autoUpdates.map { $0 ? "Yes" : "No" } ?? "Unknown"
+            property: String(localized: "Auto Updates"),
+            value: cask.autoUpdates.map(yesNo) ?? String(localized: "Unknown")
         ))
         return rows
     }
 
     private static func statusRows(for cask: Cask) -> [CaskInfoRow] {
         [
-            CaskInfoRow(property: "Outdated", value: cask.outdated ? "Yes" : "No"),
-            CaskInfoRow(property: "Deprecated", value: cask.deprecated ? "Yes" : "No"),
-            CaskInfoRow(property: "Disabled", value: cask.disabled ? "Yes" : "No")
+            CaskInfoRow(property: String(localized: "Outdated"), value: yesNo(cask.outdated)),
+            CaskInfoRow(property: String(localized: "Deprecated"), value: yesNo(cask.deprecated)),
+            CaskInfoRow(property: String(localized: "Disabled"), value: yesNo(cask.disabled))
         ]
+    }
+
+    private static func yesNo(_ value: Bool) -> String {
+        value ? String(localized: "Yes") : String(localized: "No")
     }
 
     private static func installedVersion(
@@ -172,15 +197,15 @@ enum CaskInfoProjector {
             return externalVersion
         }
         return presentation.localState.installationSource == nil
-            ? "Not installed"
-            : "Installed"
+            ? String(localized: "Not installed")
+            : String(localized: .caskStateInstalled)
     }
 
     private static func downloadSizeValue(_ size: DownloadSizeResult?) -> String {
         switch size {
         case let .known(bytes): bytes.formatted(.byteCount(style: .file))
-        case .unknown: "Unknown"
-        case nil: "Loading…"
+        case .unknown: String(localized: "Unknown")
+        case nil: String(localized: "Loading…")
         }
     }
 
@@ -189,9 +214,15 @@ enum CaskInfoProjector {
     ) -> (installed: String, updated: String) {
         switch basis {
         case .homebrewMetadata:
-            return ("Installed", "Last Updated")
+            return (
+                String(localized: .caskDateLabelInstalled),
+                String(localized: "Last Updated")
+            )
         case .applicationBundleAttributes:
-            return ("Bundle Created", "Bundle Modified")
+            return (
+                String(localized: "Bundle Created"),
+                String(localized: "Bundle Modified")
+            )
         }
     }
 
@@ -200,7 +231,7 @@ enum CaskInfoProjector {
     }
 }
 
-private extension String {
+nonisolated private extension String {
     var nilIfEmpty: String? {
         isEmpty ? nil : self
     }

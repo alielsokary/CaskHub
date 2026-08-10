@@ -85,7 +85,7 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
         pattern: "\u{001B}\\[[0-?]*[ -/]*[@-~]"
     )
 
-    private static func plainText(_ text: String) -> String {
+    static func plainText(_ text: String) -> String {
         let stripped: String
         if let ansiEscapes {
             stripped = ansiEscapes.stringByReplacingMatches(
@@ -96,6 +96,9 @@ nonisolated final class BrewOutputCollector: @unchecked Sendable {
         } else {
             stripped = text
         }
-        return stripped.replacingOccurrences(of: "\r", with: "\n")
+        // The pty's ONLCR emits \r\n; fold it first or every line doubles.
+        return stripped
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
     }
 }

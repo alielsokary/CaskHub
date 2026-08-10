@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum CaskFlowReleases {
+nonisolated enum CaskFlowReleases {
     private static let baseURL = URL(
         string: "https://github.com/alielsokary/CaskFlow/releases/latest/download/"
     )!

@@ -13,6 +13,8 @@ nonisolated struct ApplicationInstallationSnapshot: Sendable {
     let macAppStoreAppNames: Set<String>
     let macAppStoreBundleIdentifiers: [String: Set<String>]
     let detectedApplications: [DetectedApplication]
+    /// Built once per scan so per-cask resolver lookups stay O(1).
+    let detectedApplicationsByBundleName: [String: [DetectedApplication]]
 
     init(
         externalAppNames: Set<String> = [],
@@ -26,6 +28,9 @@ nonisolated struct ApplicationInstallationSnapshot: Sendable {
         self.macAppStoreAppNames = macAppStoreAppNames
         self.macAppStoreBundleIdentifiers = macAppStoreBundleIdentifiers
         self.detectedApplications = detectedApplications
+        detectedApplicationsByBundleName = Dictionary(
+            grouping: detectedApplications, by: \.bundleName
+        )
     }
 
     static let empty = ApplicationInstallationSnapshot()
@@ -58,6 +63,10 @@ nonisolated struct InstallationSnapshot: Sendable {
 
     var detectedApplications: [DetectedApplication] {
         applications.detectedApplications
+    }
+
+    var detectedApplicationsByBundleName: [String: [DetectedApplication]] {
+        applications.detectedApplicationsByBundleName
     }
 
     init(

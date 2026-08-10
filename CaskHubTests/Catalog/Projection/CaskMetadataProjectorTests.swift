@@ -64,22 +64,27 @@ final class CaskMetadataProjectorTests: XCTestCase {
         )
         let values = valuesByProperty(rows)
 
-        XCTAssertEqual(values["Main Category"], "Developer Tools")
-        XCTAssertEqual(values["Subcategories"], "Productivity, Utilities")
+        let no = String(localized: "No")
+        XCTAssertEqual(values[String(localized: "Main Category")], "Developer Tools")
+        XCTAssertEqual(values[String(localized: "Subcategories")], "Productivity, Utilities")
         XCTAssertEqual(
-            values["Installed"],
+            values[String(localized: .caskDateLabelInstalled)],
             installedAt.formatted(date: .abbreviated, time: .shortened)
         )
         XCTAssertEqual(
-            values["Last Updated"],
+            values[String(localized: "Last Updated")],
             lastUpdatedAt.formatted(date: .abbreviated, time: .shortened)
         )
-        XCTAssertEqual(values["Outdated"], "No")
-        XCTAssertEqual(values["Deprecated"], "No")
-        XCTAssertEqual(values["Disabled"], "No")
+        XCTAssertEqual(values[String(localized: "Outdated")], no)
+        XCTAssertEqual(values[String(localized: "Deprecated")], no)
+        XCTAssertEqual(values[String(localized: "Disabled")], no)
         XCTAssertEqual(
             rows.suffix(3).map(\.property),
-            ["Outdated", "Deprecated", "Disabled"]
+            [
+                String(localized: "Outdated"),
+                String(localized: "Deprecated"),
+                String(localized: "Disabled")
+            ]
         )
     }
 
@@ -96,15 +101,63 @@ final class CaskMetadataProjectorTests: XCTestCase {
         ))
 
         XCTAssertEqual(
-            values["Bundle Created"],
+            values[String(localized: "Bundle Created")],
             createdAt.formatted(date: .abbreviated, time: .shortened)
         )
         XCTAssertEqual(
-            values["Bundle Modified"],
+            values[String(localized: "Bundle Modified")],
             modifiedAt.formatted(date: .abbreviated, time: .shortened)
         )
-        XCTAssertNil(values["Installed"])
-        XCTAssertNil(values["Last Updated"])
+        XCTAssertNil(values[String(localized: .caskDateLabelInstalled)])
+        XCTAssertNil(values[String(localized: "Last Updated")])
+    }
+
+    func test_info_projection_shows_sha256_row_after_url() {
+        let hex = String(repeating: "ab", count: 32)
+        let rows = makeDownloadRows(sha256: hex)
+
+        XCTAssertEqual(valuesByProperty(rows)["SHA"], hex)
+        XCTAssertEqual(
+            rows.map(\.property).filter { ["URL", "SHA"].contains($0) },
+            ["URL", "SHA"]
+        )
+    }
+
+    func test_info_projection_softens_no_check_sha256() {
+        XCTAssertEqual(
+            valuesByProperty(makeDownloadRows(sha256: "no_check"))["SHA"],
+            String(localized: "sha256 :no_check (rolling download URL)")
+        )
+    }
+
+    func test_info_projection_omits_sha256_row_when_missing() {
+        XCTAssertNil(valuesByProperty(makeDownloadRows(sha256: nil))["SHA"])
+    }
+
+    private func makeDownloadRows(sha256: String?) -> [CaskInfoRow] {
+        CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
+            cask: Cask.preview(
+                token: "studio",
+                url: "https://example.com/studio.dmg",
+                sha256: sha256
+            ),
+            category: nil,
+            downloadSize: .unknown,
+            actionPresentation: CaskActionPresentation(
+                localState: CaskLocalState(
+                    installationSource: nil,
+                    externalCLIPath: nil,
+                    uninstallAvailability: .unavailable(reason: "Not installed"),
+                    hasAvailableUpdate: false,
+                    isZombie: false,
+                    canOpen: false
+                ),
+                homebrewInstallation: nil,
+                operationState: nil
+            ),
+            externalVersion: nil,
+            installationDates: nil
+        ))
     }
 
     private func makeRows(

@@ -88,5 +88,5 @@ extension Color {
     static let chShadowHero = adaptive(light: NSColor(hex: 0x33304A, alpha: 0.12), dark: NSColor(hex: 0x000000, alpha: 0.35))
 
     /// ── Barrel mark ────────────────────────────────────
-    static let chBarrelOutline = adaptive(light: NSColor(hex: 0x33304A), dark: NSColor(hex: 0xF6E9CB))
+    static let chBarrelOutline = chInk
 }
