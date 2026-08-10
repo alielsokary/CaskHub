@@ -87,13 +87,20 @@ enum CaskInfoProjector {
         size: DownloadSizeResult?
     ) -> [CaskInfoRow] {
         guard let url = cask.url else { return [] }
-        return [
-            CaskInfoRow(property: "URL", value: url, link: URL(string: url)),
-            CaskInfoRow(
-                property: String(localized: "Download Size"),
-                value: downloadSizeValue(size)
-            )
-        ]
+        var rows = [CaskInfoRow(property: "URL", value: url, link: URL(string: url))]
+        if let sha256 = cask.sha256 {
+            rows.append(CaskInfoRow(
+                property: "SHA-256",
+                value: sha256 == "no_check"
+                    ? String(localized: "sha256 :no_check (auto-updates enabled)")
+                    : sha256
+            ))
+        }
+        rows.append(CaskInfoRow(
+            property: String(localized: "Download Size"),
+            value: downloadSizeValue(size)
+        ))
+        return rows
     }
 
     private static func installationRows(

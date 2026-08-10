@@ -155,6 +155,7 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
     let desc: String?
     let homepage: String
     let url: String?
+    let sha256: String?
     let version: String
     let bundleVersion: String?
     let bundleShortVersion: String?
@@ -253,6 +254,8 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
             name: String? = nil,
             desc: String? = nil,
             version: String = "1.0",
+            url: String? = nil,
+            sha256: String? = nil,
             deprecated: Bool = false,
             disabled: Bool = false,
             autoUpdates: Bool? = nil
@@ -264,7 +267,8 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
                 name: [name ?? token],
                 desc: desc,
                 homepage: "https://example.com",
-                url: nil,
+                url: url,
+                sha256: sha256,
                 version: version,
                 bundleVersion: nil,
                 bundleShortVersion: nil,

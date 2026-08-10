@@ -112,6 +112,54 @@ final class CaskMetadataProjectorTests: XCTestCase {
         XCTAssertNil(values[String(localized: "Last Updated")])
     }
 
+    func test_info_projection_shows_sha256_row_after_url() {
+        let hex = String(repeating: "ab", count: 32)
+        let rows = makeDownloadRows(sha256: hex)
+
+        XCTAssertEqual(valuesByProperty(rows)["SHA-256"], hex)
+        XCTAssertEqual(
+            rows.map(\.property).filter { ["URL", "SHA-256"].contains($0) },
+            ["URL", "SHA-256"]
+        )
+    }
+
+    func test_info_projection_softens_no_check_sha256() {
+        XCTAssertEqual(
+            valuesByProperty(makeDownloadRows(sha256: "no_check"))["SHA-256"],
+            String(localized: "sha256 :no_check (auto-updates enabled)")
+        )
+    }
+
+    func test_info_projection_omits_sha256_row_when_missing() {
+        XCTAssertNil(valuesByProperty(makeDownloadRows(sha256: nil))["SHA-256"])
+    }
+
+    private func makeDownloadRows(sha256: String?) -> [CaskInfoRow] {
+        CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
+            cask: Cask.preview(
+                token: "studio",
+                url: "https://example.com/studio.dmg",
+                sha256: sha256
+            ),
+            category: nil,
+            downloadSize: .unknown,
+            actionPresentation: CaskActionPresentation(
+                localState: CaskLocalState(
+                    installationSource: nil,
+                    externalCLIPath: nil,
+                    uninstallAvailability: .unavailable(reason: "Not installed"),
+                    hasAvailableUpdate: false,
+                    isZombie: false,
+                    canOpen: false
+                ),
+                homebrewInstallation: nil,
+                operationState: nil
+            ),
+            externalVersion: nil,
+            installationDates: nil
+        ))
+    }
+
     private func makeRows(
         source: CaskInstallationSource,
         dates: CaskInstallationDates
