@@ -51,7 +51,7 @@ There is no bug bounty program, since CaskHub is free software with no revenue, 
 ### In scope (report privately)
 
 - The CaskHub app itself: all code in this repository
-- The release and update pipeline: GitHub Releases artifacts, the official [Homebrew cask](https://github.com/Homebrew/homebrew-cask/blob/HEAD/Casks/c/caskhub.rb), and the Sparkle appcast (releases are Developer ID-signed and notarized; updates are EdDSA-verified)
+- The release and update pipeline: GitHub Releases artifacts, the official [Homebrew cask](https://github.com/Homebrew/homebrew-cask/blob/main/Casks/c/caskhub.rb), and the Sparkle appcast (releases are Developer ID-signed and notarized; updates are EdDSA-verified)
 - The [caskhub.app](https://caskhub.app) website content
 
 Examples of in-scope issues:
