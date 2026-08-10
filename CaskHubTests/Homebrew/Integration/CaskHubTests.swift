@@ -206,6 +206,16 @@ final class CaskHubTests: XCTestCase {
             at: root.appendingPathComponent("docker"), withDestinationURL: appBinary
         )
 
+        let cellarBinary = root.appendingPathComponent("Cellar/docker/28.0.1/bin/hugo")
+        try FileManager.default.createDirectory(
+            at: cellarBinary.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: cellarBinary.path, contents: Data("#!/bin/sh\n".utf8))
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: cellarBinary.path)
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("hugo"), withDestinationURL: cellarBinary
+        )
+
         let scan = HomebrewInstallationScanner.scanBinaryDirectories(
             fileManager: FileManager.default,
             directories: [root]
@@ -216,6 +226,10 @@ final class CaskHubTests: XCTestCase {
         XCTAssertNil(
             scan["docker"],
             "a shim into an app bundle belongs to that app, not a standalone CLI"
+        )
+        XCTAssertNil(
+            scan["hugo"],
+            "a symlink into the Cellar belongs to a formula, not an external cask install"
         )
     }
 
