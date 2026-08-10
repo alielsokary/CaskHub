@@ -104,9 +104,124 @@ final class ShelfSetupViewTests: XCTestCase {
         )
         homebrew.setAdoptIgnored("slack", true)
 
-        let view = ShelfSetupView(viewModel: vm)
+        render(ShelfSetupView(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService())
+            .environment(ImageCacheService()))
+    }
+
+    @MainActor
+    func test_shelf_setup_view_renders_empty_state() async {
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("adopt-render-empty"),
+            externalApps: [:]
+        )
+        let (vm, _) = await makeSUT(casks: [], localHomebrew: homebrew)
+
+        render(ShelfSetupView(viewModel: vm)
+            .environment(homebrew)
+            .environment(ImageCacheService()))
+    }
+
+    @MainActor
+    func test_ignore_picker_sheet_renders_adoptable_and_empty_states() async {
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("adopt-picker-render"),
+            externalApps: [
+                "google-chrome": "Google Chrome.app",
+                "slack": "Slack.app"
+            ]
+        )
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("google-chrome", appNames: ["Google Chrome.app"]),
+                makeCask("slack", appNames: ["Slack.app"])
+            ],
+            localHomebrew: homebrew
+        )
+
+        render(AdoptIgnorePickerSheet(viewModel: vm)
+            .environment(homebrew)
+            .environment(ImageCacheService()))
+
+        homebrew.setAdoptIgnored("google-chrome", true)
+        homebrew.setAdoptIgnored("slack", true)
+        XCTAssertTrue(vm.adoptableCasks.isEmpty)
+
+        render(AdoptIgnorePickerSheet(viewModel: vm)
+            .environment(homebrew)
+            .environment(ImageCacheService()))
+    }
+
+    @MainActor
+    func test_ignored_casks_sort_newest_first_with_token_tiebreak() async {
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("adopt-sort"),
+            externalApps: [
+                "google-chrome": "Google Chrome.app",
+                "slack": "Slack.app"
+            ]
+        )
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("google-chrome", appNames: ["Google Chrome.app"]),
+                makeCask("slack", appNames: ["Slack.app"])
+            ],
+            localHomebrew: homebrew
+        )
+        homebrew.setAdoptIgnored("slack", true)
+        homebrew.setAdoptIgnored("google-chrome", true)
+
+        // chrome wins by date (ignored later) or by token on an equal-date tie.
+        XCTAssertEqual(vm.adoptIgnoredCasks.map(\.token), ["google-chrome", "slack"])
+    }
+
+    @MainActor
+    func test_page_chrome_renders() {
+        render(UtilityTopBar(title: "Shelf Setup", summary: "3 ignored"))
+        render(UtilityTopBar(title: "Health"))
+        render(MaintenancePlaceholderView())
+        render(CountBadge(count: 2))
+    }
+
+    @MainActor
+    func test_content_view_renders_utility_pages() async {
+        let categories = CategoryService()
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("adopt-content-render"),
+            externalApps: ["slack": "Slack.app"]
+        )
+        let api = MockBrewAPIClient()
+        api.casks = [makeCask("slack", appNames: ["Slack.app"])]
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: homebrew)
+        await vm.fetchCasks()
+        vm.selectedSidebar = .shelfSetup
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 1200, height: 700),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
+            .environment(categories)
+            .environment(homebrew)
+            .environment(ImageCacheService()))
+        window.orderFrontRegardless()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+
+        vm.selectedSidebar = .maintenance
+        RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+
+        addTeardownBlock { @MainActor in
+            window.contentView = NSView()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            window.close()
+        }
+    }
+
+    @MainActor
+    private func render(_ view: some View) {
         let hosting = NSHostingView(rootView: AnyView(view))
         hosting.frame = NSRect(x: 0, y: 0, width: 1100, height: 600)
         hosting.layoutSubtreeIfNeeded()

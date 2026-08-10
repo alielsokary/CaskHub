@@ -143,7 +143,7 @@ struct MaintenancePlaceholderView: View {
 
 // MARK: - Picker Sheet
 
-private struct AdoptIgnorePickerSheet: View {
+struct AdoptIgnorePickerSheet: View {
     let viewModel: CaskCatalogViewModel
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(\.dismiss) private var dismiss
