@@ -106,8 +106,17 @@ struct CaskLocalStateResolver {
 
     func localState(for cask: Cask) -> CaskLocalState {
         let source = installationSource(for: cask)
+        let externalVersion = externalApplication(for: cask)?.version
         return CaskLocalState(
             installationSource: source,
+            externalVersion: externalVersion,
+            adoptionPlan: CaskAdoptionPlan.make(
+                installationSource: source,
+                installedVersion: externalVersion,
+                homebrewVersion: cask.displayVersion,
+                installedCaskTokens: Set(snapshot.installedCasks.keys),
+                conflictingCaskTokens: cask.conflictsWith?.caskTokens ?? []
+            ),
             externalCLIPath: source == .externalExecutable
                 ? externalCLIPath(cask)
                 : nil,
@@ -182,13 +191,8 @@ struct CaskLocalStateResolver {
     }
 
     func externalAppVersion(for cask: Cask) -> String? {
-        guard !isInstalled(token: cask.token),
-              installationSource(for: cask) != nil,
-              let appURL = externalLaunchURL(for: cask),
-              let info = Bundle(url: appURL)?.infoDictionary
-        else { return nil }
-        return info["CFBundleShortVersionString"] as? String
-            ?? info["CFBundleVersion"] as? String
+        guard !isInstalled(token: cask.token) else { return nil }
+        return externalApplication(for: cask)?.version
     }
 
     func installationDates(for cask: Cask) -> CaskInstallationDates? {
@@ -231,6 +235,12 @@ struct CaskLocalStateResolver {
         return packageNames
             + cask.appArtifactNames
             + cask.packageAppNameCandidates
+    }
+
+    private func externalApplication(for cask: Cask) -> DetectedApplication? {
+        snapshot.externalApplicationOwners[cask.token]
+            ?? snapshot.externalPackageApplicationOwners[cask.token]
+            ?? macAppStoreApplication(for: cask)
     }
 
     private func macAppStoreApplication(for cask: Cask) -> DetectedApplication? {

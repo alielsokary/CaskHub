@@ -13,6 +13,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         url: URL(fileURLWithPath: "/Applications/Glaze.app"),
         bundleName: "Glaze.app",
         bundleIdentifier: "app.glaze.macos.main",
+        version: nil,
         isMacAppStore: false,
         isDirectlyInApplicationDirectory: true
     )
@@ -38,6 +39,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
             bundleName: bundleName,
             bundleIdentifier: bundleIdentifier,
+            version: nil,
             isMacAppStore: true,
             isDirectlyInApplicationDirectory: true
         )
@@ -92,6 +94,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Shared.app"),
             bundleName: "Shared.app",
             bundleIdentifier: "com.example.shared",
+            version: nil,
             isMacAppStore: false,
             isDirectlyInApplicationDirectory: true
         )
@@ -122,6 +125,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Unique.app"),
             bundleName: "Unique.app",
             bundleIdentifier: "com.example.unique",
+            version: nil,
             isMacAppStore: false,
             isDirectlyInApplicationDirectory: true
         )
@@ -198,6 +202,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Store.app"),
             bundleName: "Store.app",
             bundleIdentifier: "com.example.store",
+            version: nil,
             isMacAppStore: true,
             isDirectlyInApplicationDirectory: true
         )
@@ -244,6 +249,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Live.app"),
             bundleName: "Live.app",
             bundleIdentifier: "com.example.live",
+            version: nil,
             isMacAppStore: false,
             isDirectlyInApplicationDirectory: true
         )

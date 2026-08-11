@@ -7,6 +7,7 @@
 
 @testable import CaskHub
 import Foundation
+import XCTest
 
 // MARK: - Mock API
 
@@ -44,27 +45,37 @@ func makeCask(
     binarySourcePaths: [String]? = nil,
     packageIdentifiers: [String]? = nil,
     packageAppNames: [String]? = nil,
-    applicationBundleIdentifiers: [String]? = nil
+    applicationBundleIdentifiers: [String]? = nil,
+    conflictingCaskTokens: [String] = []
 ) -> Cask {
     var cask = Cask.preview(
         token: token,
         name: name,
         desc: desc,
-        version: version
+        version: version,
+        conflictingCaskTokens: conflictingCaskTokens
     )
     var artifacts: [ArtifactStanza] = []
-    if let appNames { artifacts.append(ArtifactStanza(keys: ["app"], appNames: appNames)) }
+    if let appNames {
+        artifacts.append(ArtifactStanza(
+            keys: ["app"],
+            appNames: appNames,
+            adoptionSourcePaths: []
+        ))
+    }
     if binaryNames != nil || binarySourcePaths != nil {
         artifacts.append(ArtifactStanza(
             keys: ["binary"],
             binaryNames: binaryNames ?? [],
-            binarySourcePaths: binarySourcePaths ?? []
+            binarySourcePaths: binarySourcePaths ?? [],
+            adoptionSourcePaths: binarySourcePaths ?? []
         ))
     }
     if packageIdentifiers != nil || packageAppNames != nil
         || applicationBundleIdentifiers != nil {
         artifacts.append(ArtifactStanza(
             keys: ["pkg", "uninstall"],
+            adoptionSourcePaths: [],
             packageIdentifiers: packageIdentifiers ?? [],
             deletedAppNames: packageAppNames ?? [],
             applicationBundleIdentifiers: applicationBundleIdentifiers ?? []
@@ -93,6 +104,7 @@ struct InstallationSnapshotFixture {
     var installedCasks: [String: LocalCaskInstallation]
     var externalAppNames: Set<String>
     var externalApplicationOwners: [String: DetectedApplication]
+    var externalPackageApplicationOwners: [String: DetectedApplication]
     var macAppStoreAppNames: Set<String>
     var macAppStoreBundleIdentifiers: [String: Set<String>]
     var detectedApplications: [DetectedApplication]
@@ -106,6 +118,7 @@ struct InstallationSnapshotFixture {
         installedCasks = snapshot.installedCasks
         externalAppNames = snapshot.externalAppNames
         externalApplicationOwners = snapshot.externalApplicationOwners
+        externalPackageApplicationOwners = snapshot.externalPackageApplicationOwners
         macAppStoreAppNames = snapshot.macAppStoreAppNames
         macAppStoreBundleIdentifiers = snapshot.macAppStoreBundleIdentifiers
         detectedApplications = snapshot.detectedApplications
@@ -122,6 +135,7 @@ struct InstallationSnapshotFixture {
             applications: ApplicationInstallationSnapshot(
                 externalAppNames: externalAppNames,
                 externalApplicationOwners: externalApplicationOwners,
+                externalPackageApplicationOwners: externalPackageApplicationOwners,
                 macAppStoreAppNames: macAppStoreAppNames,
                 macAppStoreBundleIdentifiers: macAppStoreBundleIdentifiers,
                 detectedApplications: detectedApplications
@@ -205,6 +219,22 @@ func makeApplicationBundle(
         try Data().write(to: receiptURL)
     }
     return appURL
+}
+
+func setApplicationVersion(_ version: String, at appURL: URL) throws {
+    let plistURL = appURL.appendingPathComponent("Contents/Info.plist")
+    let data = try Data(contentsOf: plistURL)
+    var info = try XCTUnwrap(
+        PropertyListSerialization.propertyList(from: data, format: nil)
+            as? [String: Any]
+    )
+    info["CFBundleShortVersionString"] = version
+    let updated = try PropertyListSerialization.data(
+        fromPropertyList: info,
+        format: .xml,
+        options: 0
+    )
+    try updated.write(to: plistURL)
 }
 
 @MainActor

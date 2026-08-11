@@ -25,6 +25,7 @@ final class ShelfSetupViewTests: XCTestCase {
                     url: URL(fileURLWithPath: "/Applications/\(appName)"),
                     bundleName: appName,
                     bundleIdentifier: "com.example.\(appName)",
+                    version: nil,
                     isMacAppStore: false,
                     isDirectlyInApplicationDirectory: true
                 )

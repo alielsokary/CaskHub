@@ -22,6 +22,7 @@ final class InstallationSnapshotTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Firefox.app"),
             bundleName: "Firefox.app",
             bundleIdentifier: "org.mozilla.firefox",
+            version: nil,
             isMacAppStore: false,
             isDirectlyInApplicationDirectory: true
         )
@@ -29,6 +30,7 @@ final class InstallationSnapshotTests: XCTestCase {
             installedCasks: ["firefox": installed],
             applications: ApplicationInstallationSnapshot(
                 externalAppNames: ["Firefox.app"],
+                externalPackageApplicationOwners: [:],
                 detectedApplications: [application]
             ),
             externalBinaryPaths: [
@@ -130,6 +132,7 @@ final class InstallationSnapshotTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Shared.app"),
             bundleName: "Shared.app",
             bundleIdentifier: "com.example.unrelated",
+            version: nil,
             isMacAppStore: false,
             isDirectlyInApplicationDirectory: true,
             installedAt: unrelatedDate
@@ -139,6 +142,7 @@ final class InstallationSnapshotTests: XCTestCase {
         )
         service.commitInstallationSnapshot(InstallationSnapshot(
             applications: ApplicationInstallationSnapshot(
+                externalPackageApplicationOwners: ["package": unrelatedApplication],
                 detectedApplications: [unrelatedApplication]
             ),
             externalPackageInstallations: [

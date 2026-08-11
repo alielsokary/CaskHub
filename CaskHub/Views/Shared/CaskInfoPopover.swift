@@ -100,7 +100,8 @@ struct CaskInfoPopover: View {
             outdated: false,
             deprecated: false,
             disabled: false,
-            autoUpdates: true
+            autoUpdates: true,
+            conflictsWith: nil
         ),
         category: CaskCategoryPresentation(
             mainID: "securityPrivacy",
