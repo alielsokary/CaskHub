@@ -237,8 +237,8 @@ final class CaskOperationStateTests: XCTestCase {
         [
             ("idle", nil),
             ("queued", .queued(.installing)),
-            ("awaiting permission", .awaitingPermission(force: false)),
-            ("awaiting adoption", .awaitingPackageAdoption),
+            ("awaiting permission", .awaitingPermission(sampleAdoptionRequest)),
+            ("awaiting adoption", .awaitingAdoption(sampleAdoptionRequest)),
             ("failed", .failed(sampleFailure))
         ]
     }
@@ -250,23 +250,39 @@ final class CaskOperationStateTests: XCTestCase {
         )
     }
 
+    private var sampleAdoptionRequest: CaskAdoptionRequest {
+        let cask = Cask.preview(token: "sample", version: "1.0")
+        return CaskAdoptionRequest(
+            cask: cask,
+            plan: CaskAdoptionPlan(
+                artifact: .applicationBundle,
+                versionRelationship: .same,
+                operation: .adopt,
+                execution: .adoptApplication,
+                installedVersion: "1.0",
+                homebrewVersion: "1.0",
+                blockingInstalledCask: nil
+            )
+        )
+    }
+
     private func assertUnconditionalEventsReplace(
         _ fixture: (name: String, state: CaskOperationState?)
     ) {
         XCTAssertEqual(
             CaskOperationStateMachine.transition(
                 from: fixture.state,
-                on: .awaitPermission(force: true)
+                on: .awaitPermission(sampleAdoptionRequest)
             ),
-            .awaitingPermission(force: true),
+            .awaitingPermission(sampleAdoptionRequest),
             fixture.name
         )
         XCTAssertEqual(
             CaskOperationStateMachine.transition(
                 from: fixture.state,
-                on: .awaitPackageAdoption
+                on: .awaitAdoption(sampleAdoptionRequest)
             ),
-            .awaitingPackageAdoption,
+            .awaitingAdoption(sampleAdoptionRequest),
             fixture.name
         )
         XCTAssertEqual(

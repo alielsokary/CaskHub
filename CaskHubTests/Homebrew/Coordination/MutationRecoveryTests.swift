@@ -86,6 +86,48 @@ final class MutationRecoveryTests: XCTestCase {
         }
     }
 
+    func test_package_replacement_stops_when_forced_uninstall_leaves_external_app() async throws {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [
+            BrewProcessResult(exitCode: 0, output: "fetched"),
+            BrewProcessResult(exitCode: 1, output: "Error: uninstall failed")
+        ]
+        let service = makeService(runner: runner)
+        let applications = root.appendingPathComponent("Applications")
+        let oneDrive = applications.appendingPathComponent("OneDrive.app")
+        try fileManager.createDirectory(at: oneDrive, withIntermediateDirectories: true)
+        updateInstallationSnapshot(of: service) {
+            $0.externalPackageInstallations["onedrive"] = ExternalPackageInstallation(
+                appBundleNames: ["OneDrive.app"]
+            )
+        }
+
+        do {
+            try await service.replacePackageForAdoption(token: "onedrive")
+            XCTFail("replacement must stop while the external app remains")
+        } catch {
+            XCTAssertEqual(runner.requests.map(\.arguments), [
+                ["fetch", "--cask", "onedrive"],
+                ["uninstall", "--cask", "onedrive", "--force"]
+            ])
+        }
+    }
+
+    func test_package_installer_refusals_offer_staged_replacement() {
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "onedrive"],
+            exitCode: 1,
+            stderr: "installer: Error - A newer version of OneDrive is already installed."
+        )
+
+        let failure = CaskOperationFailureFactory.make(
+            from: error,
+            strandedCopyExists: false
+        )
+
+        XCTAssertEqual(failure.recoveries, [.replaceWithHomebrew])
+    }
+
     func test_failed_upgrade_for_uninstalled_cask_refreshes_stale_local_state() async {
         let runner = StubBrewProcessRunner()
         runner.queuedResults = [BrewProcessResult(

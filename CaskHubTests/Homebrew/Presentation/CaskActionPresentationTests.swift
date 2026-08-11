@@ -76,6 +76,38 @@ final class CaskActionPresentationTests: XCTestCase {
 
         XCTAssertEqual(service.actionAlert(for: "tabby"), .failure(failure))
     }
+
+    func test_adoption_card_and_confirmation_use_their_own_labels() {
+        let cask = makeCask("sample", name: "Sample")
+        let updatePlan = CaskAdoptionPlan(
+            artifact: .applicationBundle,
+            versionRelationship: .homebrewNewer,
+            operation: .updateAndAdopt,
+            execution: .replaceApplication,
+            installedVersion: "1.0",
+            homebrewVersion: "2.0",
+            blockingInstalledCask: nil
+        )
+        let downgradePlan = CaskAdoptionPlan(
+            artifact: .packageInstaller,
+            versionRelationship: .homebrewOlder,
+            operation: .downgradeAndAdopt,
+            execution: .replacePackage,
+            installedVersion: "2.0",
+            homebrewVersion: "1.0",
+            blockingInstalledCask: nil
+        )
+
+        XCTAssertEqual(CaskActionStyle.adopt.title, "Adopt")
+        XCTAssertEqual(updatePlan.confirmationTitle(for: cask), "Update & Adopt Sample?")
+        XCTAssertEqual(updatePlan.confirmationButtonTitle, "Update & Adopt")
+        XCTAssertEqual(updatePlan.confirmationButtonSymbol, "arrow.up.circle")
+        XCTAssertEqual(
+            updatePlan.confirmationMessage(for: cask),
+            "Homebrew will replace the current Sample app bundle with version 2.0, then manage future updates."
+        )
+        XCTAssertEqual(downgradePlan.confirmationButtonSymbol, "arrow.down.circle")
+    }
 }
 
 final class AdoptionViewRenderTests: XCTestCase {
@@ -124,12 +156,24 @@ final class AdoptionViewRenderTests: XCTestCase {
     func test_cask_action_alerts_render_with_pending_permission_and_error() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-alerts"))
         service.permissionProbe = { .denied }
-        try? await service.adopt(token: "chrome")
-        service.open(makeCask("chrome"))
+        let cask = makeCask("chrome", appNames: ["Chrome.app"])
+        let plan = CaskAdoptionPlan(
+            artifact: .applicationBundle,
+            versionRelationship: .same,
+            operation: .adopt,
+            execution: .adoptApplication,
+            installedVersion: "1.0",
+            homebrewVersion: "1.0",
+            blockingInstalledCask: nil
+        )
+        service.operationStore.send(
+            .awaitPermission(CaskAdoptionRequest(cask: cask, plan: plan)),
+            for: cask.token
+        )
 
         render(
             Text("host")
-                .caskActionAlerts(for: makeCask("chrome"), showUninstallConfirmation: .constant(false))
+                .caskActionAlerts(for: cask, showUninstallConfirmation: .constant(false))
                 .environment(service)
         )
     }

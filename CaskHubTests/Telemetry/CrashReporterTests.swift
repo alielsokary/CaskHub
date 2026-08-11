@@ -322,7 +322,7 @@ final class CrashReporterTests: XCTestCase {
             cls("installer: The upgrade failed. (The Installer encountered an error.)\n"
                 + "Error: Failure while executing; `/usr/bin/sudo -A -E -- "
                 + "/usr/sbin/installer -pkg /private/tmp/x.pkg -target /` exited with 1."),
-            "pkg-installer-failed"
+            "pkg-upgrade-failed"
         )
         XCTAssertEqual(
             cls("curl: (7) Failed to connect to updates.vendor.com port 443\n"
@@ -331,6 +331,15 @@ final class CrashReporterTests: XCTestCase {
                 + "/usr/sbin/installer -pkg /private/tmp/vendor.pkg -target /` exited with 1."),
             "pkg-installer-failed",
             "a vendor installer's own curl chatter must not reclassify the failure"
+        )
+        XCTAssertEqual(
+            cls("installer: Error - A newer version of OneDrive (26.129.0706) "
+                + "is already installed."),
+            "pkg-newer-installed"
+        )
+        XCTAssertEqual(
+            cls("installer: Error - iLok License Manager 6.0.0 is already installed."),
+            "pkg-already-installed"
         )
         XCTAssertEqual(cls("Error: Not upgrading 1 pinned package:\nmarkedit 1.33.0"), "upgrade-refused")
         XCTAssertEqual(

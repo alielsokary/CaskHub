@@ -62,10 +62,10 @@ final class CaskOperationStore {
         return true
     }
 
-    var pendingPermissions: [String: Bool] {
+    var pendingPermissions: [String: CaskAdoptionRequest] {
         boxes.reduce(into: [:]) { result, entry in
-            if case let .awaitingPermission(force) = entry.value.state {
-                result[entry.key] = force
+            if case let .awaitingPermission(request) = entry.value.state {
+                result[entry.key] = request
             }
         }
     }

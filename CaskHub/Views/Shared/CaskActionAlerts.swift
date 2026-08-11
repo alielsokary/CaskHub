@@ -17,8 +17,11 @@ private struct CaskActionAlerts: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .caskPackageAdoptionAlert(
-                cask: cask, service: localHomebrew, isPresented: hasPackageAdoptionRequest
+            .caskAdoptionAlert(
+                cask: cask,
+                service: localHomebrew,
+                request: adoptionRequest,
+                isPresented: hasAdoptionRequest
             )
             .caskPermissionAlert(
                 cask: cask, service: localHomebrew, isPresented: $showPermissionRequest
@@ -48,15 +51,17 @@ private struct CaskActionAlerts: ViewModifier {
         )
     }
 
-    private var hasPackageAdoptionRequest: Binding<Bool> {
+    private var adoptionRequest: CaskAdoptionRequest? {
+        guard case let .adoption(request) = actionAlert else { return nil }
+        return request
+    }
+
+    private var hasAdoptionRequest: Binding<Bool> {
         Binding(
-            get: {
-                guard case .packageAdoption = actionAlert else { return false }
-                return true
-            },
+            get: { adoptionRequest != nil },
             set: {
                 if !$0 {
-                    localHomebrew.send(.cancelPackageAdoption(token: cask.token))
+                    localHomebrew.send(.cancelAdoption(token: cask.token))
                 }
             }
         )
@@ -76,20 +81,40 @@ private struct CaskActionAlerts: ViewModifier {
 }
 
 private extension View {
-    func caskPackageAdoptionAlert(
+    func caskAdoptionAlert(
         cask: Cask,
         service: LocalHomebrewService,
+        request: CaskAdoptionRequest?,
         isPresented: Binding<Bool>
     ) -> some View {
-        alert("Adopt \(cask.displayName)?", isPresented: isPresented) {
+        alert(
+            request?.plan.confirmationTitle(for: cask)
+                ?? String(localized: .alertAdoptTitle(cask.displayName)),
+            isPresented: isPresented
+        ) {
             Button("Cancel", role: .cancel) {
-                service.send(.cancelPackageAdoption(token: cask.token))
+                service.send(.cancelAdoption(token: cask.token))
             }
-            Button("Adopt") {
-                service.send(.confirmPackageAdoption(token: cask.token))
+            if let request {
+                Button(
+                    role: request.plan.versionRelationship == .homebrewOlder
+                        ? .destructive
+                        : nil
+                ) {
+                    service.send(.confirmAdoption(request))
+                } label: {
+                    if let symbol = request.plan.confirmationButtonSymbol {
+                        Label(
+                            request.plan.confirmationButtonTitle,
+                            systemImage: symbol
+                        )
+                    } else {
+                        Text(request.plan.confirmationButtonTitle)
+                    }
+                }
             }
         } message: {
-            Text(.alertAdoptPackageInstaller(cask.displayName))
+            Text(request?.plan.confirmationMessage(for: cask) ?? "")
         }
     }
 
@@ -98,17 +123,13 @@ private extension View {
         service: LocalHomebrewService,
         isPresented: Binding<Bool>
     ) -> some View {
-        onChange(of: permissionForce(for: cask, service: service)) { _, force in
-            if force != nil { isPresented.wrappedValue = true }
+        onChange(of: hasPendingPermission(for: cask, service: service)) { _, pending in
+            if pending { isPresented.wrappedValue = true }
         }
         .alert("Permission Needed", isPresented: isPresented) {
             Button("Open System Settings") {
                 // Request stays pending so adoption resumes when the app becomes active.
                 AppManagementPermission.openSystemSettings()
-            }
-            Button("Adopt Anyway") {
-                let useForce = permissionForce(for: cask, service: service) == true
-                service.send(.adoptAnyway(token: cask.token, force: useForce))
             }
             Button("Cancel", role: .cancel) {
                 service.send(.cancelPermission(token: cask.token))
@@ -173,14 +194,11 @@ private extension View {
         }
     }
 
-    private func permissionForce(
+    private func hasPendingPermission(
         for cask: Cask,
         service: LocalHomebrewService
-    ) -> Bool? {
-        guard case let .permission(force) = service.actionAlert(for: cask.token) else {
-            return nil
-        }
-        return force
+    ) -> Bool {
+        service.actionAlert(for: cask.token) == .permission
     }
 
     private func failure(
@@ -260,15 +278,60 @@ private extension CaskRecoveryAction {
     func perform(cask: Cask, service: LocalHomebrewService) {
         switch self {
         case .adoptExisting:
-            service.send(.adopt(cask))
+            service.send(.requestAdoption(cask))
         case .replaceWithHomebrew:
-            service.send(.replaceWithHomebrew(token: cask.token))
+            service.send(.requestReplacementAdoption(cask))
         case .repairAndReinstall:
             service.send(.repairAndReinstall(token: cask.token))
         case .forceUninstall:
             service.send(.repair(token: cask.token))
         case .openAppManagementSettings:
             AppManagementPermission.openSystemSettings()
+        }
+    }
+}
+
+extension CaskAdoptionPlan {
+    func confirmationTitle(for cask: Cask) -> String {
+        switch operation {
+        case .adopt:
+            String(localized: .alertAdoptTitle(cask.displayName))
+        case .updateAndAdopt:
+            String(localized: .alertAdoptUpdateTitle(cask.displayName))
+        case .downgradeAndAdopt:
+            String(localized: .alertAdoptDowngradeTitle(cask.displayName))
+        }
+    }
+
+    var confirmationButtonTitle: String {
+        switch operation {
+        case .adopt: String(localized: .alertAdoptButton)
+        case .updateAndAdopt: String(localized: .alertAdoptUpdateButton)
+        case .downgradeAndAdopt: String(localized: .alertAdoptDowngradeButton)
+        }
+    }
+
+    var confirmationButtonSymbol: String? {
+        switch operation {
+        case .adopt: nil
+        case .updateAndAdopt: "arrow.up.circle"
+        case .downgradeAndAdopt: "arrow.down.circle"
+        }
+    }
+
+    func confirmationMessage(for cask: Cask) -> String {
+        switch execution {
+        case .adoptApplication:
+            String(localized: .alertAdoptExistingApplication(cask.displayName))
+        case .replaceApplication:
+            String(localized: .alertAdoptReplaceApplication(
+                cask.displayName,
+                homebrewVersion
+            ))
+        case .installPackage:
+            String(localized: .alertAdoptPackageInstaller)
+        case .replacePackage:
+            String(localized: .alertAdoptReplacePackage)
         }
     }
 }

@@ -12,15 +12,13 @@ enum CaskIntent {
     case repairAndReinstall(token: String)
     case update(token: String)
     case updateAll(tokens: [String])
-    case adopt(Cask)
-    case requestPackageAdoption(token: String)
-    case confirmPackageAdoption(token: String)
-    case replaceWithHomebrew(token: String)
-    case adoptAnyway(token: String, force: Bool)
+    case requestAdoption(Cask)
+    case confirmAdoption(CaskAdoptionRequest)
+    case requestReplacementAdoption(Cask)
     case open(Cask)
     case openExternal(Cask)
     case cancel(token: String)
-    case cancelPackageAdoption(token: String)
+    case cancelAdoption(token: String)
     case cancelPermission(token: String)
     case dismissFailure(token: String)
 }
@@ -73,23 +71,12 @@ extension LocalHomebrewService {
 
     private func handleAdoptionIntent(_ intent: CaskIntent) -> Bool {
         switch intent {
-        case let .adopt(cask):
-            Task { try? await adopt(cask) }
-        case let .requestPackageAdoption(token):
-            requestPackageAdoption(token: token)
-        case let .confirmPackageAdoption(token):
-            Task { try? await adoptPackage(token: token) }
-        case let .replaceWithHomebrew(token):
-            Task { try? await adoptReplacing(token: token) }
-        case let .adoptAnyway(token, force):
-            cancelPermissionRequest(token: token)
-            Task {
-                if force {
-                    try? await adoptReplacing(token: token, bypassPermissionCheck: true)
-                } else {
-                    try? await adopt(token: token, bypassPermissionCheck: true)
-                }
-            }
+        case let .requestAdoption(cask):
+            Task { await requestAdoption(cask) }
+        case let .confirmAdoption(request):
+            Task { try? await confirmAdoption(request) }
+        case let .requestReplacementAdoption(cask):
+            Task { await requestReplacementAdoption(cask) }
         default:
             return false
         }
@@ -112,8 +99,8 @@ extension LocalHomebrewService {
         switch intent {
         case let .cancel(token):
             cancelInstall(token: token)
-        case let .cancelPackageAdoption(token):
-            cancelPackageAdoptionRequest(token: token)
+        case let .cancelAdoption(token):
+            cancelAdoptionRequest(token: token)
         case let .cancelPermission(token):
             cancelPermissionRequest(token: token)
         case let .dismissFailure(token):
