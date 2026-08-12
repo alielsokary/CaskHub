@@ -10,6 +10,36 @@ import XCTest
 
 @MainActor
 final class HomebrewCommandExecutorTests: XCTestCase {
+    func test_incompatible_brew_is_rejected_before_process_start() async {
+        let executor = SuspendingHomebrewCommandExecutor()
+        let incompatiblePrefix = HomebrewLocator.isAppleSilicon
+            ? HomebrewLocator.intelPrefix
+            : HomebrewLocator.appleSiliconPrefix
+        let incompatibleBrewURL = URL(fileURLWithPath: incompatiblePrefix)
+            .appendingPathComponent("bin/brew")
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("incompatible-brew")
+        ) {
+            $0.commandExecutor = executor
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = { incompatibleBrewURL }
+            $0.brewVersionProvider = { "test" }
+        }
+
+        do {
+            try await service.install(token: "gamehub")
+            XCTFail("incompatible Homebrew must fail before starting a process")
+        } catch LocalHomebrewError.incompatibleBrewPath {
+            XCTAssertTrue(executor.requests.isEmpty)
+            XCTAssertTrue(
+                service.operationStore.state(for: "gamehub")?
+                    .failure?.message.contains("Settings") == true
+            )
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+    }
+
     func test_service_cancellation_routes_through_executor_and_state_machine() async {
         let executor = SuspendingHomebrewCommandExecutor()
         let service = LocalHomebrewService(

@@ -97,6 +97,10 @@ final class HomebrewMutationCoordinator {
         callbacks: HomebrewMutationCallbacks
     ) async throws {
         guard operationStore.canBeginOperation(for: request.token) else { return }
+        try preflightBrewLocation(
+            token: request.token,
+            strandedCopyExists: callbacks.strandedCopyExists()
+        )
         beginOperation(
             request.action,
             token: request.token,
@@ -151,9 +155,7 @@ extension HomebrewMutationCoordinator {
         cancellable: Bool,
         environmentOverrides: [String: String] = [:]
     ) async throws {
-        guard let brewURL = brewBinaryProvider() else {
-            throw LocalHomebrewError.brewBinaryNotFound
-        }
+        let brewURL = try validateBrewLocation()
 
         let askpass = await AskpassScriptManager.create(token: token)
 
@@ -194,6 +196,32 @@ extension HomebrewMutationCoordinator {
             exitCode: result.exitCode,
             stderr: HomebrewOutputDiagnostics.make(from: result.output)
         )
+    }
+
+    private func validateBrewLocation() throws -> URL {
+        guard let brewURL = brewBinaryProvider() else {
+            throw LocalHomebrewError.brewBinaryNotFound
+        }
+        guard HomebrewLocator.isCompatible(brewURL: brewURL) else {
+            throw LocalHomebrewError.incompatibleBrewPath
+        }
+        return brewURL
+    }
+
+    private func preflightBrewLocation(
+        token: String,
+        strandedCopyExists: Bool
+    ) throws {
+        do {
+            _ = try validateBrewLocation()
+        } catch {
+            recordFailure(
+                token: token,
+                error: error,
+                strandedCopyExists: strandedCopyExists
+            )
+            throw error
+        }
     }
 
     func beginOperation(

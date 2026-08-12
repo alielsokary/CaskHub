@@ -9,18 +9,19 @@ import Foundation
 
 enum LocalHomebrewError: LocalizedError {
     case brewBinaryNotFound
+    case incompatibleBrewPath
     case appBundleNotFound(token: String)
     case brewCommandFailed(args: [String], exitCode: Int32, stderr: String)
 
-    /// Failures with a complete in-app recovery path are user state, not defects.
+    /// Expected user or environment state is not an app defect.
     var shouldReport: Bool {
         switch self {
-        case .brewBinaryNotFound:
+        case .brewBinaryNotFound, .incompatibleBrewPath:
             return false
         case .appBundleNotFound:
             return true
         case let .brewCommandFailed(_, code, stderr):
-            return !Self.recoverableFailureClasses.contains(
+            return !Self.nonReportableFailureClasses.contains(
                 Self.failureClass(stderr: stderr, exitCode: code)
             )
         }
@@ -97,8 +98,7 @@ enum LocalHomebrewError: LocalizedError {
         ("successfully upgraded!", "exit-nonzero-after-success")
     ]
 
-    /// A class moves here only once the app offers a complete recovery path.
-    private static let recoverableFailureClasses: Set<String> = [
+    private static let nonReportableFailureClasses: Set<String> = [
         "adopt-version-mismatch",
         "app-conflict",
         "binary-conflict",
@@ -106,6 +106,7 @@ enum LocalHomebrewError: LocalizedError {
         "checksum-mismatch",
         "network-failure",
         "permission-denied",
+        "platform-unsupported",
         "stranded-caskroom-app",
         "sudo-declined",
         "sudo-wrong-password"
@@ -154,6 +155,15 @@ enum LocalHomebrewError: LocalizedError {
         case .brewBinaryNotFound:
             return String(
                 localized: "Couldn't locate the brew binary. Is Homebrew installed?"
+            )
+        case .incompatibleBrewPath:
+            if HomebrewLocator.isAppleSilicon {
+                return String(
+                    localized: "This Mac requires Apple Silicon Homebrew. Choose /opt/homebrew/bin/brew in Settings."
+                )
+            }
+            return String(
+                localized: "This Mac requires Intel Homebrew. Choose /usr/local/bin/brew in Settings."
             )
         case let .appBundleNotFound(token):
             return String(localized: "Couldn't find an installed app for \(token).")
@@ -235,6 +245,10 @@ enum LocalHomebrewError: LocalizedError {
             case "brew-api-unavailable":
                 return "Homebrew could not obtain a valid package from its API. Wait a few "
                     + "minutes and try again; if it persists, update Homebrew."
+            case "platform-unsupported":
+                return String(
+                    localized: "This app is not available for this Mac's processor architecture or macOS version."
+                )
             default:
                 break
             }

@@ -165,6 +165,10 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_recoverable_brew_failures_are_never_captured() {
+        let architectureFailure = """
+        This cask depends on hardware architecture being one of \
+        [{type: :arm, bits: 64}], but you are running {type: :intel, bits: 64}.
+        """
         let failures = [
             "It seems the existing App is different from the one being installed.",
             "Error: zed: It seems there is already an App at "
@@ -172,7 +176,8 @@ final class CrashReporterTests: XCTestCase {
             "chmod: /Applications/Example.app/Contents/MacOS/example: Operation not permitted",
             "SHA256 mismatch",
             "Download failed: curl: (6) Could not resolve host: example.com",
-            "Error: zen-privacy: Cask 'zen-privacy' conflicts with 'zen'."
+            "Error: zen-privacy: Cask 'zen-privacy' conflicts with 'zen'.",
+            architectureFailure
         ]
         for stderr in failures {
             CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
