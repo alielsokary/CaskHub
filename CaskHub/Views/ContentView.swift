@@ -166,6 +166,7 @@ struct ContentView: View {
                 : nil,
             updateAllCount: viewModel.updatesCount,
             isUpdatingAll: localHomebrew.isUpdatingAll,
+            isUpdatingHomebrew: localHomebrew.isUpdatingHomebrew,
             greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
             onToggleGreedy: { enabled in
                 Analytics.greedyUpdatesChanged(enabled)

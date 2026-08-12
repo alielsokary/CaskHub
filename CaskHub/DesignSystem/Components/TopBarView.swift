@@ -21,7 +21,8 @@ struct TopBarView: View {
     var onSelectWindow: ((RecentlyAddedWindow) -> Void)?
     var onUpdateAll: (() -> Void)?
     var updateAllCount = 0
-    var isUpdatingAll = false
+    var isUpdatingAll: Bool
+    var isUpdatingHomebrew: Bool
     var greedyUpdates: Bool?
     var onToggleGreedy: ((Bool) -> Void)?
     var showsSort = true
@@ -67,34 +68,6 @@ struct TopBarView: View {
         }
         .padding(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 10))
         .glassPanel(radius: 999, surface: .chSurfaceToolbar)
-    }
-
-    // MARK: - Update All chip
-
-    private var updateAllChip: some View {
-        Button {
-            showUpdateAllConfirmation = true
-        } label: {
-            HStack(spacing: 6) {
-                if isUpdatingAll {
-                    ProgressView().controlSize(.mini)
-                } else {
-                    Image(systemName: CaskActionStyle.update.icon)
-                        .font(.system(size: 10, weight: .bold))
-                }
-                Text(isUpdatingAll ? "Updating…" : "Update All")
-                    .font(CHType.button)
-            }
-            .foregroundStyle(Color.chActionUpdateFg)
-            .padding(.vertical, 5)
-            .padding(.horizontal, 14)
-            .background(Capsule().fill(Color.chActionUpdateBg))
-            .overlay(Capsule().strokeBorder(Color.chActionUpdateBorder, lineWidth: 1))
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .disabled(isUpdatingAll)
-        .updateAllConfirmation($showUpdateAllConfirmation, count: updateAllCount, onConfirm: onUpdateAll)
     }
 
     // MARK: - Greedy updates chip
@@ -282,6 +255,43 @@ struct TopBarView: View {
         .frame(width: 240)
         .background(Capsule().fill(Color.chSurfaceField))
         .overlay(Capsule().strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+    }
+}
+
+private extension TopBarView {
+    var updateAllChip: some View {
+        Button {
+            showUpdateAllConfirmation = true
+        } label: {
+            HStack(spacing: 6) {
+                if isUpdatingAll {
+                    ProgressView().controlSize(.mini)
+                } else {
+                    Image(systemName: CaskActionStyle.update.icon)
+                        .font(.system(size: 10, weight: .bold))
+                }
+                Text(isUpdatingAll ? "Updating…" : "Update All")
+                    .font(CHType.button)
+            }
+            .foregroundStyle(Color.chActionUpdateFg)
+            .padding(.vertical, 5)
+            .padding(.horizontal, 14)
+            .background(Capsule().fill(Color.chActionUpdateBg))
+            .overlay(Capsule().strokeBorder(Color.chActionUpdateBorder, lineWidth: 1))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(isUpdatingAll || isUpdatingHomebrew)
+        .help(
+            isUpdatingHomebrew
+                ? String(localized: "Wait for the current action to finish.")
+                : String(localized: "Update All")
+        )
+        .updateAllConfirmation(
+            $showUpdateAllConfirmation,
+            count: updateAllCount,
+            onConfirm: onUpdateAll
+        )
     }
 }
 

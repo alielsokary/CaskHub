@@ -3376,6 +3376,176 @@
         }
       }
     },
+    "Homebrew could not extract this disk image because its layout is read-only. Try again once; if it repeats, the cask needs to be corrected upstream." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法提取此磁盘映像，因为其布局为只读。请重试一次；如果问题再次出现，则需要由上游修正该 Cask。"
+          }
+        }
+      }
+    },
+    "Homebrew could not prepare its Portable Ruby runtime. Check access to GitHub and GHCR, then update Homebrew and try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法准备 Portable Ruby 运行环境。请检查能否访问 GitHub 和 GHCR，然后更新 Homebrew 并重试。"
+          }
+        }
+      }
+    },
+    "Homebrew could not reach a required download host. Check your network, VPN, proxy, and DNS settings, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法访问所需的下载主机。请检查网络、VPN、代理和 DNS 设置，然后重试。"
+          }
+        }
+      }
+    },
+    "Homebrew could not write to one of its temporary or installation folders. Run `brew doctor`, correct the permissions it reports, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法写入其临时目录或安装目录。请运行 `brew doctor`，修正它报告的权限问题，然后重试。"
+          }
+        }
+      }
+    },
+    "Homebrew found an existing item at the destination. Remove or move that item manually, then try again.\n\n%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 在目标位置发现了现有项目。请手动移除或移动该项目，然后重试。\n\n%@"
+          }
+        }
+      }
+    },
+    "Homebrew Update Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 更新失败"
+          }
+        }
+      }
+    },
+    "Homebrew tried to run code for the wrong processor architecture. Select the compatible Homebrew path in Settings, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 尝试为错误的处理器架构运行代码。请在设置中选择兼容的 Homebrew 路径，然后重试。"
+          }
+        }
+      }
+    },
+    "Homebrew's temporary download state changed while the operation was finishing. Try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作即将完成时，Homebrew 的临时下载状态发生了变化。请重试。"
+          }
+        }
+      }
+    },
+    "macOS canceled opening the disk image. Try again and approve the disk image if macOS asks for confirmation." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 取消了打开磁盘映像。请重试；如果 macOS 要求确认，请允许打开该磁盘映像。"
+          }
+        }
+      }
+    },
+    "The disk image is already in use. Eject any mounted copy of it, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此磁盘映像正在使用中。请推出已挂载的副本，然后重试。"
+          }
+        }
+      }
+    },
+    "The download is missing valid macOS quarantine metadata. Remove the cached download and let Homebrew download it again; do not bypass the security check." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载内容缺少有效的 macOS 隔离属性。请删除缓存的下载内容，让 Homebrew 重新下载；不要绕过此安全检查。"
+          }
+        }
+      }
+    },
+    "There is not enough free storage to complete this operation. Free some space, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可用存储空间不足，无法完成此操作。请释放一些空间，然后重试。"
+          }
+        }
+      }
+    },
+    "This Homebrew installation cannot read the current cask definition. Update Homebrew, then try again. If it still fails, run `brew doctor` in Terminal." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Homebrew 安装无法读取当前的 Cask 定义。请更新 Homebrew 后重试。如果仍然失败，请在“终端”中运行 `brew doctor`。"
+          }
+        }
+      }
+    },
+    "Update Homebrew" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 Homebrew"
+          }
+        }
+      }
+    },
+    "Updating Homebrew…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在更新 Homebrew…"
+          }
+        }
+      }
+    },
+    "Your administrator has restricted the command Homebrew needs to run. Contact your administrator or install this app using your organization's approved method." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的管理员限制了 Homebrew 所需命令的运行。请联系管理员，或使用组织批准的方法安装此应用。"
+          }
+        }
+      }
+    },
+    "Your Homebrew settings require a checksum, but this cask uses an unversioned download without one. Remove `--require-sha` from `HOMEBREW_CASK_OPTS` to install it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的 Homebrew 设置要求校验和，但此 Cask 使用不带校验和的未版本化下载。请从 `HOMEBREW_CASK_OPTS` 中移除 `--require-sha` 以安装它。"
+          }
+        }
+      }
+    },
     "Year" : {
       "localizations" : {
         "zh-Hans" : {
