@@ -152,11 +152,7 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
                 installedCasks: [cask.token: installed]
             ))
         )
-        seedExternalInstallation(
-            cask: cask,
-            version: "26.129.0706",
-            service: service
-        )
+        seedExternalInstallation(cask: cask, version: "26.129.0706", service: service)
         let stableRevision = service.catalogStateRevision
         var inspectedInstallStep = false
         runner.onRequest = { request in

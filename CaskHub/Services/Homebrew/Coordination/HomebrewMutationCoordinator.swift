@@ -110,13 +110,8 @@ final class HomebrewMutationCoordinator {
         defer { clearOperationResources(token: request.token) }
 
         for (index, step) in request.steps.enumerated() {
-            if index > 0 {
-                prepareNextStep(request: request)
-            }
-            let span = CrashReporter.span(
-                name: step.arguments.first ?? "brew",
-                operation: "brew"
-            )
+            if index > 0 { prepareNextStep(request: request) }
+            let span = CrashReporter.span(name: step.arguments.first ?? "brew", operation: "brew")
             do {
                 try await executeStreaming(
                     token: request.token,
