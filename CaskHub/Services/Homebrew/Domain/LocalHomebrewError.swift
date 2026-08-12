@@ -30,6 +30,17 @@ enum LocalHomebrewError: LocalizedError {
     static func failureClass(stderr: String, exitCode: Int32? = nil) -> String {
         if isStrandedApp(stderr: stderr) { return "stranded-caskroom-app" }
         if isAppManagementDenial(stderr: stderr) { return "permission-denied" }
+        if stderr.contains("A newer version of"),
+           stderr.contains("is already installed") {
+            return "pkg-newer-installed"
+        }
+        if stderr.contains("installer:"),
+           stderr.contains("is already installed") {
+            return "pkg-already-installed"
+        }
+        if stderr.contains("installer:"), stderr.contains("The upgrade failed") {
+            return "pkg-upgrade-failed"
+        }
         if stderr.contains("uninstall script"), stderr.contains("does not exist") {
             return "missing-uninstall-script"
         }
@@ -58,7 +69,6 @@ enum LocalHomebrewError: LocalizedError {
         // Installer/dmg above the download family: vendor pkg scripts run curl too.
         ("attach failed - Resource busy", "dmg-mount-busy"),
         ("installer: The install failed", "pkg-installer-failed"),
-        ("installer: The upgrade failed", "pkg-installer-failed"),
         ("/usr/sbin/installer -pkg", "pkg-installer-failed"),
         // HTTP errors (curl 22) split out: persistent 404s flag dead casks.
         ("The requested URL returned error:", "download-broken"),
@@ -170,6 +180,28 @@ enum LocalHomebrewError: LocalizedError {
                     + "can't complete it."
             case "process-killed":
                 return "The operation was interrupted before it finished. Try again."
+            case "pkg-newer-installed":
+                return "The vendor installer refused because a newer version is already "
+                    + "installed. Downgrade & Adopt can download Homebrew's version first, "
+                    + "remove the current package with the cask's uninstall steps, and then "
+                    + "install the older version."
+            case "pkg-already-installed":
+                return "The vendor installer refused to reinstall the version already on this "
+                    + "Mac. Replace with Homebrew Version can download it first, remove the "
+                    + "current package with the cask's uninstall steps, and install it fresh."
+            case "pkg-upgrade-failed":
+                return "The vendor package installer could not upgrade the existing app in "
+                    + "place. Replace with Homebrew Version can stage the download, remove the "
+                    + "current package with the cask's uninstall steps, and install it fresh."
+            case "brew-busy":
+                return "Another Homebrew process is using the same download or installation "
+                    + "files. Wait for it to finish, then try again."
+            case "homebrew-not-writable":
+                return "Homebrew cannot write to one or more directories in its prefix. Run "
+                    + "`brew doctor`, repair the ownership it reports, then try again."
+            case "brew-api-unavailable":
+                return "Homebrew could not obtain a valid package from its API. Wait a few "
+                    + "minutes and try again; if it persists, update Homebrew."
             default:
                 break
             }

@@ -6,17 +6,17 @@
 //
 
 nonisolated enum CaskActionAlert: Equatable, Sendable {
-    case packageAdoption
-    case permission(force: Bool)
+    case adoption(CaskAdoptionRequest)
+    case permission
     case homebrewMissing(message: String)
     case failure(CaskOperationFailure)
 
     static func make(operationState: CaskOperationState?) -> Self? {
         switch operationState {
-        case .awaitingPackageAdoption:
-            return .packageAdoption
-        case let .awaitingPermission(force):
-            return .permission(force: force)
+        case let .awaitingAdoption(request):
+            return .adoption(request)
+        case .awaitingPermission:
+            return .permission
         case let .failed(failure) where failure.kind == .homebrewMissing:
             return .homebrewMissing(message: failure.message)
         case let .failed(failure):

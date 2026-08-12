@@ -113,6 +113,25 @@ final class ExternalInstallationTests: XCTestCase {
         ])
     }
 
+    func test_application_scan_publishes_bundle_version_for_constant_time_planning() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("versioned-application-scan-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let application = try makeApplicationBundle(
+            in: root,
+            named: "OneDrive.app",
+            bundleIdentifier: "com.microsoft.OneDrive"
+        )
+        try setApplicationVersion("26.129.0706", at: application)
+
+        let scan = ApplicationDiscovery().scan(
+            fileManager: .default,
+            directories: [root]
+        )
+
+        XCTAssertEqual(scan.applications.first?.version, "26.129.0706")
+    }
+
     func test_application_scan_finds_store_app_inside_localized_wrapper() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("localized-application-scan-\(UUID().uuidString)")
@@ -196,6 +215,15 @@ final class ExternalInstallationTests: XCTestCase {
         XCTAssertTrue(stanzas[1].keys.contains("pkg"))
     }
 
+    func test_cask_conflict_metadata_decodes_homebrew_cask_tokens() throws {
+        let conflicts = try JSONDecoder().decode(
+            CaskConflicts.self,
+            from: Data(#"{"cask":["microsoft-excel","onedrive"]}"#.utf8)
+        )
+
+        XCTAssertEqual(conflicts.caskTokens, ["microsoft-excel", "onedrive"])
+    }
+
     func test_package_receipt_patterns_and_payload_app_names() {
         XCTAssertTrue(PackageReceiptResolver.identifier(
             "org.virtualbox.pkg.virtualbox", matches: "org.virtualbox.pkg.*"
@@ -237,6 +265,7 @@ final class ExternalInstallationTests: XCTestCase {
                         url: URL(fileURLWithPath: "/Applications/Store App.app"),
                         bundleName: "Store App.app",
                         bundleIdentifier: "com.example.store-app",
+                        version: nil,
                         isMacAppStore: true,
                         isDirectlyInApplicationDirectory: true
                     )

@@ -43,12 +43,11 @@ struct CaskActionsView: View {
         } else if state.isAdoptable {
             HStack(spacing: 8) {
                 if isAdoptPage {
-                    ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
-                        if state.isExternalPackage {
-                            localHomebrew.send(.requestPackageAdoption(token: cask.token))
-                        } else {
-                            localHomebrew.send(.adopt(cask))
-                        }
+                    ActionCapsuleButton(
+                        action: .adopt,
+                        fullWidth: fullWidth
+                    ) {
+                        localHomebrew.send(.requestAdoption(cask))
                     }
                 } else {
                     openButton(fullWidth: fullWidth) {

@@ -42,7 +42,8 @@ enum CaskActionStyle {
 
     var background: Color {
         switch self {
-        case .install, .adopt: return .chActionInstallBg
+        case .install, .adopt:
+            return .chActionInstallBg
         case .update, .cleanup: return .chActionUpdateBg
         case .open, .installed: return .chActionDoneBg
         }
@@ -50,7 +51,8 @@ enum CaskActionStyle {
 
     var border: Color {
         switch self {
-        case .install, .adopt: return .chActionInstallBorder
+        case .install, .adopt:
+            return .chActionInstallBorder
         case .update, .cleanup: return .chActionUpdateBorder
         case .open, .installed: return .chActionDoneBorder
         }
@@ -58,7 +60,8 @@ enum CaskActionStyle {
 
     var foreground: Color {
         switch self {
-        case .install, .adopt: return .chActionInstallFg
+        case .install, .adopt:
+            return .chActionInstallFg
         case .update, .cleanup: return .chActionUpdateFg
         case .open, .installed: return .chActionDoneFg
         }

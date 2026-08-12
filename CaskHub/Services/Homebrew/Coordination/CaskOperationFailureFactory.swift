@@ -62,6 +62,8 @@ enum CaskOperationFailureFactory {
         stderr: String
     ) -> Set<CaskRecoveryAction> {
         switch failureClass {
+        case "pkg-newer-installed", "pkg-already-installed", "pkg-upgrade-failed":
+            return [.replaceWithHomebrew]
         case "binary-conflict":
             return [.replaceWithHomebrew]
         case "app-conflict":

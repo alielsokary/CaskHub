@@ -253,7 +253,7 @@ final class ImageCacheManifestGateTests: XCTestCase {
     @MainActor
     private func cliCask(_ token: String) -> Cask {
         var cask = Cask.preview(token: token)
-        cask.artifacts = [ArtifactStanza(keys: ["binary"])]
+        cask.artifacts = [ArtifactStanza(keys: ["binary"], adoptionSourcePaths: [])]
         return cask
     }
 

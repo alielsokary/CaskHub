@@ -52,6 +52,7 @@ nonisolated struct ApplicationDiscovery: Sendable {
                     url: entry.standardizedFileURL,
                     bundleName: entry.lastPathComponent,
                     bundleIdentifier: metadata.bundleIdentifier,
+                    version: metadata.version,
                     isMacAppStore: fileManager.fileExists(atPath: masReceipt.path),
                     isDirectlyInApplicationDirectory:
                         entry.deletingLastPathComponent().standardizedFileURL
@@ -84,7 +85,11 @@ nonisolated struct ApplicationDiscovery: Sendable {
 
         let executableURL = appURL.appendingPathComponent("Contents/MacOS/\(executable)")
         guard fileManager.isExecutableFile(atPath: executableURL.path) else { return nil }
-        return ApplicationBundleMetadata(bundleIdentifier: info["CFBundleIdentifier"] as? String)
+        return ApplicationBundleMetadata(
+            bundleIdentifier: info["CFBundleIdentifier"] as? String,
+            version: info["CFBundleShortVersionString"] as? String
+                ?? info["CFBundleVersion"] as? String
+        )
     }
 }
 

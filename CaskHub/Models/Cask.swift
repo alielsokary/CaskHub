@@ -7,7 +7,7 @@
 
 import Foundation
 
-nonisolated struct ArtifactStanza: Decodable, Hashable {
+nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
     let keys: Set<String>
     let appNames: [String]
     let binaryNames: [String]
@@ -19,11 +19,16 @@ nonisolated struct ArtifactStanza: Decodable, Hashable {
     /// Needed to verify a bundle actually contains what the cask declares.
     let binarySourcePaths: [String]
 
+    /// Source paths for every linked artifact that may resolve inside an adopted
+    /// app bundle (binaries, shell completions, and manpages).
+    let adoptionSourcePaths: [String]
+
     init(
         keys: Set<String>,
         appNames: [String] = [],
         binaryNames: [String] = [],
         binarySourcePaths: [String] = [],
+        adoptionSourcePaths: [String] = [],
         packageIdentifiers: [String] = [],
         deletedAppNames: [String] = [],
         applicationBundleIdentifiers: [String] = []
@@ -32,6 +37,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable {
         self.appNames = appNames
         self.binaryNames = binaryNames
         self.binarySourcePaths = binarySourcePaths
+        self.adoptionSourcePaths = adoptionSourcePaths
         self.packageIdentifiers = packageIdentifiers
         self.deletedAppNames = deletedAppNames
         self.applicationBundleIdentifiers = applicationBundleIdentifiers
@@ -104,6 +110,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable {
             appNames = []
             binaryNames = []
             binarySourcePaths = []
+            adoptionSourcePaths = []
             packageIdentifiers = []
             deletedAppNames = []
             applicationBundleIdentifiers = []
@@ -116,6 +123,13 @@ nonisolated struct ArtifactStanza: Decodable, Hashable {
             .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? [])
             .compactMap(\.name)
             .filter { $0.contains("/") }
+        adoptionSourcePaths = Self.adoptionLinkKeys.flatMap { key in
+            AnyKey(stringValue: key)
+                .flatMap { try? container.decode([AppEntry].self, forKey: $0) }
+                ?? []
+        }
+        .compactMap(\.name)
+        .filter { $0.contains("/") }
         let uninstallEntries = (AnyKey(stringValue: "uninstall")
             .flatMap { try? container.decode([UninstallEntry].self, forKey: $0) } ?? [])
         packageIdentifiers = uninstallEntries.flatMap(\.packageIdentifiers)
@@ -126,6 +140,10 @@ nonisolated struct ArtifactStanza: Decodable, Hashable {
             .map { URL(fileURLWithPath: $0).lastPathComponent }
             .filter { $0.hasSuffix(".app") }
     }
+
+    private static let adoptionLinkKeys = [
+        "binary", "bash_completion", "zsh_completion", "fish_completion", "manpage"
+    ]
 
     /// Entries can be names or staged paths, with `{"target": …}` rename dicts
     /// following the entry they rename — the on-disk name is the target's basename.
@@ -147,7 +165,15 @@ nonisolated struct ArtifactStanza: Decodable, Hashable {
 
 }
 
-nonisolated struct Cask: Decodable, Identifiable, Hashable {
+nonisolated struct CaskConflicts: Decodable, Hashable, Sendable {
+    let cask: [String]?
+
+    var caskTokens: [String] {
+        cask ?? []
+    }
+}
+
+nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     let token: String
     let fullToken: String?
     let tap: String?
@@ -163,6 +189,7 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
     let deprecated: Bool
     let disabled: Bool
     let autoUpdates: Bool?
+    let conflictsWith: CaskConflicts?
     var artifacts: [ArtifactStanza]?
 
     var id: String {
@@ -182,6 +209,12 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
     /// Raw source paths of declared `binary` artifacts.
     var binarySourcePaths: [String] {
         artifacts?.flatMap(\.binarySourcePaths) ?? []
+    }
+
+    /// All bundle-relative artifact sources Homebrew links after moving an
+    /// adopted app into its Caskroom staging directory.
+    var adoptionSourcePaths: [String] {
+        artifacts?.flatMap(\.adoptionSourcePaths) ?? []
     }
 
     /// Package receipts removed by the cask's uninstall stanza.
@@ -258,7 +291,8 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
             sha256: String? = nil,
             deprecated: Bool = false,
             disabled: Bool = false,
-            autoUpdates: Bool? = nil
+            autoUpdates: Bool? = nil,
+            conflictingCaskTokens: [String] = []
         ) -> Cask {
             Cask(
                 token: token,
@@ -275,7 +309,10 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable {
                 outdated: false,
                 deprecated: deprecated,
                 disabled: disabled,
-                autoUpdates: autoUpdates
+                autoUpdates: autoUpdates,
+                conflictsWith: conflictingCaskTokens.isEmpty
+                    ? nil
+                    : CaskConflicts(cask: conflictingCaskTokens)
             )
         }
     }

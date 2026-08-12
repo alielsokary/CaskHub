@@ -79,6 +79,36 @@ final class AdoptionSurfaceTests: XCTestCase {
         }
     }
 
+    @MainActor
+    private func seedExternalInstallation(
+        of cask: Cask,
+        version: String?,
+        in service: LocalHomebrewService
+    ) {
+        let bundleName = (cask.packageAppNameCandidates + cask.appArtifactNames).first
+            ?? "\(cask.displayName).app"
+        let application = DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
+            bundleName: bundleName,
+            bundleIdentifier: "com.example.\(cask.token)",
+            version: version,
+            isMacAppStore: false,
+            isDirectlyInApplicationDirectory: true
+        )
+        updateInstallationSnapshot(of: service) {
+            $0.detectedApplications.append(application)
+            if cask.hasPackageArtifact {
+                $0.externalPackageInstallations[cask.token] = ExternalPackageInstallation(
+                    appBundleNames: [bundleName]
+                )
+                $0.externalPackageApplicationOwners[cask.token] = application
+            } else {
+                $0.externalAppNames.insert(bundleName)
+                $0.externalApplicationOwners[cask.token] = application
+            }
+        }
+    }
+
     func test_error_descriptions_cover_every_case() {
         XCTAssertNotNil(LocalHomebrewError.brewBinaryNotFound.errorDescription)
         XCTAssertTrue(
@@ -194,18 +224,81 @@ final class AdoptionSurfaceTests: XCTestCase {
     }
 
     @MainActor
-    func test_package_adoption_confirms_then_reinstalls_without_adopt_flag() async throws {
+    func test_same_version_package_adoption_confirms_then_replaces_cleanly() async throws {
         let runner = StubBrewProcessRunner()
         let service = makeMutationService(runner: runner)
+        service.permissionProbe = { .granted }
+        let cask = makeCask(
+            "zoom",
+            packageIdentifiers: ["us.zoom.pkg.videomeeting"],
+            packageAppNames: ["zoom.us.app"]
+        )
+        seedExternalInstallation(of: cask, version: "1.0", in: service)
 
-        service.requestPackageAdoption(token: "zoom")
-        XCTAssertEqual(service.operationStore.state(for: "zoom"), .awaitingPackageAdoption)
+        await service.requestAdoption(cask)
+        let request = try XCTUnwrap(
+            service.operationStore.state(for: "zoom")?.adoptionRequest
+        )
+        XCTAssertEqual(request.plan.execution, .replacePackage)
 
-        try await service.adoptPackage(token: "zoom")
+        try await service.confirmAdoption(request)
 
-        XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "zoom"]])
+        XCTAssertEqual(runner.requests.map(\.arguments), [
+            ["fetch", "--cask", "zoom"],
+            ["uninstall", "--cask", "zoom", "--force"],
+            ["install", "--cask", "zoom"]
+        ])
         XCTAssertNil(service.operationStore.state(for: "zoom"))
         XCTAssertNil(service.operationStore.state(for: "zoom")?.action)
+    }
+
+    @MainActor
+    func test_every_planned_adoption_stays_gated_when_permission_is_not_proven() async throws {
+        for status in [AppManagementPermission.Status.denied, .unknown] {
+            let runner = StubBrewProcessRunner()
+            let service = makeMutationService(runner: runner)
+            service.permissionProbe = { status }
+
+            let application = makeCask("external-app", appNames: ["External.app"])
+            let package = makeCask(
+                "package-request",
+                packageIdentifiers: ["com.example.package"],
+                packageAppNames: ["Package.app"]
+            )
+            seedExternalInstallation(of: application, version: "1.0", in: service)
+            seedExternalInstallation(of: package, version: "2.0", in: service)
+
+            await service.requestAdoption(application)
+            await service.requestAdoption(package)
+
+            XCTAssertEqual(Set(service.operationStore.pendingPermissions.keys), [
+                "external-app", "package-request"
+            ], "\(status) must gate every adoption entry point")
+            XCTAssertTrue(runner.requests.isEmpty, "brew must never run before permission is proven")
+        }
+    }
+
+    @MainActor
+    func test_adoption_resumes_at_confirmation_after_permission_is_granted() async {
+        let runner = StubBrewProcessRunner()
+        let service = makeMutationService(runner: runner)
+        service.permissionProbe = { .denied }
+        let cask = makeCask("zoom", appNames: ["zoom.us.app"])
+        seedExternalInstallation(of: cask, version: "1.0", in: service)
+
+        await service.requestAdoption(cask)
+        let pending = service.operationStore.pendingPermissions[cask.token]
+        XCTAssertEqual(pending?.cask, cask)
+
+        service.permissionProbe = { .granted }
+        service.resumePendingAdoptions()
+        try? await Task.sleep(for: .milliseconds(100))
+
+        XCTAssertEqual(
+            service.operationStore.state(for: cask.token)?.adoptionRequest,
+            pending
+        )
+        XCTAssertTrue(runner.requests.isEmpty, "granting permission must not skip confirmation")
     }
 
     @MainActor
@@ -287,8 +380,14 @@ final class AdoptionSurfaceTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("adopt-e2e"))
         service.permissionProbe = { .granted }
         let token = "caskhub-test-nonexistent-cask"
+        let cask = makeCask(token, appNames: ["No Such App.app"])
+        seedExternalInstallation(of: cask, version: "1.0", in: service)
 
-        try? await service.adopt(token: token)
+        await service.requestAdoption(cask)
+        let request = try XCTUnwrap(
+            service.operationStore.state(for: token)?.adoptionRequest
+        )
+        try? await service.confirmAdoption(request)
 
         XCTAssertNotNil(service.operationStore.state(for: token)?.failure)
         XCTAssertNil(service.operationStore.state(for: token)?.action)
@@ -300,10 +399,11 @@ final class AdoptionSurfaceTests: XCTestCase {
         XCTAssertTrue([.granted, .denied, .unknown].contains(status))
     }
 
-    func test_artifact_stanza_decodes_binary_source_paths() throws {
+    func test_artifact_stanza_decodes_every_bundle_relative_link_source() throws {
         let json = Data("""
         [{"app": ["Obsidian.app"]},
-         {"binary": ["/Applications/Obsidian.app/Contents/MacOS/obsidian-cli", {"target": "obsidian"}]}]
+         {"binary": ["/Applications/Obsidian.app/Contents/MacOS/obsidian-cli", {"target": "obsidian"}]},
+         {"bash_completion": ["Docker.app/Contents/Resources/etc/docker-compose.bash-completion"]}]
         """.utf8)
         let stanzas = try JSONDecoder().decode([ArtifactStanza].self, from: json)
         XCTAssertEqual(
@@ -311,6 +411,13 @@ final class AdoptionSurfaceTests: XCTestCase {
             ["/Applications/Obsidian.app/Contents/MacOS/obsidian-cli"]
         )
         XCTAssertEqual(stanzas[1].binaryNames, ["obsidian"])
+        XCTAssertEqual(
+            stanzas.flatMap(\.adoptionSourcePaths),
+            [
+                "/Applications/Obsidian.app/Contents/MacOS/obsidian-cli",
+                "Docker.app/Contents/Resources/etc/docker-compose.bash-completion"
+            ]
+        )
     }
 
     @MainActor
@@ -333,8 +440,9 @@ final class AdoptionSurfaceTests: XCTestCase {
             "caskhub-test-nonexistent-cask", appNames: ["Fake.app"],
             binarySourcePaths: ["/Applications/Fake.app/Contents/MacOS/fake-cli"]
         )
+        seedExternalInstallation(of: cask, version: "1.0", in: service)
 
-        try await service.adopt(cask)
+        await service.requestAdoption(cask)
 
         XCTAssertTrue(
             service.operationStore.state(for: cask.token)?.failure?
@@ -351,7 +459,10 @@ final class AdoptionSurfaceTests: XCTestCase {
         FileManager.default.createFile(
             atPath: macOSDir.appendingPathComponent("fake-cli").path, contents: Data()
         )
-        XCTAssertNil(service.adoptBlockedByMissingBinary(cask), "present binary should clear the preflight")
+        XCTAssertNil(
+            service.adoptBlockedByMissingComponent(cask),
+            "present binary should clear the preflight"
+        )
     }
 
     @MainActor
@@ -372,7 +483,7 @@ final class AdoptionSurfaceTests: XCTestCase {
             "fake", appNames: ["Fake.app"],
             binarySourcePaths: ["$HOMEBREW_PREFIX/Caskroom/fake/1.0/fake-cli"]
         )
-        XCTAssertNil(service.adoptBlockedByMissingBinary(cask))
+        XCTAssertNil(service.adoptBlockedByMissingComponent(cask))
     }
 
 }

@@ -279,18 +279,42 @@ final class CaskHubTests: XCTestCase {
     func test_adopt_preflight_waits_for_app_management_permission() async throws {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("preflight"))
         service.permissionProbe = { .denied }
+        let adoptCask = makeCask(
+            "chatgpt-classic",
+            appNames: ["ChatGPT Classic.app"]
+        )
+        let replaceCask = makeCask("canva", appNames: ["Canva.app"])
+        let adoptApplication = externalApplication(
+            named: "ChatGPT Classic.app", version: "1.0"
+        )
+        let replaceApplication = externalApplication(
+            named: "Canva.app", version: "2.0"
+        )
+        updateInstallationSnapshot(of: service) {
+            $0.externalAppNames = [
+                adoptApplication.bundleName,
+                replaceApplication.bundleName
+            ]
+            $0.externalApplicationOwners = [
+                adoptCask.token: adoptApplication,
+                replaceCask.token: replaceApplication
+            ]
+        }
 
-        try await service.adopt(token: "chatgpt-classic")
-        XCTAssertEqual(service.operationStore.pendingPermissions["chatgpt-classic"], false)
+        await service.requestAdoption(adoptCask)
+        XCTAssertEqual(
+            service.operationStore.pendingPermissions["chatgpt-classic"]?.plan.execution,
+            .adoptApplication
+        )
         XCTAssertNil(
             service.operationStore.state(for: "chatgpt-classic")?.action,
             "brew must not run while permission is missing"
         )
 
-        try await service.adoptReplacing(token: "canva")
+        await service.requestReplacementAdoption(replaceCask)
         XCTAssertEqual(
-            service.operationStore.pendingPermissions["canva"],
-            true,
+            service.operationStore.pendingPermissions["canva"]?.plan.execution,
+            .replaceApplication,
             "replace path remembers it needs --force"
         )
 
@@ -439,5 +463,19 @@ final class CaskHubTests: XCTestCase {
         )
         vm.selectedSidebar = .library(.adopt)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["google-chrome"])
+    }
+
+    private func externalApplication(
+        named bundleName: String,
+        version: String
+    ) -> DetectedApplication {
+        DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
+            bundleName: bundleName,
+            bundleIdentifier: "com.example.\(bundleName)",
+            version: version,
+            isMacAppStore: false,
+            isDirectlyInApplicationDirectory: true
+        )
     }
 }

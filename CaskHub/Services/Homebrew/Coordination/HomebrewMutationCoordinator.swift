@@ -16,6 +16,27 @@ struct HomebrewMutationRequest {
     let environmentOverrides: [String: String]
 }
 
+enum HomebrewMutationRecoveryBehavior: Equatable {
+    case finishMutation
+    case continueSequence
+}
+
+struct HomebrewMutationStep {
+    let arguments: [String]
+    let environmentOverrides: [String: String]
+    let cancellable: Bool
+    let recoverIf: (() -> Bool)?
+    let recoveryBehavior: HomebrewMutationRecoveryBehavior
+}
+
+struct HomebrewMutationSequenceRequest {
+    let action: CaskAction
+    let token: String
+    let displayName: String
+    let origin: CaskActionOrigin
+    let steps: [HomebrewMutationStep]
+}
+
 struct HomebrewMutationCallbacks {
     let refresh: () async -> Void
     let strandedCopyExists: () -> Bool
@@ -48,6 +69,33 @@ final class HomebrewMutationCoordinator {
         _ request: HomebrewMutationRequest,
         callbacks: HomebrewMutationCallbacks
     ) async throws {
+        try await runSequence(
+            HomebrewMutationSequenceRequest(
+                action: request.action,
+                token: request.token,
+                displayName: request.displayName,
+                origin: request.origin,
+                steps: [
+                    HomebrewMutationStep(
+                        arguments: request.arguments,
+                        environmentOverrides: request.environmentOverrides,
+                        cancellable: request.action == .installing,
+                        recoverIf: callbacks.recoverIf,
+                        recoveryBehavior: .finishMutation
+                    )
+                ]
+            ),
+            callbacks: callbacks
+        )
+    }
+
+    /// Runs a multi-command workflow as one logical mutation. The current
+    /// installation snapshot remains published until every step succeeds, so
+    /// consumers never render a transient state between destructive steps.
+    func runSequence(
+        _ request: HomebrewMutationSequenceRequest,
+        callbacks: HomebrewMutationCallbacks
+    ) async throws {
         guard operationStore.canBeginOperation(for: request.token) else { return }
         beginOperation(
             request.action,
@@ -61,35 +109,42 @@ final class HomebrewMutationCoordinator {
         )
         defer { clearOperationResources(token: request.token) }
 
-        let span = CrashReporter.span(
-            name: request.arguments.first ?? "brew",
-            operation: "brew"
-        )
-        do {
-            try await executeStreaming(
-                token: request.token,
-                arguments: request.arguments,
-                cancellable: request.action == .installing,
-                environmentOverrides: request.environmentOverrides
-            )
-            span.finish()
-            Analytics.caskActionCompleted(
-                request.action,
-                token: request.token,
-                origin: request.origin
-            )
-            await callbacks.refresh()
-            operationStore.send(.clear, for: request.token)
-        } catch {
-            try await handleFailure(
-                error,
-                request: request,
-                span: span,
-                callbacks: callbacks
-            )
+        for (index, step) in request.steps.enumerated() {
+            if index > 0 { prepareNextStep(request: request) }
+            let span = CrashReporter.span(name: step.arguments.first ?? "brew", operation: "brew")
+            do {
+                try await executeStreaming(
+                    token: request.token,
+                    arguments: step.arguments,
+                    cancellable: step.cancellable,
+                    environmentOverrides: step.environmentOverrides
+                )
+                span.finish()
+            } catch {
+                let resolution = try await handleFailure(
+                    error,
+                    request: request,
+                    step: step,
+                    span: span,
+                    callbacks: callbacks
+                )
+                if resolution == .stopSequence {
+                    return
+                }
+            }
         }
-    }
 
+        Analytics.caskActionCompleted(
+            request.action,
+            token: request.token,
+            origin: request.origin
+        )
+        await callbacks.refresh()
+        operationStore.send(.clear, for: request.token)
+    }
+}
+
+extension HomebrewMutationCoordinator {
     func executeStreaming(
         token: String,
         arguments: [String],
@@ -242,30 +297,48 @@ final class HomebrewMutationCoordinator {
         }
     }
 
+    private func prepareNextStep(request: HomebrewMutationSequenceRequest) {
+        outputAggregator.clear(token: request.token)
+        operationStore.send(
+            .updateProgress(CaskOperationProgress(
+                token: request.token,
+                displayName: request.displayName,
+                action: request.action,
+                phase: .preparing
+            )),
+            for: request.token
+        )
+        operationStore.send(.setCancellable(false), for: request.token)
+    }
+
     private func handleFailure(
         _ error: Error,
-        request: HomebrewMutationRequest,
+        request: HomebrewMutationSequenceRequest,
+        step: HomebrewMutationStep,
         span: CrashSpan,
         callbacks: HomebrewMutationCallbacks
-    ) async throws {
+    ) async throws -> FailureResolution {
         if operationStore.state(for: request.token)?.cancellationRequested == true {
             span.finish()
             await callbacks.refresh()
             operationStore.send(.clear, for: request.token)
-            return
+            return .stopSequence
         }
         if let localError = error as? LocalHomebrewError,
            case .brewCommandFailed = localError,
-           callbacks.recoverIf?() == true {
+           step.recoverIf?() == true {
             span.finish()
             Analytics.caskActionRecovered(
                 request.action,
                 token: request.token,
                 origin: request.origin
             )
-            await callbacks.refresh()
-            operationStore.send(.clear, for: request.token)
-            return
+            if step.recoveryBehavior == .finishMutation {
+                await callbacks.refresh()
+                operationStore.send(.clear, for: request.token)
+                return .stopSequence
+            }
+            return .continueSequence
         }
 
         span.finish(error: error)
@@ -284,6 +357,11 @@ final class HomebrewMutationCoordinator {
             await callbacks.refresh()
         }
         throw error
+    }
+
+    private enum FailureResolution: Equatable {
+        case continueSequence
+        case stopSequence
     }
 
     /// Brew disagreeing about install state means the snapshot is stale.
