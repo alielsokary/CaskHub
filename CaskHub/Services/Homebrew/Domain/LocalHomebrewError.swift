@@ -102,6 +102,7 @@ enum LocalHomebrewError: LocalizedError {
         "adopt-version-mismatch",
         "app-conflict",
         "binary-conflict",
+        "cask-conflict",
         "checksum-mismatch",
         "network-failure",
         "permission-denied",
@@ -117,6 +118,29 @@ enum LocalHomebrewError: LocalizedError {
             options: .regularExpression
         ) else { return nil }
         return String(stderr[range].dropFirst("required by ".count))
+    }
+
+    static func conflictingCask(stderr: String) -> String? {
+        guard let range = stderr.range(
+            of: #"conflicts with '[A-Za-z0-9@._+/-]+'"#,
+            options: .regularExpression
+        ) else { return nil }
+        return String(
+            stderr[range]
+                .dropFirst("conflicts with '".count)
+                .dropLast()
+        )
+    }
+
+    static func caskConflictDescription(
+        requestedCask: String,
+        installedCask: String
+    ) -> String {
+        String(localized: .errorCaskConflict(
+            requestedCask,
+            installedCask,
+            installedCask
+        ))
     }
 
     /// A previous interrupted operation parked the real .app inside the Caskroom
@@ -155,6 +179,15 @@ enum LocalHomebrewError: LocalizedError {
                     + "it yet. Adopt keeps your current copy and hands management to "
                     + "Homebrew; Replace installs Homebrew's copy fresh. Settings and "
                     + "data are kept either way."
+            case "cask-conflict":
+                let requestedCask = args.drop(while: { $0 != "--cask" }).dropFirst().first
+                guard let requestedCask,
+                      let installedCask = Self.conflictingCask(stderr: trimmed)
+                else { return String(localized: .errorCaskConflictUnknown) }
+                return Self.caskConflictDescription(
+                    requestedCask: requestedCask,
+                    installedCask: installedCask
+                )
             case "cask-dependency":
                 let dependent = Self.dependentCask(stderr: trimmed)
                 return "This can't be uninstalled because "

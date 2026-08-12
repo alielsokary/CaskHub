@@ -236,7 +236,9 @@ enum CaskActionAlertFactory {
         service: LocalHomebrewService
     ) -> (alert: NSAlert, actions: [() -> Void]) {
         let alert = NSAlert()
-        alert.messageText = "\(cask.displayName) Failed"
+        alert.messageText = failure.kind == .installationPreflight
+            ? String(localized: .alertInstallConflictTitle(cask.displayName))
+            : "\(cask.displayName) Failed"
         if failure.message.count <= 500 {
             alert.informativeText = failure.message
         } else {

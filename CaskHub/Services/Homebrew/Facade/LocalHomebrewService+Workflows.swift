@@ -8,6 +8,25 @@
 import Foundation
 
 extension LocalHomebrewService {
+    func install(_ cask: Cask) async throws {
+        if let conflict = cask.conflictsWith?.caskTokens.first(where: {
+            installedCasks[$0] != nil
+        }) {
+            operationStore.send(
+                .fail(CaskOperationFailure(
+                    kind: .installationPreflight,
+                    message: LocalHomebrewError.caskConflictDescription(
+                        requestedCask: cask.token,
+                        installedCask: conflict
+                    )
+                )),
+                for: cask.token
+            )
+            return
+        }
+        try await install(token: cask.token)
+    }
+
     func install(token: String) async throws {
         try await runMutation(
             .installing,
