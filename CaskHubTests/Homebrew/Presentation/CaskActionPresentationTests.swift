@@ -230,6 +230,21 @@ final class AdoptionViewRenderTests: XCTestCase {
     }
 
     @MainActor
+    func test_installation_preflight_alert_does_not_call_the_conflict_a_failure() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("install-conflict-alert"))
+        let failure = CaskOperationFailure(
+            kind: .installationPreflight,
+            message: "conflict"
+        )
+
+        let (alert, _) = CaskActionAlertFactory.errorAlert(
+            for: makeCask("zen-privacy", name: "Zen"), failure: failure, service: service
+        )
+
+        XCTAssertEqual(alert.messageText, "Can't Install Zen")
+    }
+
+    @MainActor
     func test_error_alert_scrolls_long_output_instead_of_growing() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("alert-scroll"))
         let message = String(repeating: "brew output line\n", count: 60)

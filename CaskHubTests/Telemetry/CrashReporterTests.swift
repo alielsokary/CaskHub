@@ -171,7 +171,8 @@ final class CrashReporterTests: XCTestCase {
                 + "'/opt/homebrew/Caskroom/zed/1.10.3/Zed.app'.",
             "chmod: /Applications/Example.app/Contents/MacOS/example: Operation not permitted",
             "SHA256 mismatch",
-            "Download failed: curl: (6) Could not resolve host: example.com"
+            "Download failed: curl: (6) Could not resolve host: example.com",
+            "Error: zen-privacy: Cask 'zen-privacy' conflicts with 'zen'."
         ]
         for stderr in failures {
             CrashReporter.capture(LocalHomebrewError.brewCommandFailed(

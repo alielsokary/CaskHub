@@ -77,7 +77,7 @@ struct CaskActionsView: View {
                 )
         } else {
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
-                localHomebrew.send(.install(token: cask.token))
+                localHomebrew.send(.install(cask))
             }
         }
     }

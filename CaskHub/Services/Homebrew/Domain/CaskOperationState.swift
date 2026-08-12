@@ -20,6 +20,7 @@ nonisolated struct CaskOperationFailure: Equatable, Sendable {
     enum Kind: Equatable, Sendable {
         case homebrewMissing
         case appManagementDenied
+        case installationPreflight
         case adoptionPreflight
         case brewCommand
         case applicationUnavailable

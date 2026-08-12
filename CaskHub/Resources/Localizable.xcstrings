@@ -465,6 +465,24 @@
         }
       }
     },
+    "alert.installConflict.title" : {
+      "comment" : "Alert title when an installed Homebrew cask conflicts with the requested cask",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't Install %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法安装 %@"
+          }
+        }
+      }
+    },
     "alert.quitDuringOperation" : {
       "comment" : "Quit confirmation body while a brew operation is running",
       "extractionState" : "manual",
@@ -1379,6 +1397,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS 阻止了 CaskHub 修改这台 Mac 上的应用。请在「系统设置 → 隐私与安全性 → App 管理」中启用 CaskHub，然后重试。"
+          }
+        }
+      }
+    },
+    "error.caskConflict" : {
+      "comment" : "Error when a requested Homebrew cask conflicts with an installed Homebrew cask",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Homebrew cask “%@” conflicts with the installed cask “%@”. Uninstall “%@” before trying again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew Cask“%@”与已安装的 Cask“%@”冲突。请先卸载“%@”，然后重试。"
+          }
+        }
+      }
+    },
+    "error.caskConflictUnknown" : {
+      "comment" : "Fallback error when Homebrew reports a cask conflict without naming the installed cask",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Homebrew cask conflicts with another installed cask. Uninstall the conflicting cask before trying again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Homebrew Cask 与另一个已安装的 Cask 冲突。请先卸载冲突的 Cask，然后重试。"
           }
         }
       }

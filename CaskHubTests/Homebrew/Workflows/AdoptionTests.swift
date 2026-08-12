@@ -158,6 +158,25 @@ final class AdoptionSurfaceTests: XCTestCase {
         XCTAssertTrue(generic.errorDescription?.contains("boom") == true)
     }
 
+    func test_cask_conflict_has_actionable_description_and_is_not_reportable() {
+        let stderr = "Error: zen-privacy: Cask 'zen-privacy' conflicts with 'zen'."
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "zen-privacy"],
+            exitCode: 1,
+            stderr: stderr
+        )
+
+        XCTAssertEqual(LocalHomebrewError.conflictingCask(stderr: stderr), "zen")
+        XCTAssertEqual(
+            error.errorDescription,
+            LocalHomebrewError.caskConflictDescription(
+                requestedCask: "zen-privacy",
+                installedCask: "zen"
+            )
+        )
+        XCTAssertFalse(error.shouldReport)
+    }
+
     @MainActor
     func test_open_and_external_lookups_handle_missing_bundles() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("open-missing"))
@@ -221,6 +240,48 @@ final class AdoptionSurfaceTests: XCTestCase {
         XCTAssertFalse(askpassPath.map(FileManager.default.fileExists(atPath:)) ?? true)
         XCTAssertNotNil(service.operationStore.state(for: "firefox")?.failure)
         XCTAssertNil(service.operationStore.state(for: "firefox")?.action)
+    }
+
+    @MainActor
+    func test_install_preflight_blocks_an_installed_conflicting_cask() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeMutationService(runner: runner)
+        updateInstalledCask(installation("zen", version: "1.21.13b"), in: service)
+        let zenPrivacy = makeCask(
+            "zen-privacy",
+            name: "Zen",
+            conflictingCaskTokens: ["zen"]
+        )
+
+        try await service.install(zenPrivacy)
+
+        let failure = try XCTUnwrap(service.operationStore.state(for: "zen-privacy")?.failure)
+        XCTAssertEqual(failure.kind, .installationPreflight)
+        XCTAssertEqual(
+            failure.message,
+            LocalHomebrewError.caskConflictDescription(
+                requestedCask: "zen-privacy",
+                installedCask: "zen"
+            )
+        )
+        XCTAssertTrue(runner.requests.isEmpty)
+    }
+
+    @MainActor
+    func test_install_preflight_allows_a_cask_when_its_conflict_is_not_installed() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeMutationService(runner: runner)
+        let zenPrivacy = makeCask(
+            "zen-privacy",
+            conflictingCaskTokens: ["zen"]
+        )
+
+        try await service.install(zenPrivacy)
+
+        XCTAssertEqual(
+            runner.requests.map(\.arguments),
+            [["install", "--cask", "zen-privacy"]]
+        )
     }
 
     @MainActor

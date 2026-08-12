@@ -6,7 +6,7 @@
 //
 
 enum CaskIntent {
-    case install(token: String)
+    case install(Cask)
     case uninstall(token: String)
     case repair(token: String)
     case repairAndReinstall(token: String)
@@ -51,8 +51,8 @@ extension LocalHomebrewService {
 
     private func handleMutationIntent(_ intent: CaskIntent) -> Bool {
         switch intent {
-        case let .install(token):
-            Task { try? await install(token: token) }
+        case let .install(cask):
+            Task { try? await install(cask) }
         case let .uninstall(token):
             Task { try? await uninstall(token: token) }
         case let .repair(token):
