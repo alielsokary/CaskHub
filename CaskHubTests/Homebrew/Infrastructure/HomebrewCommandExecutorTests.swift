@@ -72,6 +72,49 @@ final class HomebrewCommandExecutorTests: XCTestCase {
 
         XCTAssertNil(service.operationStore.state(for: "firefox"))
     }
+
+    func test_homebrew_update_blocks_other_tokens_until_both_passes_finish() async {
+        let executor = SuspendingHomebrewCommandExecutor()
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("global-homebrew-update")
+        ) {
+            $0.commandExecutor = executor
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+            $0.brewVersionProvider = { "test" }
+        }
+
+        let update = Task { try? await service.updateHomebrew(for: "gimp") }
+        while executor.requests.count < 1 { await Task.yield() }
+
+        try? await service.install(token: "firefox")
+        await service.updateAll(tokens: ["zed", "zoom"])
+        XCTAssertEqual(executor.requests.map(\.arguments), [["update"]])
+        XCTAssertNil(service.operationStore.state(for: "zed"))
+        XCTAssertNil(service.operationStore.state(for: "zoom"))
+        XCTAssertFalse(service.isUpdatingAll)
+
+        executor.finish(BrewProcessResult(exitCode: 0, output: "first pass"))
+        while executor.requests.count < 2 { await Task.yield() }
+
+        try? await service.install(token: "firefox")
+        XCTAssertEqual(executor.requests.map(\.arguments), [["update"], ["update"]])
+
+        executor.finish(BrewProcessResult(exitCode: 0, output: "second pass"))
+        await update.value
+
+        let install = Task { try? await service.install(token: "firefox") }
+        while executor.requests.count < 3 { await Task.yield() }
+        XCTAssertEqual(executor.requests.last?.arguments, ["install", "--cask", "firefox"])
+        XCTAssertEqual(service.brewVersion, "test")
+
+        try? await service.updateHomebrew(for: "gimp")
+        XCTAssertEqual(service.brewVersion, "test")
+        XCTAssertEqual(executor.requests.count, 3)
+
+        executor.finish(BrewProcessResult(exitCode: 0, output: "installed"))
+        await install.value
+    }
 }
 
 @MainActor

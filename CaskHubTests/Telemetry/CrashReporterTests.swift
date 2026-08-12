@@ -85,6 +85,23 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(spy.capturedErrors.count, 10)
     }
 
+    func test_brew_failure_classes_are_limited_independently() {
+        for _ in 1...6 {
+            CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+                args: ["install", "--cask", "one"],
+                exitCode: 1,
+                stderr: "curl: (22) The requested URL returned error: 404"
+            ))
+            CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+                args: ["install", "--cask", "two"],
+                exitCode: 1,
+                stderr: "Error: two: Download failed on Cask 'two' with message: mystery"
+            ))
+        }
+
+        XCTAssertEqual(spy.capturedErrors.count, 10)
+    }
+
     func test_task_cancellation_is_never_captured() {
         CrashReporter.capture(CancellationError())
         XCTAssertTrue(spy.capturedErrors.isEmpty)
@@ -236,7 +253,11 @@ final class CrashReporterTests: XCTestCase {
     }
 
     private func cls(_ stderr: String) -> String {
-        LocalHomebrewError.failureClass(stderr: stderr)
+        HomebrewCommandFailure.classify(
+            arguments: [],
+            exitCode: nil,
+            diagnostic: stderr
+        ).rawValue
     }
 
     func test_failure_classes_cover_observed_brew_errors() {
@@ -259,7 +280,7 @@ final class CrashReporterTests: XCTestCase {
             "sudo-declined",
             "a declined prompt is the terminal cause even with incidental conflict warnings"
         )
-        XCTAssertEqual(cls("something novel"), "uncategorized")
+        XCTAssertEqual(cls("something novel"), "unknown")
     }
 
     func test_failure_classes_cover_field_mined_brew_errors() {
@@ -365,11 +386,14 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_killed_process_with_silent_stderr_gets_its_own_class() {
-        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: "", exitCode: 9), "process-killed")
-        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: "", exitCode: 1), "uncategorized")
+        XCTAssertEqual(classify("", exitCode: 9), "process-killed")
         XCTAssertEqual(
-            LocalHomebrewError.failureClass(stderr: "Error: real failure", exitCode: 9),
-            "uncategorized",
+            classify("", exitCode: 1),
+            "no-diagnostic-output"
+        )
+        XCTAssertEqual(
+            classify("Error: real failure", exitCode: 9),
+            "unknown",
             "a kill with actual output classifies on the output"
         )
         let killed = LocalHomebrewError.brewCommandFailed(
@@ -380,6 +404,14 @@ final class CrashReporterTests: XCTestCase {
             ["brewCommandFailed", "install", "process-killed"]
         )
         XCTAssertTrue(killed.shouldReport, "watch volume before deciding to suppress")
+    }
+
+    private func classify(_ diagnostic: String, exitCode: Int32) -> String {
+        HomebrewCommandFailure.classify(
+            arguments: [],
+            exitCode: exitCode,
+            diagnostic: diagnostic
+        ).rawValue
     }
 
     func test_wrong_sudo_password_is_not_reported() {
@@ -416,6 +448,20 @@ final class CrashReporterTests: XCTestCase {
         UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.tag("brew.path", value: "/opt/homebrew/bin/brew")
         XCTAssertTrue(spy.tags.isEmpty)
+    }
+
+    @MainActor
+    func test_homebrew_refresh_tags_the_selected_path_and_version() async {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("brew-tags")) {
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/opt/homebrew/bin/brew") }
+            $0.brewVersionProvider = { "6.0.0" }
+        }
+
+        await service.refresh()
+
+        XCTAssertEqual(spy.tags["brew.path"], "/opt/homebrew/bin/brew")
+        XCTAssertEqual(spy.tags["brew.version"], "6.0.0")
     }
 
     // MARK: - Breadcrumbs
@@ -474,5 +520,32 @@ final class CrashReporterTests: XCTestCase {
         let provider = SentryProvider()
         provider.pauseHangTracking()
         provider.resumeHangTracking()
+    }
+}
+
+extension CrashReporterTests {
+    func test_unknown_brew_diagnostics_share_one_bounded_fingerprint_and_rate_limit() {
+        let first = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "one"],
+            exitCode: 1,
+            stderr: "Error: renderer crashed before launch"
+        )
+        let second = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "two"],
+            exitCode: 1,
+            stderr: "Error: helper returned an impossible state"
+        )
+        XCTAssertEqual(
+            SentryProvider.fingerprint(for: first),
+            SentryProvider.fingerprint(for: second)
+        )
+
+        for _ in 1...6 {
+            CrashReporter.capture(first)
+            CrashReporter.capture(second)
+        }
+
+        XCTAssertEqual(spy.capturedErrors.count, 5)
+        XCTAssertEqual(CrashReporter.captureCounts.count, 1)
     }
 }

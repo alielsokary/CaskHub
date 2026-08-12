@@ -30,6 +30,23 @@ final class CaskActionPresentationTests: XCTestCase {
         XCTAssertNil(service.actionAlert(for: cask.token))
     }
 
+    func test_homebrew_update_blocks_other_cask_mutations() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("presentation-global-update")
+        )
+        service.mutationCoordinator.beginOperation(
+            .updatingHomebrew,
+            token: "gimp",
+            displayName: "Homebrew"
+        )
+
+        let presentation = service.actionPresentation(for: makeCask("firefox"))
+
+        XCTAssertTrue(presentation.isHomebrewMutationBlocked)
+        XCTAssertTrue(presentation.isBusy)
+        XCTAssertNil(presentation.activeAction)
+    }
+
     func test_failure_presentation_carries_message_and_recovery_together() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("presentation-failure"))
         let cask = makeCask("tabby")
@@ -230,6 +247,36 @@ final class AdoptionViewRenderTests: XCTestCase {
     }
 
     @MainActor
+    func test_update_homebrew_recovery_is_disabled_while_an_operation_runs() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("blocked-homebrew-recovery")
+        )
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: "firefox",
+            displayName: "Firefox"
+        )
+        let failure = CaskOperationFailure(
+            kind: .brewCommand,
+            message: "Update Homebrew first",
+            recoveries: [.updateHomebrew]
+        )
+
+        let (alert, _) = CaskActionAlertFactory.errorAlert(
+            for: makeCask("gimp"),
+            failure: failure,
+            service: service
+        )
+
+        XCTAssertFalse(alert.buttons[0].isEnabled)
+        XCTAssertEqual(
+            alert.buttons[0].toolTip,
+            String(localized: "Wait for the current action to finish.")
+        )
+        XCTAssertTrue(alert.buttons[1].isEnabled)
+    }
+
+    @MainActor
     func test_installation_preflight_alert_does_not_call_the_conflict_a_failure() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("install-conflict-alert"))
         let failure = CaskOperationFailure(
@@ -286,14 +333,15 @@ final class AdoptionViewRenderTests: XCTestCase {
             "Adopt Existing App",
             "Replace with Homebrew Version",
             "Repair & Reinstall",
+            "Update Homebrew",
             "Force Uninstall",
             "Open System Settings",
             "OK"
         ])
-        XCTAssertEqual(actions.count, 6)
+        XCTAssertEqual(actions.count, 7)
 
         // Every action except Open System Settings (launches the real app) and OK.
-        for action in actions[0...3] {
+        for action in actions[0...4] {
             action()
             try? await Task.sleep(for: .milliseconds(150))
         }

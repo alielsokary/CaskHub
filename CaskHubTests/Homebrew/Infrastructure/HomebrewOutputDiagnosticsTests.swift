@@ -32,6 +32,14 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         XCTAssertEqual(result, "Error: Download failed")
     }
 
+    func test_completed_download_without_a_diagnostic_becomes_blank() {
+        let output = "✔︎ Cask anythingllm (1.15.0) Downloaded 504.5MB/504.5MB"
+        let result = HomebrewOutputDiagnostics.make(from: output)
+
+        XCTAssertTrue(result.isEmpty)
+        XCTAssertEqual(failureKind(result), .noDiagnosticOutput)
+    }
+
     func test_download_url_lines_are_kept() {
         let output = """
         ==> Downloading https://formulae.brew.sh/api/cask.jws.json
@@ -49,7 +57,7 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         let output = (frames + ["curl: (28) Operation timed out after 30000 milliseconds"])
             .joined(separator: "\n")
         let cleaned = HomebrewOutputDiagnostics.make(from: output)
-        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: cleaned), "network-failure")
+        XCTAssertEqual(failureKind(cleaned), .networkFailure)
     }
 
     func test_short_output_passes_through_unchanged() {
@@ -95,7 +103,7 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         """
         let result = HomebrewOutputDiagnostics.make(from: output)
         XCTAssertFalse(result.contains("already an App at"))
-        XCTAssertNotEqual(LocalHomebrewError.failureClass(stderr: result), "app-conflict")
+        XCTAssertNotEqual(failureKind(result), .appConflict)
     }
 
     func test_long_payload_slices_near_the_last_error_line_keeping_context() {
@@ -119,8 +127,8 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
         let result = HomebrewOutputDiagnostics.make(from: output)
         XCTAssertTrue(result.contains("sudo: 3 incorrect password attempts"))
         XCTAssertEqual(
-            LocalHomebrewError.failureClass(stderr: result),
-            "sudo-wrong-password",
+            failureKind(result),
+            .sudoWrongPassword,
             "slicing must not strip the lines classification depends on"
         )
     }
@@ -151,5 +159,13 @@ final class HomebrewOutputDiagnosticsTests: XCTestCase {
             .joined(separator: "\n")
         let result = HomebrewOutputDiagnostics.make(from: output)
         XCTAssertEqual(result, "Error: installation failed for parallels")
+    }
+
+    private func failureKind(_ diagnostic: String) -> HomebrewFailureKind {
+        HomebrewCommandFailure.classify(
+            arguments: [],
+            exitCode: nil,
+            diagnostic: diagnostic
+        )
     }
 }
