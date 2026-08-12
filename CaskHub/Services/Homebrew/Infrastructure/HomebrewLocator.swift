@@ -9,6 +9,8 @@ import Foundation
 
 nonisolated enum HomebrewLocator {
     static let customPrefixKey = "customBrewPrefix"
+    static let appleSiliconPrefix = "/opt/homebrew"
+    static let intelPrefix = "/usr/local"
 
     /// Machine architecture, not build architecture: `hw.optional.arm64`
     /// remains accurate when CaskHub runs under Rosetta.
@@ -23,21 +25,17 @@ nonisolated enum HomebrewLocator {
         customPrefix: String? = nil,
         fileManager: FileManager
     ) -> URL? {
-        if let customPrefix, !customPrefix.isEmpty {
-            let configured = URL(fileURLWithPath: customPrefix)
-                .appendingPathComponent("Caskroom")
-            if fileManager.fileExists(atPath: configured.path) {
-                return configured
-            }
-        }
-        return prefixCandidates("Caskroom").first {
-            fileManager.fileExists(atPath: $0.path)
-        }
+        let prefix = customPrefix.flatMap(compatiblePrefix)
+            ?? (customPrefix == nil ? selectedPrefix() : nil)
+        guard let prefix else { return nil }
+        let caskroom = prefix.appendingPathComponent("Caskroom")
+        return fileManager.fileExists(atPath: caskroom.path) ? caskroom : nil
     }
 
     static func binaryDirectories(fileManager: FileManager) -> [URL] {
         let home = fileManager.homeDirectoryForCurrentUser
-        return prefixCandidates("bin") + [
+        let homebrewBin = selectedPrefix()?.appendingPathComponent("bin")
+        return [homebrewBin].compactMap { $0 } + [
             home.appendingPathComponent(".local/bin"),
             home.appendingPathComponent("bin")
         ]
@@ -67,31 +65,48 @@ nonisolated enum HomebrewLocator {
     }
 
     static func brewBinaryURL(fileManager: FileManager = .default) -> URL? {
-        prefixCandidates("bin/brew").first {
-            fileManager.isExecutableFile(atPath: $0.path)
-        }
+        guard let prefix = selectedPrefix() else { return nil }
+        let brewURL = prefix.appendingPathComponent("bin/brew")
+        guard fileManager.isExecutableFile(atPath: brewURL.path),
+              isCompatible(brewURL: brewURL)
+        else { return nil }
+        return brewURL
     }
 
-    private static func prefixCandidates(_ relativePath: String) -> [URL] {
-        var candidates: [URL] = []
+    static func isCompatible(
+        brewURL: URL,
+        machineIsAppleSilicon: Bool = isAppleSilicon
+    ) -> Bool {
+        let standardized = brewURL.standardizedFileURL.path
+        let resolved = brewURL.resolvingSymlinksInPath().standardizedFileURL.path
+        if standardized == "\(appleSiliconPrefix)/bin/brew"
+            || resolved.hasPrefix("\(appleSiliconPrefix)/Homebrew/") {
+            return machineIsAppleSilicon
+        }
+        if standardized == "\(intelPrefix)/bin/brew"
+            || resolved.hasPrefix("\(intelPrefix)/Homebrew/") {
+            return !machineIsAppleSilicon
+        }
+        return true
+    }
+
+    private static func selectedPrefix() -> URL? {
         if let custom = UserDefaults.standard.string(forKey: customPrefixKey),
            !custom.isEmpty {
-            candidates.append(
-                URL(fileURLWithPath: custom).appendingPathComponent(relativePath)
-            )
+            return compatiblePrefix(custom)
         }
         if let prefix = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"],
            !prefix.isEmpty {
-            candidates.append(
-                URL(fileURLWithPath: prefix).appendingPathComponent(relativePath)
-            )
+            return compatiblePrefix(prefix)
         }
-        let standardPrefixes = isAppleSilicon
-            ? ["/opt/homebrew", "/usr/local"]
-            : ["/usr/local", "/opt/homebrew"]
-        candidates.append(contentsOf: standardPrefixes.map {
-            URL(fileURLWithPath: $0).appendingPathComponent(relativePath)
-        })
-        return candidates
+        return URL(fileURLWithPath: isAppleSilicon ? appleSiliconPrefix : intelPrefix)
+    }
+
+    private static func compatiblePrefix(_ path: String) -> URL? {
+        let prefix = URL(fileURLWithPath: path)
+        guard !path.isEmpty,
+              isCompatible(brewURL: prefix.appendingPathComponent("bin/brew"))
+        else { return nil }
+        return prefix
     }
 }
