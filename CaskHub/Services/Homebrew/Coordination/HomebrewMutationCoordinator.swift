@@ -96,7 +96,10 @@ final class HomebrewMutationCoordinator {
         _ request: HomebrewMutationSequenceRequest,
         callbacks: HomebrewMutationCallbacks
     ) async throws {
-        guard operationStore.canBeginOperation(for: request.token) else { return }
+        guard operationStore.canBeginOperation(
+            request.action,
+            for: request.token
+        ) else { return }
         try preflightBrewLocation(
             token: request.token,
             strandedCopyExists: callbacks.strandedCopyExists()
@@ -236,7 +239,9 @@ extension HomebrewMutationCoordinator {
                     token: token,
                     displayName: displayName,
                     action: action,
-                    phase: action == .uninstalling ? .performing : .preparing
+                    phase: action == .uninstalling || action == .updatingHomebrew
+                        ? .performing
+                        : .preparing
                 ),
                 canCancel: false
             ),
@@ -297,12 +302,14 @@ extension HomebrewMutationCoordinator {
     func recordFailure(
         token: String,
         error: Error,
-        strandedCopyExists: Bool
+        strandedCopyExists: Bool,
+        title: String? = nil
     ) {
         operationStore.send(
             .fail(CaskOperationFailureFactory.make(
                 from: error,
-                strandedCopyExists: strandedCopyExists
+                strandedCopyExists: strandedCopyExists,
+                title: title
             )),
             for: token
         )
@@ -332,7 +339,7 @@ extension HomebrewMutationCoordinator {
                 token: request.token,
                 displayName: request.displayName,
                 action: request.action,
-                phase: .preparing
+                phase: request.action == .updatingHomebrew ? .performing : .preparing
             )),
             for: request.token
         )
@@ -369,17 +376,26 @@ extension HomebrewMutationCoordinator {
             return .continueSequence
         }
 
-        span.finish(error: error)
+        let localError = error as? LocalHomebrewError
+        if localError?.shouldReport == false {
+            span.finish()
+        } else {
+            span.finish(error: error)
+        }
         CrashReporter.capture(error)
         Analytics.caskActionFailed(
             request.action,
             token: request.token,
-            origin: request.origin
+            origin: request.origin,
+            failureKind: localError?.commandFailure?.kind
         )
         recordFailure(
             token: request.token,
             error: error,
-            strandedCopyExists: callbacks.strandedCopyExists()
+            strandedCopyExists: callbacks.strandedCopyExists(),
+            title: request.action == .updatingHomebrew
+                ? String(localized: "Homebrew Update Failed")
+                : nil
         )
         if Self.indicatesStateDesync(error) {
             await callbacks.refresh()
@@ -394,10 +410,10 @@ extension HomebrewMutationCoordinator {
 
     /// Brew disagreeing about install state means the snapshot is stale.
     private static func indicatesStateDesync(_ error: Error) -> Bool {
-        guard case let LocalHomebrewError.brewCommandFailed(_, _, stderr) = error else {
+        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
             return false
         }
-        return LocalHomebrewError.failureClass(stderr: stderr) == "not-installed"
+        return failure.kind == .notInstalled
     }
 
 }

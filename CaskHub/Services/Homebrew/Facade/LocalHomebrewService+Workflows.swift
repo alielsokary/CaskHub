@@ -72,6 +72,25 @@ extension LocalHomebrewService {
         )
     }
 
+    /// Homebrew's troubleshooting checklist calls for two update passes: the
+    /// first can update brew itself while leaving the original command behind.
+    func updateHomebrew(for token: String) async throws {
+        let updateStep = HomebrewMutationStep(
+            arguments: ["update"],
+            environmentOverrides: [:],
+            cancellable: false,
+            recoverIf: nil,
+            recoveryBehavior: .continueSequence
+        )
+        try await runMutationSequence(
+            .updatingHomebrew,
+            token: token,
+            steps: [updateStep, updateStep],
+            origin: .repair,
+            displayName: String(localized: "Homebrew")
+        )
+    }
+
     /// Package artifacts cannot be adopted as metadata. For a downgrade (or a
     /// recovery after a vendor installer refuses an in-place install), fetch the
     /// payload first, ask Homebrew to run the cask's uninstall stanza even though
@@ -150,7 +169,10 @@ extension LocalHomebrewService {
     func updateAll(tokens: [String]) async {
         guard operationStore.beginUpdateAll() else { return }
         defer { operationStore.finishUpdateAll() }
-        for token in tokens where operationStore.canBeginOperation(for: token) {
+        for token in tokens where operationStore.canBeginOperation(
+            .updating,
+            for: token
+        ) {
             operationStore.send(.enqueue(.updating), for: token)
         }
         for (index, token) in tokens.enumerated() {

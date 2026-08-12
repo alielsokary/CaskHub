@@ -12,6 +12,7 @@ nonisolated enum CaskRecoveryAction: CaseIterable, Hashable, Sendable {
     case adoptExisting
     case replaceWithHomebrew
     case repairAndReinstall
+    case updateHomebrew
     case forceUninstall
     case openAppManagementSettings
 }
@@ -28,15 +29,18 @@ nonisolated struct CaskOperationFailure: Equatable, Sendable {
 
     let kind: Kind
     let message: String
+    let title: String?
     let recoveries: Set<CaskRecoveryAction>
 
     init(
         kind: Kind,
         message: String,
+        title: String? = nil,
         recoveries: Set<CaskRecoveryAction> = []
     ) {
         self.kind = kind
         self.message = message
+        self.title = title
         self.recoveries = recoveries
     }
 }

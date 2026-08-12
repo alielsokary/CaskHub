@@ -231,7 +231,7 @@ nonisolated struct CaskOperationStatus: Equatable, Sendable {
         }
         let phaseOrder = [
             "downloading", "checking-download", "using-cache", "verifying", "installing",
-            "updating", "adopting", "uninstalling", "repairing", "preparing",
+            "updating", "updating-homebrew", "adopting", "uninstalling", "repairing", "preparing",
             "canceling", "queued"
         ]
         let details = phaseOrder.compactMap { identifier -> String? in

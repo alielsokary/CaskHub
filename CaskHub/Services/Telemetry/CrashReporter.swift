@@ -92,7 +92,13 @@ enum CrashReporter {
                .contains("Unexpected end of file") == true {
             return
         }
-        let signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
+        let signature: String
+        if let localError = error as? LocalHomebrewError,
+           case let .brewCommandFailed(failure) = localError {
+            signature = failure.rateLimitSignature
+        } else {
+            signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
+        }
         let count = captureCounts[signature, default: 0]
         guard count < captureLimit else { return }
         captureCounts[signature] = count + 1
@@ -173,6 +179,12 @@ final class SentryProvider: CrashReporterProvider {
             if let fingerprint = Self.fingerprint(for: error) {
                 scope.setFingerprint(fingerprint)
             }
+            guard let localError = error as? LocalHomebrewError,
+                  case let .brewCommandFailed(failure) = localError
+            else { return }
+            scope.setTag(value: failure.kind.rawValue, key: "brew.failure_class")
+            scope.setTag(value: failure.subcommand ?? "missing", key: "brew.subcommand")
+            scope.setTag(value: String(failure.exitCode), key: "brew.exit_code")
         }
     }
 
@@ -180,13 +192,10 @@ final class SentryProvider: CrashReporterProvider {
     /// domain+code — one issue per way brew fails, so a rare destructive failure
     /// can't hide inside a busy catch-all group.
     static func fingerprint(for error: Error) -> [String]? {
-        guard case let LocalHomebrewError.brewCommandFailed(args, exitCode, stderr) = error,
-              let subcommand = args.first else { return nil }
-        return [
-            "brewCommandFailed",
-            subcommand,
-            LocalHomebrewError.failureClass(stderr: stderr, exitCode: exitCode)
-        ]
+        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
+            return nil
+        }
+        return failure.stableFingerprint
     }
 
     func setTag(_ key: String, value: String) {

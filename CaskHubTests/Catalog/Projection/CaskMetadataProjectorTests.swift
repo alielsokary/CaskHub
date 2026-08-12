@@ -155,7 +155,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
                     canOpen: false
                 ),
                 homebrewInstallation: nil,
-                operationState: nil
+                operationState: nil,
+                isHomebrewMutationBlocked: false
             ),
             externalVersion: nil,
             installationDates: nil
@@ -206,7 +207,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
             actionPresentation: CaskActionPresentation(
                 localState: localState,
                 homebrewInstallation: installation,
-                operationState: nil
+                operationState: nil,
+                isHomebrewMutationBlocked: false
             ),
             externalVersion: externalVersion,
             installationDates: dates

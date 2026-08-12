@@ -48,6 +48,10 @@ final class LocalHomebrewService {
         operationStore.isUpdatingAll
     }
 
+    var isUpdatingHomebrew: Bool {
+        operationStore.isUpdatingHomebrew
+    }
+
     var hasActiveOperations: Bool {
         operationStore.hasActiveOperations
     }
@@ -157,6 +161,10 @@ final class LocalHomebrewService {
         await refresh()
     }
 
+    func invalidateBrewVersion() {
+        brewVersion = nil
+    }
+
     // MARK: - Detection
 
     func refresh() async {
@@ -175,6 +183,7 @@ final class LocalHomebrewService {
                 "brew.path",
                 value: brewBinaryProvider()?.path ?? "not found"
             )
+            CrashReporter.tag("brew.version", value: brewVersion ?? "not found")
             CrashReporter.tag("brew.caskroom", value: request.caskroomURL?.path ?? "not found")
             return
         }

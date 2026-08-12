@@ -37,12 +37,15 @@ extension Analytics {
     static func caskActionFailed(
         _ action: CaskAction,
         token: String,
-        origin: CaskActionOrigin = .individual
+        origin: CaskActionOrigin = .individual,
+        failureKind: HomebrewFailureKind? = nil
     ) {
         guard let verb = action.analyticsVerb else { return }
-        send("Cask.actionFailed", parameters: actionParameters(
+        var parameters = actionParameters(
             verb: verb.base, token: token, origin: origin
-        ))
+        )
+        parameters["failureClass"] = failureKind?.rawValue
+        send("Cask.actionFailed", parameters: parameters)
     }
 
     static func caskActionRecovered(
@@ -161,7 +164,7 @@ private extension CaskAction {
         case .uninstalling: return ("uninstall", "uninstalled")
         case .updating: return ("update", "updated")
         case .repairing: return ("repair", "repaired")
-        case .opening, .queued: return nil
+        case .opening, .updatingHomebrew, .queued: return nil
         }
     }
 }
