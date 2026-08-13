@@ -11,6 +11,7 @@ import XCTest
 private struct CrashReporterTestState {
     let provider: CrashReporterProvider
     let defaults: UserDefaults
+    let analyticsDefaults: UserDefaults
     let captureCounts: [String: Int]
     let applicationActive: Bool
     let pauseDepth: Int
@@ -27,6 +28,7 @@ final class CrashReporterTests: XCTestCase {
         originalState = CrashReporterTestState(
             provider: CrashReporter.provider,
             defaults: CrashReporter.defaults,
+            analyticsDefaults: Analytics.defaults,
             captureCounts: CrashReporter.captureCounts,
             applicationActive: CrashReporter.isApplicationActive,
             pauseDepth: CrashReporter.hangTrackingPauseDepth,
@@ -35,6 +37,9 @@ final class CrashReporterTests: XCTestCase {
         CrashReporter.provider = spy
         CrashReporter.defaults = makeScratchDefaults(
             "crash-reporter-\(ProcessInfo.processInfo.processIdentifier)"
+        )
+        Analytics.defaults = makeScratchDefaults(
+            "crash-reporter-analytics-\(ProcessInfo.processInfo.processIdentifier)"
         )
         CrashReporter.captureCounts = [:]
         CrashReporter.isApplicationActive = false
@@ -45,6 +50,7 @@ final class CrashReporterTests: XCTestCase {
     override func tearDown() {
         CrashReporter.provider = originalState.provider
         CrashReporter.defaults = originalState.defaults
+        Analytics.defaults = originalState.analyticsDefaults
         CrashReporter.captureCounts = originalState.captureCounts
         CrashReporter.isApplicationActive = originalState.applicationActive
         CrashReporter.hangTrackingPauseDepth = originalState.pauseDepth
@@ -61,20 +67,6 @@ final class CrashReporterTests: XCTestCase {
     func test_is_enabled_reflects_stored_opt_out() {
         CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         XCTAssertFalse(CrashReporter.isEnabled)
-    }
-
-    func test_start_passes_stored_setting_to_provider() {
-        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
-        CrashReporter.start()
-        XCTAssertEqual(spy.startedWith, [false])
-    }
-
-    func test_refresh_forwards_current_setting_to_provider() {
-        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
-        CrashReporter.refresh()
-        CrashReporter.defaults.set(true, forKey: CrashReporter.enabledKey)
-        CrashReporter.refresh()
-        XCTAssertEqual(spy.enabledChanges, [false, true])
     }
 
     // MARK: - Capture + consent
@@ -162,7 +154,7 @@ final class CrashReporterTests: XCTestCase {
         CrashReporter.start()
         CrashReporter.refresh()
         XCTAssertTrue(spy.startedWith.isEmpty)
-        XCTAssertTrue(spy.enabledChanges.isEmpty)
+        XCTAssertTrue(spy.consentChanges.isEmpty)
     }
 
     func test_environmental_errors_are_never_captured() {

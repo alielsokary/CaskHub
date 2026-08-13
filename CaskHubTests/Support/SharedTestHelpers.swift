@@ -366,8 +366,8 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
         let span: SpyCrashSpan
     }
 
-    var startedWith: [Bool] = []
-    var enabledChanges: [Bool] = []
+    var startedWith: [SentryConsent] = []
+    var consentChanges: [SentryConsent] = []
     var capturedErrors: [Error] = []
     var breadcrumbs: [(message: String, data: [String: String])] = []
     var tags: [String: String] = [:]
@@ -382,12 +382,12 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
         hangTrackingEvents.append("resume")
     }
 
-    func start(enabled: Bool) {
-        startedWith.append(enabled)
+    func start(consent: SentryConsent) {
+        startedWith.append(consent)
     }
 
-    func setEnabled(_ enabled: Bool) {
-        enabledChanges.append(enabled)
+    func setConsent(_ consent: SentryConsent) {
+        consentChanges.append(consent)
     }
 
     func capture(_ error: Error) {

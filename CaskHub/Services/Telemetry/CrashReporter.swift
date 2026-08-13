@@ -14,8 +14,8 @@ protocol CrashSpan {
 }
 
 protocol CrashReporterProvider {
-    func start(enabled: Bool)
-    func setEnabled(_ enabled: Bool)
+    func start(consent: SentryConsent)
+    func setConsent(_ consent: SentryConsent)
     func capture(_ error: Error)
     func addBreadcrumb(_ message: String, data: [String: String])
     func setTag(_ key: String, value: String)
@@ -27,6 +27,13 @@ protocol CrashReporterProvider {
 extension CrashReporterProvider {
     func pauseHangTracking() {}
     func resumeHangTracking() {}
+}
+
+nonisolated struct SentryConsent: Equatable, Sendable {
+    let crashReporting: Bool
+    let analytics: Bool
+
+    var isEmpty: Bool { !crashReporting && !analytics }
 }
 
 enum CrashReporter {
@@ -60,14 +67,18 @@ enum CrashReporter {
 
     static func start() {
         guard !isRunningTests else { return }
-        provider.start(enabled: isEnabled)
+        provider.start(consent: consent)
         if isEnabled { synchronizeHangTracking() }
     }
 
     static func refresh() {
         guard !isRunningTests else { return }
-        provider.setEnabled(isEnabled)
+        provider.setConsent(consent)
         if isEnabled { synchronizeHangTracking() }
+    }
+
+    private static var consent: SentryConsent {
+        SentryConsent(crashReporting: isEnabled, analytics: Analytics.isEnabled)
     }
 
     static func capture(_ error: Error) {
@@ -242,21 +253,62 @@ nonisolated final class AppHangEventProcessor: Sendable {
 }
 
 final class SentryProvider: CrashReporterProvider {
-    private static var dsn: String? {
-        let value = Bundle.main.object(forInfoDictionaryKey: "SentryDSN") as? String
-        return value?.isEmpty == false ? value : nil
-    }
-
+    private let dsn: () -> String?
+    private let startSDK: (@escaping (Options) -> Void) -> Void
+    private let closeSDK: () -> Void
+    private var consent: SentryConsent?
     private var started = false
     private let appHangProcessor = AppHangEventProcessor()
+    init(
+        dsn: @escaping () -> String? = {
+            let value = Bundle.main.object(forInfoDictionaryKey: "SentryDSN") as? String
+            return value?.isEmpty == false ? value : nil
+        },
+        startSDK: @escaping (@escaping (Options) -> Void) -> Void = {
+            SentrySDK.start(configureOptions: $0)
+        },
+        closeSDK: @escaping () -> Void = SentrySDK.close
+    ) {
+        self.dsn = dsn
+        self.startSDK = startSDK
+        self.closeSDK = closeSDK
+    }
+    func start(consent: SentryConsent) { configure(for: consent) }
+    func setConsent(_ consent: SentryConsent) { configure(for: consent) }
 
-    func start(enabled: Bool) {
-        guard enabled, let dsn = Self.dsn else { return }
+    private func configure(for consent: SentryConsent) {
+        let previousConsent = self.consent
+        guard consent != previousConsent else { return }
+        self.consent = consent
+
+        if let previousConsent,
+           previousConsent.crashReporting == consent.crashReporting {
+            if consent.isEmpty {
+                stop()
+            } else if !started {
+                start(for: consent)
+            }
+            return
+        }
+
+        stop()
+        start(for: consent)
+    }
+
+    private func start(for consent: SentryConsent) {
+        guard !consent.isEmpty, let dsn = dsn() else { return }
+
         let appHangProcessor = appHangProcessor
-        SentrySDK.start { options in
+        startSDK { options in
             options.dsn = dsn
-            options.tracesSampleRate = 1.0
-            options.beforeSend = appHangProcessor.process
+            options.shutdownTimeInterval = 0
+            Self.configure(
+                options,
+                consent: consent,
+                appHangProcessor: appHangProcessor,
+                isCrashReportingEnabled: { CrashReporter.isEnabled },
+                isAnalyticsEnabled: { Analytics.isEnabled }
+            )
             #if DEBUG
             options.environment = "debug"
             #endif
@@ -264,12 +316,57 @@ final class SentryProvider: CrashReporterProvider {
         started = true
     }
 
-    func setEnabled(_ enabled: Bool) {
-        if enabled {
-            start(enabled: true)
-        } else {
-            SentrySDK.close()
-            started = false
+    private func stop() {
+        guard started else { return }
+        closeSDK()
+        started = false
+    }
+
+    static func configure(
+        _ options: Options,
+        consent: SentryConsent,
+        appHangProcessor: AppHangEventProcessor,
+        isCrashReportingEnabled: @escaping () -> Bool = { CrashReporter.isEnabled },
+        isAnalyticsEnabled: @escaping () -> Bool = { Analytics.isEnabled }
+    ) {
+        options.enableMetrics = true
+        options.beforeSendMetric = { metric in
+            guard isAnalyticsEnabled() else { return nil }
+            var metric = metric
+            metric.attributes.removeValue(forKey: "user.id")
+            metric.attributes.removeValue(forKey: "user.name")
+            metric.attributes.removeValue(forKey: "user.email")
+            return metric
+        }
+
+        guard consent.crashReporting else {
+            options.sampleRate = 0
+            options.tracesSampleRate = 0
+            options.enableCrashHandler = false
+            options.enableAutoSessionTracking = false
+            options.enableWatchdogTerminationTracking = false
+            options.enableAppHangTracking = false
+            options.enableAutoPerformanceTracing = false
+            options.enableNetworkTracking = false
+            options.enableFileIOTracing = false
+            options.enableCoreDataTracing = false
+            options.enableCaptureFailedRequests = false
+            options.enableAutoBreadcrumbTracking = false
+            options.enableNetworkBreadcrumbs = false
+            options.enableSwizzling = false
+            options.sendClientReports = false
+            options.beforeSend = { _ in nil }
+            options.beforeSendSpan = { _ in nil }
+            return
+        }
+
+        options.tracesSampleRate = 1.0
+        options.beforeSend = {
+            guard isCrashReportingEnabled() else { return nil }
+            return appHangProcessor.process($0)
+        }
+        options.beforeSendSpan = {
+            isCrashReportingEnabled() ? $0 : nil
         }
     }
 
