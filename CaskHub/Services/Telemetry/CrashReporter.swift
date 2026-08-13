@@ -189,6 +189,9 @@ nonisolated enum AppHangFamily: String, Sendable {
 }
 
 nonisolated final class AppHangEventProcessor: Sendable {
+    private static let swiftUIFrameworks = ["swiftui", "attributegraph"]
+    private static let graphicsFrameworks = ["coregraphics", "metal", "renderbox"]
+
     func process(_ event: Event) -> Event? {
         guard let exception = event.exceptions?.first(where: {
             $0.mechanism?.type == "AppHang"
@@ -220,28 +223,21 @@ nonisolated final class AppHangEventProcessor: Sendable {
             guard let package = frame.package.map({
                 URL(fileURLWithPath: $0).lastPathComponent.lowercased()
             }) else { continue }
-            if package.contains("sentry") {
-                return .sentry
-            }
-            if package.contains("sparkle") {
-                return .sparkle
-            }
-            if package.contains("swiftui") || package.contains("attributegraph") {
-                return .swiftUI
-            }
-            if package == "skylight" {
-                return .windowServer
-            }
-            if package.contains("coregraphics")
-                || package.contains("metal")
-                || package.contains("renderbox") {
-                return .graphics
-            }
-            if package == "appkit" {
-                return .appKit
+            if let family = family(forPackage: package) {
+                return family
             }
         }
         return .system
+    }
+
+    private static func family(forPackage package: String) -> AppHangFamily? {
+        if package.contains("sentry") { return .sentry }
+        if package.contains("sparkle") { return .sparkle }
+        if swiftUIFrameworks.contains(where: package.contains) { return .swiftUI }
+        if package == "skylight" { return .windowServer }
+        if graphicsFrameworks.contains(where: package.contains) { return .graphics }
+        if package == "appkit" { return .appKit }
+        return nil
     }
 }
 
