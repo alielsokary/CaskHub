@@ -2662,7 +2662,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sends anonymized usage signals through TelemetryDeck. No personal information is collected."
+            "value" : "Sends anonymous usage metrics through Sentry. TelemetryDeck receives only anonymous session and new-install signals."
           }
         }
       }
