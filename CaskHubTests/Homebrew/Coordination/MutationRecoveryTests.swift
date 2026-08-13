@@ -6,6 +6,7 @@
 //
 
 @testable import CaskHub
+import AppKit
 import XCTest
 
 @MainActor
@@ -31,7 +32,10 @@ final class MutationRecoveryTests: XCTestCase {
         try super.tearDownWithError()
     }
 
-    private func makeService(runner: StubBrewProcessRunner) -> LocalHomebrewService {
+    private func makeService(
+        runner: StubBrewProcessRunner,
+        brewVersionProvider: @escaping () async -> String? = { "test" }
+    ) -> LocalHomebrewService {
         LocalHomebrewService(defaults: defaults) {
             $0.fileManager = fileManager
             $0.applicationDirectories = [
@@ -41,7 +45,7 @@ final class MutationRecoveryTests: XCTestCase {
             $0.brewBinaryProvider = {
                 URL(fileURLWithPath: "/test/bin/brew")
             }
-            $0.brewVersionProvider = { "test" }
+            $0.brewVersionProvider = brewVersionProvider
         }
     }
 
@@ -128,6 +132,103 @@ final class MutationRecoveryTests: XCTestCase {
         XCTAssertEqual(failure.recoveries, [.replaceWithHomebrew])
     }
 
+    func test_update_homebrew_runs_two_update_passes() async throws {
+        let runner = StubBrewProcessRunner()
+        var versionLoads = 0
+        let service = makeService(runner: runner) {
+            versionLoads += 1
+            return versionLoads == 1 ? "old" : "new"
+        }
+
+        await service.refresh()
+        XCTAssertEqual(service.brewVersion, "old")
+        runner.onRequest = { request in
+            if request.arguments == ["update"], runner.requests.count == 2 {
+                XCTAssertEqual(
+                    service.operationStore.state(for: "gimp")?.progress?.phase,
+                    .performing
+                )
+            }
+        }
+
+        try await service.updateHomebrew(for: "gimp")
+
+        XCTAssertEqual(runner.requests.map(\.arguments), [
+            ["update"],
+            ["update"]
+        ])
+        XCTAssertEqual(service.brewVersion, "new")
+        XCTAssertEqual(versionLoads, 2)
+    }
+
+    func test_stale_homebrew_recovery_runs_through_alert_action() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [
+            BrewProcessResult(
+                exitCode: 1,
+                output: "Error: Cask 'gimp' definition is invalid: invalid "
+                    + "'command_wrapper' stanza: Unknown key: :executable"
+            ),
+            BrewProcessResult(exitCode: 0, output: "updated once"),
+            BrewProcessResult(exitCode: 0, output: "updated twice")
+        ]
+        let versionReloaded = expectation(description: "Homebrew version reloaded")
+        var versionLoads = 0
+        let service = makeService(runner: runner) {
+            versionLoads += 1
+            if versionLoads == 2 { versionReloaded.fulfill() }
+            return versionLoads == 1 ? "old" : "new"
+        }
+        await service.refresh()
+        let cask = makeCask("gimp")
+
+        do {
+            try await service.install(cask)
+            XCTFail("expected the stale Homebrew install to fail")
+        } catch {}
+
+        guard case let .failure(failure) = service.actionAlert(for: cask.token) else {
+            return XCTFail("expected a recoverable command failure")
+        }
+        XCTAssertEqual(failure.recoveries, [.updateHomebrew])
+        let (alert, actions) = CaskActionAlertFactory.errorAlert(
+            for: cask,
+            failure: failure,
+            service: service
+        )
+        XCTAssertEqual(alert.buttons.map(\.title), ["Update Homebrew", "OK"])
+
+        actions[0]()
+        await fulfillment(of: [versionReloaded], timeout: 1)
+
+        XCTAssertEqual(runner.requests.map(\.arguments), [
+            ["install", "--cask", "gimp"],
+            ["update"],
+            ["update"]
+        ])
+        XCTAssertEqual(service.brewVersion, "new")
+        XCTAssertNil(service.actionAlert(for: cask.token))
+    }
+
+    func test_failed_homebrew_update_keeps_a_homebrew_specific_title() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "Error: update failed"
+        )]
+        let service = makeService(runner: runner)
+
+        do {
+            try await service.updateHomebrew(for: "gimp")
+            XCTFail("expected update failure")
+        } catch {
+            XCTAssertEqual(
+                service.operationStore.state(for: "gimp")?.failure?.title,
+                String(localized: "Homebrew Update Failed")
+            )
+        }
+    }
+
     func test_failed_upgrade_for_uninstalled_cask_refreshes_stale_local_state() async {
         let runner = StubBrewProcessRunner()
         runner.queuedResults = [BrewProcessResult(
@@ -161,9 +262,9 @@ final class MutationRecoveryTests: XCTestCase {
         do {
             try await makeService(runner: runner).install(token: "zed")
             XCTFail("expected failure")
-        } catch let LocalHomebrewError.brewCommandFailed(_, _, stderr) {
-            XCTAssertTrue(stderr.contains("Error: the meaningful failure"))
-            XCTAssertTrue(stderr.contains("formula-30"))
+        } catch let LocalHomebrewError.brewCommandFailed(failure) {
+            XCTAssertTrue(failure.diagnostic.contains("Error: the meaningful failure"))
+            XCTAssertTrue(failure.diagnostic.contains("formula-30"))
         } catch {
             XCTFail("unexpected error: \(error)")
         }

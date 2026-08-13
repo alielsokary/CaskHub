@@ -124,7 +124,7 @@ struct CaskOperationCapsule: View {
 
     private var accentColor: Color {
         switch action {
-        case .updating:
+        case .updating, .updatingHomebrew:
             return .chActionUpdateFg
         case .installing, .adopting, .repairing:
             return .chActionInstallFg

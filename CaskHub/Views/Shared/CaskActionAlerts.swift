@@ -238,7 +238,7 @@ enum CaskActionAlertFactory {
         let alert = NSAlert()
         alert.messageText = failure.kind == .installationPreflight
             ? String(localized: .alertInstallConflictTitle(cask.displayName))
-            : "\(cask.displayName) Failed"
+            : failure.title ?? "\(cask.displayName) Failed"
         if failure.message.count <= 500 {
             alert.informativeText = failure.message
         } else {
@@ -256,7 +256,13 @@ enum CaskActionAlertFactory {
         }
         var actions: [() -> Void] = []
         for recovery in CaskRecoveryAction.allCases where failure.recoveries.contains(recovery) {
-            alert.addButton(withTitle: recovery.buttonTitle).keyEquivalent = ""
+            let canPerform = recovery.canPerform(cask: cask, service: service)
+            let button = alert.addButton(withTitle: recovery.buttonTitle)
+            button.keyEquivalent = ""
+            button.isEnabled = canPerform
+            button.toolTip = canPerform
+                ? nil
+                : String(localized: "Wait for the current action to finish.")
             actions.append { recovery.perform(cask: cask, service: service) }
         }
         alert.addButton(withTitle: "OK")
@@ -266,11 +272,27 @@ enum CaskActionAlertFactory {
 }
 
 private extension CaskRecoveryAction {
+    func canPerform(cask: Cask, service: LocalHomebrewService) -> Bool {
+        switch self {
+        case .openAppManagementSettings:
+            true
+        case .adoptExisting, .replaceWithHomebrew:
+            service.operationStore.canBeginOperation(.adopting, for: cask.token)
+        case .repairAndReinstall:
+            service.operationStore.canBeginOperation(.repairing, for: cask.token)
+        case .updateHomebrew:
+            service.operationStore.canBeginOperation(.updatingHomebrew, for: cask.token)
+        case .forceUninstall:
+            service.operationStore.canBeginOperation(.uninstalling, for: cask.token)
+        }
+    }
+
     var buttonTitle: String {
         switch self {
         case .adoptExisting: "Adopt Existing App"
         case .replaceWithHomebrew: "Replace with Homebrew Version"
         case .repairAndReinstall: "Repair & Reinstall"
+        case .updateHomebrew: String(localized: "Update Homebrew")
         case .forceUninstall: "Force Uninstall"
         case .openAppManagementSettings: "Open System Settings"
         }
@@ -285,6 +307,8 @@ private extension CaskRecoveryAction {
             service.send(.requestReplacementAdoption(cask))
         case .repairAndReinstall:
             service.send(.repairAndReinstall(token: cask.token))
+        case .updateHomebrew:
+            service.send(.updateHomebrew(token: cask.token))
         case .forceUninstall:
             service.send(.repair(token: cask.token))
         case .openAppManagementSettings:

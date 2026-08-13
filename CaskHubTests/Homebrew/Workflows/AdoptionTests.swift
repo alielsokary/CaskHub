@@ -224,12 +224,12 @@ final class AdoptionSurfaceTests: XCTestCase {
             try await service.install(token: "firefox")
             XCTFail("expected the simulated brew failure")
         } catch let error as LocalHomebrewError {
-            guard case let .brewCommandFailed(args, exitCode, stderr) = error else {
+            guard case let .brewCommandFailed(failure) = error else {
                 return XCTFail("unexpected LocalHomebrewError: \(error)")
             }
-            XCTAssertEqual(args, ["install", "--cask", "firefox"])
-            XCTAssertEqual(exitCode, 7)
-            XCTAssertEqual(stderr, "simulated failure")
+            XCTAssertEqual(failure.arguments, ["install", "--cask", "firefox"])
+            XCTAssertEqual(failure.exitCode, 7)
+            XCTAssertEqual(failure.diagnostic, "simulated failure")
         } catch {
             XCTFail("unexpected error: \(error)")
         }

@@ -114,7 +114,7 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertTrue(spy.signals.isEmpty)
     }
 
-    func test_cask_action_failed_sends_base_verb_and_token() {
+    func test_cask_action_failed_omits_failure_class_when_unavailable() {
         Analytics.caskActionFailed(.updating, token: "iterm2")
         XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
         XCTAssertEqual(lastSignal?.parameters, [
@@ -122,6 +122,44 @@ final class AnalyticsTests: XCTestCase {
             "cask": "iterm2",
             "origin": "individual"
         ])
+    }
+
+    func test_cask_action_failed_includes_failure_class_when_provided() {
+        Analytics.caskActionFailed(
+            .installing,
+            token: "gimp",
+            failureKind: .homebrewRuntimeIncompatible
+        )
+
+        XCTAssertEqual(lastSignal?.parameters, [
+            "action": "install",
+            "cask": "gimp",
+            "failureClass": "homebrew-runtime-incompatible",
+            "origin": "individual"
+        ])
+    }
+
+    @MainActor
+    func test_failed_service_mutation_forwards_its_classification() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "Error: Cask 'gimp' definition is invalid: invalid "
+                + "'command_wrapper' stanza: Unknown key: :executable"
+        )]
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("classified-analytics")
+        ) {
+            $0.fileManager = NoFilesFileManager()
+            $0.processRunner = runner
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+            $0.brewVersionProvider = { "test" }
+        }
+
+        try? await service.install(token: "gimp")
+
+        XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "homebrew-runtime-incompatible")
     }
 
     func test_cask_action_recovered_records_repair_postcondition() {

@@ -10,6 +10,7 @@ enum CaskIntent {
     case uninstall(token: String)
     case repair(token: String)
     case repairAndReinstall(token: String)
+    case updateHomebrew(token: String)
     case update(token: String)
     case updateAll(tokens: [String])
     case requestAdoption(Cask)
@@ -35,7 +36,8 @@ extension LocalHomebrewService {
         CaskActionPresentation(
             localState: suppliedState ?? localState(for: cask),
             homebrewInstallation: installationSnapshot.installedCasks[cask.token],
-            operationState: operationStore.state(for: cask.token)
+            operationState: operationStore.state(for: cask.token),
+            isHomebrewMutationBlocked: operationStore.isUpdatingHomebrew
         )
     }
 
@@ -59,6 +61,8 @@ extension LocalHomebrewService {
             Task { try? await repair(token: token) }
         case let .repairAndReinstall(token):
             Task { try? await repairReinstalling(token: token) }
+        case let .updateHomebrew(token):
+            Task { try? await updateHomebrew(for: token) }
         case let .update(token):
             Task { try? await upgrade(token: token) }
         case let .updateAll(tokens):

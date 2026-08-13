@@ -31,6 +31,7 @@ nonisolated struct CaskActionPresentation: Equatable, Sendable {
     let localState: CaskLocalState
     let homebrewInstallation: LocalCaskInstallation?
     let operationState: CaskOperationState?
+    let isHomebrewMutationBlocked: Bool
 
     var activeAction: CaskAction? {
         operationState?.action
@@ -49,7 +50,7 @@ nonisolated struct CaskActionPresentation: Equatable, Sendable {
     }
 
     var isBusy: Bool {
-        activeAction != nil
+        activeAction != nil || isHomebrewMutationBlocked
     }
 
 }

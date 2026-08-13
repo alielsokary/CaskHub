@@ -184,6 +184,25 @@ final class CaskOperationProgressTests: XCTestCase {
         XCTAssertFalse(service.operationStore.state(for: "firefox")?.canCancel == true)
     }
 
+    @MainActor
+    func test_homebrew_update_begins_with_its_visible_update_label() throws {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("homebrew-update-progress")
+        )
+
+        service.mutationCoordinator.beginOperation(
+            .updatingHomebrew,
+            token: "gimp",
+            displayName: "Homebrew"
+        )
+
+        let progress = try XCTUnwrap(
+            service.operationStore.state(for: "gimp")?.progress
+        )
+        XCTAssertEqual(progress.phase, .performing)
+        XCTAssertEqual(progress.inlineLabel, String(localized: "Updating Homebrew…"))
+    }
+
     func test_operation_status_summarizes_multiple_operations() {
         let operations = [
             CaskOperationProgress(
@@ -199,15 +218,24 @@ final class CaskOperationProgressTests: XCTestCase {
                 displayName: "Firefox",
                 action: .updating,
                 phase: .performing
+            ),
+            CaskOperationProgress(
+                token: "gimp",
+                displayName: "Homebrew",
+                action: .updatingHomebrew,
+                phase: .performing
             )
         ]
 
-        let summary = String(localized: "\(2) operations in progress")
+        let summary = String(localized: "\(3) operations in progress")
         let downloading = CaskOperationPhase.downloading.label(for: .installing).lowercased()
         let updating = CaskOperationPhase.performing.label(for: .updating).lowercased()
+        let updatingHomebrew = CaskOperationPhase.performing
+            .label(for: .updatingHomebrew)
+            .lowercased()
         XCTAssertEqual(
             CaskOperationStatus.make(operations: operations, updateAll: nil)?.message,
-            "\(summary) · 1 \(downloading) · 1 \(updating)"
+            "\(summary) · 1 \(downloading) · 1 \(updating) · 1 \(updatingHomebrew)"
         )
     }
 

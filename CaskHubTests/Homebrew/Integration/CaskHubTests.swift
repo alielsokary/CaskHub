@@ -261,18 +261,27 @@ final class CaskHubTests: XCTestCase {
     }
 
     func test_adopt_mismatch_detection() {
-        XCTAssertTrue(LocalHomebrewError.isAdoptMismatch(
-            args: ["install", "--cask", "x", "--adopt"],
-            stderr: "Error: It seems the existing App is different from the one being installed."
-        ))
-        XCTAssertFalse(LocalHomebrewError.isAdoptMismatch(
-            args: ["install", "--cask", "x"],
-            stderr: "It seems there is already an App at '/Applications/X.app'."
-        ))
-        XCTAssertFalse(LocalHomebrewError.isAdoptMismatch(
-            args: ["install", "--cask", "x", "--adopt"],
-            stderr: "curl: (6) Could not resolve host"
-        ))
+        XCTAssertEqual(
+            classify(
+                ["install", "--cask", "x", "--adopt"],
+                "Error: It seems the existing App is different from the one being installed."
+            ),
+            .adoptVersionMismatch
+        )
+        XCTAssertEqual(
+            classify(
+                ["install", "--cask", "x"],
+                "It seems there is already an App at '/Applications/X.app'."
+            ),
+            .appConflict
+        )
+        XCTAssertEqual(
+            classify(
+                ["install", "--cask", "x", "--adopt"],
+                "curl: (6) Could not resolve host"
+            ),
+            .networkFailure
+        )
     }
 
     @MainActor
@@ -329,7 +338,7 @@ final class CaskHubTests: XCTestCase {
 
     func test_app_management_denial_maps_to_permission_guidance() {
         let stderr = "xattr: [Errno 1] Operation not permitted: '/Applications/ChatGPT Classic.app'"
-        XCTAssertTrue(LocalHomebrewError.isAppManagementDenial(stderr: stderr))
+        XCTAssertEqual(classify(["install", "--cask", "chatgpt-classic"], stderr), .permissionDenied)
 
         let error = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "chatgpt-classic", "--adopt"], exitCode: 1, stderr: stderr
@@ -339,19 +348,28 @@ final class CaskHubTests: XCTestCase {
         )
 
         let unrelated = "chmod: /opt/homebrew/bin/tool: Operation not permitted"
-        XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: unrelated))
-        XCTAssertFalse(
-            LocalHomebrewError.isAppManagementDenial(
-                stderr: "Inspecting /Applications/Example.app\n\(unrelated)"
-            )
+        XCTAssertEqual(classify([], unrelated), .unknown)
+        XCTAssertEqual(
+            classify([], "Inspecting /Applications/Example.app\n\(unrelated)"),
+            .unknown
         )
-        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: unrelated), "uncategorized")
         XCTAssertTrue(
             LocalHomebrewError.brewCommandFailed(
                 args: ["install", "--cask", "tool"], exitCode: 1, stderr: unrelated
             ).shouldReport
         )
-        XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: "curl: (6) Could not resolve host"))
+        XCTAssertEqual(classify([], "curl: (6) Could not resolve host"), .networkFailure)
+    }
+
+    private func classify(
+        _ arguments: [String],
+        _ diagnostic: String
+    ) -> HomebrewFailureKind {
+        HomebrewCommandFailure.classify(
+            arguments: arguments,
+            exitCode: 1,
+            diagnostic: diagnostic
+        )
     }
 
     func test_output_collector_folds_pty_crlf_instead_of_doubling() {

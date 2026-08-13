@@ -66,6 +66,8 @@
 		A12000000000000000000007 /* CaskAdoptionPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000006 /* CaskAdoptionPlanTests.swift */; };
 		A12000000000000000000009 /* CaskAdoptionWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000008 /* CaskAdoptionWorkflowTests.swift */; };
 		B0E000000000000000000002 /* LocalHomebrewError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E000000000000000000001 /* LocalHomebrewError.swift */; };
+		B0F000000000000000000002 /* HomebrewCommandFailure.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F000000000000000000001 /* HomebrewCommandFailure.swift */; };
+		B0F000000000000000000004 /* HomebrewCommandFailureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F000000000000000000003 /* HomebrewCommandFailureTests.swift */; };
 		A12000000000000000000002 /* LocalHomebrewService+State.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000002 /* LocalHomebrewService+State.swift */; };
 		A12000000000000000000003 /* LocalHomebrewService+Adoption.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */; };
 		A12000000000000000000004 /* ZombieDetectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000004 /* ZombieDetectionTests.swift */; };
@@ -236,6 +238,8 @@
 		B12000000000000000000006 /* CaskAdoptionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAdoptionPlanTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000008 /* CaskAdoptionWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAdoptionWorkflowTests.swift; sourceTree = "<group>"; };
 		B0E000000000000000000001 /* LocalHomebrewError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewError.swift; sourceTree = "<group>"; };
+		B0F000000000000000000001 /* HomebrewCommandFailure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewCommandFailure.swift; sourceTree = "<group>"; };
+		B0F000000000000000000003 /* HomebrewCommandFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewCommandFailureTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000002 /* LocalHomebrewService+State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+State.swift"; sourceTree = "<group>"; };
 		B12000000000000000000003 /* LocalHomebrewService+Adoption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Adoption.swift"; sourceTree = "<group>"; };
 		B12000000000000000000004 /* ZombieDetectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZombieDetectionTests.swift; sourceTree = "<group>"; };
@@ -624,6 +628,7 @@
 				B12000000000000000000005 /* CaskAdoptionPlan.swift */,
 				E24000000000000000000001 /* CaskOperationProgress.swift */,
 				E29000000000000000000001 /* CaskOperationState.swift */,
+				B0F000000000000000000001 /* HomebrewCommandFailure.swift */,
 				41DFD47130028F7D00608C7A /* InstallReceipt.swift */,
 				E29000000000000000000009 /* InstallationSnapshot.swift */,
 				B0E000000000000000000001 /* LocalHomebrewError.swift */,
@@ -761,6 +766,7 @@
 				B12000000000000000000006 /* CaskAdoptionPlanTests.swift */,
 				E24000000000000000000003 /* CaskOperationProgressTests.swift */,
 				E29000000000000000000003 /* CaskOperationStateTests.swift */,
+				B0F000000000000000000003 /* HomebrewCommandFailureTests.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -1008,6 +1014,7 @@
 				C15000000000000000000002 /* InstallationCatalogBuilder.swift in Sources */,
 				A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */,
 				A12000000000000000000005 /* CaskAdoptionPlan.swift in Sources */,
+				B0F000000000000000000002 /* HomebrewCommandFailure.swift in Sources */,
 				B0E000000000000000000002 /* LocalHomebrewError.swift in Sources */,
 				F24000000000000000000001 /* CaskOperationProgress.swift in Sources */,
 				F29000000000000000000001 /* CaskOperationState.swift in Sources */,
@@ -1083,6 +1090,7 @@
 				F26000000000000000000001 /* CaskListActionTests.swift in Sources */,
 				F24000000000000000000003 /* CaskOperationProgressTests.swift in Sources */,
 				F29000000000000000000003 /* CaskOperationStateTests.swift in Sources */,
+				B0F000000000000000000004 /* HomebrewCommandFailureTests.swift in Sources */,
 				F29000000000000000000007 /* CaskOperationStoreTests.swift in Sources */,
 				F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */,
 				F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */,
