@@ -95,11 +95,8 @@ extension Analytics {
 
     // MARK: - Search
 
-    static func searchPerformed(query: String, results: Int) {
-        send("Search.performed", parameters: [
-            "query": query.trimmingCharacters(in: .whitespaces).lowercased(),
-            "results": "\(results)"
-        ])
+    static func searchPerformed(results: Int) {
+        send("Search.performed", parameters: ["results": "\(results)"])
     }
 
     // MARK: - Filters & view options
