@@ -109,6 +109,7 @@ final class CaskCatalogViewModel {
     var selectedSidebar: SidebarSelection = .discover(.browse) {
         didSet {
             guard oldValue != selectedSidebar else { return }
+            searchText = ""
             resetReveal()
             switch selectedSidebar {
             case .library(.installed):
