@@ -36,6 +36,17 @@ struct StagedUpdateGate {
     }
 }
 
+struct UpdaterStartGate {
+    private(set) var started = false
+
+    mutating func run(start: () -> Void, check: () -> Void) {
+        guard !started else { return }
+        started = true
+        start()
+        check()
+    }
+}
+
 @Observable
 final class UpdaterService: NSObject, SPUUpdaterDelegate {
     private var controller: SPUStandardUpdaterController!
@@ -44,16 +55,15 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
     private(set) var lastUpdateCheckDate: Date?
     @ObservationIgnored private var cancellables = Set<AnyCancellable>()
     @ObservationIgnored private var stagedUpdate = StagedUpdateGate()
+    @ObservationIgnored private var startGate = UpdaterStartGate()
 
     override init() {
         super.init()
         controller = SPUStandardUpdaterController(
-            startingUpdater: true,
+            startingUpdater: false,
             updaterDelegate: self,
             userDriverDelegate: self
         )
-        // Sparkle allows a forced launch check here, before its scheduled cycle starts.
-        Self.checkForUpdatesOnLaunch(using: controller.updater)
         controller.updater.publisher(for: \.canCheckForUpdates)
             .sink { [weak self] canCheck in
                 guard let self else { return }
@@ -71,6 +81,16 @@ final class UpdaterService: NSObject, SPUUpdaterDelegate {
                 self?.lastUpdateCheckDate = date
             }
             .store(in: &cancellables)
+    }
+
+    func start() {
+        startGate.run(
+            start: { controller.startUpdater() },
+            check: {
+                // Sparkle allows a forced launch check after the updater starts.
+                Self.checkForUpdatesOnLaunch(using: controller.updater)
+            }
+        )
     }
 
     static func checkForUpdatesOnLaunch(using updater: some BackgroundUpdateChecking) {

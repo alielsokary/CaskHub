@@ -23,8 +23,16 @@ final class UpdateSettingsViewTests: XCTestCase {
     func test_sparkle_modal_alert_hooks_pause_and_resume_hang_tracking() {
         let spy = SpyCrashReporterProvider()
         let original = CrashReporter.provider
-        defer { CrashReporter.provider = original }
+        let wasActive = CrashReporter.isApplicationActive
+        let pauseDepth = CrashReporter.hangTrackingPauseDepth
+        defer {
+            CrashReporter.provider = original
+            CrashReporter.isApplicationActive = wasActive
+            CrashReporter.hangTrackingPauseDepth = pauseDepth
+        }
         CrashReporter.provider = spy
+        CrashReporter.isApplicationActive = true
+        CrashReporter.hangTrackingPauseDepth = 0
 
         let updater = UpdaterService()
         updater.standardUserDriverWillShowModalAlert()

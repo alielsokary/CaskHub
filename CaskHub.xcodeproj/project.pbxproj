@@ -11,6 +11,7 @@
 		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
 		41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10132F68B00400BEABB8 /* CrashReporter.swift */; };
 		41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */; };
+		41EA00023005200100C45A51 /* AppHangReportingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41EA00013005200100C45A51 /* AppHangReportingTests.swift */; };
 		41AD10222F68C00300BEABB8 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10212F68C00200BEABB8 /* Sparkle */; };
 		41AD10312F68D00200BEABB8 /* UpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10302F68D00100BEABB8 /* UpdaterService.swift */; };
 		41DF1BB73027E71B004C0E14 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 41DF1BB63027E71B004C0E14 /* AppIcon.icon */; };
@@ -158,6 +159,7 @@
 		41AD10042F68A00400BEABB8 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
 		41AD10132F68B00400BEABB8 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
 		41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
+		41EA00013005200100C45A51 /* AppHangReportingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHangReportingTests.swift; sourceTree = "<group>"; };
 		41AD10302F68D00100BEABB8 /* UpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterService.swift; sourceTree = "<group>"; };
 		41DF1BB63027E71B004C0E14 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		41DFD44E30028F7D00608C7A /* Askpass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Askpass.swift; sourceTree = "<group>"; };
@@ -711,6 +713,7 @@
 			isa = PBXGroup;
 			children = (
 				41DFD4B030028F9F00608C7A /* AnalyticsTests.swift */,
+				41EA00013005200100C45A51 /* AppHangReportingTests.swift */,
 				41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */,
 			);
 			path = Telemetry;
@@ -1071,6 +1074,7 @@
 				B09000000000000000000002 /* ApplicationMenuTests.swift in Sources */,
 				A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */,
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
+				41EA00023005200100C45A51 /* AppHangReportingTests.swift in Sources */,
 				A29100000000000000000004 /* CaskMetadataProjectorTests.swift in Sources */,
 				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
 				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,

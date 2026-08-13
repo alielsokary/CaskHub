@@ -8,25 +8,47 @@
 @testable import CaskHub
 import XCTest
 
+private struct CrashReporterTestState {
+    let provider: CrashReporterProvider
+    let defaults: UserDefaults
+    let captureCounts: [String: Int]
+    let applicationActive: Bool
+    let pauseDepth: Int
+    let isRunningTests: Bool
+}
+
 final class CrashReporterTests: XCTestCase {
-    private var spy: SpyCrashReporterProvider!
-    private var originalProvider: CrashReporterProvider!
+    var spy: SpyCrashReporterProvider!
+    private var originalState: CrashReporterTestState!
 
     override func setUp() {
         super.setUp()
         spy = SpyCrashReporterProvider()
-        originalProvider = CrashReporter.provider
+        originalState = CrashReporterTestState(
+            provider: CrashReporter.provider,
+            defaults: CrashReporter.defaults,
+            captureCounts: CrashReporter.captureCounts,
+            applicationActive: CrashReporter.isApplicationActive,
+            pauseDepth: CrashReporter.hangTrackingPauseDepth,
+            isRunningTests: CrashReporter.isRunningTests
+        )
         CrashReporter.provider = spy
+        CrashReporter.defaults = makeScratchDefaults(
+            "crash-reporter-\(ProcessInfo.processInfo.processIdentifier)"
+        )
         CrashReporter.captureCounts = [:]
+        CrashReporter.isApplicationActive = false
+        CrashReporter.hangTrackingPauseDepth = 0
         CrashReporter.isRunningTests = false
-        UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
     }
 
     override func tearDown() {
-        CrashReporter.provider = originalProvider
-        CrashReporter.captureCounts = [:]
-        CrashReporter.isRunningTests = CrashReporter.detectsTestRun
-        UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
+        CrashReporter.provider = originalState.provider
+        CrashReporter.defaults = originalState.defaults
+        CrashReporter.captureCounts = originalState.captureCounts
+        CrashReporter.isApplicationActive = originalState.applicationActive
+        CrashReporter.hangTrackingPauseDepth = originalState.pauseDepth
+        CrashReporter.isRunningTests = originalState.isRunningTests
         super.tearDown()
     }
 
@@ -37,20 +59,20 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_is_enabled_reflects_stored_opt_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         XCTAssertFalse(CrashReporter.isEnabled)
     }
 
     func test_start_passes_stored_setting_to_provider() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.start()
         XCTAssertEqual(spy.startedWith, [false])
     }
 
     func test_refresh_forwards_current_setting_to_provider() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.refresh()
-        UserDefaults.standard.set(true, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(true, forKey: CrashReporter.enabledKey)
         CrashReporter.refresh()
         XCTAssertEqual(spy.enabledChanges, [false, true])
     }
@@ -63,7 +85,7 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_capture_is_suppressed_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.capture(URLError(.badServerResponse))
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
@@ -267,7 +289,10 @@ final class CrashReporterTests: XCTestCase {
             cls("chmod: /Applications/Example.app: Unable to change file mode: Operation not permitted"),
             "permission-denied"
         )
-        XCTAssertEqual(cls("It seems the existing App is different from the one being installed."), "adopt-version-mismatch")
+        XCTAssertEqual(
+            cls("It seems the existing App is different from the one being installed."),
+            "adopt-version-mismatch"
+        )
         XCTAssertEqual(cls("SHA256 mismatch"), "checksum-mismatch")
         XCTAssertEqual(cls("curl: (6) Could not resolve host: example.com"), "network-failure")
         XCTAssertEqual(cls("It seems there is already a Binary at '/opt/homebrew/bin/x'."), "binary-conflict")
@@ -445,7 +470,7 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_tag_is_suppressed_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.tag("brew.path", value: "/opt/homebrew/bin/brew")
         XCTAssertTrue(spy.tags.isEmpty)
     }
@@ -473,7 +498,7 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_breadcrumb_is_suppressed_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.breadcrumb("Cask.installed")
         XCTAssertTrue(spy.breadcrumbs.isEmpty)
     }
@@ -495,26 +520,13 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_span_is_inert_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         let span = CrashReporter.span(name: "install", operation: "brew")
         span.finish()
         XCTAssertTrue(spy.spans.isEmpty)
     }
 
     // MARK: - Hang tracking pause
-
-    func test_with_hang_tracking_paused_brackets_the_body() {
-        let value = CrashReporter.withHangTrackingPaused { 7 }
-        XCTAssertEqual(value, 7)
-        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
-    }
-
-    func test_hang_tracking_resumes_when_body_throws() {
-        XCTAssertThrowsError(
-            try CrashReporter.withHangTrackingPaused { throw URLError(.badURL) }
-        )
-        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
-    }
 
     func test_sentry_provider_pause_resume_are_safe_without_started_sdk() {
         let provider = SentryProvider()

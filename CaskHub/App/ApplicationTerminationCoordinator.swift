@@ -57,6 +57,14 @@ final class ApplicationTerminationCoordinator: NSObject, NSApplicationDelegate {
         requestApplicationTermination()
     }
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        CrashReporter.setApplicationActive(true)
+    }
+
+    func applicationWillResignActive(_ notification: Notification) {
+        CrashReporter.setApplicationActive(false)
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard hasActiveOperations() else {
             return .terminateNow

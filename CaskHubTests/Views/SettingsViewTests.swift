@@ -159,6 +159,23 @@ final class SettingsViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_updater_start_gate_runs_start_and_check_once_in_order() {
+        var gate = UpdaterStartGate()
+        var actions: [String] = []
+
+        gate.run(
+            start: { actions.append("start") },
+            check: { actions.append("check") }
+        )
+        gate.run(
+            start: { actions.append("start") },
+            check: { actions.append("check") }
+        )
+
+        XCTAssertEqual(actions, ["start", "check"])
+    }
+
+    @MainActor
     func test_staged_update_not_pending_when_automatic_checks_disabled() {
         var gate = StagedUpdateGate()
         gate.updateStaged(automaticChecksEnabled: false)

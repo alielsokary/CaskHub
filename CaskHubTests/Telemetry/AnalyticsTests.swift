@@ -23,18 +23,24 @@ private final class SpyAnalyticsProvider: AnalyticsProvider {
 final class AnalyticsTests: XCTestCase {
     private var spy: SpyAnalyticsProvider!
     private var originalProvider: AnalyticsProvider!
+    private var originalCrashDefaults: UserDefaults!
 
     override func setUp() {
         super.setUp()
         spy = SpyAnalyticsProvider()
         originalProvider = Analytics.provider
+        originalCrashDefaults = CrashReporter.defaults
         Analytics.provider = spy
+        CrashReporter.defaults = makeScratchDefaults(
+            "analytics-crash-\(ProcessInfo.processInfo.processIdentifier)"
+        )
         Analytics.openedPages.removeAll()
         UserDefaults.standard.removeObject(forKey: Analytics.enabledKey)
     }
 
     override func tearDown() {
         Analytics.provider = originalProvider
+        CrashReporter.defaults = originalCrashDefaults
         UserDefaults.standard.removeObject(forKey: Analytics.enabledKey)
         super.tearDown()
     }
@@ -308,9 +314,9 @@ final class AnalyticsTests: XCTestCase {
         CrashReporter.provider = crashSpy
         defer {
             CrashReporter.provider = originalCrash
-            UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
+            CrashReporter.defaults.removeObject(forKey: CrashReporter.enabledKey)
         }
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
 
         Analytics.send("Page.opened")
 

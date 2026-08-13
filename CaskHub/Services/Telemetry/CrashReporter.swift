@@ -33,8 +33,11 @@ enum CrashReporter {
     static let enabledKey = "crashReportingEnabled"
 
     static var provider: CrashReporterProvider = SentryProvider()
+    static var defaults = UserDefaults.standard
 
     static var captureCounts: [String: Int] = [:]
+    static var isApplicationActive = false
+    static var hangTrackingPauseDepth = 0
     private static let captureLimit = 5
     private static let ignoredURLErrorCodes: Set<Int> = [
         URLError.cancelled.rawValue,
@@ -52,17 +55,19 @@ enum CrashReporter {
     static var isRunningTests = detectsTestRun
 
     static var isEnabled: Bool {
-        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+        defaults.object(forKey: enabledKey) as? Bool ?? true
     }
 
     static func start() {
         guard !isRunningTests else { return }
         provider.start(enabled: isEnabled)
+        if isEnabled { synchronizeHangTracking() }
     }
 
     static func refresh() {
         guard !isRunningTests else { return }
         provider.setEnabled(isEnabled)
+        if isEnabled { synchronizeHangTracking() }
     }
 
     static func capture(_ error: Error) {
@@ -120,21 +125,48 @@ enum CrashReporter {
         return provider.startSpan(name: name, operation: operation)
     }
 
-    // Hang detection pings the main queue in the default run-loop mode; app-modal
-    // panels spin NSModalPanelRunLoopMode, so any dialog open >2s reports as a
-    // fake hang. Pause around every runModal-style nested run loop.
+    // Sentry's macOS tracker does not understand app activity or nested pauses.
+    // Keep it enabled only while CaskHub is active and outside modal run loops.
+    static func setApplicationActive(_ isActive: Bool) {
+        let wasTracking = shouldTrackHangs
+        isApplicationActive = isActive
+        updateHangTracking(ifChangedFrom: wasTracking)
+    }
+
     static func pauseHangTracking() {
-        provider.pauseHangTracking()
+        let wasTracking = shouldTrackHangs
+        hangTrackingPauseDepth += 1
+        updateHangTracking(ifChangedFrom: wasTracking)
     }
 
     static func resumeHangTracking() {
-        provider.resumeHangTracking()
+        guard hangTrackingPauseDepth > 0 else { return }
+        let wasTracking = shouldTrackHangs
+        hangTrackingPauseDepth -= 1
+        updateHangTracking(ifChangedFrom: wasTracking)
     }
 
     static func withHangTrackingPaused<T>(_ body: () throws -> T) rethrows -> T {
         pauseHangTracking()
         defer { resumeHangTracking() }
         return try body()
+    }
+
+    private static var shouldTrackHangs: Bool {
+        isApplicationActive && hangTrackingPauseDepth == 0
+    }
+
+    private static func updateHangTracking(ifChangedFrom wasTracking: Bool) {
+        guard shouldTrackHangs != wasTracking else { return }
+        synchronizeHangTracking()
+    }
+
+    private static func synchronizeHangTracking() {
+        if shouldTrackHangs {
+            provider.resumeHangTracking()
+        } else {
+            provider.pauseHangTracking()
+        }
     }
 }
 
@@ -145,6 +177,70 @@ struct NoOpCrashSpan: CrashSpan {
 
 // MARK: - Sentry
 
+nonisolated enum AppHangFamily: String, Sendable {
+    case appCode = "app-code"
+    case sentry
+    case sparkle
+    case swiftUI = "swift-ui"
+    case windowServer = "window-server"
+    case graphics
+    case appKit = "app-kit"
+    case system
+}
+
+nonisolated final class AppHangEventProcessor: Sendable {
+    private static let swiftUIFrameworks = ["swiftui", "attributegraph"]
+    private static let graphicsFrameworks = ["coregraphics", "metal", "renderbox"]
+
+    func process(_ event: Event) -> Event? {
+        guard let exception = event.exceptions?.first(where: {
+            $0.mechanism?.type == "AppHang"
+        }) else {
+            return event
+        }
+
+        let family = Self.family(
+            for: exception.stacktrace?.frames
+                ?? event.threads?.first(where: { $0.isMain?.boolValue == true })?
+                    .stacktrace?.frames
+                ?? []
+        )
+        var tags = event.tags ?? [:]
+        tags["app_hang.family"] = family.rawValue
+        event.tags = tags
+        event.fingerprint = (event.fingerprint ?? ["{{ default }}"])
+            + ["app-hang", family.rawValue]
+        return event
+    }
+
+    private static func family(for frames: [Frame]) -> AppHangFamily {
+        // Sentry stores native frames oldest-to-youngest. The youngest useful
+        // frame describes the work that was actually blocking the main thread.
+        for frame in frames.reversed() {
+            if frame.inApp?.boolValue == true {
+                return .appCode
+            }
+            guard let package = frame.package.map({
+                URL(fileURLWithPath: $0).lastPathComponent.lowercased()
+            }) else { continue }
+            if let family = family(forPackage: package) {
+                return family
+            }
+        }
+        return .system
+    }
+
+    private static func family(forPackage package: String) -> AppHangFamily? {
+        if package.contains("sentry") { return .sentry }
+        if package.contains("sparkle") { return .sparkle }
+        if swiftUIFrameworks.contains(where: package.contains) { return .swiftUI }
+        if package == "skylight" { return .windowServer }
+        if graphicsFrameworks.contains(where: package.contains) { return .graphics }
+        if package == "appkit" { return .appKit }
+        return nil
+    }
+}
+
 final class SentryProvider: CrashReporterProvider {
     private static var dsn: String? {
         let value = Bundle.main.object(forInfoDictionaryKey: "SentryDSN") as? String
@@ -152,12 +248,15 @@ final class SentryProvider: CrashReporterProvider {
     }
 
     private var started = false
+    private let appHangProcessor = AppHangEventProcessor()
 
     func start(enabled: Bool) {
         guard enabled, let dsn = Self.dsn else { return }
+        let appHangProcessor = appHangProcessor
         SentrySDK.start { options in
             options.dsn = dsn
             options.tracesSampleRate = 1.0
+            options.beforeSend = appHangProcessor.process
             #if DEBUG
             options.environment = "debug"
             #endif
