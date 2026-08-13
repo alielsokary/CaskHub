@@ -72,9 +72,10 @@ struct CaskHubApp: App {
                 ContentView(viewModel: catalog)
                     .frame(minWidth: 1380, minHeight: 640)
                     .background {
-                        WindowCloseButtonConfigurator {
-                            terminationCoordinator.requestTermination()
-                        }
+                        WindowCloseButtonConfigurator(
+                            onClose: { terminationCoordinator.requestTermination() },
+                            onBecomeKey: { updaterService.start() }
+                        )
                     }
                     .background {
                         CaskHubHelpSearchRegistration(selection: $helpTopic)
@@ -129,12 +130,13 @@ struct CaskHubApp: App {
 
 @MainActor
 struct WindowCloseButtonConfigurator: NSViewRepresentable {
-    typealias CloseAction = @MainActor @Sendable () -> Void
+    typealias WindowAction = @MainActor @Sendable () -> Void
 
-    let onClose: CloseAction
+    let onClose: WindowAction
+    let onBecomeKey: WindowAction
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onClose: onClose)
+        Coordinator(onClose: onClose, onBecomeKey: onBecomeKey)
     }
 
     func makeNSView(context: Context) -> WindowObservationView {
@@ -146,6 +148,7 @@ struct WindowCloseButtonConfigurator: NSViewRepresentable {
     func updateNSView(_ view: WindowObservationView, context: Context) {
         view.coordinator = context.coordinator
         context.coordinator.onClose = onClose
+        context.coordinator.onBecomeKey = onBecomeKey
         if let window = view.window {
             context.coordinator.attach(to: window)
         }
@@ -170,30 +173,53 @@ struct WindowCloseButtonConfigurator: NSViewRepresentable {
 
     @MainActor
     final class Coordinator: NSObject {
-        var onClose: CloseAction
+        var onClose: WindowAction
+        var onBecomeKey: WindowAction
 
+        private weak var observedWindow: NSWindow?
         private weak var closeButton: NSButton?
         private weak var originalTarget: AnyObject?
         private var originalAction: Selector?
 
-        init(onClose: @escaping CloseAction) {
+        init(onClose: @escaping WindowAction, onBecomeKey: @escaping WindowAction) {
             self.onClose = onClose
+            self.onBecomeKey = onBecomeKey
         }
 
         func detach() {
-            guard let closeButton, closeButton.target === self else { return }
-            closeButton.target = originalTarget
-            closeButton.action = originalAction
+            if let closeButton, closeButton.target === self {
+                closeButton.target = originalTarget
+                closeButton.action = originalAction
+            }
+            if let observedWindow {
+                NotificationCenter.default.removeObserver(
+                    self,
+                    name: NSWindow.didBecomeKeyNotification,
+                    object: observedWindow
+                )
+            }
+            observedWindow = nil
             self.closeButton = nil
             originalTarget = nil
             originalAction = nil
         }
 
         func attach(to window: NSWindow) {
-            guard let button = window.standardWindowButton(.closeButton) else { return }
-            guard closeButton !== button || button.target !== self else { return }
+            guard observedWindow !== window else { return }
 
             detach()
+            observedWindow = window
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(windowDidBecomeKey),
+                name: NSWindow.didBecomeKeyNotification,
+                object: window
+            )
+            if window.isKeyWindow {
+                onBecomeKey()
+            }
+
+            guard let button = window.standardWindowButton(.closeButton) else { return }
             closeButton = button
             originalTarget = button.target
             originalAction = button.action
@@ -204,6 +230,11 @@ struct WindowCloseButtonConfigurator: NSViewRepresentable {
         @objc
         private func closeButtonPressed() {
             onClose()
+        }
+
+        @objc
+        private func windowDidBecomeKey() {
+            onBecomeKey()
         }
     }
 }
