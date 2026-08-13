@@ -146,6 +146,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
             actionPresentation: CaskActionPresentation(
                 localState: CaskLocalState(
                     installationSource: nil,
+                    externalVersion: nil,
+                    adoptionPlan: nil,
                     externalCLIPath: nil,
                     uninstallAvailability: .unavailable(reason: "Not installed"),
                     hasAvailableUpdate: false,
@@ -153,7 +155,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
                     canOpen: false
                 ),
                 homebrewInstallation: nil,
-                operationState: nil
+                operationState: nil,
+                isHomebrewMutationBlocked: false
             ),
             externalVersion: nil,
             installationDates: nil
@@ -174,8 +177,17 @@ final class CaskMetadataProjectorTests: XCTestCase {
                 appBundleNames: []
             )
             : nil
+        let externalVersion = source == .homebrew ? nil : "3.1"
         let localState = CaskLocalState(
             installationSource: source,
+            externalVersion: externalVersion,
+            adoptionPlan: CaskAdoptionPlan.make(
+                installationSource: source,
+                installedVersion: externalVersion,
+                homebrewVersion: cask.displayVersion,
+                installedCaskTokens: [],
+                conflictingCaskTokens: []
+            ),
             externalCLIPath: nil,
             uninstallAvailability: source == .homebrew
                 ? .available
@@ -195,9 +207,10 @@ final class CaskMetadataProjectorTests: XCTestCase {
             actionPresentation: CaskActionPresentation(
                 localState: localState,
                 homebrewInstallation: installation,
-                operationState: nil
+                operationState: nil,
+                isHomebrewMutationBlocked: false
             ),
-            externalVersion: source == .homebrew ? nil : "3.1",
+            externalVersion: externalVersion,
             installationDates: dates
         ))
     }

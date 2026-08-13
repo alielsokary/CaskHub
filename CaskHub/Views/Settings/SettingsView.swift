@@ -248,11 +248,55 @@ private struct HomebrewSettingsContent: View {
                 )
             }
             Section("Paths") {
-                pathRow("Brew Binary", HomebrewLocator.brewBinaryURL()?.path)
-                pathRow(
-                    "Caskroom",
-                    HomebrewLocator.caskroomURL(fileManager: .default)?.path
-                )
+                VStack(alignment: .leading, spacing: 12) {
+                    Picker("Homebrew Location", selection: $locationModel.selection) {
+                        locationOption(.appleSilicon, title: "Apple Silicon Mac")
+                            .tag(HomebrewLocationChoice.appleSilicon)
+                        locationOption(.intel, title: "Intel Mac")
+                            .tag(HomebrewLocationChoice.intel)
+                        locationOption(.custom, title: "Custom brew path")
+                            .tag(HomebrewLocationChoice.custom)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.radioGroup)
+                    .onChange(of: locationModel.selection) { _, choice in
+                        Task { await locationModel.applyChoice(choice) }
+                    }
+
+                    HStack(spacing: 10) {
+                        TextField(
+                            "",
+                            text: $locationModel.customPathField,
+                            prompt: Text("Homebrew path")
+                        )
+                        .labelsHidden()
+                        .accessibilityLabel("Custom brew path")
+                        .font(.body.monospaced())
+                        .multilineTextAlignment(.leading)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity)
+                        .layoutPriority(1)
+                        .onSubmit {
+                            Task { await locationModel.applyTypedPath() }
+                        }
+                        .onChange(of: locationModel.customPathField) {
+                            locationModel.validateCustomPath()
+                        }
+
+                        Button("Choose…") { chooseCustomPrefix() }
+                            .fixedSize()
+                    }
+                    .disabled(locationModel.selection != .custom)
+
+                    if locationModel.invalidSelection {
+                        Label(
+                            "Currently selected brew path is invalid",
+                            systemImage: "xmark.circle.fill"
+                        )
+                        .foregroundStyle(.red)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             Section("Library") {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
@@ -262,40 +306,6 @@ private struct HomebrewSettingsContent: View {
                         ?? String(localized: "Never")
                 )
             }
-            Section("Custom Location") {
-                HStack(alignment: .center, spacing: 10) {
-                    TextField(
-                        "",
-                        text: $locationModel.customPathField,
-                        prompt: Text("Homebrew path")
-                    )
-                    .labelsHidden()
-                    .accessibilityLabel("Homebrew path")
-                    .font(.body.monospaced())
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: .infinity)
-                    .layoutPriority(1)
-                    .onSubmit {
-                        Task { await locationModel.applyTypedPath() }
-                    }
-
-                    Button("Choose…") { chooseCustomPrefix() }
-                        .fixedSize()
-                }
-                .frame(maxWidth: .infinity)
-                .controlSize(.regular)
-
-                if localHomebrew.customBrewPrefix != nil {
-                    Button("Use Automatic Location") {
-                        locationModel.customPathField = ""
-                        Task { await locationModel.applyTypedPath() }
-                    }
-                }
-
-                Text("Only needed when Homebrew is installed outside /opt/homebrew or /usr/local.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
         }
         .formStyle(.grouped)
         .padding()
@@ -303,27 +313,29 @@ private struct HomebrewSettingsContent: View {
         .onChange(of: localHomebrew.customBrewPrefix) {
             locationModel.synchronize()
         }
-        .alert(
-            "No Homebrew There",
-            isPresented: Binding(
-                get: { locationModel.invalidSelection },
-                set: { if !$0 { locationModel.dismissInvalidSelection() } }
-            )
-        ) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("The selected location doesn't contain a brew binary.")
-        }
     }
 
-    private func pathRow(_ title: LocalizedStringKey, _ path: String?) -> some View {
-        LabeledContent(title) {
-            Text(path ?? String(localized: "Not found"))
-                .font(.callout.monospaced())
-                .foregroundStyle(path == nil ? .secondary : .primary)
-                .textSelection(.enabled)
-                .lineLimit(1)
-                .truncationMode(.middle)
+    private func locationOption(
+        _ choice: HomebrewLocationChoice,
+        title: LocalizedStringKey
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Text(title)
+                if locationModel.selection == choice {
+                    Image(systemName: locationModel.invalidSelection
+                          ? "xmark.circle.fill"
+                          : "checkmark.circle.fill")
+                        .foregroundStyle(locationModel.invalidSelection ? .red : .green)
+                        .accessibilityHidden(true)
+                }
+            }
+            if let path = choice.brewBinaryPath {
+                Text(path)
+                    .font(.callout.monospaced())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
         }
     }
 

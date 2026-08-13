@@ -31,12 +31,13 @@ final class CaskOperationStoreTests: XCTestCase {
 
     func test_store_projects_confirmation_states() {
         let store = CaskOperationStore()
+        let request = adoptionRequest()
 
-        store.send(.awaitPermission(force: true), for: "canva")
-        store.send(.awaitPackageAdoption, for: "zoom")
+        store.send(.awaitPermission(request), for: "canva")
+        store.send(.awaitAdoption(request), for: "zoom")
 
-        XCTAssertEqual(store.pendingPermissions, ["canva": true])
-        XCTAssertEqual(store.state(for: "zoom"), .awaitingPackageAdoption)
+        XCTAssertEqual(store.pendingPermissions, ["canva": request])
+        XCTAssertEqual(store.state(for: "zoom"), .awaitingAdoption(request))
         XCTAssertNil(store.state(for: "canva")?.action)
         XCTAssertNil(store.state(for: "zoom")?.action)
     }
@@ -91,9 +92,10 @@ final class CaskOperationStoreTests: XCTestCase {
     func test_confirmation_and_failure_states_are_not_active_operations() {
         let store = CaskOperationStore()
         let failure = CaskOperationFailure(kind: .brewCommand, message: "failed")
+        let request = adoptionRequest()
 
-        store.send(.awaitPermission(force: false), for: "canva")
-        store.send(.awaitPackageAdoption, for: "zoom")
+        store.send(.awaitPermission(request), for: "canva")
+        store.send(.awaitAdoption(request), for: "zoom")
         store.send(.fail(failure), for: "tabby")
 
         XCTAssertFalse(store.hasActiveOperations)
@@ -150,5 +152,21 @@ final class CaskOperationStoreTests: XCTestCase {
 
         XCTAssertNil(store.updateAllProgress)
         XCTAssertFalse(store.isUpdatingAll)
+    }
+
+    private func adoptionRequest() -> CaskAdoptionRequest {
+        let cask = makeCask("sample", appNames: ["Sample.app"])
+        return CaskAdoptionRequest(
+            cask: cask,
+            plan: CaskAdoptionPlan(
+                artifact: .applicationBundle,
+                versionRelationship: .same,
+                operation: .adopt,
+                execution: .adoptApplication,
+                installedVersion: "1.0",
+                homebrewVersion: "1.0",
+                blockingInstalledCask: nil
+            )
+        )
     }
 }

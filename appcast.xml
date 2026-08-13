@@ -3,35 +3,31 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.7.0</title>
-            <pubDate>Mon, 10 Aug 2026 14:01:29 +0000</pubDate>
-            <sparkle:version>556</sparkle:version>
-            <sparkle:shortVersionString>0.7.0</sparkle:shortVersionString>
+            <title>0.7.1</title>
+            <pubDate>Thu, 13 Aug 2026 15:52:48 +0000</pubDate>
+            <sparkle:version>591</sparkle:version>
+            <sparkle:shortVersionString>0.7.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Added native macOS menus and an in-app help center
-- Added Simplified Chinese localization, including localized category names
-- Added a Shelf Setup page to choose which apps the Adopt scan ignores
-- Added the SHA checksum to the cask info popover
-- Joined the official Homebrew cask repository — install with `brew install --cask caskhub`
+- Added Homebrew path selection in Settings: Apple Silicon, Intel, or a custom location
 
 ### Improvements
 
-- Brought browse sections and the house pick to list view
-- Added one-click recovery actions when an install conflicts with existing files
+- Made usage analytics and crash reporting consent independent, and search text is never collected
+- Clearer Homebrew error messages, with a guided Update Homebrew fix when your Homebrew is too old to read a cask
 
 ### Bug Fixes
 
-- Fixed in-app updates downloading silently instead of showing the standard update prompt
-- Fixed App Management permission shown as enabled when it was never granted
-- Fixed menu actions that were intermittently disabled or did nothing
-- Fixed Homebrew formula shims being flagged as externally installed CLI tools
-- Fixed the squared app icon on macOS 15 and icon colors in dark theme
+- Fixed adopting apps whose installed version differs from the Homebrew cask, including package-based apps like OneDrive
+- Fixed cask conflicts failing with a generic error — CaskHub now names the conflicting installed cask up front
+- Fixed ARM-only casks failing to install when an Intel Homebrew was selected on Apple Silicon
+- Fixed search text carrying over when switching pages from the sidebar
+- Fixed false hang reports while CaskHub was inactive or showing a dialog
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.7.0/CaskHub-0.7.0.zip" length="6626635" type="application/octet-stream" sparkle:edSignature="hbD/LGbQzXP6/uYSLYyN20facDISJSZy/4nC2PoeYpGcdV4DQxq2wQP4FpNiY9F3SqvyWcA4UqpqVmMAz5LPBg=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.7.1/CaskHub-0.7.1.zip" length="6738790" type="application/octet-stream" sparkle:edSignature="ArK/8WbnhrEXOZlrc1KyM+9wFNJTcaPPBteKJntTMjxjy86sJndGk6dEeDl9E2rcdbatm4Y3F3XtldcWwnPgDA=="/>
         </item>
     </channel>
 </rss>

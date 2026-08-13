@@ -30,6 +30,23 @@ final class CaskActionPresentationTests: XCTestCase {
         XCTAssertNil(service.actionAlert(for: cask.token))
     }
 
+    func test_homebrew_update_blocks_other_cask_mutations() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("presentation-global-update")
+        )
+        service.mutationCoordinator.beginOperation(
+            .updatingHomebrew,
+            token: "gimp",
+            displayName: "Homebrew"
+        )
+
+        let presentation = service.actionPresentation(for: makeCask("firefox"))
+
+        XCTAssertTrue(presentation.isHomebrewMutationBlocked)
+        XCTAssertTrue(presentation.isBusy)
+        XCTAssertNil(presentation.activeAction)
+    }
+
     func test_failure_presentation_carries_message_and_recovery_together() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("presentation-failure"))
         let cask = makeCask("tabby")
@@ -75,6 +92,38 @@ final class CaskActionPresentationTests: XCTestCase {
         service.operationStore.send(.fail(failure), for: "tabby")
 
         XCTAssertEqual(service.actionAlert(for: "tabby"), .failure(failure))
+    }
+
+    func test_adoption_card_and_confirmation_use_their_own_labels() {
+        let cask = makeCask("sample", name: "Sample")
+        let updatePlan = CaskAdoptionPlan(
+            artifact: .applicationBundle,
+            versionRelationship: .homebrewNewer,
+            operation: .updateAndAdopt,
+            execution: .replaceApplication,
+            installedVersion: "1.0",
+            homebrewVersion: "2.0",
+            blockingInstalledCask: nil
+        )
+        let downgradePlan = CaskAdoptionPlan(
+            artifact: .packageInstaller,
+            versionRelationship: .homebrewOlder,
+            operation: .downgradeAndAdopt,
+            execution: .replacePackage,
+            installedVersion: "2.0",
+            homebrewVersion: "1.0",
+            blockingInstalledCask: nil
+        )
+
+        XCTAssertEqual(CaskActionStyle.adopt.title, "Adopt")
+        XCTAssertEqual(updatePlan.confirmationTitle(for: cask), "Update & Adopt Sample?")
+        XCTAssertEqual(updatePlan.confirmationButtonTitle, "Update & Adopt")
+        XCTAssertEqual(updatePlan.confirmationButtonSymbol, "arrow.up.circle")
+        XCTAssertEqual(
+            updatePlan.confirmationMessage(for: cask),
+            "Homebrew will replace the current Sample app bundle with version 2.0, then manage future updates."
+        )
+        XCTAssertEqual(downgradePlan.confirmationButtonSymbol, "arrow.down.circle")
     }
 }
 
@@ -124,12 +173,24 @@ final class AdoptionViewRenderTests: XCTestCase {
     func test_cask_action_alerts_render_with_pending_permission_and_error() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-alerts"))
         service.permissionProbe = { .denied }
-        try? await service.adopt(token: "chrome")
-        service.open(makeCask("chrome"))
+        let cask = makeCask("chrome", appNames: ["Chrome.app"])
+        let plan = CaskAdoptionPlan(
+            artifact: .applicationBundle,
+            versionRelationship: .same,
+            operation: .adopt,
+            execution: .adoptApplication,
+            installedVersion: "1.0",
+            homebrewVersion: "1.0",
+            blockingInstalledCask: nil
+        )
+        service.operationStore.send(
+            .awaitPermission(CaskAdoptionRequest(cask: cask, plan: plan)),
+            for: cask.token
+        )
 
         render(
             Text("host")
-                .caskActionAlerts(for: makeCask("chrome"), showUninstallConfirmation: .constant(false))
+                .caskActionAlerts(for: cask, showUninstallConfirmation: .constant(false))
                 .environment(service)
         )
     }
@@ -186,6 +247,51 @@ final class AdoptionViewRenderTests: XCTestCase {
     }
 
     @MainActor
+    func test_update_homebrew_recovery_is_disabled_while_an_operation_runs() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("blocked-homebrew-recovery")
+        )
+        service.mutationCoordinator.beginOperation(
+            .installing,
+            token: "firefox",
+            displayName: "Firefox"
+        )
+        let failure = CaskOperationFailure(
+            kind: .brewCommand,
+            message: "Update Homebrew first",
+            recoveries: [.updateHomebrew]
+        )
+
+        let (alert, _) = CaskActionAlertFactory.errorAlert(
+            for: makeCask("gimp"),
+            failure: failure,
+            service: service
+        )
+
+        XCTAssertFalse(alert.buttons[0].isEnabled)
+        XCTAssertEqual(
+            alert.buttons[0].toolTip,
+            String(localized: "Wait for the current action to finish.")
+        )
+        XCTAssertTrue(alert.buttons[1].isEnabled)
+    }
+
+    @MainActor
+    func test_installation_preflight_alert_does_not_call_the_conflict_a_failure() {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("install-conflict-alert"))
+        let failure = CaskOperationFailure(
+            kind: .installationPreflight,
+            message: "conflict"
+        )
+
+        let (alert, _) = CaskActionAlertFactory.errorAlert(
+            for: makeCask("zen-privacy", name: "Zen"), failure: failure, service: service
+        )
+
+        XCTAssertEqual(alert.messageText, "Can't Install Zen")
+    }
+
+    @MainActor
     func test_error_alert_scrolls_long_output_instead_of_growing() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("alert-scroll"))
         let message = String(repeating: "brew output line\n", count: 60)
@@ -227,14 +333,15 @@ final class AdoptionViewRenderTests: XCTestCase {
             "Adopt Existing App",
             "Replace with Homebrew Version",
             "Repair & Reinstall",
+            "Update Homebrew",
             "Force Uninstall",
             "Open System Settings",
             "OK"
         ])
-        XCTAssertEqual(actions.count, 6)
+        XCTAssertEqual(actions.count, 7)
 
         // Every action except Open System Settings (launches the real app) and OK.
-        for action in actions[0...3] {
+        for action in actions[0...4] {
             action()
             try? await Task.sleep(for: .milliseconds(150))
         }

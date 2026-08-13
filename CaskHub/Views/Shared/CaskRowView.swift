@@ -16,6 +16,7 @@ struct CaskRowView: View {
     var eyebrow: LocalizedStringKey?
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
+    @Environment(\.isAdoptPage) private var isAdoptPage
     @State private var showDeleteConfirmation = false
     @State private var showingInfo = false
 
@@ -55,8 +56,34 @@ struct CaskRowView: View {
                     .foregroundStyle(Color.chTextBody)
                     .lineLimit(1)
             }
+            if isAdoptPage, let plan = actionPresentation.localState.adoptionPlan {
+                Text("Cask: \(cask.token)")
+                    .font(CHType.statusMono)
+                    .foregroundStyle(Color.chTextMuted)
+                adoptionVersionLine(plan)
+            }
         }
         .frame(minWidth: 150, alignment: .leading)
+    }
+
+    private func adoptionVersionLine(_ plan: CaskAdoptionPlan) -> some View {
+        HStack(spacing: 6) {
+            Text("Installed: \(plan.installedVersion ?? String(localized: "Unknown"))")
+                .foregroundStyle(Color.chTextMuted)
+            Image(systemName: "arrow.right")
+                .foregroundStyle(Color.chTextFaint)
+            Text(homebrewVersionLabel(plan))
+                .foregroundStyle(Color.chTextBrand)
+        }
+        .font(CHType.statusMono)
+        .lineLimit(1)
+    }
+
+    private func homebrewVersionLabel(_ plan: CaskAdoptionPlan) -> String {
+        let suffix = plan.versionRelationship == .homebrewOlder
+            ? String(localized: " (older)")
+            : ""
+        return "Homebrew: \(plan.homebrewVersion)\(suffix)"
     }
 
     // MARK: - Metadata

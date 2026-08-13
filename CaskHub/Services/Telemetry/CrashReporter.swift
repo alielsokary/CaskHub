@@ -14,8 +14,8 @@ protocol CrashSpan {
 }
 
 protocol CrashReporterProvider {
-    func start(enabled: Bool)
-    func setEnabled(_ enabled: Bool)
+    func start(consent: SentryConsent)
+    func setConsent(_ consent: SentryConsent)
     func capture(_ error: Error)
     func addBreadcrumb(_ message: String, data: [String: String])
     func setTag(_ key: String, value: String)
@@ -29,12 +29,22 @@ extension CrashReporterProvider {
     func resumeHangTracking() {}
 }
 
+nonisolated struct SentryConsent: Equatable, Sendable {
+    let crashReporting: Bool
+    let analytics: Bool
+
+    var isEmpty: Bool { !crashReporting && !analytics }
+}
+
 enum CrashReporter {
     static let enabledKey = "crashReportingEnabled"
 
     static var provider: CrashReporterProvider = SentryProvider()
+    static var defaults = UserDefaults.standard
 
     static var captureCounts: [String: Int] = [:]
+    static var isApplicationActive = false
+    static var hangTrackingPauseDepth = 0
     private static let captureLimit = 5
     private static let ignoredURLErrorCodes: Set<Int> = [
         URLError.cancelled.rawValue,
@@ -52,17 +62,23 @@ enum CrashReporter {
     static var isRunningTests = detectsTestRun
 
     static var isEnabled: Bool {
-        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+        defaults.object(forKey: enabledKey) as? Bool ?? true
     }
 
     static func start() {
         guard !isRunningTests else { return }
-        provider.start(enabled: isEnabled)
+        provider.start(consent: consent)
+        if isEnabled { synchronizeHangTracking() }
     }
 
     static func refresh() {
         guard !isRunningTests else { return }
-        provider.setEnabled(isEnabled)
+        provider.setConsent(consent)
+        if isEnabled { synchronizeHangTracking() }
+    }
+
+    private static var consent: SentryConsent {
+        SentryConsent(crashReporting: isEnabled, analytics: Analytics.isEnabled)
     }
 
     static func capture(_ error: Error) {
@@ -92,7 +108,13 @@ enum CrashReporter {
                .contains("Unexpected end of file") == true {
             return
         }
-        let signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
+        let signature: String
+        if let localError = error as? LocalHomebrewError,
+           case let .brewCommandFailed(failure) = localError {
+            signature = failure.rateLimitSignature
+        } else {
+            signature = "\(type(of: error)):\(nsError.domain):\(nsError.code)"
+        }
         let count = captureCounts[signature, default: 0]
         guard count < captureLimit else { return }
         captureCounts[signature] = count + 1
@@ -114,21 +136,48 @@ enum CrashReporter {
         return provider.startSpan(name: name, operation: operation)
     }
 
-    // Hang detection pings the main queue in the default run-loop mode; app-modal
-    // panels spin NSModalPanelRunLoopMode, so any dialog open >2s reports as a
-    // fake hang. Pause around every runModal-style nested run loop.
+    // Sentry's macOS tracker does not understand app activity or nested pauses.
+    // Keep it enabled only while CaskHub is active and outside modal run loops.
+    static func setApplicationActive(_ isActive: Bool) {
+        let wasTracking = shouldTrackHangs
+        isApplicationActive = isActive
+        updateHangTracking(ifChangedFrom: wasTracking)
+    }
+
     static func pauseHangTracking() {
-        provider.pauseHangTracking()
+        let wasTracking = shouldTrackHangs
+        hangTrackingPauseDepth += 1
+        updateHangTracking(ifChangedFrom: wasTracking)
     }
 
     static func resumeHangTracking() {
-        provider.resumeHangTracking()
+        guard hangTrackingPauseDepth > 0 else { return }
+        let wasTracking = shouldTrackHangs
+        hangTrackingPauseDepth -= 1
+        updateHangTracking(ifChangedFrom: wasTracking)
     }
 
     static func withHangTrackingPaused<T>(_ body: () throws -> T) rethrows -> T {
         pauseHangTracking()
         defer { resumeHangTracking() }
         return try body()
+    }
+
+    private static var shouldTrackHangs: Bool {
+        isApplicationActive && hangTrackingPauseDepth == 0
+    }
+
+    private static func updateHangTracking(ifChangedFrom wasTracking: Bool) {
+        guard shouldTrackHangs != wasTracking else { return }
+        synchronizeHangTracking()
+    }
+
+    private static func synchronizeHangTracking() {
+        if shouldTrackHangs {
+            provider.resumeHangTracking()
+        } else {
+            provider.pauseHangTracking()
+        }
     }
 }
 
@@ -139,19 +188,127 @@ struct NoOpCrashSpan: CrashSpan {
 
 // MARK: - Sentry
 
-final class SentryProvider: CrashReporterProvider {
-    private static var dsn: String? {
-        let value = Bundle.main.object(forInfoDictionaryKey: "SentryDSN") as? String
-        return value?.isEmpty == false ? value : nil
+nonisolated enum AppHangFamily: String, Sendable {
+    case appCode = "app-code"
+    case sentry
+    case sparkle
+    case swiftUI = "swift-ui"
+    case windowServer = "window-server"
+    case graphics
+    case appKit = "app-kit"
+    case system
+}
+
+nonisolated final class AppHangEventProcessor: Sendable {
+    private static let swiftUIFrameworks = ["swiftui", "attributegraph"]
+    private static let graphicsFrameworks = ["coregraphics", "metal", "renderbox"]
+
+    func process(_ event: Event) -> Event? {
+        guard let exception = event.exceptions?.first(where: {
+            $0.mechanism?.type == "AppHang"
+        }) else {
+            return event
+        }
+
+        let family = Self.family(
+            for: exception.stacktrace?.frames
+                ?? event.threads?.first(where: { $0.isMain?.boolValue == true })?
+                    .stacktrace?.frames
+                ?? []
+        )
+        var tags = event.tags ?? [:]
+        tags["app_hang.family"] = family.rawValue
+        event.tags = tags
+        event.fingerprint = (event.fingerprint ?? ["{{ default }}"])
+            + ["app-hang", family.rawValue]
+        return event
     }
 
-    private var started = false
+    private static func family(for frames: [Frame]) -> AppHangFamily {
+        // Sentry stores native frames oldest-to-youngest. The youngest useful
+        // frame describes the work that was actually blocking the main thread.
+        for frame in frames.reversed() {
+            if frame.inApp?.boolValue == true {
+                return .appCode
+            }
+            guard let package = frame.package.map({
+                URL(fileURLWithPath: $0).lastPathComponent.lowercased()
+            }) else { continue }
+            if let family = family(forPackage: package) {
+                return family
+            }
+        }
+        return .system
+    }
 
-    func start(enabled: Bool) {
-        guard enabled, let dsn = Self.dsn else { return }
-        SentrySDK.start { options in
+    private static func family(forPackage package: String) -> AppHangFamily? {
+        if package.contains("sentry") { return .sentry }
+        if package.contains("sparkle") { return .sparkle }
+        if swiftUIFrameworks.contains(where: package.contains) { return .swiftUI }
+        if package == "skylight" { return .windowServer }
+        if graphicsFrameworks.contains(where: package.contains) { return .graphics }
+        if package == "appkit" { return .appKit }
+        return nil
+    }
+}
+
+final class SentryProvider: CrashReporterProvider {
+    private let dsn: () -> String?
+    private let startSDK: (@escaping (Options) -> Void) -> Void
+    private let closeSDK: () -> Void
+    private var consent: SentryConsent?
+    private var started = false
+    private let appHangProcessor = AppHangEventProcessor()
+    init(
+        dsn: @escaping () -> String? = {
+            let value = Bundle.main.object(forInfoDictionaryKey: "SentryDSN") as? String
+            return value?.isEmpty == false ? value : nil
+        },
+        startSDK: @escaping (@escaping (Options) -> Void) -> Void = {
+            SentrySDK.start(configureOptions: $0)
+        },
+        closeSDK: @escaping () -> Void = SentrySDK.close
+    ) {
+        self.dsn = dsn
+        self.startSDK = startSDK
+        self.closeSDK = closeSDK
+    }
+    func start(consent: SentryConsent) { configure(for: consent) }
+    func setConsent(_ consent: SentryConsent) { configure(for: consent) }
+
+    private func configure(for consent: SentryConsent) {
+        let previousConsent = self.consent
+        guard consent != previousConsent else { return }
+        self.consent = consent
+
+        if let previousConsent,
+           previousConsent.crashReporting == consent.crashReporting {
+            if consent.isEmpty {
+                stop()
+            } else if !started {
+                start(for: consent)
+            }
+            return
+        }
+
+        stop()
+        start(for: consent)
+    }
+
+    private func start(for consent: SentryConsent) {
+        guard !consent.isEmpty, let dsn = dsn() else { return }
+
+        let appHangProcessor = appHangProcessor
+        startSDK { options in
             options.dsn = dsn
-            options.tracesSampleRate = 1.0
+            options.shutdownTimeInterval = 0
+            Self.configure(
+                options,
+                consent: consent,
+                appHangProcessor: appHangProcessor,
+                isCrashReportingEnabled: { CrashReporter.isEnabled },
+                isAnalyticsEnabled: { Analytics.isEnabled }
+            )
             #if DEBUG
             options.environment = "debug"
             #endif
@@ -159,12 +316,57 @@ final class SentryProvider: CrashReporterProvider {
         started = true
     }
 
-    func setEnabled(_ enabled: Bool) {
-        if enabled {
-            start(enabled: true)
-        } else {
-            SentrySDK.close()
-            started = false
+    private func stop() {
+        guard started else { return }
+        closeSDK()
+        started = false
+    }
+
+    static func configure(
+        _ options: Options,
+        consent: SentryConsent,
+        appHangProcessor: AppHangEventProcessor,
+        isCrashReportingEnabled: @escaping () -> Bool = { CrashReporter.isEnabled },
+        isAnalyticsEnabled: @escaping () -> Bool = { Analytics.isEnabled }
+    ) {
+        options.enableMetrics = true
+        options.beforeSendMetric = { metric in
+            guard isAnalyticsEnabled() else { return nil }
+            var metric = metric
+            metric.attributes.removeValue(forKey: "user.id")
+            metric.attributes.removeValue(forKey: "user.name")
+            metric.attributes.removeValue(forKey: "user.email")
+            return metric
+        }
+
+        guard consent.crashReporting else {
+            options.sampleRate = 0
+            options.tracesSampleRate = 0
+            options.enableCrashHandler = false
+            options.enableAutoSessionTracking = false
+            options.enableWatchdogTerminationTracking = false
+            options.enableAppHangTracking = false
+            options.enableAutoPerformanceTracing = false
+            options.enableNetworkTracking = false
+            options.enableFileIOTracing = false
+            options.enableCoreDataTracing = false
+            options.enableCaptureFailedRequests = false
+            options.enableAutoBreadcrumbTracking = false
+            options.enableNetworkBreadcrumbs = false
+            options.enableSwizzling = false
+            options.sendClientReports = false
+            options.beforeSend = { _ in nil }
+            options.beforeSendSpan = { _ in nil }
+            return
+        }
+
+        options.tracesSampleRate = 1.0
+        options.beforeSend = {
+            guard isCrashReportingEnabled() else { return nil }
+            return appHangProcessor.process($0)
+        }
+        options.beforeSendSpan = {
+            isCrashReportingEnabled() ? $0 : nil
         }
     }
 
@@ -173,6 +375,12 @@ final class SentryProvider: CrashReporterProvider {
             if let fingerprint = Self.fingerprint(for: error) {
                 scope.setFingerprint(fingerprint)
             }
+            guard let localError = error as? LocalHomebrewError,
+                  case let .brewCommandFailed(failure) = localError
+            else { return }
+            scope.setTag(value: failure.kind.rawValue, key: "brew.failure_class")
+            scope.setTag(value: failure.subcommand ?? "missing", key: "brew.subcommand")
+            scope.setTag(value: String(failure.exitCode), key: "brew.exit_code")
         }
     }
 
@@ -180,13 +388,10 @@ final class SentryProvider: CrashReporterProvider {
     /// domain+code — one issue per way brew fails, so a rare destructive failure
     /// can't hide inside a busy catch-all group.
     static func fingerprint(for error: Error) -> [String]? {
-        guard case let LocalHomebrewError.brewCommandFailed(args, exitCode, stderr) = error,
-              let subcommand = args.first else { return nil }
-        return [
-            "brewCommandFailed",
-            subcommand,
-            LocalHomebrewError.failureClass(stderr: stderr, exitCode: exitCode)
-        ]
+        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
+            return nil
+        }
+        return failure.stableFingerprint
     }
 
     func setTag(_ key: String, value: String) {

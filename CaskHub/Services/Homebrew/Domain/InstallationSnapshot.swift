@@ -10,6 +10,7 @@ import Foundation
 nonisolated struct ApplicationInstallationSnapshot: Sendable {
     let externalAppNames: Set<String>
     let externalApplicationOwners: [String: DetectedApplication]
+    let externalPackageApplicationOwners: [String: DetectedApplication]
     let macAppStoreAppNames: Set<String>
     let macAppStoreBundleIdentifiers: [String: Set<String>]
     let detectedApplications: [DetectedApplication]
@@ -19,12 +20,14 @@ nonisolated struct ApplicationInstallationSnapshot: Sendable {
     init(
         externalAppNames: Set<String> = [],
         externalApplicationOwners: [String: DetectedApplication] = [:],
+        externalPackageApplicationOwners: [String: DetectedApplication],
         macAppStoreAppNames: Set<String> = [],
         macAppStoreBundleIdentifiers: [String: Set<String>] = [:],
         detectedApplications: [DetectedApplication] = []
     ) {
         self.externalAppNames = externalAppNames
         self.externalApplicationOwners = externalApplicationOwners
+        self.externalPackageApplicationOwners = externalPackageApplicationOwners
         self.macAppStoreAppNames = macAppStoreAppNames
         self.macAppStoreBundleIdentifiers = macAppStoreBundleIdentifiers
         self.detectedApplications = detectedApplications
@@ -33,7 +36,9 @@ nonisolated struct ApplicationInstallationSnapshot: Sendable {
         )
     }
 
-    static let empty = ApplicationInstallationSnapshot()
+    static let empty = ApplicationInstallationSnapshot(
+        externalPackageApplicationOwners: [:]
+    )
 }
 
 nonisolated struct InstallationSnapshot: Sendable {
@@ -51,6 +56,10 @@ nonisolated struct InstallationSnapshot: Sendable {
 
     var externalApplicationOwners: [String: DetectedApplication] {
         applications.externalApplicationOwners
+    }
+
+    var externalPackageApplicationOwners: [String: DetectedApplication] {
+        applications.externalPackageApplicationOwners
     }
 
     var macAppStoreAppNames: Set<String> {

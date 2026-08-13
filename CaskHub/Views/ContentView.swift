@@ -116,10 +116,7 @@ struct ContentView: View {
                 searchSignalTask = Task {
                     try? await Task.sleep(for: .seconds(2))
                     guard !Task.isCancelled else { return }
-                    Analytics.searchPerformed(
-                        query: newValue,
-                        results: viewModel.filteredCasks.count
-                    )
+                    Analytics.searchPerformed(results: viewModel.filteredCasks.count)
                 }
             }
             if newValue.isEmpty {
@@ -166,6 +163,7 @@ struct ContentView: View {
                 : nil,
             updateAllCount: viewModel.updatesCount,
             isUpdatingAll: localHomebrew.isUpdatingAll,
+            isUpdatingHomebrew: localHomebrew.isUpdatingHomebrew,
             greedyUpdates: selectedSidebar == .library(.updates) ? localHomebrew.greedyUpdates : nil,
             onToggleGreedy: { enabled in
                 Analytics.greedyUpdatesChanged(enabled)

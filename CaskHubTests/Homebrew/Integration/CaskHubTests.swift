@@ -261,36 +261,69 @@ final class CaskHubTests: XCTestCase {
     }
 
     func test_adopt_mismatch_detection() {
-        XCTAssertTrue(LocalHomebrewError.isAdoptMismatch(
-            args: ["install", "--cask", "x", "--adopt"],
-            stderr: "Error: It seems the existing App is different from the one being installed."
-        ))
-        XCTAssertFalse(LocalHomebrewError.isAdoptMismatch(
-            args: ["install", "--cask", "x"],
-            stderr: "It seems there is already an App at '/Applications/X.app'."
-        ))
-        XCTAssertFalse(LocalHomebrewError.isAdoptMismatch(
-            args: ["install", "--cask", "x", "--adopt"],
-            stderr: "curl: (6) Could not resolve host"
-        ))
+        XCTAssertEqual(
+            classify(
+                ["install", "--cask", "x", "--adopt"],
+                "Error: It seems the existing App is different from the one being installed."
+            ),
+            .adoptVersionMismatch
+        )
+        XCTAssertEqual(
+            classify(
+                ["install", "--cask", "x"],
+                "It seems there is already an App at '/Applications/X.app'."
+            ),
+            .appConflict
+        )
+        XCTAssertEqual(
+            classify(
+                ["install", "--cask", "x", "--adopt"],
+                "curl: (6) Could not resolve host"
+            ),
+            .networkFailure
+        )
     }
 
     @MainActor
     func test_adopt_preflight_waits_for_app_management_permission() async throws {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("preflight"))
         service.permissionProbe = { .denied }
+        let adoptCask = makeCask(
+            "chatgpt-classic",
+            appNames: ["ChatGPT Classic.app"]
+        )
+        let replaceCask = makeCask("canva", appNames: ["Canva.app"])
+        let adoptApplication = externalApplication(
+            named: "ChatGPT Classic.app", version: "1.0"
+        )
+        let replaceApplication = externalApplication(
+            named: "Canva.app", version: "2.0"
+        )
+        updateInstallationSnapshot(of: service) {
+            $0.externalAppNames = [
+                adoptApplication.bundleName,
+                replaceApplication.bundleName
+            ]
+            $0.externalApplicationOwners = [
+                adoptCask.token: adoptApplication,
+                replaceCask.token: replaceApplication
+            ]
+        }
 
-        try await service.adopt(token: "chatgpt-classic")
-        XCTAssertEqual(service.operationStore.pendingPermissions["chatgpt-classic"], false)
+        await service.requestAdoption(adoptCask)
+        XCTAssertEqual(
+            service.operationStore.pendingPermissions["chatgpt-classic"]?.plan.execution,
+            .adoptApplication
+        )
         XCTAssertNil(
             service.operationStore.state(for: "chatgpt-classic")?.action,
             "brew must not run while permission is missing"
         )
 
-        try await service.adoptReplacing(token: "canva")
+        await service.requestReplacementAdoption(replaceCask)
         XCTAssertEqual(
-            service.operationStore.pendingPermissions["canva"],
-            true,
+            service.operationStore.pendingPermissions["canva"]?.plan.execution,
+            .replaceApplication,
             "replace path remembers it needs --force"
         )
 
@@ -305,7 +338,7 @@ final class CaskHubTests: XCTestCase {
 
     func test_app_management_denial_maps_to_permission_guidance() {
         let stderr = "xattr: [Errno 1] Operation not permitted: '/Applications/ChatGPT Classic.app'"
-        XCTAssertTrue(LocalHomebrewError.isAppManagementDenial(stderr: stderr))
+        XCTAssertEqual(classify(["install", "--cask", "chatgpt-classic"], stderr), .permissionDenied)
 
         let error = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "chatgpt-classic", "--adopt"], exitCode: 1, stderr: stderr
@@ -315,19 +348,28 @@ final class CaskHubTests: XCTestCase {
         )
 
         let unrelated = "chmod: /opt/homebrew/bin/tool: Operation not permitted"
-        XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: unrelated))
-        XCTAssertFalse(
-            LocalHomebrewError.isAppManagementDenial(
-                stderr: "Inspecting /Applications/Example.app\n\(unrelated)"
-            )
+        XCTAssertEqual(classify([], unrelated), .unknown)
+        XCTAssertEqual(
+            classify([], "Inspecting /Applications/Example.app\n\(unrelated)"),
+            .unknown
         )
-        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: unrelated), "uncategorized")
         XCTAssertTrue(
             LocalHomebrewError.brewCommandFailed(
                 args: ["install", "--cask", "tool"], exitCode: 1, stderr: unrelated
             ).shouldReport
         )
-        XCTAssertFalse(LocalHomebrewError.isAppManagementDenial(stderr: "curl: (6) Could not resolve host"))
+        XCTAssertEqual(classify([], "curl: (6) Could not resolve host"), .networkFailure)
+    }
+
+    private func classify(
+        _ arguments: [String],
+        _ diagnostic: String
+    ) -> HomebrewFailureKind {
+        HomebrewCommandFailure.classify(
+            arguments: arguments,
+            exitCode: 1,
+            diagnostic: diagnostic
+        )
     }
 
     func test_output_collector_folds_pty_crlf_instead_of_doubling() {
@@ -439,5 +481,19 @@ final class CaskHubTests: XCTestCase {
         )
         vm.selectedSidebar = .library(.adopt)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["google-chrome"])
+    }
+
+    private func externalApplication(
+        named bundleName: String,
+        version: String
+    ) -> DetectedApplication {
+        DetectedApplication(
+            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
+            bundleName: bundleName,
+            bundleIdentifier: "com.example.\(bundleName)",
+            version: version,
+            isMacAppStore: false,
+            isDirectlyInApplicationDirectory: true
+        )
     }
 }

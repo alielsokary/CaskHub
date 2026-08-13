@@ -39,7 +39,7 @@ final class CaskOperationStore {
     }
 
     func beginUpdateAll() -> Bool {
-        guard !isUpdatingAll else { return false }
+        guard !isUpdatingAll, !isUpdatingHomebrew else { return false }
         isUpdatingAll = true
         return true
     }
@@ -62,10 +62,22 @@ final class CaskOperationStore {
         return true
     }
 
-    var pendingPermissions: [String: Bool] {
+    func canBeginOperation(_ action: CaskAction, for token: String) -> Bool {
+        if action == .updatingHomebrew {
+            return !hasActiveOperations
+        }
+        guard !isUpdatingHomebrew else { return false }
+        return canBeginOperation(for: token)
+    }
+
+    var isUpdatingHomebrew: Bool {
+        boxes.values.contains { $0.state?.action == .updatingHomebrew }
+    }
+
+    var pendingPermissions: [String: CaskAdoptionRequest] {
         boxes.reduce(into: [:]) { result, entry in
-            if case let .awaitingPermission(force) = entry.value.state {
-                result[entry.key] = force
+            if case let .awaitingPermission(request) = entry.value.state {
+                result[entry.key] = request
             }
         }
     }

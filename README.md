@@ -17,7 +17,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 
 ## Install
 
-<a href="https://github.com/alielsokary/CaskHub/releases/download/0.7.0/CaskHub-0.7.0.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
+<a href="https://github.com/alielsokary/CaskHub/releases/download/0.7.1/CaskHub-0.7.1.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
 
 Or install with Homebrew:
 
@@ -85,7 +85,7 @@ Select the **CaskHub** scheme and run (⌘R). Xcode resolves the Swift package d
 - **SwiftUI + MVVM** with `@Observable` view models and `@MainActor` isolation
 - **Protocol-based networking layer** for testability (`BrewAPIClientProtocol`, `NetworkServiceProtocol`) with dependency injection throughout
 - **Two-tier icon caching** (memory + disk) and HTTP-header-based download-size resolution
-- **Minimal dependencies** - three focused packages: [Sparkle](https://sparkle-project.org) for app updates, [Sentry](https://sentry.io) for crash reporting, and [TelemetryDeck](https://telemetrydeck.com) for analytics
+- **Minimal dependencies** - three focused packages: [Sparkle](https://sparkle-project.org) for app updates, [Sentry](https://sentry.io) for crash reporting and usage metrics, and [TelemetryDeck](https://telemetrydeck.com) for session and acquisition analytics
 
 ## Testing & CI
 
@@ -97,11 +97,11 @@ xcodebuild test -project CaskHub.xcodeproj -scheme CaskHub -destination 'platfor
 
 ## Privacy & Analytics
 
-CaskHub collects anonymous usage analytics through [TelemetryDeck](https://telemetrydeck.com), a privacy-first analytics service. No personal data or identifiers ever leave your Mac: user IDs are salted and hashed on-device, and there is no tracking across apps or websites.
+CaskHub sends anonymous usage metrics through [Sentry](https://sentry.io). [TelemetryDeck](https://telemetrydeck.com) receives only anonymous session and new-install signals used for acquisition and retention reporting.
 
-CaskHub also sends anonymous crash reports through [Sentry](https://sentry.io) to help diagnose and fix stability issues.
+CaskHub also sends crash reports and technical diagnostics through [Sentry](https://sentry.io) to help diagnose and fix stability issues.
 
-You can opt out of both at any time in **Settings → Privacy**.
+You can opt out of everything at any time in **Settings → Privacy**.
 
 ## Localization
 

@@ -8,25 +8,53 @@
 @testable import CaskHub
 import XCTest
 
+private struct CrashReporterTestState {
+    let provider: CrashReporterProvider
+    let defaults: UserDefaults
+    let analyticsDefaults: UserDefaults
+    let captureCounts: [String: Int]
+    let applicationActive: Bool
+    let pauseDepth: Int
+    let isRunningTests: Bool
+}
+
 final class CrashReporterTests: XCTestCase {
-    private var spy: SpyCrashReporterProvider!
-    private var originalProvider: CrashReporterProvider!
+    var spy: SpyCrashReporterProvider!
+    private var originalState: CrashReporterTestState!
 
     override func setUp() {
         super.setUp()
         spy = SpyCrashReporterProvider()
-        originalProvider = CrashReporter.provider
+        originalState = CrashReporterTestState(
+            provider: CrashReporter.provider,
+            defaults: CrashReporter.defaults,
+            analyticsDefaults: Analytics.defaults,
+            captureCounts: CrashReporter.captureCounts,
+            applicationActive: CrashReporter.isApplicationActive,
+            pauseDepth: CrashReporter.hangTrackingPauseDepth,
+            isRunningTests: CrashReporter.isRunningTests
+        )
         CrashReporter.provider = spy
+        CrashReporter.defaults = makeScratchDefaults(
+            "crash-reporter-\(ProcessInfo.processInfo.processIdentifier)"
+        )
+        Analytics.defaults = makeScratchDefaults(
+            "crash-reporter-analytics-\(ProcessInfo.processInfo.processIdentifier)"
+        )
         CrashReporter.captureCounts = [:]
+        CrashReporter.isApplicationActive = false
+        CrashReporter.hangTrackingPauseDepth = 0
         CrashReporter.isRunningTests = false
-        UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
     }
 
     override func tearDown() {
-        CrashReporter.provider = originalProvider
-        CrashReporter.captureCounts = [:]
-        CrashReporter.isRunningTests = CrashReporter.detectsTestRun
-        UserDefaults.standard.removeObject(forKey: CrashReporter.enabledKey)
+        CrashReporter.provider = originalState.provider
+        CrashReporter.defaults = originalState.defaults
+        Analytics.defaults = originalState.analyticsDefaults
+        CrashReporter.captureCounts = originalState.captureCounts
+        CrashReporter.isApplicationActive = originalState.applicationActive
+        CrashReporter.hangTrackingPauseDepth = originalState.pauseDepth
+        CrashReporter.isRunningTests = originalState.isRunningTests
         super.tearDown()
     }
 
@@ -37,22 +65,8 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_is_enabled_reflects_stored_opt_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         XCTAssertFalse(CrashReporter.isEnabled)
-    }
-
-    func test_start_passes_stored_setting_to_provider() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
-        CrashReporter.start()
-        XCTAssertEqual(spy.startedWith, [false])
-    }
-
-    func test_refresh_forwards_current_setting_to_provider() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
-        CrashReporter.refresh()
-        UserDefaults.standard.set(true, forKey: CrashReporter.enabledKey)
-        CrashReporter.refresh()
-        XCTAssertEqual(spy.enabledChanges, [false, true])
     }
 
     // MARK: - Capture + consent
@@ -63,7 +77,7 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_capture_is_suppressed_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.capture(URLError(.badServerResponse))
         XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
@@ -82,6 +96,23 @@ final class CrashReporterTests: XCTestCase {
             CrashReporter.capture(URLError(.badServerResponse))
             CrashReporter.capture(URLError(.cannotDecodeRawData))
         }
+        XCTAssertEqual(spy.capturedErrors.count, 10)
+    }
+
+    func test_brew_failure_classes_are_limited_independently() {
+        for _ in 1...6 {
+            CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+                args: ["install", "--cask", "one"],
+                exitCode: 1,
+                stderr: "curl: (22) The requested URL returned error: 404"
+            ))
+            CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
+                args: ["install", "--cask", "two"],
+                exitCode: 1,
+                stderr: "Error: two: Download failed on Cask 'two' with message: mystery"
+            ))
+        }
+
         XCTAssertEqual(spy.capturedErrors.count, 10)
     }
 
@@ -123,7 +154,7 @@ final class CrashReporterTests: XCTestCase {
         CrashReporter.start()
         CrashReporter.refresh()
         XCTAssertTrue(spy.startedWith.isEmpty)
-        XCTAssertTrue(spy.enabledChanges.isEmpty)
+        XCTAssertTrue(spy.consentChanges.isEmpty)
     }
 
     func test_environmental_errors_are_never_captured() {
@@ -165,13 +196,19 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_recoverable_brew_failures_are_never_captured() {
+        let architectureFailure = """
+        This cask depends on hardware architecture being one of \
+        [{type: :arm, bits: 64}], but you are running {type: :intel, bits: 64}.
+        """
         let failures = [
             "It seems the existing App is different from the one being installed.",
             "Error: zed: It seems there is already an App at "
                 + "'/opt/homebrew/Caskroom/zed/1.10.3/Zed.app'.",
             "chmod: /Applications/Example.app/Contents/MacOS/example: Operation not permitted",
             "SHA256 mismatch",
-            "Download failed: curl: (6) Could not resolve host: example.com"
+            "Download failed: curl: (6) Could not resolve host: example.com",
+            "Error: zen-privacy: Cask 'zen-privacy' conflicts with 'zen'.",
+            architectureFailure
         ]
         for stderr in failures {
             CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
@@ -230,7 +267,11 @@ final class CrashReporterTests: XCTestCase {
     }
 
     private func cls(_ stderr: String) -> String {
-        LocalHomebrewError.failureClass(stderr: stderr)
+        HomebrewCommandFailure.classify(
+            arguments: [],
+            exitCode: nil,
+            diagnostic: stderr
+        ).rawValue
     }
 
     func test_failure_classes_cover_observed_brew_errors() {
@@ -240,7 +281,10 @@ final class CrashReporterTests: XCTestCase {
             cls("chmod: /Applications/Example.app: Unable to change file mode: Operation not permitted"),
             "permission-denied"
         )
-        XCTAssertEqual(cls("It seems the existing App is different from the one being installed."), "adopt-version-mismatch")
+        XCTAssertEqual(
+            cls("It seems the existing App is different from the one being installed."),
+            "adopt-version-mismatch"
+        )
         XCTAssertEqual(cls("SHA256 mismatch"), "checksum-mismatch")
         XCTAssertEqual(cls("curl: (6) Could not resolve host: example.com"), "network-failure")
         XCTAssertEqual(cls("It seems there is already a Binary at '/opt/homebrew/bin/x'."), "binary-conflict")
@@ -253,7 +297,7 @@ final class CrashReporterTests: XCTestCase {
             "sudo-declined",
             "a declined prompt is the terminal cause even with incidental conflict warnings"
         )
-        XCTAssertEqual(cls("something novel"), "uncategorized")
+        XCTAssertEqual(cls("something novel"), "unknown")
     }
 
     func test_failure_classes_cover_field_mined_brew_errors() {
@@ -322,7 +366,7 @@ final class CrashReporterTests: XCTestCase {
             cls("installer: The upgrade failed. (The Installer encountered an error.)\n"
                 + "Error: Failure while executing; `/usr/bin/sudo -A -E -- "
                 + "/usr/sbin/installer -pkg /private/tmp/x.pkg -target /` exited with 1."),
-            "pkg-installer-failed"
+            "pkg-upgrade-failed"
         )
         XCTAssertEqual(
             cls("curl: (7) Failed to connect to updates.vendor.com port 443\n"
@@ -331,6 +375,15 @@ final class CrashReporterTests: XCTestCase {
                 + "/usr/sbin/installer -pkg /private/tmp/vendor.pkg -target /` exited with 1."),
             "pkg-installer-failed",
             "a vendor installer's own curl chatter must not reclassify the failure"
+        )
+        XCTAssertEqual(
+            cls("installer: Error - A newer version of OneDrive (26.129.0706) "
+                + "is already installed."),
+            "pkg-newer-installed"
+        )
+        XCTAssertEqual(
+            cls("installer: Error - iLok License Manager 6.0.0 is already installed."),
+            "pkg-already-installed"
         )
         XCTAssertEqual(cls("Error: Not upgrading 1 pinned package:\nmarkedit 1.33.0"), "upgrade-refused")
         XCTAssertEqual(
@@ -350,11 +403,14 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_killed_process_with_silent_stderr_gets_its_own_class() {
-        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: "", exitCode: 9), "process-killed")
-        XCTAssertEqual(LocalHomebrewError.failureClass(stderr: "", exitCode: 1), "uncategorized")
+        XCTAssertEqual(classify("", exitCode: 9), "process-killed")
         XCTAssertEqual(
-            LocalHomebrewError.failureClass(stderr: "Error: real failure", exitCode: 9),
-            "uncategorized",
+            classify("", exitCode: 1),
+            "no-diagnostic-output"
+        )
+        XCTAssertEqual(
+            classify("Error: real failure", exitCode: 9),
+            "unknown",
             "a kill with actual output classifies on the output"
         )
         let killed = LocalHomebrewError.brewCommandFailed(
@@ -365,6 +421,14 @@ final class CrashReporterTests: XCTestCase {
             ["brewCommandFailed", "install", "process-killed"]
         )
         XCTAssertTrue(killed.shouldReport, "watch volume before deciding to suppress")
+    }
+
+    private func classify(_ diagnostic: String, exitCode: Int32) -> String {
+        HomebrewCommandFailure.classify(
+            arguments: [],
+            exitCode: exitCode,
+            diagnostic: diagnostic
+        ).rawValue
     }
 
     func test_wrong_sudo_password_is_not_reported() {
@@ -398,9 +462,23 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_tag_is_suppressed_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.tag("brew.path", value: "/opt/homebrew/bin/brew")
         XCTAssertTrue(spy.tags.isEmpty)
+    }
+
+    @MainActor
+    func test_homebrew_refresh_tags_the_selected_path_and_version() async {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("brew-tags")) {
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/opt/homebrew/bin/brew") }
+            $0.brewVersionProvider = { "6.0.0" }
+        }
+
+        await service.refresh()
+
+        XCTAssertEqual(spy.tags["brew.path"], "/opt/homebrew/bin/brew")
+        XCTAssertEqual(spy.tags["brew.version"], "6.0.0")
     }
 
     // MARK: - Breadcrumbs
@@ -412,7 +490,7 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_breadcrumb_is_suppressed_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         CrashReporter.breadcrumb("Cask.installed")
         XCTAssertTrue(spy.breadcrumbs.isEmpty)
     }
@@ -434,7 +512,7 @@ final class CrashReporterTests: XCTestCase {
     }
 
     func test_span_is_inert_when_opted_out() {
-        UserDefaults.standard.set(false, forKey: CrashReporter.enabledKey)
+        CrashReporter.defaults.set(false, forKey: CrashReporter.enabledKey)
         let span = CrashReporter.span(name: "install", operation: "brew")
         span.finish()
         XCTAssertTrue(spy.spans.isEmpty)
@@ -442,22 +520,36 @@ final class CrashReporterTests: XCTestCase {
 
     // MARK: - Hang tracking pause
 
-    func test_with_hang_tracking_paused_brackets_the_body() {
-        let value = CrashReporter.withHangTrackingPaused { 7 }
-        XCTAssertEqual(value, 7)
-        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
-    }
-
-    func test_hang_tracking_resumes_when_body_throws() {
-        XCTAssertThrowsError(
-            try CrashReporter.withHangTrackingPaused { throw URLError(.badURL) }
-        )
-        XCTAssertEqual(spy.hangTrackingEvents, ["pause", "resume"])
-    }
-
     func test_sentry_provider_pause_resume_are_safe_without_started_sdk() {
         let provider = SentryProvider()
         provider.pauseHangTracking()
         provider.resumeHangTracking()
+    }
+}
+
+extension CrashReporterTests {
+    func test_unknown_brew_diagnostics_share_one_bounded_fingerprint_and_rate_limit() {
+        let first = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "one"],
+            exitCode: 1,
+            stderr: "Error: renderer crashed before launch"
+        )
+        let second = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "two"],
+            exitCode: 1,
+            stderr: "Error: helper returned an impossible state"
+        )
+        XCTAssertEqual(
+            SentryProvider.fingerprint(for: first),
+            SentryProvider.fingerprint(for: second)
+        )
+
+        for _ in 1...6 {
+            CrashReporter.capture(first)
+            CrashReporter.capture(second)
+        }
+
+        XCTAssertEqual(spy.capturedErrors.count, 5)
+        XCTAssertEqual(CrashReporter.captureCounts.count, 1)
     }
 }

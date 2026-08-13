@@ -62,8 +62,8 @@ nonisolated enum HomebrewOutputDiagnostics {
         if line.unicodeScalars.contains(where: { (0x2800...0x28FF).contains($0.value) }) {
             return true
         }
-        guard let range = line.range(of: "Downloading ") ?? line.range(of: "Extracting ")
-            ?? line.range(of: "Verified ") else { return false }
+        guard let range = line.range(of: "Downloading ") ?? line.range(of: "Downloaded ")
+            ?? line.range(of: "Extracting ") ?? line.range(of: "Verified ") else { return false }
         return line[range.upperBound...].contains("B/")
     }
 }

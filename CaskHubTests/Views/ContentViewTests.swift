@@ -151,9 +151,10 @@ final class ContentViewTests: XCTestCase {
             defer: false
         )
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: WindowCloseButtonConfigurator {
-            terminationCoordinator.requestTermination()
-        })
+        window.contentView = NSHostingView(rootView: WindowCloseButtonConfigurator(
+            onClose: { terminationCoordinator.requestTermination() },
+            onBecomeKey: {}
+        ))
         window.orderFrontRegardless()
 
         let closeButton = try XCTUnwrap(window.standardWindowButton(.closeButton))
@@ -170,6 +171,39 @@ final class ContentViewTests: XCTestCase {
         XCTAssertEqual(probe.terminationReply, .terminateCancel)
         window.contentView = NSView()
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        window.close()
+    }
+
+    @MainActor
+    func test_window_configurator_reports_when_its_window_becomes_key() {
+        var keyCount = 0
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: WindowCloseButtonConfigurator(
+            onClose: {},
+            onBecomeKey: { keyCount += 1 }
+        ))
+        window.orderFrontRegardless()
+
+        let closeButton = window.standardWindowButton(.closeButton)
+        let deadline = Date().addingTimeInterval(2)
+        while !(closeButton?.target is WindowCloseButtonConfigurator.Coordinator),
+              Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
+        keyCount = 0
+        NotificationCenter.default.post(
+            name: NSWindow.didBecomeKeyNotification,
+            object: window
+        )
+
+        XCTAssertEqual(keyCount, 1)
+        window.contentView = NSView()
         window.close()
     }
 
@@ -234,6 +268,7 @@ final class SidebarViewTests: XCTestCase {
 final class TopBarViewTests: XCTestCase {
     private struct TopBarHarness: View {
         let isUpdatingAll: Bool
+        let isUpdatingHomebrew: Bool
         var greedyUpdates: Bool?
         let onAppear: () -> Void
         @FocusState private var searchFocused: Bool
@@ -248,6 +283,7 @@ final class TopBarViewTests: XCTestCase {
                 searchFocus: $searchFocused,
                 onUpdateAll: {},
                 isUpdatingAll: isUpdatingAll,
+                isUpdatingHomebrew: isUpdatingHomebrew,
                 greedyUpdates: greedyUpdates,
                 onToggleGreedy: { _ in }
             )
@@ -261,7 +297,11 @@ final class TopBarViewTests: XCTestCase {
     }
 
     @MainActor
-    private func renderTopBar(isUpdatingAll: Bool, greedyUpdates: Bool? = nil) {
+    private func renderTopBar(
+        isUpdatingAll: Bool,
+        isUpdatingHomebrew: Bool,
+        greedyUpdates: Bool? = nil
+    ) {
         let probe = RenderProbe()
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 900, height: 80),
@@ -271,7 +311,11 @@ final class TopBarViewTests: XCTestCase {
         )
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(
-            rootView: TopBarHarness(isUpdatingAll: isUpdatingAll, greedyUpdates: greedyUpdates) { probe.appeared = true }
+            rootView: TopBarHarness(
+                isUpdatingAll: isUpdatingAll,
+                isUpdatingHomebrew: isUpdatingHomebrew,
+                greedyUpdates: greedyUpdates
+            ) { probe.appeared = true }
         )
         window.orderFrontRegardless()
 
@@ -287,18 +331,19 @@ final class TopBarViewTests: XCTestCase {
 
     @MainActor
     func test_update_all_chip_renders_idle_state() {
-        renderTopBar(isUpdatingAll: false)
+        renderTopBar(isUpdatingAll: false, isUpdatingHomebrew: false)
     }
 
     @MainActor
     func test_update_all_chip_renders_updating_state() {
-        renderTopBar(isUpdatingAll: true)
+        renderTopBar(isUpdatingAll: true, isUpdatingHomebrew: false)
+        renderTopBar(isUpdatingAll: false, isUpdatingHomebrew: true)
     }
 
     @MainActor
     func test_greedy_chip_renders_on_and_off_states() {
-        renderTopBar(isUpdatingAll: false, greedyUpdates: true)
-        renderTopBar(isUpdatingAll: false, greedyUpdates: false)
+        renderTopBar(isUpdatingAll: false, isUpdatingHomebrew: false, greedyUpdates: true)
+        renderTopBar(isUpdatingAll: false, isUpdatingHomebrew: false, greedyUpdates: false)
     }
 
     /// Production-boundary check for the reveal sentinel: the browse landing

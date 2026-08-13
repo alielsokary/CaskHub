@@ -9,12 +9,14 @@ import Foundation
 
 nonisolated struct ApplicationBundleMetadata {
     let bundleIdentifier: String?
+    let version: String?
 }
 
 nonisolated struct DetectedApplication: Hashable, Sendable {
     let url: URL
     let bundleName: String
     let bundleIdentifier: String?
+    let version: String?
     let isMacAppStore: Bool
     let isDirectlyInApplicationDirectory: Bool
     let installedAt: Date?
@@ -24,6 +26,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         url: URL,
         bundleName: String,
         bundleIdentifier: String?,
+        version: String?,
         isMacAppStore: Bool,
         isDirectlyInApplicationDirectory: Bool,
         installedAt: Date? = nil,
@@ -32,6 +35,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         self.url = url
         self.bundleName = bundleName
         self.bundleIdentifier = bundleIdentifier
+        self.version = version
         self.isMacAppStore = isMacAppStore
         self.isDirectlyInApplicationDirectory = isDirectlyInApplicationDirectory
         self.installedAt = installedAt
@@ -189,6 +193,8 @@ nonisolated enum CaskUninstallAvailability: Equatable, Sendable {
 
 nonisolated struct CaskLocalState: Equatable, Sendable {
     let installationSource: CaskInstallationSource?
+    let externalVersion: String?
+    let adoptionPlan: CaskAdoptionPlan?
     let externalCLIPath: URL?
     let uninstallAvailability: CaskUninstallAvailability
     let hasAvailableUpdate: Bool
@@ -271,6 +277,7 @@ nonisolated enum CaskAction: Equatable, Sendable {
     case installing
     case adopting
     case updating
+    case updatingHomebrew
     case uninstalling
     case repairing
     case queued
@@ -281,6 +288,7 @@ nonisolated enum CaskAction: Equatable, Sendable {
         case .installing: return String(localized: "Installing…")
         case .adopting: return String(localized: "Adopting…")
         case .updating: return String(localized: "Updating…")
+        case .updatingHomebrew: return String(localized: "Updating Homebrew…")
         case .uninstalling: return String(localized: "Uninstalling…")
         case .repairing: return String(localized: "Repairing…")
         case .queued: return String(localized: "Queued…")
@@ -295,6 +303,7 @@ nonisolated enum CaskAction: Equatable, Sendable {
         case .installing: return "installing"
         case .adopting: return "adopting"
         case .updating: return "updating"
+        case .updatingHomebrew: return "updating-homebrew"
         case .uninstalling: return "uninstalling"
         case .repairing: return "repairing"
         case .queued: return "queued"

@@ -45,31 +45,105 @@ final class SettingsViewTests: XCTestCase {
     }
 
     @MainActor
-    func test_homebrew_location_model_validates_before_applying() async {
-        let settings = HomebrewSettingsSpy(customBrewPrefix: "/existing")
+    func test_homebrew_location_model_rejects_incompatible_and_invalid_paths() async {
+        let settings = HomebrewSettingsSpy(customBrewPrefix: "/usr/local")
         let resolver = HomebrewLocationResolverStub(prefixes: [
-            "/selected": "/resolved"
+            "/opt/homebrew": "/opt/homebrew",
+            "/opt/homebrew/bin/brew": "/opt/homebrew",
+            "/usr/local": "/usr/local",
+            "/selected": "/resolved",
+            "/resolved/bin/brew": "/resolved"
         ])
         let model = HomebrewLocationSettingsModel(
             settings: settings,
-            resolver: resolver
+            resolver: resolver,
+            machineIsAppleSilicon: true
         )
 
+        XCTAssertEqual(model.selection, .intel)
+        XCTAssertTrue(model.invalidSelection)
+        XCTAssertEqual(model.customPathField, "/opt/homebrew/bin/brew")
+
+        await model.applyChoice(.intel)
+        XCTAssertTrue(model.invalidSelection)
+        XCTAssertTrue(settings.appliedPrefixes.isEmpty)
+
+        await model.applyChoice(.appleSilicon)
+        XCTAssertFalse(model.invalidSelection)
+        XCTAssertEqual(settings.appliedPrefixes, ["/opt/homebrew"])
+        XCTAssertEqual(model.customPathField, "/opt/homebrew/bin/brew")
+
+        model.selection = .custom
         model.customPathField = "/invalid"
+        model.validateCustomPath()
+        XCTAssertTrue(model.invalidSelection)
         await model.applyTypedPath()
         XCTAssertTrue(model.invalidSelection)
-        XCTAssertEqual(model.customPathField, "/existing")
-        XCTAssertTrue(settings.appliedPrefixes.isEmpty)
+        XCTAssertEqual(model.customPathField, "/invalid")
+        XCTAssertEqual(settings.appliedPrefixes, ["/opt/homebrew"])
 
         await model.applySelection(URL(fileURLWithPath: "/selected"))
         XCTAssertFalse(model.invalidSelection)
-        XCTAssertEqual(settings.appliedPrefixes, ["/resolved"])
-        XCTAssertEqual(model.customPathField, "/resolved")
+        XCTAssertEqual(settings.appliedPrefixes, ["/opt/homebrew", "/resolved"])
+        XCTAssertEqual(model.customPathField, "/resolved/bin/brew")
 
         model.customPathField = "  "
         await model.applyTypedPath()
-        XCTAssertEqual(settings.appliedPrefixes, ["/resolved", nil])
-        XCTAssertEqual(model.customPathField, "")
+        XCTAssertTrue(model.invalidSelection)
+        XCTAssertEqual(settings.appliedPrefixes, ["/opt/homebrew", "/resolved"])
+    }
+
+    @MainActor
+    func test_custom_homebrew_path_validates_on_each_edit_without_saving() {
+        let settings = HomebrewSettingsSpy(customBrewPrefix: nil)
+        let resolver = HomebrewLocationResolverStub(prefixes: [
+            "/opt/homebrew": "/opt/homebrew",
+            "/opt/homebrew/bin/brew": "/opt/homebrew"
+        ])
+        let model = HomebrewLocationSettingsModel(
+            settings: settings,
+            resolver: resolver,
+            machineIsAppleSilicon: true
+        )
+
+        XCTAssertEqual(model.customPathField, "/opt/homebrew/bin/brew")
+        model.selection = .custom
+        model.validateCustomPath()
+        XCTAssertFalse(model.invalidSelection)
+
+        model.customPathField.append("x")
+        model.validateCustomPath()
+
+        XCTAssertTrue(model.invalidSelection)
+        XCTAssertTrue(settings.appliedPrefixes.isEmpty)
+    }
+
+    func test_homebrew_standard_paths_match_machine_architecture() {
+        let appleSiliconBrewURL = URL(fileURLWithPath: "/opt/homebrew/bin/brew")
+        let intelBrewURL = URL(fileURLWithPath: "/usr/local/bin/brew")
+        let intelRepositoryBrewURL = URL(
+            fileURLWithPath: "/usr/local/Homebrew/bin/brew"
+        )
+        XCTAssertTrue(HomebrewLocator.isCompatible(
+            brewURL: appleSiliconBrewURL,
+            machineIsAppleSilicon: true
+        ))
+        XCTAssertFalse(HomebrewLocator.isCompatible(
+            brewURL: intelBrewURL,
+            machineIsAppleSilicon: true
+        ))
+        XCTAssertFalse(HomebrewLocator.isCompatible(
+            brewURL: intelRepositoryBrewURL,
+            machineIsAppleSilicon: true
+        ))
+        XCTAssertFalse(HomebrewLocator.isCompatible(
+            brewURL: appleSiliconBrewURL,
+            machineIsAppleSilicon: false
+        ))
+        XCTAssertTrue(HomebrewLocator.isCompatible(
+            brewURL: intelBrewURL,
+            machineIsAppleSilicon: false
+        ))
     }
 
     @MainActor
@@ -82,6 +156,23 @@ final class SettingsViewTests: XCTestCase {
 
         XCTAssertEqual(enabled.checkCount, 1)
         XCTAssertEqual(disabled.checkCount, 0)
+    }
+
+    @MainActor
+    func test_updater_start_gate_runs_start_and_check_once_in_order() {
+        var gate = UpdaterStartGate()
+        var actions: [String] = []
+
+        gate.run(
+            start: { actions.append("start") },
+            check: { actions.append("check") }
+        )
+        gate.run(
+            start: { actions.append("start") },
+            check: { actions.append("check") }
+        )
+
+        XCTAssertEqual(actions, ["start", "check"])
     }
 
     @MainActor
@@ -253,7 +344,7 @@ final class ImageCacheManifestGateTests: XCTestCase {
     @MainActor
     private func cliCask(_ token: String) -> Cask {
         var cask = Cask.preview(token: token)
-        cask.artifacts = [ArtifactStanza(keys: ["binary"])]
+        cask.artifacts = [ArtifactStanza(keys: ["binary"], adoptionSourcePaths: [])]
         return cask
     }
 

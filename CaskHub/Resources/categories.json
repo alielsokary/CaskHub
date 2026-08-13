@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-08-09",
-  "totalCasks": 3860,
+  "generatedDate": "2026-08-13",
+  "totalCasks": 3869,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -5842,6 +5842,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "grok-bot": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
+    },
     "grok-build": {
       "primary": "developerTools",
       "secondary": [
@@ -5974,6 +5980,13 @@
       "primary": "developerTools",
       "secondary": [
         "utilities"
+      ]
+    },
+    "headroom": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai",
+        "menuBar"
       ]
     },
     "headset": {
@@ -9266,6 +9279,12 @@
       "primary": "screensaverWallpaper",
       "secondary": []
     },
+    "muse-code": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "museeks": {
       "primary": "audioMusic",
       "secondary": []
@@ -9547,12 +9566,6 @@
     "network-radar": {
       "primary": "utilities",
       "secondary": []
-    },
-    "netxms-console": {
-      "primary": "utilities",
-      "secondary": [
-        "developerTools"
-      ]
     },
     "nexonplug": {
       "primary": "games",
@@ -9917,6 +9930,12 @@
     "ollamac": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "omegat": {
+      "primary": "productivity",
+      "secondary": [
+        "scienceEducation"
+      ]
     },
     "omnidisksweeper": {
       "primary": "utilities",
@@ -12762,6 +12781,10 @@
         "securityPrivacy"
       ]
     },
+    "sentry-cli": {
+      "primary": "developerTools",
+      "secondary": []
+    },
     "sequel-ace": {
       "primary": "developerTools",
       "secondary": []
@@ -12871,6 +12894,12 @@
     "shearwater-cloud": {
       "primary": "utilities",
       "secondary": []
+    },
+    "shell360": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
     },
     "sherlock-app": {
       "primary": "developerTools",
@@ -13457,6 +13486,10 @@
       "primary": "utilities",
       "secondary": []
     },
+    "space-rabbit": {
+      "primary": "utilities",
+      "secondary": []
+    },
     "spacedrive": {
       "primary": "utilities",
       "secondary": []
@@ -13865,6 +13898,10 @@
     },
     "subsurface": {
       "primary": "other",
+      "secondary": []
+    },
+    "subtitle-edit": {
+      "primary": "videoMedia",
       "secondary": []
     },
     "subtitle-studio": {
@@ -14468,6 +14505,12 @@
     "textmate": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "textream": {
+      "primary": "videoMedia",
+      "secondary": [
+        "productivity"
+      ]
     },
     "textsniper": {
       "primary": "utilities",
@@ -15858,6 +15901,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "warp-agent-cli": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "warsaw": {
       "primary": "securityPrivacy",
       "secondary": [
@@ -16228,7 +16277,7 @@
       "primary": "productivity",
       "secondary": []
     },
-    "worksheet-crafter": {
+    "worksheetcrafter": {
       "primary": "scienceEducation",
       "secondary": [
         "productivity"
@@ -16710,7 +16759,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.08.09",
+  "releaseTag": "caskflow-v2026.08.13",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -17309,6 +17358,7 @@
     "companion-satellite",
     "compositor",
     "conar",
+    "concept2-utility",
     "conductor",
     "confectionery",
     "connect-fonts",
@@ -17964,6 +18014,7 @@
     "hbuilderx",
     "hdfview",
     "headlamp",
+    "headroom",
     "headset",
     "heaven",
     "hedy",
@@ -18965,6 +19016,7 @@
     "papers",
     "paperspace",
     "paragon-camptune",
+    "paragon-extfs",
     "parallels",
     "parallels-client",
     "parallels-virtualization-sdk",
@@ -19461,6 +19513,7 @@
     "sharepod",
     "shattered-pixel-dungeon",
     "shearwater-cloud",
+    "shell360",
     "sherlock-app",
     "shichizip",
     "shichizip-zs",
@@ -19589,6 +19642,7 @@
     "sourcenote",
     "sourcetree",
     "space-capsule",
+    "space-rabbit",
     "spacedrive",
     "spacejump",
     "spacelauncher",
@@ -19797,6 +19851,7 @@
     "textexpander",
     "textgrabber2",
     "textmate",
+    "textream",
     "textsniper",
     "textual",
     "texturepacker",
@@ -20174,6 +20229,7 @@
     "workbench",
     "workflowy",
     "worksheet-crafter",
+    "worksheetcrafter",
     "workspace-one-intelligent-hub",
     "workspaces",
     "wowup",

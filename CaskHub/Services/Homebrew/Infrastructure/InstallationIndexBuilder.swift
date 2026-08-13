@@ -148,17 +148,11 @@ nonisolated struct InstallationIndexBuilder: Sendable {
             result[token] = installationDates(for: application)
         }
 
-        let nonStoreApplicationsByName = Dictionary(
-            grouping: applications.lazy.filter { !$0.isMacAppStore },
-            by: \.bundleName
+        for (token, application) in resolveExternalPackageApplications(
+            packageInstallations: packageInstallations,
+            applications: applications
         )
-        for (token, installation) in packageInstallations
             where result[token] == nil {
-            guard let application = installation.appBundleNames.lazy.compactMap({ name in
-                let candidates = nonStoreApplicationsByName[name] ?? []
-                return candidates.first(where: \.isDirectlyInApplicationDirectory)
-                    ?? candidates.first
-            }).first else { continue }
             result[token] = installationDates(for: application)
         }
 
@@ -167,6 +161,24 @@ nonisolated struct InstallationIndexBuilder: Sendable {
             result[token] = installationDates(for: application)
         }
         return result
+    }
+
+    func resolveExternalPackageApplications(
+        packageInstallations: [String: ExternalPackageInstallation],
+        applications: [DetectedApplication]
+    ) -> [String: DetectedApplication] {
+        let nonStoreApplicationsByName = Dictionary(
+            grouping: applications.lazy.filter { !$0.isMacAppStore },
+            by: \.bundleName
+        )
+        return packageInstallations.reduce(into: [:]) { result, entry in
+            let (token, installation) = entry
+            result[token] = installation.appBundleNames.lazy.compactMap { name in
+                let candidates = nonStoreApplicationsByName[name] ?? []
+                return candidates.first(where: \.isDirectlyInApplicationDirectory)
+                    ?? candidates.first
+            }.first
+        }
     }
 
     private func installationDates(

@@ -24,8 +24,34 @@ final class CaskCatalogSortTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/\(name)"),
             bundleName: name,
             bundleIdentifier: "com.example.\(name)",
+            version: nil,
             isMacAppStore: false,
             isDirectlyInApplicationDirectory: true
+        )
+    }
+
+    private func localState(
+        source: CaskInstallationSource,
+        cask: Cask,
+        hasAvailableUpdate: Bool
+    ) -> CaskLocalState {
+        CaskLocalState(
+            installationSource: source,
+            externalVersion: nil,
+            adoptionPlan: CaskAdoptionPlan.make(
+                installationSource: source,
+                installedVersion: nil,
+                homebrewVersion: cask.displayVersion,
+                installedCaskTokens: [],
+                conflictingCaskTokens: []
+            ),
+            externalCLIPath: nil,
+            uninstallAvailability: source == .homebrew
+                ? .available
+                : .unavailable(reason: "Adopt first"),
+            hasAvailableUpdate: hasAvailableUpdate,
+            isZombie: false,
+            canOpen: true
         )
     }
 
@@ -36,21 +62,15 @@ final class CaskCatalogSortTests: XCTestCase {
         let input = CatalogLibraryProjectionInput(
             casks: [installed, adoptable],
             localStates: [
-                installed.token: CaskLocalState(
-                    installationSource: .homebrew,
-                    externalCLIPath: nil,
-                    uninstallAvailability: .available,
-                    hasAvailableUpdate: true,
-                    isZombie: false,
-                    canOpen: true
+                installed.token: localState(
+                    source: .homebrew,
+                    cask: installed,
+                    hasAvailableUpdate: true
                 ),
-                adoptable.token: CaskLocalState(
-                    installationSource: .externalApplication,
-                    externalCLIPath: nil,
-                    uninstallAvailability: .unavailable(reason: "Adopt first"),
-                    hasAvailableUpdate: false,
-                    isZombie: false,
-                    canOpen: true
+                adoptable.token: localState(
+                    source: .externalApplication,
+                    cask: adoptable,
+                    hasAvailableUpdate: false
                 )
             ],
             categoryMappings: [

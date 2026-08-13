@@ -8,53 +8,78 @@
 import Foundation
 
 extension LocalHomebrewService {
-    func requestPackageAdoption(token: String) {
-        operationStore.send(.awaitPackageAdoption, for: token)
+    func requestAdoption(_ cask: Cask) async {
+        guard let plan = localState(for: cask).adoptionPlan else { return }
+        await requestAdoption(CaskAdoptionRequest(cask: cask, plan: plan))
     }
 
-    func cancelPackageAdoptionRequest(token: String) {
+    func requestReplacementAdoption(_ cask: Cask) async {
+        let localPlan = localState(for: cask).adoptionPlan
+        let artifact: CaskAdoptionArtifact = cask.hasPackageArtifact
+            ? .packageInstaller
+            : .applicationBundle
+        let plan = CaskAdoptionPlan(
+            artifact: artifact,
+            versionRelationship: localPlan?.versionRelationship ?? .unknown,
+            operation: localPlan?.operation ?? .adopt,
+            execution: artifact == .packageInstaller
+                ? .replacePackage
+                : .replaceApplication,
+            installedVersion: localPlan?.installedVersion,
+            homebrewVersion: cask.displayVersion,
+            blockingInstalledCask: localPlan?.blockingInstalledCask
+        )
+        await requestAdoption(CaskAdoptionRequest(cask: cask, plan: plan))
+    }
+
+    func confirmAdoption(_ request: CaskAdoptionRequest) async throws {
+        guard await requireAdoptionPermission(for: request) else { return }
+        guard preflightAdoption(request) else { return }
+
+        switch request.plan.execution {
+        case .adoptApplication:
+            try await runMutation(
+                .adopting,
+                token: request.cask.token,
+                args: ["install", "--cask", request.cask.token, "--adopt"]
+            )
+        case .replaceApplication:
+            try await runMutation(
+                .adopting,
+                token: request.cask.token,
+                args: ["install", "--cask", request.cask.token, "--force"]
+            )
+        case .installPackage:
+            try await runMutation(
+                .adopting,
+                token: request.cask.token,
+                args: ["install", "--cask", request.cask.token]
+            )
+        case .replacePackage:
+            try await replacePackageForAdoption(token: request.cask.token)
+        }
+    }
+
+    func cancelAdoptionRequest(token: String) {
         operationStore.send(.clear, for: token)
     }
 
-    /// Package artifacts do not support Homebrew's `--adopt` semantics. Running
-    /// the package installer again is the supported path that creates Homebrew's
-    /// Caskroom records and transfers future management to Homebrew.
-    func adoptPackage(token: String) async throws {
-        try await runMutation(
-            .adopting,
-            token: token,
-            args: ["install", "--cask", token]
-        )
+    func cancelPermissionRequest(token: String) {
+        operationStore.send(.clear, for: token)
     }
 
-    /// Preflight before `--adopt`: a declared binary missing from the on-disk
-    /// bundle makes brew fail *after* it has moved the app aside — and brew's
-    /// rollback then deletes the app entirely. Refuse locally and offer the
-    /// safe replace path instead.
-    func adopt(_ cask: Cask, bypassPermissionCheck: Bool = false) async throws {
-        if let missing = adoptBlockedByMissingBinary(cask) {
-            let message = String(localized: .errorAdoptMissingComponent(cask.displayName, missing))
-            operationStore.send(
-                .fail(CaskOperationFailure(
-                    kind: .adoptionPreflight,
-                    message: message,
-                    recoveries: [.replaceWithHomebrew]
-                )),
-                for: cask.token
-            )
-            return
+    /// A linked artifact missing from the on-disk bundle makes Homebrew fail
+    /// after it has moved the app aside. Its rollback can then remove the only
+    /// copy. Check every bundle-relative link source before `--adopt` runs.
+    func adoptBlockedByMissingComponent(_ cask: Cask) -> String? {
+        guard let appURL = existingBundleURL(named: cask.appArtifactNames) else {
+            return nil
         }
-        try await adopt(token: cask.token, bypassPermissionCheck: bypassPermissionCheck)
-    }
-
-    /// Only paths inside the app bundle can be preflighted; staged-path binaries
-    /// don't exist until brew downloads the cask, so they're skipped.
-    func adoptBlockedByMissingBinary(_ cask: Cask) -> String? {
-        guard let appURL = existingBundleURL(named: cask.appArtifactNames) else { return nil }
-        let marker = "/\(appURL.lastPathComponent)/"
-        for path in cask.binarySourcePaths {
+        let marker = "\(appURL.lastPathComponent)/"
+        for path in cask.adoptionSourcePaths {
             guard let range = path.range(of: marker) else { continue }
-            let resolved = appURL.appendingPathComponent(String(path[range.upperBound...]))
+            let relativePath = String(path[range.upperBound...])
+            let resolved = appURL.appendingPathComponent(relativePath)
             if !fileManager.fileExists(atPath: resolved.path) {
                 return URL(fileURLWithPath: path).lastPathComponent
             }
@@ -62,51 +87,78 @@ extension LocalHomebrewService {
         return nil
     }
 
-    func adopt(token: String, bypassPermissionCheck: Bool = false) async throws {
-        if !bypassPermissionCheck, await !permissionAllowsAdoption() {
-            operationStore.send(.awaitPermission(force: false), for: token)
-            return
-        }
-        try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--adopt"])
-    }
-
-    /// Fallback when `--adopt` refuses: replace the on-disk app with Homebrew's copy.
-    /// Needs App Management even more than adopt — brew deletes the existing app,
-    /// and a TCC-denied delete makes brew escalate to a scary sudo password prompt.
-    func adoptReplacing(token: String, bypassPermissionCheck: Bool = false) async throws {
-        if !bypassPermissionCheck, await !permissionAllowsAdoption() {
-            operationStore.send(.awaitPermission(force: true), for: token)
-            return
-        }
-        try await runMutation(.adopting, token: token, args: ["install", "--cask", token, "--force"])
-    }
-
-    func cancelPermissionRequest(token: String) {
-        operationStore.send(.clear, for: token)
-    }
-
-    /// Called when the app becomes active: if the user granted App Management while
-    /// away (in System Settings), finish the adoptions that were waiting on it.
+    /// Called after returning from System Settings. Permission approval resumes
+    /// at confirmation; it never starts a destructive replacement implicitly.
     func resumePendingAdoptions() {
         let pending = operationStore.pendingPermissions
         guard !pending.isEmpty else { return }
         Task {
             guard await permissionAllowsAdoption() else { return }
-            for (token, useForce) in pending {
-                if useForce {
-                    try? await adoptReplacing(token: token, bypassPermissionCheck: true)
-                } else {
-                    try? await adopt(token: token, bypassPermissionCheck: true)
-                }
+            for (token, request) in pending {
+                guard preflightAdoption(request) else { continue }
+                operationStore.send(.awaitAdoption(request), for: token)
             }
         }
     }
 
-    /// `.unknown` passes through — only a confirmed denial blocks, so a failed
-    /// probe can never lock the user out of adopting.
+    private func requestAdoption(_ request: CaskAdoptionRequest) async {
+        guard preflightAdoption(request) else { return }
+        guard await requireAdoptionPermission(for: request) else { return }
+        operationStore.send(.awaitAdoption(request), for: request.cask.token)
+    }
+
+    private func preflightAdoption(_ request: CaskAdoptionRequest) -> Bool {
+        if let conflict = request.plan.blockingInstalledCask {
+            operationStore.send(
+                .fail(CaskOperationFailure(
+                    kind: .adoptionPreflight,
+                    message: "\(request.cask.displayName) conflicts with the Homebrew-managed "
+                        + "cask “\(conflict)”. Uninstall that cask before adopting this one."
+                )),
+                for: request.cask.token
+            )
+            return false
+        }
+        guard request.plan.execution == .adoptApplication,
+              let missing = adoptBlockedByMissingComponent(request.cask)
+        else { return true }
+
+        let message = String(
+            localized: .errorAdoptMissingComponent(
+                request.cask.displayName,
+                missing
+            )
+        )
+        operationStore.send(
+            .fail(CaskOperationFailure(
+                kind: .adoptionPreflight,
+                message: message,
+                recoveries: [.replaceWithHomebrew]
+            )),
+            for: request.cask.token
+        )
+        return false
+    }
+
+    private func requireAdoptionPermission(
+        for request: CaskAdoptionRequest
+    ) async -> Bool {
+        guard await permissionAllowsAdoption() else {
+            operationStore.send(
+                .awaitPermission(request),
+                for: request.cask.token
+            )
+            return false
+        }
+        return true
+    }
+
+    /// Adoption only proceeds after the probe positively demonstrates access.
+    /// An indeterminate probe stays gated because it cannot prove Homebrew can
+    /// modify the existing application.
     private func permissionAllowsAdoption() async -> Bool {
         let probe = permissionProbe
         let status = await Task.detached(priority: .userInitiated) { probe() }.value
-        return status != .denied
+        return status == .granted
     }
 }

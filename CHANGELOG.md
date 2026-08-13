@@ -4,6 +4,25 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.7.1 — 2026-08-13
+
+### What's New
+
+- Added Homebrew path selection in Settings: Apple Silicon, Intel, or a custom location
+
+### Improvements
+
+- Made usage analytics and crash reporting consent independent, and search text is never collected
+- Clearer Homebrew error messages, with a guided Update Homebrew fix when your Homebrew is too old to read a cask
+
+### Bug Fixes
+
+- Fixed adopting apps whose installed version differs from the Homebrew cask, including package-based apps like OneDrive
+- Fixed cask conflicts failing with a generic error — CaskHub now names the conflicting installed cask up front
+- Fixed ARM-only casks failing to install when an Intel Homebrew was selected on Apple Silicon
+- Fixed search text carrying over when switching pages from the sidebar
+- Fixed false hang reports while CaskHub was inactive or showing a dialog
+
 ## 0.7.0 — 2026-08-10
 
 ### What's New

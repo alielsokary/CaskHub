@@ -134,11 +134,17 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
                 packageInstallations: components.packages,
                 applications: components.applications.applications
             )
+        let externalPackageApplicationOwners =
+            installationIndexBuilder.resolveExternalPackageApplications(
+                packageInstallations: components.packages,
+                applications: components.applications.applications
+            )
         return InstallationSnapshot(
             installedCasks: components.installedCasks,
             applications: ApplicationInstallationSnapshot(
                 externalAppNames: components.applications.adoptableNames,
                 externalApplicationOwners: owners,
+                externalPackageApplicationOwners: externalPackageApplicationOwners,
                 macAppStoreAppNames: components.applications.macAppStoreNames,
                 macAppStoreBundleIdentifiers:
                     components.applications.macAppStoreBundleIdentifiers,

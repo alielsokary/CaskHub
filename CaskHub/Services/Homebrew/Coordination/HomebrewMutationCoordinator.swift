@@ -16,6 +16,27 @@ struct HomebrewMutationRequest {
     let environmentOverrides: [String: String]
 }
 
+enum HomebrewMutationRecoveryBehavior: Equatable {
+    case finishMutation
+    case continueSequence
+}
+
+struct HomebrewMutationStep {
+    let arguments: [String]
+    let environmentOverrides: [String: String]
+    let cancellable: Bool
+    let recoverIf: (() -> Bool)?
+    let recoveryBehavior: HomebrewMutationRecoveryBehavior
+}
+
+struct HomebrewMutationSequenceRequest {
+    let action: CaskAction
+    let token: String
+    let displayName: String
+    let origin: CaskActionOrigin
+    let steps: [HomebrewMutationStep]
+}
+
 struct HomebrewMutationCallbacks {
     let refresh: () async -> Void
     let strandedCopyExists: () -> Bool
@@ -48,7 +69,41 @@ final class HomebrewMutationCoordinator {
         _ request: HomebrewMutationRequest,
         callbacks: HomebrewMutationCallbacks
     ) async throws {
-        guard operationStore.canBeginOperation(for: request.token) else { return }
+        try await runSequence(
+            HomebrewMutationSequenceRequest(
+                action: request.action,
+                token: request.token,
+                displayName: request.displayName,
+                origin: request.origin,
+                steps: [
+                    HomebrewMutationStep(
+                        arguments: request.arguments,
+                        environmentOverrides: request.environmentOverrides,
+                        cancellable: request.action == .installing,
+                        recoverIf: callbacks.recoverIf,
+                        recoveryBehavior: .finishMutation
+                    )
+                ]
+            ),
+            callbacks: callbacks
+        )
+    }
+
+    /// Runs a multi-command workflow as one logical mutation. The current
+    /// installation snapshot remains published until every step succeeds, so
+    /// consumers never render a transient state between destructive steps.
+    func runSequence(
+        _ request: HomebrewMutationSequenceRequest,
+        callbacks: HomebrewMutationCallbacks
+    ) async throws {
+        guard operationStore.canBeginOperation(
+            request.action,
+            for: request.token
+        ) else { return }
+        try preflightBrewLocation(
+            token: request.token,
+            strandedCopyExists: callbacks.strandedCopyExists()
+        )
         beginOperation(
             request.action,
             token: request.token,
@@ -61,44 +116,49 @@ final class HomebrewMutationCoordinator {
         )
         defer { clearOperationResources(token: request.token) }
 
-        let span = CrashReporter.span(
-            name: request.arguments.first ?? "brew",
-            operation: "brew"
-        )
-        do {
-            try await executeStreaming(
-                token: request.token,
-                arguments: request.arguments,
-                cancellable: request.action == .installing,
-                environmentOverrides: request.environmentOverrides
-            )
-            span.finish()
-            Analytics.caskActionCompleted(
-                request.action,
-                token: request.token,
-                origin: request.origin
-            )
-            await callbacks.refresh()
-            operationStore.send(.clear, for: request.token)
-        } catch {
-            try await handleFailure(
-                error,
-                request: request,
-                span: span,
-                callbacks: callbacks
-            )
+        for (index, step) in request.steps.enumerated() {
+            if index > 0 { prepareNextStep(request: request) }
+            let span = CrashReporter.span(name: step.arguments.first ?? "brew", operation: "brew")
+            do {
+                try await executeStreaming(
+                    token: request.token,
+                    arguments: step.arguments,
+                    cancellable: step.cancellable,
+                    environmentOverrides: step.environmentOverrides
+                )
+                span.finish()
+            } catch {
+                let resolution = try await handleFailure(
+                    error,
+                    request: request,
+                    step: step,
+                    span: span,
+                    callbacks: callbacks
+                )
+                if resolution == .stopSequence {
+                    return
+                }
+            }
         }
-    }
 
+        Analytics.caskActionCompleted(
+            request.action,
+            token: request.token,
+            origin: request.origin
+        )
+        await callbacks.refresh()
+        operationStore.send(.clear, for: request.token)
+    }
+}
+
+extension HomebrewMutationCoordinator {
     func executeStreaming(
         token: String,
         arguments: [String],
         cancellable: Bool,
         environmentOverrides: [String: String] = [:]
     ) async throws {
-        guard let brewURL = brewBinaryProvider() else {
-            throw LocalHomebrewError.brewBinaryNotFound
-        }
+        let brewURL = try validateBrewLocation()
 
         let askpass = await AskpassScriptManager.create(token: token)
 
@@ -141,6 +201,32 @@ final class HomebrewMutationCoordinator {
         )
     }
 
+    private func validateBrewLocation() throws -> URL {
+        guard let brewURL = brewBinaryProvider() else {
+            throw LocalHomebrewError.brewBinaryNotFound
+        }
+        guard HomebrewLocator.isCompatible(brewURL: brewURL) else {
+            throw LocalHomebrewError.incompatibleBrewPath
+        }
+        return brewURL
+    }
+
+    private func preflightBrewLocation(
+        token: String,
+        strandedCopyExists: Bool
+    ) throws {
+        do {
+            _ = try validateBrewLocation()
+        } catch {
+            recordFailure(
+                token: token,
+                error: error,
+                strandedCopyExists: strandedCopyExists
+            )
+            throw error
+        }
+    }
+
     func beginOperation(
         _ action: CaskAction,
         token: String,
@@ -153,7 +239,9 @@ final class HomebrewMutationCoordinator {
                     token: token,
                     displayName: displayName,
                     action: action,
-                    phase: action == .uninstalling ? .performing : .preparing
+                    phase: action == .uninstalling || action == .updatingHomebrew
+                        ? .performing
+                        : .preparing
                 ),
                 canCancel: false
             ),
@@ -214,12 +302,14 @@ final class HomebrewMutationCoordinator {
     func recordFailure(
         token: String,
         error: Error,
-        strandedCopyExists: Bool
+        strandedCopyExists: Bool,
+        title: String? = nil
     ) {
         operationStore.send(
             .fail(CaskOperationFailureFactory.make(
                 from: error,
-                strandedCopyExists: strandedCopyExists
+                strandedCopyExists: strandedCopyExists,
+                title: title
             )),
             for: token
         )
@@ -242,43 +332,70 @@ final class HomebrewMutationCoordinator {
         }
     }
 
+    private func prepareNextStep(request: HomebrewMutationSequenceRequest) {
+        outputAggregator.clear(token: request.token)
+        operationStore.send(
+            .updateProgress(CaskOperationProgress(
+                token: request.token,
+                displayName: request.displayName,
+                action: request.action,
+                phase: request.action == .updatingHomebrew ? .performing : .preparing
+            )),
+            for: request.token
+        )
+        operationStore.send(.setCancellable(false), for: request.token)
+    }
+
     private func handleFailure(
         _ error: Error,
-        request: HomebrewMutationRequest,
+        request: HomebrewMutationSequenceRequest,
+        step: HomebrewMutationStep,
         span: CrashSpan,
         callbacks: HomebrewMutationCallbacks
-    ) async throws {
+    ) async throws -> FailureResolution {
         if operationStore.state(for: request.token)?.cancellationRequested == true {
             span.finish()
             await callbacks.refresh()
             operationStore.send(.clear, for: request.token)
-            return
+            return .stopSequence
         }
         if let localError = error as? LocalHomebrewError,
            case .brewCommandFailed = localError,
-           callbacks.recoverIf?() == true {
+           step.recoverIf?() == true {
             span.finish()
             Analytics.caskActionRecovered(
                 request.action,
                 token: request.token,
                 origin: request.origin
             )
-            await callbacks.refresh()
-            operationStore.send(.clear, for: request.token)
-            return
+            if step.recoveryBehavior == .finishMutation {
+                await callbacks.refresh()
+                operationStore.send(.clear, for: request.token)
+                return .stopSequence
+            }
+            return .continueSequence
         }
 
-        span.finish(error: error)
+        let localError = error as? LocalHomebrewError
+        if localError?.shouldReport == false {
+            span.finish()
+        } else {
+            span.finish(error: error)
+        }
         CrashReporter.capture(error)
         Analytics.caskActionFailed(
             request.action,
             token: request.token,
-            origin: request.origin
+            origin: request.origin,
+            failureKind: localError?.commandFailure?.kind
         )
         recordFailure(
             token: request.token,
             error: error,
-            strandedCopyExists: callbacks.strandedCopyExists()
+            strandedCopyExists: callbacks.strandedCopyExists(),
+            title: request.action == .updatingHomebrew
+                ? String(localized: "Homebrew Update Failed")
+                : nil
         )
         if Self.indicatesStateDesync(error) {
             await callbacks.refresh()
@@ -286,12 +403,17 @@ final class HomebrewMutationCoordinator {
         throw error
     }
 
+    private enum FailureResolution: Equatable {
+        case continueSequence
+        case stopSequence
+    }
+
     /// Brew disagreeing about install state means the snapshot is stale.
     private static func indicatesStateDesync(_ error: Error) -> Bool {
-        guard case let LocalHomebrewError.brewCommandFailed(_, _, stderr) = error else {
+        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
             return false
         }
-        return LocalHomebrewError.failureClass(stderr: stderr) == "not-installed"
+        return failure.kind == .notInstalled
     }
 
 }

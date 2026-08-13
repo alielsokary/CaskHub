@@ -17,6 +17,7 @@ final class InstallationDateIndexTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Shared.app"),
             bundleName: "Shared.app",
             bundleIdentifier: "com.example.store",
+            version: nil,
             isMacAppStore: true,
             isDirectlyInApplicationDirectory: true,
             installedAt: storeCreatedAt
@@ -25,6 +26,7 @@ final class InstallationDateIndexTests: XCTestCase {
             url: URL(fileURLWithPath: "/Applications/Direct/Shared.app"),
             bundleName: "Shared.app",
             bundleIdentifier: "com.example.direct",
+            version: nil,
             isMacAppStore: false,
             isDirectlyInApplicationDirectory: false,
             installedAt: packageCreatedAt

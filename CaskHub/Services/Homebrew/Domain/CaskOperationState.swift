@@ -12,6 +12,7 @@ nonisolated enum CaskRecoveryAction: CaseIterable, Hashable, Sendable {
     case adoptExisting
     case replaceWithHomebrew
     case repairAndReinstall
+    case updateHomebrew
     case forceUninstall
     case openAppManagementSettings
 }
@@ -20,6 +21,7 @@ nonisolated struct CaskOperationFailure: Equatable, Sendable {
     enum Kind: Equatable, Sendable {
         case homebrewMissing
         case appManagementDenied
+        case installationPreflight
         case adoptionPreflight
         case brewCommand
         case applicationUnavailable
@@ -27,15 +29,18 @@ nonisolated struct CaskOperationFailure: Equatable, Sendable {
 
     let kind: Kind
     let message: String
+    let title: String?
     let recoveries: Set<CaskRecoveryAction>
 
     init(
         kind: Kind,
         message: String,
+        title: String? = nil,
         recoveries: Set<CaskRecoveryAction> = []
     ) {
         self.kind = kind
         self.message = message
+        self.title = title
         self.recoveries = recoveries
     }
 }
@@ -47,8 +52,8 @@ nonisolated enum CaskOperationState: Equatable, Sendable {
         canCancel: Bool,
         cancellationRequested: Bool
     )
-    case awaitingPermission(force: Bool)
-    case awaitingPackageAdoption
+    case awaitingPermission(CaskAdoptionRequest)
+    case awaitingAdoption(CaskAdoptionRequest)
     case failed(CaskOperationFailure)
 
     var action: CaskAction? {
@@ -57,7 +62,7 @@ nonisolated enum CaskOperationState: Equatable, Sendable {
             return action
         case let .running(progress, _, _):
             return progress.action
-        case .awaitingPermission, .awaitingPackageAdoption, .failed:
+        case .awaitingPermission, .awaitingAdoption, .failed:
             return nil
         }
     }
@@ -83,6 +88,15 @@ nonisolated enum CaskOperationState: Equatable, Sendable {
         guard case let .failed(failure) = self else { return nil }
         return failure
     }
+
+    var adoptionRequest: CaskAdoptionRequest? {
+        switch self {
+        case let .awaitingPermission(request), let .awaitingAdoption(request):
+            return request
+        case .queued, .running, .failed:
+            return nil
+        }
+    }
 }
 
 nonisolated enum CaskOperationEvent: Equatable, Sendable {
@@ -91,8 +105,8 @@ nonisolated enum CaskOperationEvent: Equatable, Sendable {
     case updateProgress(CaskOperationProgress)
     case setCancellable(Bool)
     case requestCancellation
-    case awaitPermission(force: Bool)
-    case awaitPackageAdoption
+    case awaitPermission(CaskAdoptionRequest)
+    case awaitAdoption(CaskAdoptionRequest)
     case fail(CaskOperationFailure)
     case clear
 }
@@ -118,11 +132,11 @@ nonisolated enum CaskOperationStateMachine {
         case .requestCancellation:
             return requestCancellation(in: state)
 
-        case let .awaitPermission(force):
-            return .awaitingPermission(force: force)
+        case let .awaitPermission(adoptionKind):
+            return .awaitingPermission(adoptionKind)
 
-        case .awaitPackageAdoption:
-            return .awaitingPackageAdoption
+        case let .awaitAdoption(request):
+            return .awaitingAdoption(request)
 
         case let .fail(failure):
             return .failed(failure)
@@ -199,7 +213,7 @@ nonisolated enum CaskOperationStateMachine {
 
     private static func canBegin(from state: CaskOperationState?) -> Bool {
         switch state {
-        case .queued, .failed, .awaitingPermission, .awaitingPackageAdoption:
+        case .queued, .failed, .awaitingPermission, .awaitingAdoption:
             return true
         case .running, nil:
             return false

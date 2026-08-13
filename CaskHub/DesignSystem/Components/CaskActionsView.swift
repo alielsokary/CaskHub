@@ -39,17 +39,22 @@ struct CaskActionsView: View {
         if let inFlight = presentation.activeAction {
             inFlightCapsule(for: inFlight, presentation: presentation)
         } else if state.isHomebrewInstalled {
-            installedActions(state)
+            installedActions(
+                state,
+                mutationBlocked: presentation.isHomebrewMutationBlocked
+            )
         } else if state.isAdoptable {
             HStack(spacing: 8) {
                 if isAdoptPage {
-                    ActionCapsuleButton(action: .adopt, fullWidth: fullWidth) {
-                        if state.isExternalPackage {
-                            localHomebrew.send(.requestPackageAdoption(token: cask.token))
-                        } else {
-                            localHomebrew.send(.adopt(cask))
-                        }
+                    ActionCapsuleButton(
+                        action: .adopt,
+                        fullWidth: fullWidth
+                    ) {
+                        localHomebrew.send(.requestAdoption(cask))
                     }
+                    .disabledDuringHomebrewUpdate(
+                        presentation.isHomebrewMutationBlocked
+                    )
                 } else {
                     openButton(fullWidth: fullWidth) {
                         localHomebrew.send(.openExternal(cask))
@@ -78,25 +83,35 @@ struct CaskActionsView: View {
                 )
         } else {
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
-                localHomebrew.send(.install(token: cask.token))
+                localHomebrew.send(.install(cask))
             }
+            .disabledDuringHomebrewUpdate(
+                presentation.isHomebrewMutationBlocked
+            )
         }
     }
 
     @ViewBuilder
-    private func installedActions(_ state: CaskLocalState) -> some View {
+    private func installedActions(
+        _ state: CaskLocalState,
+        mutationBlocked: Bool
+    ) -> some View {
         if state.isZombie {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
                 localHomebrew.send(.repair(token: cask.token))
             }
             .help(String(localized: .actionCleanupZombieHelp(cask.displayName)))
+            .disabledDuringHomebrewUpdate(mutationBlocked)
         } else {
-            managedActions(state)
+            managedActions(state, mutationBlocked: mutationBlocked)
         }
     }
 
     @ViewBuilder
-    private func managedActions(_ state: CaskLocalState) -> some View {
+    private func managedActions(
+        _ state: CaskLocalState,
+        mutationBlocked: Bool
+    ) -> some View {
         HStack(spacing: 8) {
             if state.canOpen {
                 openButton(
@@ -107,7 +122,10 @@ struct CaskActionsView: View {
                 }
             }
             if state.hasAvailableUpdate {
-                updateButton(fullWidth: fullWidth) {
+                updateButton(
+                    fullWidth: fullWidth,
+                    mutationBlocked: mutationBlocked
+                ) {
                     localHomebrew.send(.update(token: cask.token))
                 }
             }
@@ -126,6 +144,7 @@ struct CaskActionsView: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .disabledDuringHomebrewUpdate(mutationBlocked)
             }
         }
     }
@@ -144,11 +163,17 @@ struct CaskActionsView: View {
     }
 
     @ViewBuilder
-    private func updateButton(fullWidth: Bool, action: @escaping () -> Void) -> some View {
+    private func updateButton(
+        fullWidth: Bool,
+        mutationBlocked: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
         if usesIconOnlyOpenAndUpdate {
             ActionCapsuleIconButton(action: .update, onTap: action)
+                .disabledDuringHomebrewUpdate(mutationBlocked)
         } else {
             ActionCapsuleButton(action: .update, fullWidth: fullWidth, onTap: action)
+                .disabledDuringHomebrewUpdate(mutationBlocked)
         }
     }
 
@@ -166,6 +191,19 @@ struct CaskActionsView: View {
             fullWidth: fullWidth,
             onCancel: { localHomebrew.send(.cancel(token: token)) }
         )
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func disabledDuringHomebrewUpdate(_ disabled: Bool) -> some View {
+        if disabled {
+            self
+                .disabled(true)
+                .help(String(localized: "Wait for the current action to finish."))
+        } else {
+            self
+        }
     }
 }
 

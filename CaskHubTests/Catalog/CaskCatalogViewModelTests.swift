@@ -156,6 +156,16 @@ final class CaskCatalogViewModelTests: XCTestCase {
         XCTAssertEqual(vm.displayedCasks.count, chunk)
     }
 
+    @MainActor
+    func test_sidebar_change_clears_search_text() async {
+        let (vm, _) = await makeSUT(casks: [makeCask("firefox")])
+
+        vm.searchText = "fire"
+        vm.selectedSidebar = .library(.installed)
+
+        XCTAssertEqual(vm.searchText, "")
+    }
+
     // MARK: Sidebar filters
 
     @MainActor
