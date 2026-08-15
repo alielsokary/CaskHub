@@ -1254,6 +1254,16 @@
         }
       }
     },
+    "Currently selected brew path is invalid" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前选择的 brew 路径无效"
+          }
+        }
+      }
+    },
     "Custom brew path" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1861,6 +1871,56 @@
     "Homebrew" : {
       "shouldTranslate" : false
     },
+    "Homebrew could not extract this disk image because its layout is read-only. Try again once; if it repeats, the cask needs to be corrected upstream." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法提取此磁盘映像，因为其布局为只读。请重试一次；如果问题再次出现，则需要由上游修正该 Cask。"
+          }
+        }
+      }
+    },
+    "Homebrew could not prepare its Portable Ruby runtime. Check access to GitHub and GHCR, then update Homebrew and try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法准备 Portable Ruby 运行环境。请检查能否访问 GitHub 和 GHCR，然后更新 Homebrew 并重试。"
+          }
+        }
+      }
+    },
+    "Homebrew could not reach a required download host. Check your network, VPN, proxy, and DNS settings, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法访问所需的下载主机。请检查网络、VPN、代理和 DNS 设置，然后重试。"
+          }
+        }
+      }
+    },
+    "Homebrew could not write to one of its temporary or installation folders. Run `brew doctor`, correct the permissions it reports, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 无法写入其临时目录或安装目录。请运行 `brew doctor`，修正它报告的权限问题，然后重试。"
+          }
+        }
+      }
+    },
+    "Homebrew found an existing item at the destination. Remove or move that item manually, then try again.\n\n%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 在目标位置发现了现有项目。请手动移除或移动该项目，然后重试。\n\n%@"
+          }
+        }
+      }
+    },
     "Homebrew is available: %@" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1905,12 +1965,42 @@
         }
       }
     },
+    "Homebrew tried to run code for the wrong processor architecture. Select the compatible Homebrew path in Settings, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 尝试为错误的处理器架构运行代码。请在设置中选择兼容的 Homebrew 路径，然后重试。"
+          }
+        }
+      }
+    },
+    "Homebrew Update Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 更新失败"
+          }
+        }
+      }
+    },
     "Homebrew was not found on this Mac." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "此 Mac 上未找到 Homebrew。"
+          }
+        }
+      }
+    },
+    "Homebrew's temporary download state changed while the operation was finishing. Try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作即将完成时，Homebrew 的临时下载状态发生了变化。请重试。"
           }
         }
       }
@@ -2142,6 +2232,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "加载中…"
+          }
+        }
+      }
+    },
+    "macOS canceled opening the disk image. Try again and approve the disk image if macOS asks for confirmation." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 取消了打开磁盘映像。请重试；如果 macOS 要求确认，请允许打开该磁盘映像。"
           }
         }
       }
@@ -2721,6 +2821,366 @@
         }
       }
     },
+    "shelfSetup.brewfile.export.button" : {
+      "comment" : "Button that saves the shelf as a Brewfile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出…"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.export.description" : {
+      "comment" : "Explains Brewfile export; count of managed casks",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write the %lld casks CaskHub manages to a Brewfile. Your setup, portable."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把 CaskHub 管理的 %lld 个 cask 写入 Brewfile。你的配置，随身携带。"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.export.failed" : {
+      "comment" : "Shown under the export row when writing the file fails",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't save the Brewfile."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法保存 Brewfile。"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.export.saved" : {
+      "comment" : "Shown under the export row after saving; path then cask count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved to %1$@ · %2$lld casks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存到 %1$@ · %2$lld 个 cask"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.export.title" : {
+      "comment" : "Title of the Brewfile export row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export your shelf"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出你的酒架"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.import.button" : {
+      "comment" : "Button that opens the Brewfile picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose file…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择文件…"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.import.description" : {
+      "comment" : "Explains Brewfile import",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour every cask a Brewfile lists. Perfect for a new Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "装入 Brewfile 列出的每个 cask，新 Mac 的完美起点。"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.import.empty" : {
+      "comment" : "Shown under the import row when the chosen file lists no casks",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No casks found in that Brewfile."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该 Brewfile 中未找到 cask。"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.import.title" : {
+      "comment" : "Title of the Brewfile import row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import a Brewfile"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 Brewfile"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.deselectAll" : {
+      "comment" : "Header checkbox label when every listed cask is selected",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deselect All"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消全选"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.done" : {
+      "comment" : "Import sheet success message; count of casks installed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All %lld poured. Your shelf matches the Brewfile."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部 %lld 个已装入。你的酒架与 Brewfile 一致。"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.doneWithFailures" : {
+      "comment" : "Import sheet completion when some installs failed: succeeded, total, failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld poured, %3$lld failed."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$lld 个中已装入 %1$lld 个，%3$lld 个失败。"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.installButton" : {
+      "comment" : "Import sheet confirm button; count of casks not yet on the shelf",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install %lld new"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 %lld 个新应用"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.nothingNew" : {
+      "comment" : "Import sheet message when every listed cask is already present",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing new to pour. Everything listed is already on this Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有新内容，列出的应用都已安装在这台 Mac 上。"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.pouring" : {
+      "comment" : "Import progress: cask name, current index, total",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pouring %1$@… (%2$lld of %3$lld)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在装入 %1$@…（%2$lld/%3$lld）"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.selectAll" : {
+      "comment" : "Header checkbox label when some listed casks are deselected",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select All"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全选"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.skipped" : {
+      "comment" : "Import sheet section header; count of casks already installed on this Mac (brew, App Store, or external)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld already on your machine, skipped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个已安装在这台 Mac 上，已跳过"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.subtitle" : {
+      "comment" : "Import sheet subtitle: file path, cask count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld casks listed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · 共列出 %2$lld 个 cask"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.title" : {
+      "comment" : "Title of the Brewfile import sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Casks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 Cask"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.title" : {
+      "comment" : "Section title of the Brewfile card on Shelf Setup",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brewfile"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brewfile"
+          }
+        }
+      }
+    },
     "shelfSetup.ignore.addButton" : {
       "comment" : "Button opening the picker of adoptable apps to ignore",
       "extractionState" : "manual",
@@ -3075,6 +3535,26 @@
         }
       }
     },
+    "The disk image is already in use. Eject any mounted copy of it, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此磁盘映像正在使用中。请推出已挂载的副本，然后重试。"
+          }
+        }
+      }
+    },
+    "The download is missing valid macOS quarantine metadata. Remove the cached download and let Homebrew download it again; do not bypass the security check." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载内容缺少有效的 macOS 隔离属性。请删除缓存的下载内容，让 Homebrew 重新下载；不要绕过此安全检查。"
+          }
+        }
+      }
+    },
     "The installer for “%@” requires your login password." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3085,12 +3565,12 @@
         }
       }
     },
-    "Currently selected brew path is invalid" : {
+    "There is not enough free storage to complete this operation. Free some space, then try again." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当前选择的 brew 路径无效"
+            "value" : "可用存储空间不足，无法完成此操作。请释放一些空间，然后重试。"
           }
         }
       }
@@ -3101,6 +3581,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此应用不支持这台 Mac 的处理器架构或 macOS 版本。"
+          }
+        }
+      }
+    },
+    "This Homebrew installation cannot read the current cask definition. Update Homebrew, then try again. If it still fails, run `brew doctor` in Terminal." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Homebrew 安装无法读取当前的 Cask 定义。请更新 Homebrew 后重试。如果仍然失败，请在“终端”中运行 `brew doctor`。"
           }
         }
       }
@@ -3225,6 +3715,16 @@
         }
       }
     },
+    "Update Homebrew" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 Homebrew"
+          }
+        }
+      }
+    },
     "Updates" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3251,6 +3751,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在更新 %lld/%lld"
+          }
+        }
+      }
+    },
+    "Updating Homebrew…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在更新 Homebrew…"
           }
         }
       }
@@ -3376,152 +3886,22 @@
         }
       }
     },
-    "Homebrew could not extract this disk image because its layout is read-only. Try again once; if it repeats, the cask needs to be corrected upstream." : {
+    "Year" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Homebrew 无法提取此磁盘映像，因为其布局为只读。请重试一次；如果问题再次出现，则需要由上游修正该 Cask。"
+            "value" : "一年"
           }
         }
       }
     },
-    "Homebrew could not prepare its Portable Ruby runtime. Check access to GitHub and GHCR, then update Homebrew and try again." : {
+    "Yes" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Homebrew 无法准备 Portable Ruby 运行环境。请检查能否访问 GitHub 和 GHCR，然后更新 Homebrew 并重试。"
-          }
-        }
-      }
-    },
-    "Homebrew could not reach a required download host. Check your network, VPN, proxy, and DNS settings, then try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew 无法访问所需的下载主机。请检查网络、VPN、代理和 DNS 设置，然后重试。"
-          }
-        }
-      }
-    },
-    "Homebrew could not write to one of its temporary or installation folders. Run `brew doctor`, correct the permissions it reports, then try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew 无法写入其临时目录或安装目录。请运行 `brew doctor`，修正它报告的权限问题，然后重试。"
-          }
-        }
-      }
-    },
-    "Homebrew found an existing item at the destination. Remove or move that item manually, then try again.\n\n%@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew 在目标位置发现了现有项目。请手动移除或移动该项目，然后重试。\n\n%@"
-          }
-        }
-      }
-    },
-    "Homebrew Update Failed" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew 更新失败"
-          }
-        }
-      }
-    },
-    "Homebrew tried to run code for the wrong processor architecture. Select the compatible Homebrew path in Settings, then try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew 尝试为错误的处理器架构运行代码。请在设置中选择兼容的 Homebrew 路径，然后重试。"
-          }
-        }
-      }
-    },
-    "Homebrew's temporary download state changed while the operation was finishing. Try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "操作即将完成时，Homebrew 的临时下载状态发生了变化。请重试。"
-          }
-        }
-      }
-    },
-    "macOS canceled opening the disk image. Try again and approve the disk image if macOS asks for confirmation." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macOS 取消了打开磁盘映像。请重试；如果 macOS 要求确认，请允许打开该磁盘映像。"
-          }
-        }
-      }
-    },
-    "The disk image is already in use. Eject any mounted copy of it, then try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此磁盘映像正在使用中。请推出已挂载的副本，然后重试。"
-          }
-        }
-      }
-    },
-    "The download is missing valid macOS quarantine metadata. Remove the cached download and let Homebrew download it again; do not bypass the security check." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "下载内容缺少有效的 macOS 隔离属性。请删除缓存的下载内容，让 Homebrew 重新下载；不要绕过此安全检查。"
-          }
-        }
-      }
-    },
-    "There is not enough free storage to complete this operation. Free some space, then try again." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可用存储空间不足，无法完成此操作。请释放一些空间，然后重试。"
-          }
-        }
-      }
-    },
-    "This Homebrew installation cannot read the current cask definition. Update Homebrew, then try again. If it still fails, run `brew doctor` in Terminal." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此 Homebrew 安装无法读取当前的 Cask 定义。请更新 Homebrew 后重试。如果仍然失败，请在“终端”中运行 `brew doctor`。"
-          }
-        }
-      }
-    },
-    "Update Homebrew" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更新 Homebrew"
-          }
-        }
-      }
-    },
-    "Updating Homebrew…" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在更新 Homebrew…"
+            "value" : "是"
           }
         }
       }
@@ -3542,26 +3922,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的 Homebrew 设置要求校验和，但此 Cask 使用不带校验和的未版本化下载。请从 `HOMEBREW_CASK_OPTS` 中移除 `--require-sha` 以安装它。"
-          }
-        }
-      }
-    },
-    "Year" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "一年"
-          }
-        }
-      }
-    },
-    "Yes" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "是"
           }
         }
       }
