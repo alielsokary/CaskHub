@@ -11,19 +11,175 @@ struct ShelfSetupView: View {
     let viewModel: CaskCatalogViewModel
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var showsIgnorePicker = false
+    @State private var exportNote: BrewfileNote?
+    @State private var importNote: BrewfileNote?
+    @State private var importPlan: BrewfileImportPlan?
 
     var body: some View {
         ScrollView {
-            ignoreCard
-                .frame(maxWidth: 680, alignment: .leading)
-                .frame(width: CHSize.contentWidth, alignment: .leading)
-                .frame(maxWidth: .infinity)
+            VStack(alignment: .leading, spacing: 16) {
+                brewfileCard
+                ignoreCard
+            }
+            .frame(maxWidth: 680, alignment: .leading)
+            .frame(width: CHSize.contentWidth, alignment: .leading)
+            .frame(maxWidth: .infinity)
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .sheet(isPresented: $showsIgnorePicker) {
             AdoptIgnorePickerSheet(viewModel: viewModel)
         }
+        .sheet(item: $importPlan) { plan in
+            BrewfileImportSheet(plan: plan)
+        }
+    }
+
+    // MARK: - Brewfile
+
+    private var brewfileCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(String(localized: .shelfSetupBrewfileTitle))
+                .font(CHType.section)
+                .foregroundStyle(Color.chTextTitle)
+                .padding(.bottom, 10)
+            brewfileRow(
+                title: String(localized: .shelfSetupBrewfileExportTitle),
+                description: String(
+                    localized: .shelfSetupBrewfileExportDescription(viewModel.installedCount)
+                ),
+                note: exportNote
+            ) {
+                PillButton(
+                    title: String(localized: .shelfSetupBrewfileExportButton),
+                    background: .chActionInstallBg,
+                    border: .chActionInstallBorder,
+                    foreground: .chActionInstallFg,
+                    action: exportBrewfile
+                )
+            }
+            brewfileRow(
+                title: String(localized: .shelfSetupBrewfileImportTitle),
+                description: String(localized: .shelfSetupBrewfileImportDescription),
+                note: importNote
+            ) {
+                PillButton(
+                    title: String(localized: .shelfSetupBrewfileImportButton),
+                    background: .chSurfaceField,
+                    border: .chHairlineStrong,
+                    foreground: .chTextNav,
+                    action: chooseImportFile
+                )
+            }
+        }
+        .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
+        .glassPanel()
+    }
+
+    private func brewfileRow(
+        title: String,
+        description: String,
+        note: BrewfileNote?,
+        @ViewBuilder button: () -> some View
+    ) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(CHType.cardTitle)
+                    .foregroundStyle(Color.chTextTitle)
+                Text(description)
+                    .font(CHType.bodySm)
+                    .foregroundStyle(Color.chTextBody)
+                if let note {
+                    Text(note.message)
+                        .font(CHType.bodySm)
+                        .foregroundStyle(
+                            note.isFailure ? Color.chActionUpdateFg : Color.chActionDoneFg
+                        )
+                }
+            }
+            Spacer(minLength: 10)
+            button()
+        }
+        .padding(.vertical, 11)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
+    }
+
+    private func exportBrewfile() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "Brewfile"
+        panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
+        panel.showsHiddenFiles = true
+        let response = CrashReporter.withHangTrackingPaused { panel.runModal() }
+        guard response == .OK, let url = panel.url else { return }
+        let tokens = viewModel.installedCasks.map(\.token)
+        do {
+            try Brewfile.contents(forCaskTokens: tokens)
+                .write(to: url, atomically: true, encoding: .utf8)
+            exportNote = BrewfileNote(
+                message: String(localized: .shelfSetupBrewfileExportSaved(
+                    (url.path as NSString).abbreviatingWithTildeInPath,
+                    tokens.count
+                )),
+                isFailure: false
+            )
+        } catch {
+            exportNote = BrewfileNote(
+                message: String(localized: .shelfSetupBrewfileExportFailed),
+                isFailure: true
+            )
+        }
+    }
+
+    private func chooseImportFile() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.showsHiddenFiles = true
+        panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
+        let response = CrashReporter.withHangTrackingPaused { panel.runModal() }
+        guard response == .OK, let url = panel.url else { return }
+        let contents = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+        let tokens = Brewfile.caskTokens(in: contents)
+        guard !tokens.isEmpty else {
+            importNote = BrewfileNote(
+                message: String(localized: .shelfSetupBrewfileImportEmpty),
+                isFailure: true
+            )
+            return
+        }
+        importNote = nil
+        importPlan = makeImportPlan(
+            fileName: (url.path as NSString).abbreviatingWithTildeInPath,
+            tokens: tokens
+        )
+    }
+
+    private func makeImportPlan(
+        fileName: String,
+        tokens: [String]
+    ) -> BrewfileImportPlan {
+        let byToken = Dictionary(viewModel.casks.map { ($0.token, $0) }) { first, _ in first }
+        var skippedEntries: [BrewfileImportPlan.Entry] = []
+        var newEntries: [BrewfileImportPlan.Entry] = []
+        for token in tokens {
+            // Brewfiles may tap-qualify tokens; the catalog keys bare ones.
+            let bare = token.split(separator: "/").last.map(String.init) ?? token
+            let cask = byToken[bare]
+            let entry = BrewfileImportPlan.Entry(token: token, cask: cask)
+            if let cask, viewModel.localState(for: cask).isPresent {
+                skippedEntries.append(entry)
+            } else {
+                newEntries.append(entry)
+            }
+        }
+        return BrewfileImportPlan(
+            fileName: fileName,
+            listedCount: tokens.count,
+            skippedEntries: skippedEntries,
+            newEntries: newEntries
+        )
     }
 
     // MARK: - Ignore List
@@ -217,7 +373,7 @@ struct AdoptIgnorePickerSheet: View {
 
 // MARK: - Shared Bits
 
-private struct PillButton: View {
+struct PillButton: View {
     let title: String
     let background: Color
     let border: Color
