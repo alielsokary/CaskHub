@@ -41,11 +41,12 @@ struct BrewfileImportSheet: View {
     let plan: BrewfileImportPlan
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(\.dismiss) private var dismiss
-    @State private var phase: BrewfileImportPhase = .preview
+    @State private var phase: BrewfileImportPhase
     @State private var selectedTokens: Set<String>
 
-    init(plan: BrewfileImportPlan) {
+    init(plan: BrewfileImportPlan, phase: BrewfileImportPhase = .preview) {
         self.plan = plan
+        _phase = State(initialValue: phase)
         _selectedTokens = State(initialValue: Set(plan.newEntries.map(\.token)))
     }
 

@@ -156,7 +156,7 @@ struct ShelfSetupView: View {
         )
     }
 
-    private func makeImportPlan(
+    func makeImportPlan(
         fileName: String,
         tokens: [String]
     ) -> BrewfileImportPlan {

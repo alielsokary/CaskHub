@@ -124,6 +124,67 @@ final class ShelfSetupViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_make_import_plan_splits_installed_new_and_unknown_tokens() async {
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("brewfile-plan"),
+            externalApps: ["google-chrome": "Google Chrome.app"]
+        )
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("google-chrome", appNames: ["Google Chrome.app"]),
+                makeCask("raycast", appNames: ["Raycast.app"])
+            ],
+            localHomebrew: homebrew
+        )
+
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+            fileName: "~/Brewfile",
+            tokens: ["homebrew/cask/google-chrome", "raycast", "mystery-app"]
+        )
+
+        XCTAssertEqual(
+            plan.skippedEntries.map(\.token), ["homebrew/cask/google-chrome"],
+            "externally installed app counts as present, even tap-qualified"
+        )
+        XCTAssertEqual(plan.newEntries.map(\.token), ["raycast", "mystery-app"])
+        XCTAssertEqual(plan.listedCount, 3)
+        XCTAssertEqual(plan.newEntries.first?.cask?.token, "raycast")
+        XCTAssertNil(plan.newEntries.last?.cask, "unknown token keeps nil cask")
+    }
+
+    @MainActor
+    func test_brewfile_import_sheet_renders_every_phase() {
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("brewfile-render"),
+            externalApps: [:]
+        )
+        let plan = BrewfileImportPlan(
+            fileName: "~/Brewfile",
+            skippedEntries: [.init(token: "google-chrome", cask: makeCask("google-chrome"))],
+            newEntries: [
+                .init(token: "raycast", cask: makeCask("raycast")),
+                .init(token: "mystery-app", cask: nil)
+            ]
+        )
+        let phases: [BrewfileImportPhase] = [
+            .preview, .running(index: 0), .done(failedCount: 0), .done(failedCount: 1)
+        ]
+        for phase in phases {
+            render(BrewfileImportSheet(plan: plan, phase: phase)
+                .environment(homebrew)
+                .environment(ImageCacheService()))
+        }
+        let nothingNew = BrewfileImportPlan(
+            fileName: "~/Brewfile",
+            skippedEntries: plan.skippedEntries,
+            newEntries: []
+        )
+        render(BrewfileImportSheet(plan: nothingNew)
+            .environment(homebrew)
+            .environment(ImageCacheService()))
+    }
+
+    @MainActor
     func test_ignore_picker_sheet_renders_adoptable_and_empty_states() async {
         let homebrew = makeHomebrew(
             defaults: makeScratchDefaults("adopt-picker-render"),
