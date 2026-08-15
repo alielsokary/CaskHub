@@ -176,7 +176,6 @@ struct ShelfSetupView: View {
         }
         return BrewfileImportPlan(
             fileName: fileName,
-            listedCount: tokens.count,
             skippedEntries: skippedEntries,
             newEntries: newEntries
         )

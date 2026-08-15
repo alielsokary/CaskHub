@@ -25,9 +25,10 @@ nonisolated struct BrewfileImportPlan: Identifiable {
 
     let id = UUID()
     let fileName: String
-    let listedCount: Int
     let skippedEntries: [Entry]
     let newEntries: [Entry]
+
+    var listedCount: Int { skippedEntries.count + newEntries.count }
 }
 
 nonisolated enum BrewfileImportPhase: Equatable {
@@ -102,7 +103,7 @@ struct BrewfileImportSheet: View {
                     if !plan.skippedEntries.isEmpty {
                         skippedHeader
                         ForEach(plan.skippedEntries) { entry in
-                            BrewfileInstalledRow(entry: entry)
+                            BrewfileEntryRow(entry: entry)
                         }
                     }
                 }
@@ -111,24 +112,15 @@ struct BrewfileImportSheet: View {
         }
         HStack(spacing: 8) {
             Spacer()
-            if plan.newEntries.isEmpty {
-                PillButton(
-                    title: String(localized: "Done"),
-                    background: .chSurfaceField,
-                    border: .chHairlineStrong,
-                    foreground: .chTextNav
-                ) {
-                    dismiss()
-                }
-            } else {
-                PillButton(
-                    title: String(localized: "Cancel"),
-                    background: .chSurfaceField,
-                    border: .chHairlineStrong,
-                    foreground: .chTextNav
-                ) {
-                    dismiss()
-                }
+            PillButton(
+                title: String(localized: plan.newEntries.isEmpty ? "Done" : "Cancel"),
+                background: .chSurfaceField,
+                border: .chHairlineStrong,
+                foreground: .chTextNav
+            ) {
+                dismiss()
+            }
+            if !plan.newEntries.isEmpty {
                 PillButton(
                     title: String(localized: .shelfSetupBrewfileSheetInstallButton(
                         selectedEntries.count
@@ -195,7 +187,9 @@ struct BrewfileImportSheet: View {
             GeometryReader { geo in
                 Capsule()
                     .fill(Color.chTerracotta)
-                    .frame(width: geo.size.width * fraction(index: index))
+                    .frame(
+                        width: geo.size.width * CGFloat(index) / CGFloat(selectedEntries.count)
+                    )
             }
             .frame(height: 8)
             .background(Capsule().fill(Color.chSurfaceField))
@@ -210,11 +204,6 @@ struct BrewfileImportSheet: View {
             .foregroundStyle(Color.chTextMuted)
         }
         .padding(.vertical, 8)
-    }
-
-    private func fraction(index: Int) -> CGFloat {
-        guard !selectedEntries.isEmpty else { return 0 }
-        return CGFloat(index) / CGFloat(selectedEntries.count)
     }
 
     @ViewBuilder private func summary(failedCount: Int) -> some View {
@@ -266,42 +255,24 @@ struct BrewfileImportSheet: View {
 
 // MARK: - Rows
 
+/// Checkbox row when `isSelected` is bound; dimmed installed row when nil.
 private struct BrewfileEntryRow: View {
     let entry: BrewfileImportPlan.Entry
-    @Binding var isSelected: Bool
+    var isSelected: Binding<Bool>?
 
     var body: some View {
         HStack(spacing: 10) {
-            Toggle(isOn: $isSelected) {
-                Text(entry.displayName)
-            }
-            .toggleStyle(.checkbox)
-            .labelsHidden()
-            .frame(width: 16)
-            BrewfileEntryIcon(entry: entry)
-            Text(entry.displayName)
-                .font(CHType.cardTitle)
-                .foregroundStyle(Color.chTextTitle)
-                .lineLimit(1)
-            Spacer(minLength: 10)
-            if let cask = entry.cask {
-                Text(verbatim: "v\(cask.displayVersion)")
-                    .font(CHType.statusMono)
-                    .foregroundStyle(Color.chTextFaint)
-            }
-        }
-        .padding(.vertical, 7)
-        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
-    }
-}
-
-private struct BrewfileInstalledRow: View {
-    let entry: BrewfileImportPlan.Entry
-
-    var body: some View {
-        HStack(spacing: 10) {
-            BrewfileDoneMark(size: 14)
+            if let isSelected {
+                Toggle(isOn: isSelected) {
+                    Text(entry.displayName)
+                }
+                .toggleStyle(.checkbox)
+                .labelsHidden()
                 .frame(width: 16)
+            } else {
+                BrewfileDoneMark(size: 14)
+                    .frame(width: 16)
+            }
             BrewfileEntryIcon(entry: entry)
             Text(entry.displayName)
                 .font(CHType.cardTitle)
@@ -315,7 +286,7 @@ private struct BrewfileInstalledRow: View {
             }
         }
         .padding(.vertical, 7)
-        .opacity(0.55)
+        .opacity(isSelected == nil ? 0.55 : 1)
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 }
