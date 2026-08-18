@@ -15,25 +15,29 @@ struct MaintenanceDiskCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if model.hasDiskSnapshot {
-                header
-                usageBar
-                    .padding(.top, 12)
-                    .padding(.bottom, 14)
-                ForEach(model.orderedDiskCategories) { id in
-                    diskRow(id)
-                }
-            } else {
-                Text(String(localized: .maintenanceDiskTitle))
-                    .font(CHType.section)
-                    .foregroundStyle(Color.chTextTitle)
-                ProgressView()
-                    .controlSize(.small)
-                    .frame(maxWidth: .infinity, minHeight: 220)
+            header
+            usageBar
+                .padding(.top, 12)
+                .padding(.bottom, 14)
+            ForEach(model.orderedDiskCategories) { id in
+                diskRow(id)
             }
         }
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
+        .overlay {
+            if !model.hasDiskSnapshot {
+                RoundedRectangle(cornerRadius: CHRadius.card)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        ProgressView(String(localized: .maintenanceDiskMeasuring))
+                            .font(CHType.body)
+                            .foregroundStyle(Color.chTextBody)
+                    }
+                    .transition(.opacity)
+            }
+        }
+        .disabled(!model.hasDiskSnapshot)
         .animation(.easeOut(duration: 0.2), value: model.expandedRows)
         .animation(.easeOut(duration: 0.25), value: model.hasDiskSnapshot)
         .animation(.easeOut(duration: 0.25), value: model.diskBytes)

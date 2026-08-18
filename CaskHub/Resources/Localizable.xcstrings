@@ -2649,6 +2649,24 @@
         }
       }
     },
+    "maintenance.disk.measuring" : {
+      "comment" : "Label under the spinner while disk usage is measured",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Measuring disk usage…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在测量磁盘用量…"
+          }
+        }
+      }
+    },
     "maintenance.disk.old.desc" : {
       "comment" : "Disk row description for superseded versions",
       "extractionState" : "manual",
