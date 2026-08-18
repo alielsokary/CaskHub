@@ -2385,6 +2385,24 @@
         }
       }
     },
+    "maintenance.disk.allClean" : {
+      "comment" : "Accessibility label for the green check shown when a disk row has nothing to clean",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All clean"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清洁"
+          }
+        }
+      }
+    },
     "maintenance.disk.apps.desc" : {
       "comment" : "Disk row description for installed apps; %lld is the cask count",
       "extractionState" : "manual",
@@ -2465,6 +2483,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刚刚清理完毕"
+          }
+        }
+      }
+    },
+    "maintenance.disk.cache.empty" : {
+      "comment" : "Disk row description when the download cache is already empty",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cached installers"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有缓存的安装包"
           }
         }
       }
@@ -2577,6 +2613,24 @@
         }
       }
     },
+    "maintenance.disk.imageCache.empty" : {
+      "comment" : "Disk row description when the image cache is already empty",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cached images"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有缓存的图片"
+          }
+        }
+      }
+    },
     "maintenance.disk.imageCache.label" : {
       "comment" : "Disk row label for CaskHub's icon cache",
       "extractionState" : "manual",
@@ -2627,6 +2681,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刚刚移除"
+          }
+        }
+      }
+    },
+    "maintenance.disk.old.empty" : {
+      "comment" : "Disk row description when no superseded versions remain",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing kept from past updates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有历史版本残留"
           }
         }
       }

@@ -258,7 +258,9 @@ extension MaintenanceViewModel {
                         probe: probe
                     )
                 }
-                setBytes(.orphans, total)
+                // Floor at 1 byte while orphans exist so the row stays actionable
+                // even when their kegs cannot be measured.
+                setBytes(.orphans, names.isEmpty ? 0 : max(total, 1))
             }
         } else {
             setBytes(.oldVersions, 0)
@@ -298,6 +300,15 @@ extension MaintenanceViewModel {
             rowStates[id] = .idle
             failedRows.insert(id)
         }
+    }
+
+    var orderedDiskCategories: [DiskCategoryID] {
+        DiskCategoryID.allCases.enumerated().sorted { lhs, rhs in
+            let left = diskBytes[lhs.element] ?? 0
+            let right = diskBytes[rhs.element] ?? 0
+            if left != right { return left > right }
+            return lhs.offset < rhs.offset
+        }.map(\.element)
     }
 
     var reclaimableBytes: Int64? {

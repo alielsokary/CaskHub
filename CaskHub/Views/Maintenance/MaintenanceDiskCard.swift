@@ -20,7 +20,7 @@ struct MaintenanceDiskCard: View {
                 usageBar
                     .padding(.top, 12)
                     .padding(.bottom, 14)
-                ForEach(CategoryID.allCases) { id in
+                ForEach(model.orderedDiskCategories) { id in
                     diskRow(id)
                 }
             } else {
@@ -36,6 +36,7 @@ struct MaintenanceDiskCard: View {
         .glassPanel()
         .animation(.easeOut(duration: 0.2), value: model.expandedRows)
         .animation(.easeOut(duration: 0.25), value: model.hasDiskSnapshot)
+        .animation(.easeOut(duration: 0.25), value: model.diskBytes)
     }
 
     private var header: some View {
@@ -72,7 +73,7 @@ struct MaintenanceDiskCard: View {
     private var usageBar: some View {
         GeometryReader { geo in
             HStack(spacing: 0) {
-                ForEach(CategoryID.allCases) { id in
+                ForEach(model.orderedDiskCategories) { id in
                     tint(for: id)
                         .opacity(dotOpacity(for: id))
                         .frame(width: geo.size.width * fraction(of: id))
@@ -156,8 +157,23 @@ struct MaintenanceDiskCard: View {
             }
             .frame(width: 74)
         default:
-            Color.clear.frame(width: 74, height: 1)
+            if buttonTitle(for: id) != nil, model.diskBytes[id] == 0 {
+                cleanGlyph
+                    .frame(width: 74)
+            } else {
+                Color.clear.frame(width: 74, height: 1)
+            }
         }
+    }
+
+    private var cleanGlyph: some View {
+        Text("✓")
+            .font(.system(size: 10, weight: .heavy))
+            .foregroundStyle(Color.chActionDoneFg)
+            .frame(width: 18, height: 18)
+            .background(Circle().fill(Color.chActionDoneBg))
+            .overlay(Circle().strokeBorder(Color.chActionDoneBorder, lineWidth: 1))
+            .accessibilityLabel(String(localized: .maintenanceDiskAllClean))
     }
 
     private func directoryList(for id: CategoryID) -> some View {
@@ -185,8 +201,11 @@ struct MaintenanceDiskCard: View {
         .padding(.bottom, 8)
     }
 
-    // MARK: - Row Metadata
+}
 
+// MARK: - Row Metadata
+
+extension MaintenanceDiskCard {
     private func tint(for id: CategoryID) -> Color {
         switch id {
         case .apps: return .chSage
@@ -224,7 +243,24 @@ struct MaintenanceDiskCard: View {
         if state == .done, let done = doneDescription(for: id) {
             return done
         }
+        if isCleanRow(id), let empty = emptyDescription(for: id) {
+            return empty
+        }
         return idleDescription(for: id)
+    }
+
+    private func isCleanRow(_ id: CategoryID) -> Bool {
+        buttonTitle(for: id) != nil && model.diskBytes[id] == 0
+    }
+
+    private func emptyDescription(for id: CategoryID) -> String? {
+        switch id {
+        case .apps: return nil
+        case .cache: return String(localized: .maintenanceDiskCacheEmpty)
+        case .oldVersions: return String(localized: .maintenanceDiskOldEmpty)
+        case .orphans: return String(localized: .maintenanceDiskOrphansEmpty)
+        case .imageCache: return String(localized: .maintenanceDiskImageCacheEmpty)
+        }
     }
 
     private func doneDescription(for id: CategoryID) -> String? {
@@ -256,7 +292,7 @@ struct MaintenanceDiskCard: View {
 
     private func descriptionColor(for id: CategoryID, state: MaintenanceViewModel.TaskState) -> Color {
         if model.failedRows.contains(id) { return .chActionUpdateFg }
-        return state == .done ? .chActionDoneFg : .chTextMuted
+        return state == .done || isCleanRow(id) ? .chActionDoneFg : .chTextMuted
     }
 
     private func sizeText(for id: CategoryID) -> String {

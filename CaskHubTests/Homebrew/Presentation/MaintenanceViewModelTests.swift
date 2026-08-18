@@ -154,6 +154,10 @@ final class MaintenanceViewModelTests: XCTestCase {
         XCTAssertEqual(model.diskBytes[.apps], 0)
         XCTAssertEqual(model.orphanFormulae, ["libyaml", "pcre2"])
         XCTAssertEqual(model.reclaimableBytes, 209_715_200 + 1_000 + 1_000 + 2_000)
+        XCTAssertEqual(
+            model.orderedDiskCategories,
+            [.oldVersions, .imageCache, .cache, .orphans, .apps]
+        )
     }
 
     // MARK: - Cleaning
