@@ -106,6 +106,19 @@ final class MaintenanceViewModelTests: XCTestCase {
         XCTAssertEqual(model.advisoryCount, 1)
     }
 
+    @MainActor
+    func test_checkup_runs_doctor_with_brew_path_first() async {
+        let probe = RecordingMaintenanceProbe()
+        let model = makeModel(probe: probe)
+
+        await model.runCheckup()
+
+        let doctorIndex = probe.commands.firstIndex(of: ["brew", "doctor"])
+        XCTAssertNotNil(doctorIndex)
+        let path = doctorIndex.flatMap { probe.environments[$0]?["PATH"] }
+        XCTAssertEqual(path?.hasPrefix("/opt/homebrew/bin:/opt/homebrew/sbin:"), true)
+    }
+
     // MARK: - Disk Scan
 
     @MainActor

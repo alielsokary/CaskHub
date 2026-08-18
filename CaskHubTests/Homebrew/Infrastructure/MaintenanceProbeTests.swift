@@ -34,6 +34,17 @@ final class MaintenanceProbeTests: XCTestCase {
         XCTAssertTrue(result?.output.contains("err") == true)
     }
 
+    func test_run_merges_environment_overrides() async {
+        let result = await probe.run(
+            URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "echo $PATH"],
+            environment: ["PATH": "/probe-test-bin:/usr/bin"]
+        )
+
+        XCTAssertEqual(result?.exitCode, 0)
+        XCTAssertTrue(result?.output.hasPrefix("/probe-test-bin:") == true)
+    }
+
     func test_run_returns_nil_for_missing_executable() async {
         let result = await probe.run(
             root.appendingPathComponent("no-such-binary"),

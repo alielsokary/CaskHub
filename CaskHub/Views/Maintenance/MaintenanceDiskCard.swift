@@ -25,6 +25,7 @@ struct MaintenanceDiskCard: View {
         }
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
+        .animation(.easeOut(duration: 0.2), value: model.expandedRows)
     }
 
     private var header: some View {
@@ -134,7 +135,7 @@ struct MaintenanceDiskCard: View {
         switch state {
         case .running:
             WorkingPill(title: String(localized: .maintenanceWorking))
-        case .idle where buttonTitle(for: id) != nil:
+        case .idle where buttonTitle(for: id) != nil && (model.diskBytes[id] ?? 0) > 0:
             PillButton(
                 title: buttonTitle(for: id) ?? "",
                 background: .chActionUpdateBg,

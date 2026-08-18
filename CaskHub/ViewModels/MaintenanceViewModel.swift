@@ -91,7 +91,11 @@ final class MaintenanceViewModel {
         var nextChecks: [HealthCheck] = [brewInstallationCheck()]
         nextChecks.append(await commandLineToolsCheck())
         if let brewURL = localHomebrew.brewBinaryProvider(),
-           let doctor = await probe.run(brewURL, arguments: ["doctor"]) {
+           let doctor = await probe.run(
+               brewURL,
+               arguments: ["doctor"],
+               environment: Self.doctorEnvironment(brewURL: brewURL)
+           ) {
             nextChecks += BrewDoctorParser.warnings(from: doctor.output)
         }
         checks = nextChecks
@@ -101,6 +105,17 @@ final class MaintenanceViewModel {
         lastChecked = .now
         defaults.set(lastChecked, forKey: Self.lastCheckedKey)
         defaults.set(count, forKey: Self.advisoryCountKey)
+    }
+
+    /// GUI apps launch with a sanitized PATH, which makes `brew doctor` raise
+    /// PATH advisories a terminal run never shows. Front-load brew's own bin
+    /// and sbin so the report matches the user's shell.
+    nonisolated static func doctorEnvironment(brewURL: URL) -> [String: String] {
+        let binDir = brewURL.deletingLastPathComponent()
+        let sbinDir = binDir.deletingLastPathComponent().appendingPathComponent("sbin")
+        let currentPath = ProcessInfo.processInfo.environment["PATH"]
+            ?? "/usr/bin:/bin:/usr/sbin:/sbin"
+        return ["PATH": "\(binDir.path):\(sbinDir.path):\(currentPath)"]
     }
 
     private func brewInstallationCheck() -> HealthCheck {

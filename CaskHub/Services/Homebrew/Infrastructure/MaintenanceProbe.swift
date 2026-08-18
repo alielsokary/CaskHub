@@ -13,17 +13,35 @@ nonisolated struct BrewProbeResult: Equatable, Sendable {
 }
 
 nonisolated protocol MaintenanceProbing: Sendable {
-    func run(_ executable: URL, arguments: [String]) async -> BrewProbeResult?
+    func run(
+        _ executable: URL,
+        arguments: [String],
+        environment: [String: String]?
+    ) async -> BrewProbeResult?
     func directorySize(at url: URL) async -> Int64
     func removeDirectoryContents(at url: URL) async -> Bool
 }
 
+extension MaintenanceProbing {
+    func run(_ executable: URL, arguments: [String]) async -> BrewProbeResult? {
+        await run(executable, arguments: arguments, environment: nil)
+    }
+}
+
 nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
     @concurrent
-    func run(_ executable: URL, arguments: [String]) async -> BrewProbeResult? {
+    func run(
+        _ executable: URL,
+        arguments: [String],
+        environment: [String: String]?
+    ) async -> BrewProbeResult? {
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments
+        if let environment {
+            process.environment = ProcessInfo.processInfo.environment
+                .merging(environment) { _, override in override }
+        }
         // One pipe for both streams: a single read cannot deadlock on a full
         // sibling buffer, and callers treat the output as one transcript anyway.
         let pipe = Pipe()

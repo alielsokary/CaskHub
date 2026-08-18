@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MaintenanceView: View {
     let model: MaintenanceViewModel
+    @State private var expandedChecks: Set<String> = []
 
     var body: some View {
         ScrollView {
@@ -20,9 +21,12 @@ struct MaintenanceView: View {
                 }
                 MaintenanceDiskCard(model: model)
             }
-            .frame(maxWidth: 900, alignment: .leading)
-            .frame(width: CHSize.contentWidth, alignment: .leading)
+            // Same clamp as the utility top bar so the cards line up with it.
+            .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
+            .padding(.horizontal, CHSpace.s5)
             .frame(maxWidth: .infinity)
+            .animation(.easeOut(duration: 0.25), value: model.checks)
+            .animation(.easeOut(duration: 0.2), value: model.advisoriesExpanded)
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
@@ -64,6 +68,7 @@ struct MaintenanceView: View {
                     }
                 }
                 .padding(.top, 12)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20))
@@ -115,10 +120,31 @@ struct MaintenanceView: View {
                     .font(CHType.cardTitle)
                     .foregroundStyle(Color.chTextTitle)
                 if !check.detail.isEmpty {
+                    let isExpanded = expandedChecks.contains(check.id)
                     Text(check.detail)
                         .font(CHType.bodySm)
                         .foregroundStyle(Color.chTextBody)
+                        .lineLimit(isExpanded ? nil : Self.collapsedDetailLines)
                         .textSelection(.enabled)
+                    if check.detail.split(separator: "\n").count > Self.collapsedDetailLines {
+                        Button {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                if isExpanded {
+                                    expandedChecks.remove(check.id)
+                                } else {
+                                    expandedChecks.insert(check.id)
+                                }
+                            }
+                        } label: {
+                            Text(String(localized: isExpanded
+                                ? .maintenanceHealthShowLess
+                                : .maintenanceHealthShowMore))
+                                .font(CHType.bodySm)
+                                .foregroundStyle(Color.chTextBrand)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 2)
+                    }
                 }
             }
             Spacer(minLength: 0)
@@ -126,6 +152,8 @@ struct MaintenanceView: View {
         .padding(.vertical, 11)
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
+
+    private static let collapsedDetailLines = 4
 
     // MARK: - Widgets
 

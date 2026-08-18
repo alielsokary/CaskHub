@@ -321,6 +321,7 @@ nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecke
     private var storedSizes: [String: Int64] = [:]
     private var storedRemoveSucceeds = true
     private var storedCommands: [[String]] = []
+    private var storedEnvironments: [[String: String]?] = []
     private var storedRemoved: [URL] = []
 
     var resultsByFirstArgument: [String: BrewProbeResult] {
@@ -339,11 +340,17 @@ nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecke
     }
 
     var commands: [[String]] { lock.withLock { storedCommands } }
+    var environments: [[String: String]?] { lock.withLock { storedEnvironments } }
     var removedDirectories: [URL] { lock.withLock { storedRemoved } }
 
-    func run(_ executable: URL, arguments: [String]) async -> BrewProbeResult? {
+    func run(
+        _ executable: URL,
+        arguments: [String],
+        environment: [String: String]?
+    ) async -> BrewProbeResult? {
         lock.withLock {
             storedCommands.append([executable.lastPathComponent] + arguments)
+            storedEnvironments.append(environment)
             if let first = arguments.first, let result = storedResults[first] {
                 return result
             }

@@ -21,7 +21,6 @@ nonisolated struct HealthCheck: Equatable, Sendable, Identifiable {
 
 nonisolated enum BrewDoctorParser {
     static let readyMarker = "Your system is ready to brew."
-    private static let detailLineCap = 8
 
     /// `brew doctor` prints warnings to stderr as blocks that start with
     /// `Warning:` (or `Error:`) and run until the next marker.
@@ -40,11 +39,8 @@ nonisolated enum BrewDoctorParser {
                 .replacingOccurrences(of: "Warning: ", with: "")
                 .replacingOccurrences(of: "Error: ", with: "")
             let (label, firstLineRest) = splitLabel(from: message)
-            var detailLines = ([firstLineRest] + lines.dropFirst())
+            let detailLines = ([firstLineRest] + lines.dropFirst())
                 .filter { !$0.isEmpty }
-            if detailLines.count > detailLineCap {
-                detailLines = Array(detailLines.prefix(detailLineCap)) + ["…"]
-            }
             return HealthCheck(
                 id: "doctor-\(index)",
                 status: .advisory,
@@ -68,7 +64,11 @@ nonisolated enum BrewDoctorParser {
 
 nonisolated enum MaintenanceFormat {
     static func bytes(_ value: Int64) -> String {
-        ByteCountFormatter.string(fromByteCount: value, countStyle: .file)
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        // The default nonnumeric formatting spells out "Zero KB".
+        formatter.allowsNonnumericFormatting = false
+        return formatter.string(fromByteCount: value)
     }
 }
 

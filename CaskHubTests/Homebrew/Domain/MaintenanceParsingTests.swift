@@ -47,7 +47,7 @@ final class MaintenanceParsingTests: XCTestCase {
         """)
     }
 
-    func test_doctor_long_warning_detail_is_capped() {
+    func test_doctor_long_warning_keeps_the_full_log() {
         let paths = (1...20).map { "  /usr/local/lib/lib\($0).dylib" }
         let output = (["Warning: Unbrewed dylibs were found in /usr/local/lib."] + paths)
             .joined(separator: "\n")
@@ -55,8 +55,8 @@ final class MaintenanceParsingTests: XCTestCase {
 
         XCTAssertEqual(checks.count, 1)
         let lines = checks[0].detail.split(separator: "\n")
-        XCTAssertEqual(lines.count, 9)
-        XCTAssertEqual(lines.last, "…")
+        XCTAssertEqual(lines.count, 20)
+        XCTAssertEqual(lines.last, "/usr/local/lib/lib20.dylib")
     }
 
     // MARK: - brew cleanup --dry-run
