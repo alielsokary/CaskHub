@@ -323,6 +323,7 @@ nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecke
     private var storedCommands: [[String]] = []
     private var storedEnvironments: [[String: String]?] = []
     private var storedRemoved: [URL] = []
+    private var storedInstallers: [CachedInstaller] = []
 
     var resultsByFirstArgument: [String: BrewProbeResult] {
         get { lock.withLock { storedResults } }
@@ -337,6 +338,11 @@ nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecke
     var removeSucceeds: Bool {
         get { lock.withLock { storedRemoveSucceeds } }
         set { lock.withLock { storedRemoveSucceeds = newValue } }
+    }
+
+    var cachedInstallersResult: [CachedInstaller] {
+        get { lock.withLock { storedInstallers } }
+        set { lock.withLock { storedInstallers = newValue } }
     }
 
     var commands: [[String]] { lock.withLock { storedCommands } }
@@ -367,6 +373,10 @@ nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecke
             storedRemoved.append(url)
             return storedRemoveSucceeds
         }
+    }
+
+    func cachedInstallers(at cacheURL: URL) async -> [CachedInstaller] {
+        lock.withLock { storedInstallers }
     }
 }
 

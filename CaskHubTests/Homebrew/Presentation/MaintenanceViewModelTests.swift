@@ -141,12 +141,16 @@ final class MaintenanceViewModelTests: XCTestCase {
             "libyaml": 300,
             "pcre2": 700
         ]
+        probe.cachedInstallersResult = [
+            CachedInstaller(name: "foo--1.0.zip", bytes: 900)
+        ]
         let model = makeModel(probe: probe)
         XCTAssertFalse(model.hasDiskSnapshot)
 
         await model.refreshDisk()
 
         XCTAssertTrue(model.hasDiskSnapshot)
+        XCTAssertEqual(model.cachedInstallers.map(\.name), ["foo--1.0.zip"])
         XCTAssertEqual(model.diskBytes[.cache], 1_000)
         XCTAssertEqual(model.diskBytes[.imageCache], 2_000)
         XCTAssertEqual(model.diskBytes[.oldVersions], 209_715_200)
@@ -178,7 +182,11 @@ final class MaintenanceViewModelTests: XCTestCase {
     @MainActor
     func test_clean_cache_removes_directory_contents() async {
         let probe = RecordingMaintenanceProbe()
+        probe.cachedInstallersResult = [
+            CachedInstaller(name: "foo--1.0.zip", bytes: 900)
+        ]
         let model = makeModel(probe: probe)
+        await model.refreshDisk()
 
         await model.clean(.cache)
 
@@ -187,6 +195,7 @@ final class MaintenanceViewModelTests: XCTestCase {
             ["Homebrew"]
         )
         XCTAssertEqual(model.rowStates[.cache], .done)
+        XCTAssertTrue(model.cachedInstallers.isEmpty)
     }
 
     @MainActor

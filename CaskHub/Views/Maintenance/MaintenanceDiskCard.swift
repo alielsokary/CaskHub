@@ -178,6 +178,21 @@ struct MaintenanceDiskCard: View {
 
     private func directoryList(for id: CategoryID) -> some View {
         VStack(alignment: .leading, spacing: 0) {
+            if id == .cache {
+                ForEach(model.cachedInstallers) { installer in
+                    HStack(spacing: 10) {
+                        Text(installer.name)
+                            .font(CHType.statusMono)
+                            .foregroundStyle(Color.chTextMuted)
+                            .lineLimit(1)
+                        Spacer(minLength: 10)
+                        Text(MaintenanceFormat.bytes(installer.bytes))
+                            .font(CHType.statusMono)
+                            .foregroundStyle(Color.chTextFaint)
+                    }
+                    .padding(.vertical, 3)
+                }
+            }
             ForEach(model.directories(for: id), id: \.path) { url in
                 HStack(spacing: 10) {
                     Text((url.path as NSString).abbreviatingWithTildeInPath)

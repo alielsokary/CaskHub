@@ -49,6 +49,7 @@ final class MaintenanceViewModel {
     private(set) var rowStates: [DiskCategoryID: TaskState] = [:]
     private(set) var failedRows: Set<DiskCategoryID> = []
     private(set) var orphanFormulae: [String] = []
+    private(set) var cachedInstallers: [CachedInstaller] = []
     var expandedRows: Set<DiskCategoryID> = []
 
     private let localHomebrew: LocalHomebrewService
@@ -238,6 +239,7 @@ extension MaintenanceViewModel {
 
         let probe = probe
         async let cacheBytes = probe.directorySize(at: Self.homebrewCacheDirectory)
+        async let installers = probe.cachedInstallers(at: Self.homebrewCacheDirectory)
         async let imageBytes = probe.directorySize(at: IconDiskCache.defaultDirectory)
         let appURLs = installedAppURLs()
         async let appsBytes = Self.totalSize(of: appURLs, probe: probe)
@@ -267,6 +269,9 @@ extension MaintenanceViewModel {
             setBytes(.orphans, 0)
         }
         setBytes(.cache, await cacheBytes)
+        if rowStates[.cache, default: .idle] != .done {
+            cachedInstallers = await installers
+        }
         setBytes(.imageCache, await imageBytes)
         setBytes(.apps, await appsBytes)
         hasDiskSnapshot = true
@@ -295,6 +300,7 @@ extension MaintenanceViewModel {
         if succeeded {
             diskBytes[id] = 0
             if id == .orphans { orphanFormulae = [] }
+            if id == .cache { cachedInstallers = [] }
             rowStates[id] = .done
         } else {
             rowStates[id] = .idle

@@ -83,6 +83,32 @@ final class MaintenanceProbeTests: XCTestCase {
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [])
     }
 
+    func test_cachedInstallers_resolves_cask_aliases_to_payload_sizes() async throws {
+        let caskDir = root.appendingPathComponent("Cask")
+        let downloadsDir = root.appendingPathComponent("downloads")
+        try FileManager.default.createDirectory(at: caskDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: downloadsDir, withIntermediateDirectories: true)
+        let payload = downloadsDir.appendingPathComponent("abc123--Foo.zip")
+        try Data(repeating: 0, count: 10_000).write(to: payload)
+        let bookmark = try payload.bookmarkData(
+            options: .suitableForBookmarkFile,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        try URL.writeBookmarkData(bookmark, to: caskDir.appendingPathComponent("foo--1.0.zip"))
+        try Data("{}".utf8).write(to: caskDir.appendingPathComponent("descriptions.json"))
+
+        let installers = await probe.cachedInstallers(at: root)
+
+        XCTAssertEqual(installers.map(\.name), ["foo--1.0.zip"])
+        XCTAssertGreaterThanOrEqual(installers[0].bytes, 10_000)
+    }
+
+    func test_cachedInstallers_is_empty_without_cask_directory() async {
+        let installers = await probe.cachedInstallers(at: root)
+        XCTAssertTrue(installers.isEmpty)
+    }
+
     func test_removeDirectoryContents_fails_for_missing_directory() async {
         let succeeded = await probe.removeDirectoryContents(
             at: root.appendingPathComponent("missing")
