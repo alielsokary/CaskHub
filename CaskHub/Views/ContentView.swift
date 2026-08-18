@@ -15,6 +15,7 @@ struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(CategoryService.self) private var categoryService
     @Environment(LocalHomebrewService.self) private var localHomebrew
+    @Environment(MaintenanceViewModel.self) private var maintenance
     @AppStorage("viewMode") var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var sidebarVisibility: NavigationSplitViewVisibility = .all
@@ -180,10 +181,19 @@ struct ContentView: View {
     private var utilityTopBar: some View {
         UtilityTopBar(
             title: sectionName,
-            summary: selectedSidebar == .shelfSetup
-                ? String(localized: .shelfSetupIgnoredCount(viewModel.adoptIgnoredCasks.count))
-                : nil
+            summary: utilitySummary
         )
+    }
+
+    private var utilitySummary: String? {
+        switch selectedSidebar {
+        case .shelfSetup:
+            return String(localized: .shelfSetupIgnoredCount(viewModel.adoptIgnoredCasks.count))
+        case .maintenance:
+            return maintenance.topBarSummary
+        default:
+            return nil
+        }
     }
 
     private var isUtilityPage: Bool {
@@ -198,7 +208,7 @@ struct ContentView: View {
         case .shelfSetup:
             ShelfSetupView(viewModel: viewModel)
         case .maintenance:
-            MaintenancePlaceholderView()
+            MaintenanceView(model: maintenance)
         default:
             if viewModel.isLoading {
                 ProgressView("Loading casks…")
@@ -284,14 +294,20 @@ struct ResignFocusOnOutsideClick: ViewModifier {
     let categories = CategoryService()
     let recent = RecentlyAddedService()
     let homebrew = LocalHomebrewService()
-    ContentView(viewModel: CaskCatalogViewModel(
+    let catalog = CaskCatalogViewModel(
         apiClient: BrewAPIClient(),
         categoryService: categories,
         recentlyAdded: recent,
         localHomebrew: homebrew
-    ))
-    .environment(categories)
-    .environment(recent)
-    .environment(homebrew)
-    .environment(ImageCacheService())
+    )
+    ContentView(viewModel: catalog)
+        .environment(categories)
+        .environment(recent)
+        .environment(homebrew)
+        .environment(ImageCacheService())
+        .environment(MaintenanceViewModel(
+            localHomebrew: homebrew,
+            catalog: catalog,
+            clearImageCache: {}
+        ))
 }

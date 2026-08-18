@@ -31,6 +31,9 @@ extension Color {
     static let chTerracotta = Color(nsColor: NSColor(hex: 0xC8674A))
     static let chTerracottaLid = Color(nsColor: NSColor(hex: 0xA94F36))
     static let chGoldBand = Color(nsColor: NSColor(hex: 0xF0D59A))
+    static let chSage = Color(nsColor: NSColor(hex: 0x6FA287))
+    static let chAmber = Color(nsColor: NSColor(hex: 0xD99A4E))
+    static let chPlum = Color(nsColor: NSColor(hex: 0x8D87A0))
 
     // ── Window background gradient stops ──────────────
     static let chBg1 = adaptive(light: NSColor(hex: 0xF2E2BD), dark: NSColor(hex: 0x232030))

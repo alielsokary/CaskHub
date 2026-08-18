@@ -278,24 +278,6 @@ struct UtilityTopBar: View {
     }
 }
 
-struct MaintenancePlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            BarrelMark()
-                .frame(width: 56, height: 56)
-                .opacity(0.6)
-            Text(String(localized: .maintenanceComingSoonTitle))
-                .font(CHType.section)
-                .foregroundStyle(Color.chTextTitle)
-            Text(String(localized: .maintenanceComingSoonBody))
-                .font(CHType.body)
-                .foregroundStyle(Color.chTextBody)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
 // MARK: - Picker Sheet
 
 struct AdoptIgnorePickerSheet: View {

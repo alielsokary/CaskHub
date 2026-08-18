@@ -2269,38 +2269,1058 @@
         }
       }
     },
-    "maintenance.comingSoon.body" : {
-      "comment" : "Placeholder body on the Health maintenance page",
+    "maintenance.check.brew.fail" : {
+      "comment" : "Health check detail when the brew binary is missing",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Health checks, disk cleanup and quick maintenance tools will live here."
+            "value" : "Homebrew was not found. Install it from brew.sh."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "健康检查、磁盘清理和快速维护工具将在这里提供。"
+            "value" : "未找到 Homebrew。请前往 brew.sh 安装。"
           }
         }
       }
     },
-    "maintenance.comingSoon.title" : {
-      "comment" : "Placeholder title on the Health maintenance page",
+    "maintenance.check.brew.label" : {
+      "comment" : "Health check row label for the Homebrew installation",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Coming soon"
+            "value" : "Homebrew installation"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即将推出"
+            "value" : "Homebrew 安装"
+          }
+        }
+      }
+    },
+    "maintenance.check.brew.pass" : {
+      "comment" : "Health check detail when brew is healthy; %1$@ version, %2$@ prefix path",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew %1$@ at %2$@, healthy."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew %1$@ 位于 %2$@,状态良好。"
+          }
+        }
+      }
+    },
+    "maintenance.check.clt.fail" : {
+      "comment" : "Health check detail when Command Line Tools are missing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not installed. Run xcode-select --install in Terminal."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装。请在终端运行 xcode-select --install。"
+          }
+        }
+      }
+    },
+    "maintenance.check.clt.label" : {
+      "comment" : "Health check row label for Xcode Command Line Tools",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xcode Command Line Tools"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xcode 命令行工具"
+          }
+        }
+      }
+    },
+    "maintenance.check.clt.pass" : {
+      "comment" : "Health check detail when Command Line Tools exist; %@ is the developer dir path",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed at %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装于 %@。"
+          }
+        }
+      }
+    },
+    "maintenance.disk.apps.desc" : {
+      "comment" : "Disk row description for installed apps; %lld is the cask count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cask, managed"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld casks, managed"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个 Cask,已托管"
+          }
+        }
+      }
+    },
+    "maintenance.disk.apps.label" : {
+      "comment" : "Disk row label for installed apps",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps on your shelf"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "酒架上的应用"
+          }
+        }
+      }
+    },
+    "maintenance.disk.cache.desc" : {
+      "comment" : "Disk row description for the Homebrew download cache",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installers already poured"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成安装的安装包"
+          }
+        }
+      }
+    },
+    "maintenance.disk.cache.done" : {
+      "comment" : "Disk row description after the download cache was cleaned",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaned just now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刚刚清理完毕"
+          }
+        }
+      }
+    },
+    "maintenance.disk.cache.label" : {
+      "comment" : "Disk row label for the Homebrew download cache",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download cache"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载缓存"
+          }
+        }
+      }
+    },
+    "maintenance.disk.clean" : {
+      "comment" : "Button that cleans a disk usage row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clean"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理"
+          }
+        }
+      }
+    },
+    "maintenance.disk.failed" : {
+      "comment" : "Disk row description after a cleanup attempt failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong. Try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出了点问题,请重试。"
+          }
+        }
+      }
+    },
+    "maintenance.disk.imageCache.button" : {
+      "comment" : "Button that clears the icon image cache",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空"
+          }
+        }
+      }
+    },
+    "maintenance.disk.imageCache.desc" : {
+      "comment" : "Disk row description for CaskHub's icon cache",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cached icons and artwork"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存的图标和插图"
+          }
+        }
+      }
+    },
+    "maintenance.disk.imageCache.done" : {
+      "comment" : "Disk row description after the image cache was cleared",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleared, re-fetches as needed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清空,将按需重新获取"
+          }
+        }
+      }
+    },
+    "maintenance.disk.imageCache.label" : {
+      "comment" : "Disk row label for CaskHub's icon cache",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image cache"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片缓存"
+          }
+        }
+      }
+    },
+    "maintenance.disk.old.desc" : {
+      "comment" : "Disk row description for superseded versions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept from past updates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史更新留下的版本"
+          }
+        }
+      }
+    },
+    "maintenance.disk.old.done" : {
+      "comment" : "Disk row description after old versions were removed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed just now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刚刚移除"
+          }
+        }
+      }
+    },
+    "maintenance.disk.old.label" : {
+      "comment" : "Disk row label for superseded versions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Old versions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旧版本"
+          }
+        }
+      }
+    },
+    "maintenance.disk.openFinder" : {
+      "comment" : "Tooltip on the button that opens a directory in Finder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in Finder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中打开"
+          }
+        }
+      }
+    },
+    "maintenance.disk.orphans.button" : {
+      "comment" : "Button that removes orphaned dependencies",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
+      }
+    },
+    "maintenance.disk.orphans.done" : {
+      "comment" : "Disk row description after orphaned dependencies were removed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing left over"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已全部清除"
+          }
+        }
+      }
+    },
+    "maintenance.disk.orphans.empty" : {
+      "comment" : "Disk row description when no orphaned formulae exist",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No orphaned formulae"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有孤立的 Formula"
+          }
+        }
+      }
+    },
+    "maintenance.disk.orphans.label" : {
+      "comment" : "Disk row label for formulae nothing depends on anymore",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orphaned dependencies"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "孤立依赖"
+          }
+        }
+      }
+    },
+    "maintenance.disk.reclaimable" : {
+      "comment" : "Suffix after the big reclaimable size figure",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reclaimable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可回收"
+          }
+        }
+      }
+    },
+    "maintenance.disk.title" : {
+      "comment" : "Title of the disk usage card on the Health page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew on disk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "磁盘上的 Homebrew"
+          }
+        }
+      }
+    },
+    "maintenance.disk.total" : {
+      "comment" : "Total size readout in the disk card header; %@ is a formatted size",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ total"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共 %@"
+          }
+        }
+      }
+    },
+    "maintenance.health.cardTitle" : {
+      "comment" : "Title of the health card on the Health page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "健康"
+          }
+        }
+      }
+    },
+    "maintenance.health.checkedAt" : {
+      "comment" : "Top bar note with the relative time of the last checkup; %@ like 'yesterday'",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "checked %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次检查:%@"
+          }
+        }
+      }
+    },
+    "maintenance.health.hide" : {
+      "comment" : "Button that collapses the health check rows",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起"
+          }
+        }
+      }
+    },
+    "maintenance.health.review" : {
+      "comment" : "Button that expands the health check rows",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看"
+          }
+        }
+      }
+    },
+    "maintenance.health.run" : {
+      "comment" : "Button that starts the brew doctor checkup",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run checkup"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行检查"
+          }
+        }
+      }
+    },
+    "maintenance.health.running" : {
+      "comment" : "Checkup button label while checks are running",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查中…"
+          }
+        }
+      }
+    },
+    "maintenance.health.summary.advisories" : {
+      "comment" : "Health card summary when brew doctor reported advisories; %lld is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "brew doctor: %lld advisory to review. Nothing blocking."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "brew doctor: %lld advisories to review. Nothing blocking."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew doctor:有 %lld 项建议待查看,无阻塞问题。"
+          }
+        }
+      }
+    },
+    "maintenance.health.summary.allClear" : {
+      "comment" : "Health card summary when brew doctor found nothing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew doctor: all clear."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew doctor:一切正常。"
+          }
+        }
+      }
+    },
+    "maintenance.health.summary.notRun" : {
+      "comment" : "Health card summary before the first checkup",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run a checkup to see how your Homebrew is doing."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行一次检查,看看 Homebrew 的状态。"
+          }
+        }
+      }
+    },
+    "maintenance.health.summary.running" : {
+      "comment" : "Health card summary while brew doctor runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running brew doctor…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在运行 brew doctor…"
+          }
+        }
+      }
+    },
+    "maintenance.summary.allClear" : {
+      "comment" : "Top bar summary fragment when the last checkup was clean",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一切正常"
+          }
+        }
+      }
+    },
+    "maintenance.summary.reclaimable" : {
+      "comment" : "Top bar summary fragment; %@ is a formatted size",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ reclaimable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可回收 %@"
+          }
+        }
+      }
+    },
+    "maintenance.summary.review" : {
+      "comment" : "Top bar summary fragment; %lld is the advisory count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld to review"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld to review"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 项待查看"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.button" : {
+      "comment" : "Button that runs brew update",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.detail" : {
+      "comment" : "Homebrew widget detail; %1$@ version, %2$@ prefix path",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew %1$@ at %2$@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew %1$@ 位于 %2$@。"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.done" : {
+      "comment" : "Homebrew widget state after a successful update",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✓ Updated"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✓ 已更新"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.failed" : {
+      "comment" : "Homebrew widget note after brew update failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update failed. Try again later."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新失败,请稍后重试。"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.hint" : {
+      "comment" : "Homebrew widget helper line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update refreshes Homebrew and its catalog of casks."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新会刷新 Homebrew 及其 Cask 目录。"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.missing" : {
+      "comment" : "Homebrew widget detail when brew is not installed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew was not found."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到 Homebrew。"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.title" : {
+      "comment" : "Title of the Homebrew widget on the Health page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.button" : {
+      "comment" : "Button that refreshes catalog data from CaskFlow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即同步"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.detail" : {
+      "comment" : "Sync widget detail; %@ is a relative time like 'yesterday'",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your collection and CaskFlow last synced %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的收藏与 CaskFlow 上次同步于%@。"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.done" : {
+      "comment" : "Sync widget state after a successful sync",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✓ Synced"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✓ 已同步"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.meta" : {
+      "comment" : "Sync widget meta line; %lld is the installed cask count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cask in sync"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld casks in sync"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个 Cask 已同步"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.never" : {
+      "comment" : "Sync widget detail before the first sync",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your collection has not synced yet."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的收藏尚未同步。"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.running" : {
+      "comment" : "Sync widget state while syncing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步中…"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.title" : {
+      "comment" : "Title of the collection sync widget on the Health page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collection sync"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收藏同步"
+          }
+        }
+      }
+    },
+    "maintenance.working" : {
+      "comment" : "Generic in-progress pill label on the Health page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Working…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "处理中…"
           }
         }
       }
