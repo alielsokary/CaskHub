@@ -44,6 +44,7 @@ final class MaintenanceViewModel {
     // MARK: - Disk
 
     private(set) var diskScanning = false
+    private(set) var hasDiskSnapshot = false
     private(set) var diskBytes: [DiskCategoryID: Int64] = [:]
     private(set) var rowStates: [DiskCategoryID: TaskState] = [:]
     private(set) var failedRows: Set<DiskCategoryID> = []
@@ -266,6 +267,7 @@ extension MaintenanceViewModel {
         setBytes(.cache, await cacheBytes)
         setBytes(.imageCache, await imageBytes)
         setBytes(.apps, await appsBytes)
+        hasDiskSnapshot = true
     }
 
     func clean(_ id: DiskCategoryID) async {

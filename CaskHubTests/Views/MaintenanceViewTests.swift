@@ -38,6 +38,11 @@ final class MaintenanceViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_disk_card_renders_loading_state_before_first_scan() {
+        render(MaintenanceDiskCard(model: makeModel()))
+    }
+
+    @MainActor
     func test_page_renders_checkup_results() async {
         let probe = RecordingMaintenanceProbe()
         probe.resultsByFirstArgument = [

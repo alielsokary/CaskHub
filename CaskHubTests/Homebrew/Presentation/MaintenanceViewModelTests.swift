@@ -142,9 +142,11 @@ final class MaintenanceViewModelTests: XCTestCase {
             "pcre2": 700
         ]
         let model = makeModel(probe: probe)
+        XCTAssertFalse(model.hasDiskSnapshot)
 
         await model.refreshDisk()
 
+        XCTAssertTrue(model.hasDiskSnapshot)
         XCTAssertEqual(model.diskBytes[.cache], 1_000)
         XCTAssertEqual(model.diskBytes[.imageCache], 2_000)
         XCTAssertEqual(model.diskBytes[.oldVersions], 209_715_200)

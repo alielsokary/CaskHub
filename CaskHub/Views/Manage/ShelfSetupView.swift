@@ -21,8 +21,9 @@ struct ShelfSetupView: View {
                 brewfileCard
                 ignoreCard
             }
-            .frame(maxWidth: 680, alignment: .leading)
-            .frame(width: CHSize.contentWidth, alignment: .leading)
+            // Same clamp as the utility top bar so the cards line up with it.
+            .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
+            .padding(.horizontal, CHSpace.s5)
             .frame(maxWidth: .infinity)
         }
         .contentMargins(.bottom, 44, for: .scrollContent)

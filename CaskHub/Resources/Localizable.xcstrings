@@ -2800,13 +2800,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Health"
+            "value" : "Homebrew Doctor"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "健康"
+            "value" : "Homebrew 体检"
           }
         }
       }
