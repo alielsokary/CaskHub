@@ -314,6 +314,55 @@ final class RecordingApplicationLauncher: ApplicationLaunching {
     }
 }
 
+nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedResults: [String: BrewProbeResult] = [:]
+    private var storedDefault: BrewProbeResult? = BrewProbeResult(exitCode: 0, output: "")
+    private var storedSizes: [String: Int64] = [:]
+    private var storedRemoveSucceeds = true
+    private var storedCommands: [[String]] = []
+    private var storedRemoved: [URL] = []
+
+    var resultsByFirstArgument: [String: BrewProbeResult] {
+        get { lock.withLock { storedResults } }
+        set { lock.withLock { storedResults = newValue } }
+    }
+
+    var directorySizes: [String: Int64] {
+        get { lock.withLock { storedSizes } }
+        set { lock.withLock { storedSizes = newValue } }
+    }
+
+    var removeSucceeds: Bool {
+        get { lock.withLock { storedRemoveSucceeds } }
+        set { lock.withLock { storedRemoveSucceeds = newValue } }
+    }
+
+    var commands: [[String]] { lock.withLock { storedCommands } }
+    var removedDirectories: [URL] { lock.withLock { storedRemoved } }
+
+    func run(_ executable: URL, arguments: [String]) async -> BrewProbeResult? {
+        lock.withLock {
+            storedCommands.append([executable.lastPathComponent] + arguments)
+            if let first = arguments.first, let result = storedResults[first] {
+                return result
+            }
+            return storedDefault
+        }
+    }
+
+    func directorySize(at url: URL) async -> Int64 {
+        lock.withLock { storedSizes[url.lastPathComponent] ?? 0 }
+    }
+
+    func removeDirectoryContents(at url: URL) async -> Bool {
+        lock.withLock {
+            storedRemoved.append(url)
+            return storedRemoveSucceeds
+        }
+    }
+}
+
 nonisolated struct EmptyInstalledSoftwareScanner: InstalledSoftwareScanning {
     func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
         .empty
