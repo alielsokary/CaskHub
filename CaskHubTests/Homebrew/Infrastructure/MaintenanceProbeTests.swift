@@ -83,6 +83,38 @@ final class MaintenanceProbeTests: XCTestCase {
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [])
     }
 
+    func test_cachedInstallers_resolves_symlinks_from_cask_dir_and_root() async throws {
+        let caskDir = root.appendingPathComponent("Cask")
+        let downloadsDir = root.appendingPathComponent("downloads")
+        try FileManager.default.createDirectory(at: caskDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: downloadsDir, withIntermediateDirectories: true)
+        let caskPayload = downloadsDir.appendingPathComponent("abc--Foo.zip")
+        try Data(repeating: 0, count: 20_000).write(to: caskPayload)
+        let bottlePayload = downloadsDir.appendingPathComponent("def--mole.bottle.tar.gz")
+        try Data(repeating: 0, count: 5_000).write(to: bottlePayload)
+        let manifestPayload = downloadsDir.appendingPathComponent("fe5--mole.bottle_manifest.json")
+        try Data("{}".utf8).write(to: manifestPayload)
+        try FileManager.default.createSymbolicLink(
+            at: caskDir.appendingPathComponent("foo--1.0.zip"),
+            withDestinationURL: caskPayload
+        )
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("mole--1.50.0"),
+            withDestinationURL: bottlePayload
+        )
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("mole_bottle_manifest--1.50.0"),
+            withDestinationURL: manifestPayload
+        )
+        try Data("x".utf8).write(to: root.appendingPathComponent("all_commands_list.txt"))
+
+        let installers = await probe.cachedInstallers(at: root)
+
+        XCTAssertEqual(installers.map(\.name), ["foo--1.0.zip", "mole--1.50.0"])
+        XCTAssertGreaterThanOrEqual(installers[0].bytes, 20_000)
+        XCTAssertGreaterThanOrEqual(installers[1].bytes, 5_000)
+    }
+
     func test_cachedInstallers_resolves_cask_aliases_to_payload_sizes() async throws {
         let caskDir = root.appendingPathComponent("Cask")
         let downloadsDir = root.appendingPathComponent("downloads")

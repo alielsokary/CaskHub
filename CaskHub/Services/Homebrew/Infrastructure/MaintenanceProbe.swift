@@ -87,37 +87,52 @@ nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
         return total
     }
 
-    /// Brew's cask cache is a folder of readable `token--version.ext` alias
-    /// files pointing at hash-named payloads in `downloads/`. Resolving each
-    /// alias yields a human-readable name with the real installer's size.
+    /// Brew's cache keeps every payload hash-named in `downloads/` and indexes
+    /// it with readable `token--version.ext` symlinks: casks under `Cask/`,
+    /// formula bottles at the cache root. Resolving each link pairs the
+    /// readable name with the real payload's size.
     @concurrent
     func cachedInstallers(at cacheURL: URL) async -> [CachedInstaller] {
-        let caskDirectory = cacheURL.appendingPathComponent("Cask")
-        guard let entries = try? FileManager.default.contentsOfDirectory(
-            at: caskDirectory,
-            includingPropertiesForKeys: [.isRegularFileKey]
-        ) else { return [] }
         var installers: [CachedInstaller] = []
-        for entry in entries where entry.pathExtension != "json" {
-            guard let values = try? entry.resourceValues(forKeys: [.isRegularFileKey]),
-                  values.isRegularFile == true,
-                  let target = try? URL(
-                      resolvingAliasFileAt: entry,
-                      options: [.withoutUI, .withoutMounting]
-                  ),
-                  target != entry,
-                  let targetValues = try? target.resourceValues(
-                      forKeys: [.totalFileAllocatedSizeKey, .fileSizeKey]
-                  )
-            else { continue }
-            installers.append(CachedInstaller(
-                name: entry.lastPathComponent,
-                bytes: Int64(targetValues.totalFileAllocatedSize ?? targetValues.fileSize ?? 0)
-            ))
+        for directory in [cacheURL.appendingPathComponent("Cask"), cacheURL] {
+            guard let entries = try? FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: [.isSymbolicLinkKey, .isRegularFileKey]
+            ) else { continue }
+            for entry in entries
+                where entry.pathExtension != "json"
+                && !entry.lastPathComponent.contains("bottle_manifest") {
+                guard let target = resolvedTarget(of: entry),
+                      let targetValues = try? target.resourceValues(
+                          forKeys: [.totalFileAllocatedSizeKey, .fileSizeKey]
+                      )
+                else { continue }
+                installers.append(CachedInstaller(
+                    name: entry.lastPathComponent,
+                    bytes: Int64(targetValues.totalFileAllocatedSize ?? targetValues.fileSize ?? 0)
+                ))
+            }
         }
         return installers.sorted { lhs, rhs in
             lhs.bytes != rhs.bytes ? lhs.bytes > rhs.bytes : lhs.name < rhs.name
         }
+    }
+
+    private func resolvedTarget(of entry: URL) -> URL? {
+        guard let values = try? entry.resourceValues(
+            forKeys: [.isSymbolicLinkKey, .isRegularFileKey]
+        ) else { return nil }
+        if values.isSymbolicLink == true {
+            return entry.resolvingSymlinksInPath()
+        }
+        guard values.isRegularFile == true,
+              let alias = try? URL(
+                  resolvingAliasFileAt: entry,
+                  options: [.withoutUI, .withoutMounting]
+              ),
+              alias.lastPathComponent != entry.lastPathComponent
+        else { return nil }
+        return alias
     }
 
     @concurrent
