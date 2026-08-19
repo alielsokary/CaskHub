@@ -15,10 +15,6 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
     let deletedAppNames: [String]
     let applicationBundleIdentifiers: [String]
 
-    /// Raw source paths of `binary` entries (e.g. a path inside the .app bundle).
-    /// Needed to verify a bundle actually contains what the cask declares.
-    let binarySourcePaths: [String]
-
     /// Source paths for every linked artifact that may resolve inside an adopted
     /// app bundle (binaries, shell completions, and manpages).
     let adoptionSourcePaths: [String]
@@ -27,7 +23,6 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
         keys: Set<String>,
         appNames: [String] = [],
         binaryNames: [String] = [],
-        binarySourcePaths: [String] = [],
         adoptionSourcePaths: [String] = [],
         packageIdentifiers: [String] = [],
         deletedAppNames: [String] = [],
@@ -36,7 +31,6 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
         self.keys = keys
         self.appNames = appNames
         self.binaryNames = binaryNames
-        self.binarySourcePaths = binarySourcePaths
         self.adoptionSourcePaths = adoptionSourcePaths
         self.packageIdentifiers = packageIdentifiers
         self.deletedAppNames = deletedAppNames
@@ -109,7 +103,6 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
             keys = []
             appNames = []
             binaryNames = []
-            binarySourcePaths = []
             adoptionSourcePaths = []
             packageIdentifiers = []
             deletedAppNames = []
@@ -119,10 +112,6 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
         keys = Set(container.allKeys.map(\.stringValue))
         appNames = Self.artifactNames(in: container, key: "app")
         binaryNames = Self.artifactNames(in: container, key: "binary")
-        binarySourcePaths = (AnyKey(stringValue: "binary")
-            .flatMap { try? container.decode([AppEntry].self, forKey: $0) } ?? [])
-            .compactMap(\.name)
-            .filter { $0.contains("/") }
         adoptionSourcePaths = Self.adoptionLinkKeys.flatMap { key in
             AnyKey(stringValue: key)
                 .flatMap { try? container.decode([AppEntry].self, forKey: $0) }
@@ -204,11 +193,6 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     /// Executable names this cask links into the brew prefix (e.g. "claude").
     var binaryArtifactNames: [String] {
         artifacts?.flatMap(\.binaryNames) ?? []
-    }
-
-    /// Raw source paths of declared `binary` artifacts.
-    var binarySourcePaths: [String] {
-        artifacts?.flatMap(\.binarySourcePaths) ?? []
     }
 
     /// All bundle-relative artifact sources Homebrew links after moving an

@@ -287,41 +287,13 @@ private extension TopBarView {
                 ? String(localized: "Wait for the current action to finish.")
                 : String(localized: "Update All")
         )
-        .updateAllConfirmation(
-            $showUpdateAllConfirmation,
-            count: updateAllCount,
-            onConfirm: onUpdateAll
-        )
-    }
-}
-
-private struct UpdateAllConfirmationModifier: ViewModifier {
-    @Binding var isPresented: Bool
-    let count: Int
-    let onConfirm: (() -> Void)?
-
-    func body(content: Content) -> some View {
-        content.alert("Update All Apps?", isPresented: $isPresented) {
+        .alert("Update All Apps?", isPresented: $showUpdateAllConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Update All") {
-                onConfirm?()
+                onUpdateAll?()
             }
         } message: {
-            Text(.alertUpdateAllConfirmation(count))
+            Text(.alertUpdateAllConfirmation(updateAllCount))
         }
-    }
-}
-
-private extension View {
-    func updateAllConfirmation(
-        _ isPresented: Binding<Bool>,
-        count: Int,
-        onConfirm: (() -> Void)?
-    ) -> some View {
-        modifier(UpdateAllConfirmationModifier(
-            isPresented: isPresented,
-            count: count,
-            onConfirm: onConfirm
-        ))
     }
 }

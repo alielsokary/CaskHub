@@ -138,28 +138,18 @@ struct Keycap: View {
     let symbol: String
 
     var body: some View {
-        content
-            .foregroundStyle(Color.chTextTitle)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 1.5)
-            .background(RoundedRectangle(cornerRadius: CHRadius.keycap).fill(Color.chSurfaceKeycap))
-            .overlay(RoundedRectangle(cornerRadius: CHRadius.keycap).strokeBorder(Color.chHairlineStrong, lineWidth: 1))
-            .shadow(color: Color.chShadowCard, radius: 2, y: 1)
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        if symbol.hasPrefix("⌘") {
-            HStack(spacing: 1) {
-                Image(systemName: "command")
-                    .font(.system(size: 8.5, weight: .bold))
-                Text(symbol.dropFirst())
-                    .font(CHType.keycap)
-            }
-        } else {
-            Text(symbol)
+        HStack(spacing: 1) {
+            Image(systemName: "command")
+                .font(.system(size: 8.5, weight: .bold))
+            Text(symbol.dropFirst())
                 .font(CHType.keycap)
         }
+        .foregroundStyle(Color.chTextTitle)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 1.5)
+        .background(RoundedRectangle(cornerRadius: CHRadius.keycap).fill(Color.chSurfaceKeycap))
+        .overlay(RoundedRectangle(cornerRadius: CHRadius.keycap).strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+        .shadow(color: Color.chShadowCard, radius: 2, y: 1)
     }
 }
 

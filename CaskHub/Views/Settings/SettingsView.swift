@@ -122,12 +122,8 @@ struct AboutSettingsView: View {
 
 struct GeneralSettingsView: View {
     @Environment(ImageCacheService.self) private var imageCache
-    @State private var settingsModel: GeneralSettingsModel
+    @State private var settingsModel = GeneralSettingsModel()
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
-
-    init(settingsModel: GeneralSettingsModel? = nil) {
-        _settingsModel = State(initialValue: settingsModel ?? GeneralSettingsModel())
-    }
 
     var body: some View {
         Form {

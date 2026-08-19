@@ -60,14 +60,6 @@ extension LocalHomebrewService {
         }
     }
 
-    func cancelAdoptionRequest(token: String) {
-        operationStore.send(.clear, for: token)
-    }
-
-    func cancelPermissionRequest(token: String) {
-        operationStore.send(.clear, for: token)
-    }
-
     /// A linked artifact missing from the on-disk bundle makes Homebrew fail
     /// after it has moved the app aside. Its rollback can then remove the only
     /// copy. Check every bundle-relative link source before `--adopt` runs.

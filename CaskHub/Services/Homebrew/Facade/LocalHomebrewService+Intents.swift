@@ -103,11 +103,9 @@ extension LocalHomebrewService {
         switch intent {
         case let .cancel(token):
             cancelInstall(token: token)
-        case let .cancelAdoption(token):
-            cancelAdoptionRequest(token: token)
-        case let .cancelPermission(token):
-            cancelPermissionRequest(token: token)
-        case let .dismissFailure(token):
+        case let .cancelAdoption(token),
+             let .cancelPermission(token),
+             let .dismissFailure(token):
             clearError(for: token)
         default:
             return false

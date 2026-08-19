@@ -82,15 +82,15 @@ final class CaskCatalogViewModel {
     @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
 
     @ObservationIgnored let libraryCache =
-        MemoizedValue<CatalogLibraryCacheKey, CatalogLibrarySnapshot>()
+        BoundedMemoizedValues<CatalogLibraryCacheKey, CatalogLibrarySnapshot>(capacity: 1)
     @ObservationIgnored let filteredCache =
         BoundedMemoizedValues<FilteredCatalogCacheKey, [Cask]>(capacity: 16)
     @ObservationIgnored let browseCache =
-        MemoizedValue<BrowseCatalogCacheKey, [BrowseSection]>()
-    @ObservationIgnored let searchKeysCache = MemoizedValue<Int, [String: String]>()
-    @ObservationIgnored let nameRankCache = MemoizedValue<Int, [String: Int]>()
+        BoundedMemoizedValues<BrowseCatalogCacheKey, [BrowseSection]>(capacity: 1)
+    @ObservationIgnored let searchKeysCache = BoundedMemoizedValues<Int, [String: String]>(capacity: 1)
+    @ObservationIgnored let nameRankCache = BoundedMemoizedValues<Int, [String: Int]>(capacity: 1)
     @ObservationIgnored let categoryPresentationCache =
-        MemoizedValue<CategoryPresentationCacheKey, [String: CaskCategoryPresentation]>()
+        BoundedMemoizedValues<CategoryPresentationCacheKey, [String: CaskCategoryPresentation]>(capacity: 1)
 
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"
