@@ -67,7 +67,6 @@ func makeCask(
         artifacts.append(ArtifactStanza(
             keys: ["binary"],
             binaryNames: binaryNames ?? [],
-            binarySourcePaths: binarySourcePaths ?? [],
             adoptionSourcePaths: binarySourcePaths ?? []
         ))
     }
@@ -288,12 +287,13 @@ func makeSUT(
 
 @MainActor
 func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
-                      categories: [String: CategoryDefinition]) -> CategoryService {
+                      categories: [String: CategoryDefinition],
+                      releaseTag: String? = nil) -> CategoryService {
     let service = CategoryService()
     service.applyData(CaskCategoryData(
         version: 1,
         generatedDate: "2026-07-11",
-        releaseTag: nil,
+        releaseTag: releaseTag,
         categories: categories,
         tokenToCategory: tokenToCategory,
         iconTokens: nil
@@ -303,23 +303,18 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
 
 @MainActor
 final class RecordingApplicationLauncher: ApplicationLaunching {
-    private(set) var openedURLs: [URL] = []
-
-    var lastOpenedURL: URL? {
-        openedURLs.last
-    }
+    private(set) var lastOpenedURL: URL?
 
     func open(_ url: URL) {
-        openedURLs.append(url)
+        lastOpenedURL = url
     }
 }
 
 nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecked Sendable {
     private let lock = NSLock()
     private var storedResults: [String: BrewProbeResult] = [:]
-    private var storedDefault: BrewProbeResult? = BrewProbeResult(exitCode: 0, output: "")
+    private let storedDefault = BrewProbeResult(exitCode: 0, output: "")
     private var storedSizes: [String: Int64] = [:]
-    private var storedRemoveSucceeds = true
     private var storedCommands: [[String]] = []
     private var storedEnvironments: [[String: String]?] = []
     private var storedRemoved: [URL] = []
@@ -333,11 +328,6 @@ nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecke
     var directorySizes: [String: Int64] {
         get { lock.withLock { storedSizes } }
         set { lock.withLock { storedSizes = newValue } }
-    }
-
-    var removeSucceeds: Bool {
-        get { lock.withLock { storedRemoveSucceeds } }
-        set { lock.withLock { storedRemoveSucceeds = newValue } }
     }
 
     var cachedInstallersResult: [CachedInstaller] {
@@ -369,10 +359,8 @@ nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecke
     }
 
     func removeDirectoryContents(at url: URL) async -> Bool {
-        lock.withLock {
-            storedRemoved.append(url)
-            return storedRemoveSucceeds
-        }
+        lock.withLock { storedRemoved.append(url) }
+        return true
     }
 
     func cachedInstallers(at cacheURL: URL) async -> [CachedInstaller] {

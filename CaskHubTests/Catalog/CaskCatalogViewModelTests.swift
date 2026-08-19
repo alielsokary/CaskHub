@@ -409,10 +409,10 @@ final class CaskCatalogViewModelTests: XCTestCase {
     }
 
     @MainActor
-    func test_recently_added_loads_bundled_offline_snapshot() {
+    func test_recently_added_loads_bundled_offline_snapshot() async {
         let recent = RecentlyAddedService()
 
-        recent.loadBundledDates()
+        await recent.loadBundledDatesAsync()
 
         XCTAssertFalse(recent.addedDates.isEmpty)
         XCTAssertFalse(recent.generatedDate.isEmpty)

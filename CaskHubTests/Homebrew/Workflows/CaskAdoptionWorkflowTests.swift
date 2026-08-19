@@ -10,51 +10,6 @@ import XCTest
 
 @MainActor
 final class CaskAdoptionWorkflowTests: XCTestCase {
-    private func makeService(
-        runner: StubBrewProcessRunner,
-        scanner: (any InstalledSoftwareScanning)? = nil
-    ) -> LocalHomebrewService {
-        let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("planned-adoption-\(UUID().uuidString)")
-        ) {
-            $0.fileManager = NoFilesFileManager()
-            $0.processRunner = runner
-            $0.softwareScanner = scanner
-            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
-            $0.brewVersionProvider = { "test" }
-        }
-        service.permissionProbe = { .granted }
-        return service
-    }
-
-    private func seedExternalInstallation(
-        cask: Cask,
-        version: String,
-        service: LocalHomebrewService
-    ) {
-        let bundleName = (cask.packageAppNameCandidates + cask.appArtifactNames).first
-            ?? "\(cask.displayName).app"
-        let application = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
-            bundleName: bundleName,
-            bundleIdentifier: "com.example.\(cask.token)",
-            version: version,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
-        updateInstallationSnapshot(of: service) {
-            if cask.hasPackageArtifact {
-                $0.externalPackageInstallations[cask.token] = ExternalPackageInstallation(
-                    appBundleNames: [bundleName]
-                )
-                $0.externalPackageApplicationOwners[cask.token] = application
-            } else {
-                $0.externalAppNames.insert(bundleName)
-                $0.externalApplicationOwners[cask.token] = application
-            }
-        }
-    }
-
     func test_application_plan_executes_adopt_or_replace_from_version_relation() async throws {
         try await assertApplicationExecution(
             installedVersion: "1.0",
@@ -72,7 +27,7 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
 
     func test_onedrive_newer_package_executes_staged_downgrade() async throws {
         let runner = StubBrewProcessRunner()
-        let service = makeService(runner: runner)
+        let service = makeMutationService(runner: runner, permissionProbe: { .granted })
         let cask = makeCask(
             "onedrive",
             name: "OneDrive",
@@ -80,11 +35,7 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
             packageIdentifiers: ["com.microsoft.OneDrive"],
             packageAppNames: ["OneDrive.app"]
         )
-        seedExternalInstallation(
-            cask: cask,
-            version: "26.129.0706",
-            service: service
-        )
+        seedExternalInstallation(of: cask, version: "26.129.0706", in: service)
 
         await service.requestAdoption(cask)
         let request = try XCTUnwrap(
@@ -105,7 +56,7 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
 
     func test_same_version_package_executes_staged_replacement() async throws {
         let runner = StubBrewProcessRunner()
-        let service = makeService(runner: runner)
+        let service = makeMutationService(runner: runner, permissionProbe: { .granted })
         let cask = makeCask(
             "ilok-license-manager",
             name: "iLok License Manager",
@@ -113,7 +64,7 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
             packageIdentifiers: ["com.paceap.pkg.iLokLicenseManager"],
             packageAppNames: ["iLok License Manager.app"]
         )
-        seedExternalInstallation(cask: cask, version: "6.2.0", service: service)
+        seedExternalInstallation(of: cask, version: "6.2.0", in: service)
 
         await service.requestAdoption(cask)
         let request = try XCTUnwrap(
@@ -146,13 +97,14 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
             installedAt: nil,
             appBundleNames: ["OneDrive.app"]
         )
-        let service = makeService(
+        let service = makeMutationService(
             runner: runner,
             scanner: FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
                 installedCasks: [cask.token: installed]
-            ))
+            )),
+            permissionProbe: { .granted }
         )
-        seedExternalInstallation(cask: cask, version: "26.129.0706", service: service)
+        seedExternalInstallation(of: cask, version: "26.129.0706", in: service)
         let stableRevision = service.catalogStateRevision
         var inspectedInstallStep = false
         runner.onRequest = { request in
@@ -184,14 +136,14 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
 
     func test_package_conflict_is_blocked_before_permission_or_brew() async throws {
         let runner = StubBrewProcessRunner()
-        let service = makeService(runner: runner)
+        let service = makeMutationService(runner: runner, permissionProbe: { .granted })
         let cask = makeCask(
             "microsoft-office",
             packageIdentifiers: ["com.microsoft.office"],
             packageAppNames: ["Microsoft Word.app"],
             conflictingCaskTokens: ["microsoft-excel"]
         )
-        seedExternalInstallation(cask: cask, version: "1.0", service: service)
+        seedExternalInstallation(of: cask, version: "1.0", in: service)
         updateInstalledCask(
             installation("microsoft-excel", version: "1.0"),
             in: service
@@ -214,17 +166,13 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
         expectedArguments: [String]
     ) async throws {
         let runner = StubBrewProcessRunner()
-        let service = makeService(runner: runner)
+        let service = makeMutationService(runner: runner, permissionProbe: { .granted })
         let cask = makeCask(
             "sample",
             version: homebrewVersion,
             appNames: ["Sample.app"]
         )
-        seedExternalInstallation(
-            cask: cask,
-            version: installedVersion,
-            service: service
-        )
+        seedExternalInstallation(of: cask, version: installedVersion, in: service)
 
         await service.requestAdoption(cask)
         let request = try XCTUnwrap(
@@ -233,20 +181,5 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
         XCTAssertEqual(request.plan.operation, expectedOperation)
         try await service.confirmAdoption(request)
         XCTAssertEqual(runner.requests.map(\.arguments), [expectedArguments])
-    }
-}
-
-private nonisolated struct FixedInstalledSoftwareScanner: InstalledSoftwareScanning {
-    let snapshot: InstallationSnapshot
-
-    func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
-        snapshot
-    }
-
-    func reconcileCatalog(
-        _ request: InstalledSoftwareScanRequest,
-        with current: InstallationSnapshot
-    ) async -> InstallationSnapshot {
-        snapshot
     }
 }

@@ -279,28 +279,21 @@ final class CaskOperationProgressTests: XCTestCase {
         )
         await service.mutationCoordinator.awaitPendingOutput()
 
-        render(CaskActionsView(cask: makeCask("plain")).environment(service))
-        render(CaskActionsView(cask: makeCask("plain"), fullWidth: false).environment(service))
+        render(CaskActionsView(cask: makeCask("plain")).environment(service), width: 420, height: 400)
+        render(CaskActionsView(cask: makeCask("plain"), fullWidth: false).environment(service), width: 420, height: 400)
         render(
             StatusBarView(
                 caskCount: 3_781,
                 caskFlowRelease: "caskflow-v2026.07.18",
                 operation: service.statusBarOperation
-            )
-        )
+            ),
+            width: 420, height: 400)
         render(
             ObservedStatusBarView(
                 caskCount: 3_781,
                 caskFlowRelease: "caskflow-v2026.07.18"
             )
-            .environment(service)
-        )
-    }
-
-    @MainActor
-    private func render(_ view: some View, width: CGFloat = 420, height: CGFloat = 400) {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.frame = NSRect(x: 0, y: 0, width: width, height: height)
-        hosting.layoutSubtreeIfNeeded()
+            .environment(service),
+            width: 420, height: 400)
     }
 }

@@ -29,8 +29,6 @@ final class StubBrewProcessRunner: BrewProcessRunning {
     }
 
     var queuedResults: [BrewProcessResult] = []
-    var queuedChunks: [[String]] = []
-    var thrownError: Error?
     var onRequest: ((Request) throws -> Void)?
     private(set) var requests: [Request] = []
 
@@ -39,7 +37,7 @@ final class StubBrewProcessRunner: BrewProcessRunning {
         arguments: [String],
         environment: [String: String],
         onStart _: @escaping (Process) -> Void,
-        onChunk: @escaping @MainActor @Sendable (String) -> Void
+        onChunk _: @escaping @MainActor @Sendable (String) -> Void
     ) async throws -> BrewProcessResult {
         let askpassContents = environment["SUDO_ASKPASS"].flatMap {
             try? String(contentsOfFile: $0, encoding: .utf8)
@@ -52,10 +50,6 @@ final class StubBrewProcessRunner: BrewProcessRunning {
         )
         requests.append(request)
         try onRequest?(request)
-        if let thrownError { throw thrownError }
-        if !queuedChunks.isEmpty {
-            queuedChunks.removeFirst().forEach(onChunk)
-        }
         return queuedResults.isEmpty
             ? BrewProcessResult(exitCode: 0, output: "")
             : queuedResults.removeFirst()
@@ -65,50 +59,6 @@ final class StubBrewProcessRunner: BrewProcessRunning {
 // MARK: - Adoption error surfaces & scans
 
 final class AdoptionSurfaceTests: XCTestCase {
-    @MainActor
-    private func makeMutationService(runner: StubBrewProcessRunner) -> LocalHomebrewService {
-        LocalHomebrewService(
-            defaults: makeScratchDefaults("mutation-runner-\(UUID().uuidString)")
-        ) {
-            $0.fileManager = NoFilesFileManager()
-            $0.processRunner = runner
-            $0.brewBinaryProvider = {
-                URL(fileURLWithPath: "/test/bin/brew")
-            }
-            $0.brewVersionProvider = { "test" }
-        }
-    }
-
-    @MainActor
-    private func seedExternalInstallation(
-        of cask: Cask,
-        version: String?,
-        in service: LocalHomebrewService
-    ) {
-        let bundleName = (cask.packageAppNameCandidates + cask.appArtifactNames).first
-            ?? "\(cask.displayName).app"
-        let application = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
-            bundleName: bundleName,
-            bundleIdentifier: "com.example.\(cask.token)",
-            version: version,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
-        updateInstallationSnapshot(of: service) {
-            $0.detectedApplications.append(application)
-            if cask.hasPackageArtifact {
-                $0.externalPackageInstallations[cask.token] = ExternalPackageInstallation(
-                    appBundleNames: [bundleName]
-                )
-                $0.externalPackageApplicationOwners[cask.token] = application
-            } else {
-                $0.externalAppNames.insert(bundleName)
-                $0.externalApplicationOwners[cask.token] = application
-            }
-        }
-    }
-
     func test_error_descriptions_cover_every_case() {
         XCTAssertNotNil(LocalHomebrewError.brewBinaryNotFound.errorDescription)
         XCTAssertTrue(
@@ -203,15 +153,6 @@ final class AdoptionSurfaceTests: XCTestCase {
         service.openExternalApp(cask: external)
         XCTAssertNotNil(service.operationStore.state(for: "ghost2")?.failure?.message)
         XCTAssertNil(service.externalAppVersion(for: external))
-    }
-
-    func test_missing_caskroom_scans_as_no_installed_casks() {
-        XCTAssertEqual(
-            HomebrewInstallationScanner.scanCaskroom(
-                fileManager: NoFilesFileManager()
-            ).count,
-            0
-        )
     }
 
     @MainActor
@@ -467,10 +408,6 @@ final class AdoptionSurfaceTests: XCTestCase {
          {"bash_completion": ["Docker.app/Contents/Resources/etc/docker-compose.bash-completion"]}]
         """.utf8)
         let stanzas = try JSONDecoder().decode([ArtifactStanza].self, from: json)
-        XCTAssertEqual(
-            stanzas[1].binarySourcePaths,
-            ["/Applications/Obsidian.app/Contents/MacOS/obsidian-cli"]
-        )
         XCTAssertEqual(stanzas[1].binaryNames, ["obsidian"])
         XCTAssertEqual(
             stanzas.flatMap(\.adoptionSourcePaths),

@@ -13,23 +13,18 @@ final class InstallationDateIndexTests: XCTestCase {
         let homebrewInstalledAt = Date(timeIntervalSince1970: 100)
         let storeCreatedAt = Date(timeIntervalSince1970: 200)
         let packageCreatedAt = Date(timeIntervalSince1970: 300)
-        let storeApplication = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Shared.app"),
-            bundleName: "Shared.app",
-            bundleIdentifier: "com.example.store",
-            version: nil,
+        let storeApplication = makeDetectedApplication(
+            "Shared.app",
+            id: "com.example.store",
             isMacAppStore: true,
-            isDirectlyInApplicationDirectory: true,
             installedAt: storeCreatedAt
         )
-        let packageApplication = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Direct/Shared.app"),
-            bundleName: "Shared.app",
-            bundleIdentifier: "com.example.direct",
-            version: nil,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: false,
-            installedAt: packageCreatedAt
+        let packageApplication = makeDetectedApplication(
+            "Shared.app",
+            id: "com.example.direct",
+            inApplicationsDirectory: false,
+            installedAt: packageCreatedAt,
+            url: URL(fileURLWithPath: "/Applications/Direct/Shared.app")
         )
 
         let dates = InstallationIndexBuilder().resolveInstallationDates(

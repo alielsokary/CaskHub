@@ -293,12 +293,8 @@ final class CaskHubTests: XCTestCase {
             appNames: ["ChatGPT Classic.app"]
         )
         let replaceCask = makeCask("canva", appNames: ["Canva.app"])
-        let adoptApplication = externalApplication(
-            named: "ChatGPT Classic.app", version: "1.0"
-        )
-        let replaceApplication = externalApplication(
-            named: "Canva.app", version: "2.0"
-        )
+        let adoptApplication = makeDetectedApplication("ChatGPT Classic.app", version: "1.0")
+        let replaceApplication = makeDetectedApplication("Canva.app", version: "2.0")
         updateInstallationSnapshot(of: service) {
             $0.externalAppNames = [
                 adoptApplication.bundleName,
@@ -332,7 +328,7 @@ final class CaskHubTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(100))
         XCTAssertEqual(service.operationStore.pendingPermissions.count, 2)
 
-        service.cancelPermissionRequest(token: "canva")
+        service.clearError(for: "canva")
         XCTAssertNil(service.operationStore.pendingPermissions["canva"])
     }
 
@@ -483,17 +479,4 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["google-chrome"])
     }
 
-    private func externalApplication(
-        named bundleName: String,
-        version: String
-    ) -> DetectedApplication {
-        DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
-            bundleName: bundleName,
-            bundleIdentifier: "com.example.\(bundleName)",
-            version: version,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
-    }
 }
