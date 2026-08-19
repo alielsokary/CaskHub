@@ -104,6 +104,7 @@
 		AA100000000000000000000F /* MaintenanceViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100000000000000000000E /* MaintenanceViewModelTests.swift */; };
 		AA1000000000000000000011 /* MaintenanceViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000010 /* MaintenanceViewTests.swift */; };
 		AA1000000000000000000013 /* MaintenanceProbeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000012 /* MaintenanceProbeTests.swift */; };
+		AA1000000000000000000015 /* MaintenanceViewModel+Freshness.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000014 /* MaintenanceViewModel+Freshness.swift */; };
 		B0D000000000000000000002 /* ContentView+Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D000000000000000000001 /* ContentView+Catalog.swift */; };
 		B0C000000000000000000005 /* ShelfSetupViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C000000000000000000004 /* ShelfSetupViewTests.swift */; };
 		C12000000000000000000001 /* BrewProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000001 /* BrewProcessRunner.swift */; };
@@ -254,6 +255,7 @@
 		AA100000000000000000000E /* MaintenanceViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceViewModelTests.swift; sourceTree = "<group>"; };
 		AA1000000000000000000010 /* MaintenanceViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceViewTests.swift; sourceTree = "<group>"; };
 		AA1000000000000000000012 /* MaintenanceProbeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceProbeTests.swift; sourceTree = "<group>"; };
+		AA1000000000000000000014 /* MaintenanceViewModel+Freshness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MaintenanceViewModel+Freshness.swift"; sourceTree = "<group>"; };
 		B0D000000000000000000001 /* ContentView+Catalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Catalog.swift"; sourceTree = "<group>"; };
 		B0C000000000000000000004 /* ShelfSetupViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupViewTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
@@ -439,6 +441,7 @@
 			children = (
 				F3200000000000000000001C /* Catalog */,
 				AA1000000000000000000005 /* MaintenanceViewModel.swift */,
+				AA1000000000000000000014 /* MaintenanceViewModel+Freshness.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -1029,6 +1032,7 @@
 				AA1000000000000000000002 /* MaintenanceReport.swift in Sources */,
 				AA1000000000000000000004 /* MaintenanceProbe.swift in Sources */,
 				AA1000000000000000000006 /* MaintenanceViewModel.swift in Sources */,
+				AA1000000000000000000015 /* MaintenanceViewModel+Freshness.swift in Sources */,
 				AA1000000000000000000008 /* MaintenanceView.swift in Sources */,
 				AA100000000000000000000A /* MaintenanceDiskCard.swift in Sources */,
 				B0D000000000000000000002 /* ContentView+Catalog.swift in Sources */,

@@ -37,9 +37,17 @@ final class MaintenanceViewModel {
 
     // MARK: - Widgets
 
+    enum Freshness: Equatable {
+        case unknown
+        case current
+        case updateAvailable(String)
+    }
+
     private(set) var homebrewState: TaskState = .idle
     private(set) var homebrewFailed = false
     private(set) var syncState: TaskState = .idle
+    var brewFreshness: Freshness = .unknown
+    var collectionFreshness: Freshness = .unknown
 
     // MARK: - Disk
 
@@ -52,11 +60,12 @@ final class MaintenanceViewModel {
     private(set) var cachedInstallers: [CachedInstaller] = []
     var expandedRows: Set<DiskCategoryID> = []
 
-    private let localHomebrew: LocalHomebrewService
-    private let catalog: CaskCatalogViewModel
+    let localHomebrew: LocalHomebrewService
+    let catalog: CaskCatalogViewModel
     private let clearImageCache: () async -> Void
     private let probe: any MaintenanceProbing
-    private let defaults: UserDefaults
+    let latestReleaseTag: (String, String) async -> String?
+    let defaults: UserDefaults
 
     static let homebrewOperationToken = "caskhub-homebrew"
     private static let lastCheckedKey = "maintenanceLastChecked"
@@ -72,12 +81,16 @@ final class MaintenanceViewModel {
         catalog: CaskCatalogViewModel,
         clearImageCache: @escaping () async -> Void,
         probe: any MaintenanceProbing = SystemMaintenanceProbe(),
+        latestReleaseTag: @escaping (String, String) async -> String? = { owner, repo in
+            await LatestReleaseChecker.latestTag(owner: owner, repo: repo)
+        },
         defaults: UserDefaults = .standard
     ) {
         self.localHomebrew = localHomebrew
         self.catalog = catalog
         self.clearImageCache = clearImageCache
         self.probe = probe
+        self.latestReleaseTag = latestReleaseTag
         self.defaults = defaults
         lastChecked = defaults.object(forKey: Self.lastCheckedKey) as? Date
         advisoryCount = defaults.object(forKey: Self.advisoryCountKey) as? Int
@@ -96,10 +109,14 @@ final class MaintenanceViewModel {
            let doctor = await probe.run(
                brewURL,
                arguments: ["doctor"],
-               environment: Self.doctorEnvironment(brewURL: brewURL)
+               environment: BrewDoctorEnvironment.make(brewURL: brewURL)
            ) {
             nextChecks += BrewDoctorParser.warnings(from: doctor.output)
         }
+        recordCheckup(nextChecks)
+    }
+
+    private func recordCheckup(_ nextChecks: [HealthCheck]) {
         checks = nextChecks
         let count = nextChecks.filter { $0.status == .advisory }.count
         advisoryCount = count
@@ -107,17 +124,6 @@ final class MaintenanceViewModel {
         lastChecked = .now
         defaults.set(lastChecked, forKey: Self.lastCheckedKey)
         defaults.set(count, forKey: Self.advisoryCountKey)
-    }
-
-    /// GUI apps launch with a sanitized PATH, which makes `brew doctor` raise
-    /// PATH advisories a terminal run never shows. Front-load brew's own bin
-    /// and sbin so the report matches the user's shell.
-    nonisolated static func doctorEnvironment(brewURL: URL) -> [String: String] {
-        let binDir = brewURL.deletingLastPathComponent()
-        let sbinDir = binDir.deletingLastPathComponent().appendingPathComponent("sbin")
-        let currentPath = ProcessInfo.processInfo.environment["PATH"]
-            ?? "/usr/bin:/bin:/usr/sbin:/sbin"
-        return ["PATH": "\(binDir.path):\(sbinDir.path):\(currentPath)"]
     }
 
     private func brewInstallationCheck() -> HealthCheck {
@@ -215,6 +221,7 @@ final class MaintenanceViewModel {
         do {
             try await localHomebrew.updateHomebrew(for: Self.homebrewOperationToken)
             homebrewState = .done
+            await refreshFreshness(force: true)
         } catch {
             homebrewState = .idle
             homebrewFailed = true
@@ -226,6 +233,7 @@ final class MaintenanceViewModel {
         syncState = .running
         await catalog.load()
         syncState = .done
+        await refreshFreshness(force: true)
     }
 }
 
@@ -248,7 +256,7 @@ extension MaintenanceViewModel {
             async let cleanup = probe.run(brewURL, arguments: ["cleanup", "--dry-run"])
             async let autoremove = probe.run(brewURL, arguments: ["autoremove", "--dry-run"])
             if let cleanupResult = await cleanup {
-                setBytes(.oldVersions, BrewCleanupParser.estimate(from: cleanupResult.output).kegBytes)
+                setBytes(.oldVersions, BrewCleanupParser.supersededKegBytes(from: cleanupResult.output))
             }
             if let autoremoveResult = await autoremove {
                 let names = BrewAutoremoveParser.formulae(from: autoremoveResult.output)
@@ -260,8 +268,7 @@ extension MaintenanceViewModel {
                         probe: probe
                     )
                 }
-                // Floor at 1 byte while orphans exist so the row stays actionable
-                // even when their kegs cannot be measured.
+                // Floored so unmeasurable orphans still keep the row actionable.
                 setBytes(.orphans, names.isEmpty ? 0 : max(total, 1))
             }
         } else {
@@ -283,29 +290,35 @@ extension MaintenanceViewModel {
         guard id == .imageCache || !localHomebrew.hasActiveOperations else { return }
         failedRows.remove(id)
         rowStates[id] = .running
-        let succeeded: Bool
+        finishClean(id, succeeded: await performClean(id))
+    }
+
+    private func performClean(_ id: DiskCategoryID) async -> Bool {
         switch id {
         case .apps:
-            succeeded = false
+            return false
         case .cache:
-            succeeded = await probe.removeDirectoryContents(at: Self.homebrewCacheDirectory)
+            return await probe.removeDirectoryContents(at: Self.homebrewCacheDirectory)
         case .oldVersions:
-            succeeded = await runBrew(["cleanup"])
+            return await runBrew(["cleanup"])
         case .orphans:
-            succeeded = await runBrew(["autoremove"])
+            return await runBrew(["autoremove"])
         case .imageCache:
             await clearImageCache()
-            succeeded = true
+            return true
         }
-        if succeeded {
-            diskBytes[id] = 0
-            if id == .orphans { orphanFormulae = [] }
-            if id == .cache { cachedInstallers = [] }
-            rowStates[id] = .done
-        } else {
+    }
+
+    private func finishClean(_ id: DiskCategoryID, succeeded: Bool) {
+        guard succeeded else {
             rowStates[id] = .idle
             failedRows.insert(id)
+            return
         }
+        diskBytes[id] = 0
+        if id == .orphans { orphanFormulae = [] }
+        if id == .cache { cachedInstallers = [] }
+        rowStates[id] = .done
     }
 
     var orderedDiskCategories: [DiskCategoryID] {

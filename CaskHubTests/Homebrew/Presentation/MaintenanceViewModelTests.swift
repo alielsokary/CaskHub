@@ -27,18 +27,25 @@ final class MaintenanceViewModelTests: XCTestCase {
         probe: RecordingMaintenanceProbe? = nil,
         homebrew: LocalHomebrewService? = nil,
         clearImageCache: @escaping () async -> Void = {},
+        latestReleaseTag: @escaping (String, String) async -> String? = { _, _ in nil },
+        categories: CategoryService? = nil,
         defaults: UserDefaults? = nil,
         function: String = #function
     ) -> MaintenanceViewModel {
         let probe = probe ?? RecordingMaintenanceProbe()
         let defaults = defaults ?? makeScratchDefaults(function)
         let service = homebrew ?? makeHomebrew(defaults: defaults)
-        let catalog = makeViewModel(api: MockBrewAPIClient(), localHomebrew: service)
+        let catalog = makeViewModel(
+            api: MockBrewAPIClient(),
+            categories: categories,
+            localHomebrew: service
+        )
         return MaintenanceViewModel(
             localHomebrew: service,
             catalog: catalog,
             clearImageCache: clearImageCache,
             probe: probe,
+            latestReleaseTag: latestReleaseTag,
             defaults: defaults
         )
     }
@@ -273,6 +280,89 @@ final class MaintenanceViewModelTests: XCTestCase {
 
         XCTAssertTrue(model.homebrewFailed)
         XCTAssertEqual(model.homebrewState, .idle)
+    }
+
+    // MARK: - Freshness
+
+    @MainActor
+    private func makeSeededCategories(tag: String?) -> CategoryService {
+        let service = CategoryService()
+        service.applyData(CaskCategoryData(
+            version: 1,
+            generatedDate: "2026-08-18",
+            releaseTag: tag,
+            categories: [:],
+            tokenToCategory: [:],
+            iconTokens: nil
+        ))
+        return service
+    }
+
+    @MainActor
+    func test_freshness_marks_both_widgets_current() async {
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("freshness-current"))
+        await homebrew.refresh()
+        let model = makeModel(
+            homebrew: homebrew,
+            latestReleaseTag: { _, repo in repo == "brew" ? "4.6.15" : "v0.7.1" },
+            categories: makeSeededCategories(tag: "v0.7.1")
+        )
+
+        await model.refreshFreshness()
+
+        XCTAssertEqual(model.brewFreshness, .current)
+        XCTAssertEqual(model.collectionFreshness, .current)
+    }
+
+    @MainActor
+    func test_freshness_reports_updates_available() async {
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("freshness-behind"))
+        await homebrew.refresh()
+        let model = makeModel(
+            homebrew: homebrew,
+            latestReleaseTag: { _, repo in repo == "brew" ? "9.9.9" : "v0.8.0" },
+            categories: makeSeededCategories(tag: "v0.7.1")
+        )
+
+        await model.refreshFreshness()
+
+        XCTAssertEqual(model.brewFreshness, .updateAvailable("9.9.9"))
+        XCTAssertEqual(model.collectionFreshness, .updateAvailable("0.8.0"))
+    }
+
+    @MainActor
+    func test_freshness_is_unknown_when_the_check_fails() async {
+        let model = makeModel(latestReleaseTag: { _, _ in nil })
+
+        await model.refreshFreshness()
+
+        XCTAssertEqual(model.brewFreshness, .unknown)
+        XCTAssertEqual(model.collectionFreshness, .unknown)
+    }
+
+    @MainActor
+    func test_freshness_check_is_cached_within_the_ttl() async {
+        let counter = Counter()
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("freshness-ttl"))
+        await homebrew.refresh()
+        let model = makeModel(
+            homebrew: homebrew,
+            latestReleaseTag: { _, _ in
+                counter.value += 1
+                return "4.6.15"
+            }
+        )
+
+        await model.refreshFreshness()
+        await model.refreshFreshness()
+
+        XCTAssertEqual(counter.value, 2)
+        XCTAssertEqual(model.brewFreshness, .current)
+    }
+
+    @MainActor
+    private final class Counter {
+        var value = 0
     }
 
     // MARK: - Directories

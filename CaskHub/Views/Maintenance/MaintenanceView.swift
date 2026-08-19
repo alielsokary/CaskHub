@@ -21,7 +21,6 @@ struct MaintenanceView: View {
                 }
                 MaintenanceDiskCard(model: model)
             }
-            // Same clamp as the utility top bar so the cards line up with it.
             .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
             .padding(.horizontal, CHSpace.s5)
             .frame(maxWidth: .infinity)
@@ -31,6 +30,7 @@ struct MaintenanceView: View {
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .task { await model.refreshDisk() }
+        .task { await model.refreshFreshness() }
     }
 
     // MARK: - Health
@@ -102,49 +102,13 @@ struct MaintenanceView: View {
 
     private func checkRow(_ check: HealthCheck) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Text(check.status == .pass ? "✓" : "!")
-                .font(.system(size: 11, weight: .heavy))
-                .foregroundStyle(check.status == .pass ? Color.chActionDoneFg : Color.chActionUpdateFg)
-                .frame(width: 22, height: 22)
-                .background(
-                    Circle().fill(check.status == .pass ? Color.chActionDoneBg : Color.chActionUpdateBg)
-                )
-                .overlay(
-                    Circle().strokeBorder(
-                        check.status == .pass ? Color.chActionDoneBorder : Color.chActionUpdateBorder,
-                        lineWidth: 1
-                    )
-                )
+            checkGlyph(check)
             VStack(alignment: .leading, spacing: 2) {
                 Text(check.label)
                     .font(CHType.cardTitle)
                     .foregroundStyle(Color.chTextTitle)
                 if !check.detail.isEmpty {
-                    let isExpanded = expandedChecks.contains(check.id)
-                    Text(check.detail)
-                        .font(CHType.bodySm)
-                        .foregroundStyle(Color.chTextBody)
-                        .lineLimit(isExpanded ? nil : Self.collapsedDetailLines)
-                        .textSelection(.enabled)
-                    if check.detail.split(separator: "\n").count > Self.collapsedDetailLines {
-                        Button {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                if isExpanded {
-                                    expandedChecks.remove(check.id)
-                                } else {
-                                    expandedChecks.insert(check.id)
-                                }
-                            }
-                        } label: {
-                            Text(String(localized: isExpanded
-                                ? .maintenanceHealthShowLess
-                                : .maintenanceHealthShowMore))
-                                .font(CHType.bodySm)
-                                .foregroundStyle(Color.chTextBrand)
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.top, 2)
-                    }
+                    checkDetail(check)
                 }
             }
             Spacer(minLength: 0)
@@ -153,22 +117,74 @@ struct MaintenanceView: View {
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 
+    private func checkGlyph(_ check: HealthCheck) -> some View {
+        let passed = check.status == .pass
+        return Text(passed ? "✓" : "!")
+            .font(.system(size: 11, weight: .heavy))
+            .foregroundStyle(passed ? Color.chActionDoneFg : Color.chActionUpdateFg)
+            .frame(width: 22, height: 22)
+            .background(Circle().fill(passed ? Color.chActionDoneBg : Color.chActionUpdateBg))
+            .overlay(
+                Circle().strokeBorder(
+                    passed ? Color.chActionDoneBorder : Color.chActionUpdateBorder,
+                    lineWidth: 1
+                )
+            )
+    }
+
+    @ViewBuilder
+    private func checkDetail(_ check: HealthCheck) -> some View {
+        let isExpanded = expandedChecks.contains(check.id)
+        Text(check.detail)
+            .font(CHType.bodySm)
+            .foregroundStyle(Color.chTextBody)
+            .lineLimit(isExpanded ? nil : Self.collapsedDetailLines)
+            .textSelection(.enabled)
+        if check.detail.split(separator: "\n").count > Self.collapsedDetailLines {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    if isExpanded {
+                        expandedChecks.remove(check.id)
+                    } else {
+                        expandedChecks.insert(check.id)
+                    }
+                }
+            } label: {
+                Text(String(localized: isExpanded
+                    ? .maintenanceHealthShowLess
+                    : .maintenanceHealthShowMore))
+                    .font(CHType.bodySm)
+                    .foregroundStyle(Color.chTextBrand)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 2)
+        }
+    }
+
     private static let collapsedDetailLines = 4
 
-    // MARK: - Widgets
+}
 
+// MARK: - Widgets
+
+extension MaintenanceView {
     private var homebrewWidget: some View {
         maintenanceWidget(
             title: String(localized: .maintenanceWidgetHomebrewTitle),
             detail: model.brewVersion.map {
                 String(localized: .maintenanceWidgetHomebrewDetail($0, model.brewPrefix ?? "?"))
             } ?? String(localized: .maintenanceWidgetHomebrewMissing),
-            meta: model.homebrewFailed
-                ? String(localized: .maintenanceWidgetHomebrewFailed)
-                : String(localized: .maintenanceWidgetHomebrewHint),
-            metaColor: model.homebrewFailed ? .chActionUpdateFg : .chTextFaint
+            meta: homebrewMeta.text,
+            metaColor: homebrewMeta.color
         ) {
             switch model.homebrewState {
+            case .idle where model.brewFreshness == .current:
+                StatusPill(
+                    title: String(localized: .maintenanceUpToDate),
+                    background: .chActionDoneBg,
+                    border: .chActionDoneBorder,
+                    foreground: .chActionDoneFg
+                )
             case .idle:
                 PillButton(
                     title: String(localized: .maintenanceWidgetHomebrewButton),
@@ -192,6 +208,23 @@ struct MaintenanceView: View {
         }
     }
 
+    private var homebrewMeta: (text: String, color: Color) {
+        if model.homebrewFailed {
+            return (String(localized: .maintenanceWidgetHomebrewFailed), .chActionUpdateFg)
+        }
+        switch model.brewFreshness {
+        case .current:
+            return (String(localized: .maintenanceWidgetHomebrewLatest), .chActionDoneFg)
+        case let .updateAvailable(version):
+            return (
+                String(localized: .maintenanceWidgetHomebrewUpdateAvailable(version)),
+                .chActionUpdateFg
+            )
+        case .unknown:
+            return (String(localized: .maintenanceWidgetHomebrewHint), .chTextFaint)
+        }
+    }
+
     private var syncWidget: some View {
         maintenanceWidget(
             title: String(localized: .maintenanceWidgetSyncTitle),
@@ -200,10 +233,17 @@ struct MaintenanceView: View {
                     $0.formatted(.relative(presentation: .named))
                 ))
             } ?? String(localized: .maintenanceWidgetSyncNever),
-            meta: String(localized: .maintenanceWidgetSyncMeta(model.installedCount)),
-            metaColor: model.syncState == .done ? .chActionDoneFg : .chTextFaint
+            meta: syncMeta.text,
+            metaColor: syncMeta.color
         ) {
             switch model.syncState {
+            case .idle where model.collectionFreshness == .current:
+                StatusPill(
+                    title: String(localized: .maintenanceUpToDate),
+                    background: .chActionDoneBg,
+                    border: .chActionDoneBorder,
+                    foreground: .chActionDoneFg
+                )
             case .idle:
                 PillButton(
                     title: String(localized: .maintenanceWidgetSyncButton),
@@ -223,6 +263,26 @@ struct MaintenanceView: View {
                     foreground: .chActionDoneFg
                 )
             }
+        }
+    }
+
+    private var syncMeta: (text: String, color: Color) {
+        switch model.collectionFreshness {
+        case .current:
+            return (
+                String(localized: .maintenanceWidgetSyncLatest(model.caskFlowReleaseTag ?? "")),
+                .chActionDoneFg
+            )
+        case let .updateAvailable(version):
+            return (
+                String(localized: .maintenanceWidgetSyncUpdateAvailable(version)),
+                .chActionUpdateFg
+            )
+        case .unknown:
+            return (
+                String(localized: .maintenanceWidgetSyncMeta(model.installedCount)),
+                model.syncState == .done ? .chActionDoneFg : .chTextFaint
+            )
         }
     }
 

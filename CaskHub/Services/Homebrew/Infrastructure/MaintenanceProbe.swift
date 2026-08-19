@@ -36,6 +36,38 @@ extension MaintenanceProbing {
     }
 }
 
+nonisolated enum BrewDoctorEnvironment {
+    /// GUI apps get a sanitized PATH; front-load brew's bin and sbin so
+    /// `brew doctor` matches a terminal run instead of raising PATH advisories.
+    static func make(brewURL: URL) -> [String: String] {
+        let binDir = brewURL.deletingLastPathComponent()
+        let sbinDir = binDir.deletingLastPathComponent().appendingPathComponent("sbin")
+        let currentPath = ProcessInfo.processInfo.environment["PATH"]
+            ?? "/usr/bin:/bin:/usr/sbin:/sbin"
+        return ["PATH": "\(binDir.path):\(sbinDir.path):\(currentPath)"]
+    }
+}
+
+nonisolated enum LatestReleaseChecker {
+    @concurrent
+    static func latestTag(owner: String, repo: String) async -> String? {
+        guard let url = URL(
+            string: "https://api.github.com/repos/\(owner)/\(repo)/releases/latest"
+        ) else { return nil }
+        var request = URLRequest(url: url, timeoutInterval: 10)
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200
+        else { return nil }
+        struct Release: Decodable {
+            let tagName: String
+        }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return (try? decoder.decode(Release.self, from: data))?.tagName
+    }
+}
+
 nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
     @concurrent
     func run(
@@ -50,8 +82,7 @@ nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
             process.environment = ProcessInfo.processInfo.environment
                 .merging(environment) { _, override in override }
         }
-        // One pipe for both streams: a single read cannot deadlock on a full
-        // sibling buffer, and callers treat the output as one transcript anyway.
+        // One pipe for both streams: a single read cannot deadlock on a full sibling buffer.
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe
@@ -87,10 +118,8 @@ nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
         return total
     }
 
-    /// Brew's cache keeps every payload hash-named in `downloads/` and indexes
-    /// it with readable `token--version.ext` symlinks: casks under `Cask/`,
-    /// formula bottles at the cache root. Resolving each link pairs the
-    /// readable name with the real payload's size.
+    /// Payloads are hash-named in `downloads/`; readable `token--version.ext`
+    /// symlinks index them from `Cask/` (casks) and the cache root (bottles).
     @concurrent
     func cachedInstallers(at cacheURL: URL) async -> [CachedInstaller] {
         var installers: [CachedInstaller] = []

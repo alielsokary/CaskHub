@@ -61,18 +61,17 @@ final class MaintenanceParsingTests: XCTestCase {
 
     // MARK: - brew cleanup --dry-run
 
-    func test_cleanup_estimate_buckets_kegs_and_cache() {
+    func test_cleanup_sums_superseded_kegs_and_ignores_cache_lines() {
         let output = """
         Would remove: /opt/homebrew/Cellar/openssl@3/3.1.0 (6,090 files, 28.2MB)
         Would remove: /Users/ali/Library/Caches/Homebrew/firefox--119.0.dmg (120.5MB)
         Would remove: /opt/homebrew/Caskroom/figma/124.7 (3 files, 200MB)
         ==> This operation would free approximately 348.7MB of disk space.
         """
-        let estimate = BrewCleanupParser.estimate(from: output)
-
-        XCTAssertEqual(estimate.kegCount, 2)
-        XCTAssertEqual(estimate.kegBytes, 29_569_843 + 209_715_200)
-        XCTAssertEqual(estimate.cacheBytes, 126_353_408)
+        XCTAssertEqual(
+            BrewCleanupParser.supersededKegBytes(from: output),
+            29_569_843 + 209_715_200
+        )
     }
 
     func test_cleanup_size_parsing_handles_units() {
@@ -82,8 +81,25 @@ final class MaintenanceParsingTests: XCTestCase {
         XCTAssertNil(BrewCleanupParser.lastSizeBytes(in: "no size here"))
     }
 
-    func test_cleanup_estimate_is_empty_for_clean_system() {
-        XCTAssertEqual(BrewCleanupParser.estimate(from: ""), BrewCleanupEstimate())
+    func test_cleanup_estimate_is_zero_for_clean_system() {
+        XCTAssertEqual(BrewCleanupParser.supersededKegBytes(from: ""), 0)
+    }
+
+    // MARK: - Version comparison
+
+    func test_version_normalization_strips_prefix_and_git_suffix() {
+        XCTAssertEqual(MaintenanceVersion.normalized("6.0.18-29-ga2005e5"), "6.0.18")
+        XCTAssertEqual(MaintenanceVersion.normalized("v0.7.1"), "0.7.1")
+        XCTAssertEqual(MaintenanceVersion.normalized("4.6.15"), "4.6.15")
+    }
+
+    func test_version_comparison_covers_current_ahead_and_behind() {
+        XCTAssertEqual(MaintenanceVersion.isCurrent(local: "4.6.15", latest: "4.6.15"), true)
+        XCTAssertEqual(MaintenanceVersion.isCurrent(local: "6.0.18-29-ga2005e5", latest: "6.0.18"), true)
+        XCTAssertEqual(MaintenanceVersion.isCurrent(local: "6.1", latest: "6.0.18"), true)
+        XCTAssertEqual(MaintenanceVersion.isCurrent(local: "4.6.15", latest: "4.7.0"), false)
+        XCTAssertEqual(MaintenanceVersion.isCurrent(local: "4.6", latest: "4.6.1"), false)
+        XCTAssertNil(MaintenanceVersion.isCurrent(local: "?", latest: "4.7.0"))
     }
 
     // MARK: - brew autoremove --dry-run

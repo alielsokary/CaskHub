@@ -3177,6 +3177,24 @@
         }
       }
     },
+    "maintenance.upToDate" : {
+      "comment" : "Pill shown when a widget is already on the latest version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已是最新"
+          }
+        }
+      }
+    },
     "maintenance.widget.homebrew.button" : {
       "comment" : "Button that runs brew update",
       "extractionState" : "manual",
@@ -3267,6 +3285,24 @@
         }
       }
     },
+    "maintenance.widget.homebrew.latest" : {
+      "comment" : "Homebrew widget note when brew matches the latest release",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are on the latest version."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已是最新版本。"
+          }
+        }
+      }
+    },
     "maintenance.widget.homebrew.missing" : {
       "comment" : "Homebrew widget detail when brew is not installed",
       "extractionState" : "manual",
@@ -3299,6 +3335,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Homebrew"
+          }
+        }
+      }
+    },
+    "maintenance.widget.homebrew.updateAvailable" : {
+      "comment" : "Homebrew widget note when a newer brew release exists; %@ is the version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ is available."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新版本 %@ 已可用。"
           }
         }
       }
@@ -3353,6 +3407,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已同步"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.latest" : {
+      "comment" : "Sync widget note when the collection matches the latest CaskFlow release; %@ is the tag",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date with CaskFlow %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已与 CaskFlow %@ 保持同步"
           }
         }
       }
@@ -3437,6 +3509,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收藏同步"
+          }
+        }
+      }
+    },
+    "maintenance.widget.sync.updateAvailable" : {
+      "comment" : "Sync widget note when a newer CaskFlow release exists; %@ is the tag",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskFlow %@ is available."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskFlow %@ 已发布新版本。"
           }
         }
       }

@@ -20,10 +20,7 @@ nonisolated struct HealthCheck: Equatable, Sendable, Identifiable {
 }
 
 nonisolated enum BrewDoctorParser {
-    static let readyMarker = "Your system is ready to brew."
-
-    /// `brew doctor` prints warnings to stderr as blocks that start with
-    /// `Warning:` (or `Error:`) and run until the next marker.
+    /// Blocks start with `Warning:` or `Error:` and run until the next marker.
     static func warnings(from output: String) -> [HealthCheck] {
         var blocks: [[String]] = []
         for rawLine in output.split(separator: "\n", omittingEmptySubsequences: false) {
@@ -62,6 +59,32 @@ nonisolated enum BrewDoctorParser {
     }
 }
 
+nonisolated enum MaintenanceVersion {
+    /// `v6.0.18-29-ga2005e5` → `6.0.18`
+    static func normalized(_ version: String) -> String {
+        let base = version.split(separator: "-").first.map(String.init) ?? version
+        return base.hasPrefix("v") ? String(base.dropFirst()) : base
+    }
+
+    static func isCurrent(local: String, latest: String) -> Bool? {
+        guard let localParts = numericParts(of: local),
+              let latestParts = numericParts(of: latest)
+        else { return nil }
+        for index in 0..<max(localParts.count, latestParts.count) {
+            let localValue = index < localParts.count ? localParts[index] : 0
+            let latestValue = index < latestParts.count ? latestParts[index] : 0
+            if localValue != latestValue { return localValue > latestValue }
+        }
+        return true
+    }
+
+    private static func numericParts(of version: String) -> [Int]? {
+        let parts = normalized(version).split(separator: ".").map { Int($0) }
+        guard !parts.isEmpty, !parts.contains(nil) else { return nil }
+        return parts.compactMap { $0 }
+    }
+}
+
 nonisolated enum MaintenanceFormat {
     static func bytes(_ value: Int64) -> String {
         let formatter = ByteCountFormatter()
@@ -72,29 +95,19 @@ nonisolated enum MaintenanceFormat {
     }
 }
 
-nonisolated struct BrewCleanupEstimate: Equatable, Sendable {
-    var cacheBytes: Int64 = 0
-    var kegBytes: Int64 = 0
-    var kegCount: Int = 0
-}
-
 nonisolated enum BrewCleanupParser {
-    /// Parses `brew cleanup --dry-run` lines like
+    /// Sums superseded kegs from `brew cleanup --dry-run` lines like
     /// `Would remove: /opt/homebrew/Cellar/foo/1.0 (6,090 files, 28.2MB)`.
-    static func estimate(from output: String) -> BrewCleanupEstimate {
-        var estimate = BrewCleanupEstimate()
+    static func supersededKegBytes(from output: String) -> Int64 {
+        var total: Int64 = 0
         for rawLine in output.split(separator: "\n") {
             let line = String(rawLine).trimmingCharacters(in: .whitespaces)
-            guard line.hasPrefix("Would remove: ") else { continue }
-            let bytes = lastSizeBytes(in: line) ?? 0
-            if line.contains("/Cellar/") || line.contains("/Caskroom/") {
-                estimate.kegBytes += bytes
-                estimate.kegCount += 1
-            } else {
-                estimate.cacheBytes += bytes
-            }
+            guard line.hasPrefix("Would remove: "),
+                  line.contains("/Cellar/") || line.contains("/Caskroom/")
+            else { continue }
+            total += lastSizeBytes(in: line) ?? 0
         }
-        return estimate
+        return total
     }
 
     static func lastSizeBytes(in line: String) -> Int64? {
@@ -115,7 +128,6 @@ nonisolated enum BrewCleanupParser {
 }
 
 nonisolated enum BrewAutoremoveParser {
-    /// Parses `brew autoremove --dry-run`:
     /// `==> Would autoremove 3 unneeded formulae:` followed by one name per line.
     static func formulae(from output: String) -> [String] {
         var names: [String] = []

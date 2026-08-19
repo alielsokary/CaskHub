@@ -316,7 +316,6 @@ extension MaintenanceDiskCard {
 
     private func sizeText(for id: CategoryID) -> String {
         guard let bytes = model.diskBytes[id] else { return "…" }
-        // The green check already says it: no "0 bytes" on clean rows.
         if isCleanRow(id) { return "" }
         return MaintenanceFormat.bytes(bytes)
     }
