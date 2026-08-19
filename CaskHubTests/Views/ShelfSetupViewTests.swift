@@ -241,7 +241,6 @@ final class ShelfSetupViewTests: XCTestCase {
     func test_page_chrome_renders() {
         render(UtilityTopBar(title: "Shelf Setup", summary: "3 ignored"))
         render(UtilityTopBar(title: "Health"))
-        render(MaintenancePlaceholderView())
         render(CountBadge(count: 2))
     }
 
@@ -268,7 +267,14 @@ final class ShelfSetupViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
             .environment(categories)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService())
+            .environment(MaintenanceViewModel(
+                localHomebrew: homebrew,
+                catalog: vm,
+                clearImageCache: {},
+                probe: RecordingMaintenanceProbe(),
+                defaults: makeScratchDefaults("maintenance-content-render")
+            )))
         window.orderFrontRegardless()
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
 

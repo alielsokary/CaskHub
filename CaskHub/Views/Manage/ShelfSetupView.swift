@@ -21,8 +21,8 @@ struct ShelfSetupView: View {
                 brewfileCard
                 ignoreCard
             }
-            .frame(maxWidth: 680, alignment: .leading)
-            .frame(width: CHSize.contentWidth, alignment: .leading)
+            .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
+            .padding(.horizontal, CHSpace.s5)
             .frame(maxWidth: .infinity)
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
@@ -275,24 +275,6 @@ struct UtilityTopBar: View {
         }
         .padding(EdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20))
         .glassPanel(radius: 999, surface: .chSurfaceToolbar)
-    }
-}
-
-struct MaintenancePlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            BarrelMark()
-                .frame(width: 56, height: 56)
-                .opacity(0.6)
-            Text(String(localized: .maintenanceComingSoonTitle))
-                .font(CHType.section)
-                .foregroundStyle(Color.chTextTitle)
-            Text(String(localized: .maintenanceComingSoonBody))
-                .font(CHType.body)
-                .foregroundStyle(Color.chTextBody)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

@@ -375,7 +375,14 @@ final class TopBarViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
             .environment(categories)
             .environment(local)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService())
+            .environment(MaintenanceViewModel(
+                localHomebrew: local,
+                catalog: vm,
+                clearImageCache: {},
+                probe: RecordingMaintenanceProbe(),
+                defaults: makeScratchDefaults("maintenance-browse-render")
+            )))
         window.orderFrontRegardless()
 
         let deadline = Date().addingTimeInterval(2)
@@ -449,7 +456,14 @@ final class TopBarViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
             .environment(categories)
             .environment(local)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService())
+            .environment(MaintenanceViewModel(
+                localHomebrew: local,
+                catalog: vm,
+                clearImageCache: {},
+                probe: RecordingMaintenanceProbe(),
+                defaults: makeScratchDefaults("maintenance-harness-render")
+            )))
         window.orderFrontRegardless()
         RunLoop.main.run(until: Date().addingTimeInterval(0.25))
 
