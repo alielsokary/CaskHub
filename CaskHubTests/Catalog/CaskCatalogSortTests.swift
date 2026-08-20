@@ -19,17 +19,6 @@ final class CaskCatalogSortTests: XCTestCase {
         }
     }
 
-    private func detectedApplication(named name: String) -> DetectedApplication {
-        DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/\(name)"),
-            bundleName: name,
-            bundleIdentifier: "com.example.\(name)",
-            version: nil,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
-    }
-
     private func localState(
         source: CaskInstallationSource,
         cask: Cask,
@@ -190,8 +179,8 @@ final class CaskCatalogSortTests: XCTestCase {
         )
         updateInstallationSnapshot(of: local) {
             $0.externalApplicationOwners = [
-                "able": detectedApplication(named: "Able.app"),
-                "bravo": detectedApplication(named: "Bravo.app")
+                "able": makeDetectedApplication("Able.app"),
+                "bravo": makeDetectedApplication("Bravo.app")
             ]
         }
 

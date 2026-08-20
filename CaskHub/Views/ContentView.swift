@@ -43,19 +43,17 @@ struct ContentView: View {
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
         } detail: {
             VStack(spacing: 0) {
-                if isUtilityPage {
-                    utilityTopBar
-                        .frame(maxWidth: CHSize.contentWidth)
-                        .padding(.horizontal, CHSpace.s5)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, CHSpace.s4)
-                } else {
-                    catalogTopBar
-                        .frame(maxWidth: CHSize.contentWidth)
-                        .padding(.horizontal, CHSpace.s5)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, CHSpace.s4)
+                Group {
+                    if isUtilityPage {
+                        utilityTopBar
+                    } else {
+                        catalogTopBar
+                    }
                 }
+                .frame(maxWidth: CHSize.contentWidth)
+                .padding(.horizontal, CHSpace.s5)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, CHSpace.s4)
 
                 if showsResultsHeader {
                     Text("Results for “\(viewModel.searchText)”")

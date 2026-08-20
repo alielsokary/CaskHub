@@ -60,16 +60,6 @@ final class CategoryService {
             .map { (id: $0.key, definition: $0.value) }
     }
 
-    func loadCategories() {
-        guard let url = Bundle.main.url(forResource: "categories", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let catalog = try? JSONDecoder().decode(CaskCategoryData.self, from: data)
-        else {
-            return
-        }
-        applyData(catalog)
-    }
-
     /// Off-main decode; never overwrites fresher remote data.
     func loadBundledCategoriesAsync() async {
         guard let catalog = await Self.decodeBundledCategories(),

@@ -20,23 +20,27 @@ extension LocalHomebrewService {
         _ action: CaskAction,
         token: String,
         args: [String],
-        origin: CaskActionOrigin = .individual,
-        environmentOverrides: [String: String] = [:],
-        recoverIf: (() -> Bool)? = nil
+        origin: CaskActionOrigin = .individual
     ) async throws {
-        try await mutationCoordinator.run(
-            HomebrewMutationRequest(
+        try await mutationCoordinator.runSequence(
+            HomebrewMutationSequenceRequest(
                 action: action,
                 token: token,
                 displayName: displayName(for: token),
-                arguments: args,
                 origin: origin,
-                environmentOverrides: environmentOverrides
+                steps: [
+                    HomebrewMutationStep(
+                        arguments: args,
+                        environmentOverrides: [:],
+                        cancellable: action == .installing,
+                        recoverIf: nil,
+                        recoveryBehavior: .finishMutation
+                    )
+                ]
             ),
             callbacks: HomebrewMutationCallbacks(
                 refresh: { [self] in await refresh() },
-                strandedCopyExists: { [self] in hasStrandedCopy(token: token) },
-                recoverIf: recoverIf
+                strandedCopyExists: { [self] in hasStrandedCopy(token: token) }
             )
         )
     }
@@ -61,8 +65,7 @@ extension LocalHomebrewService {
                     if action == .updatingHomebrew { invalidateBrewVersion() }
                     await refresh()
                 },
-                strandedCopyExists: { [self] in hasStrandedCopy(token: token) },
-                recoverIf: nil
+                strandedCopyExists: { [self] in hasStrandedCopy(token: token) }
             )
         )
     }

@@ -9,47 +9,6 @@
 import XCTest
 
 final class MaintenanceViewModelTests: XCTestCase {
-    @MainActor
-    private func makeHomebrew(
-        defaults: UserDefaults,
-        executor: RecordingHomebrewCommandExecutor? = nil
-    ) -> LocalHomebrewService {
-        LocalHomebrewService(defaults: defaults) {
-            $0.softwareScanner = EmptyInstalledSoftwareScanner()
-            $0.brewBinaryProvider = { URL(fileURLWithPath: "/opt/homebrew/bin/brew") }
-            $0.brewVersionProvider = { "4.6.15" }
-            if let executor { $0.commandExecutor = executor }
-        }
-    }
-
-    @MainActor
-    private func makeModel(
-        probe: RecordingMaintenanceProbe? = nil,
-        homebrew: LocalHomebrewService? = nil,
-        clearImageCache: @escaping () async -> Void = {},
-        latestReleaseTag: @escaping (String, String) async -> String? = { _, _ in nil },
-        categories: CategoryService? = nil,
-        defaults: UserDefaults? = nil,
-        function: String = #function
-    ) -> MaintenanceViewModel {
-        let probe = probe ?? RecordingMaintenanceProbe()
-        let defaults = defaults ?? makeScratchDefaults(function)
-        let service = homebrew ?? makeHomebrew(defaults: defaults)
-        let catalog = makeViewModel(
-            api: MockBrewAPIClient(),
-            categories: categories,
-            localHomebrew: service
-        )
-        return MaintenanceViewModel(
-            localHomebrew: service,
-            catalog: catalog,
-            clearImageCache: clearImageCache,
-            probe: probe,
-            latestReleaseTag: latestReleaseTag,
-            defaults: defaults
-        )
-    }
-
     // MARK: - Checkup
 
     @MainActor
@@ -65,7 +24,7 @@ final class MaintenanceViewModelTests: XCTestCase {
             """)
         ]
         let defaults = makeScratchDefaults("checkup-warnings")
-        let model = makeModel(probe: probe, defaults: defaults)
+        let model = makeMaintenanceModel(probe: probe, defaults: defaults)
 
         await model.runCheckup()
 
@@ -77,7 +36,7 @@ final class MaintenanceViewModelTests: XCTestCase {
         XCTAssertNotNil(model.lastChecked)
         XCTAssertNotNil(model.topBarSummary)
 
-        let relaunched = makeModel(defaults: defaults)
+        let relaunched = makeMaintenanceModel(defaults: defaults)
         XCTAssertEqual(relaunched.advisoryCount, 2)
         XCTAssertNotNil(relaunched.lastChecked)
     }
@@ -89,7 +48,7 @@ final class MaintenanceViewModelTests: XCTestCase {
             "-p": BrewProbeResult(exitCode: 0, output: "/Library/Developer/CommandLineTools\n"),
             "doctor": BrewProbeResult(exitCode: 0, output: "Your system is ready to brew.\n")
         ]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
 
         await model.runCheckup()
 
@@ -105,7 +64,7 @@ final class MaintenanceViewModelTests: XCTestCase {
             "-p": BrewProbeResult(exitCode: 2, output: "xcode-select: error: unable to get active developer directory\n"),
             "doctor": BrewProbeResult(exitCode: 0, output: "Your system is ready to brew.\n")
         ]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
 
         await model.runCheckup()
 
@@ -116,7 +75,7 @@ final class MaintenanceViewModelTests: XCTestCase {
     @MainActor
     func test_checkup_runs_doctor_with_brew_path_first() async {
         let probe = RecordingMaintenanceProbe()
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
 
         await model.runCheckup()
 
@@ -151,7 +110,7 @@ final class MaintenanceViewModelTests: XCTestCase {
         probe.cachedInstallersResult = [
             CachedInstaller(name: "foo--1.0.zip", bytes: 900)
         ]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
         XCTAssertFalse(model.hasDiskSnapshot)
 
         await model.refreshDisk()
@@ -176,7 +135,7 @@ final class MaintenanceViewModelTests: XCTestCase {
     @MainActor
     func test_clean_orphans_runs_autoremove_and_zeroes_row() async {
         let probe = RecordingMaintenanceProbe()
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
 
         await model.clean(.orphans)
 
@@ -192,7 +151,7 @@ final class MaintenanceViewModelTests: XCTestCase {
         probe.cachedInstallersResult = [
             CachedInstaller(name: "foo--1.0.zip", bytes: 900)
         ]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
         await model.refreshDisk()
 
         await model.clean(.cache)
@@ -208,7 +167,7 @@ final class MaintenanceViewModelTests: XCTestCase {
     @MainActor
     func test_clean_image_cache_calls_injected_closure() async {
         var cleared = false
-        let model = makeModel(clearImageCache: { cleared = true })
+        let model = makeMaintenanceModel(clearImageCache: { cleared = true })
 
         await model.clean(.imageCache)
 
@@ -223,7 +182,7 @@ final class MaintenanceViewModelTests: XCTestCase {
         probe.resultsByFirstArgument = [
             "autoremove": BrewProbeResult(exitCode: 1, output: "Error: nope")
         ]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
 
         await model.clean(.orphans)
 
@@ -234,7 +193,7 @@ final class MaintenanceViewModelTests: XCTestCase {
     @MainActor
     func test_apps_row_is_not_cleanable() async {
         let probe = RecordingMaintenanceProbe()
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
 
         await model.clean(.apps)
 
@@ -247,11 +206,11 @@ final class MaintenanceViewModelTests: XCTestCase {
     @MainActor
     func test_updateHomebrew_runs_two_update_passes() async {
         let executor = RecordingHomebrewCommandExecutor()
-        let homebrew = makeHomebrew(
+        let homebrew = makeMaintenanceHomebrew(
             defaults: makeScratchDefaults("update-homebrew"),
             executor: executor
         )
-        let model = makeModel(homebrew: homebrew)
+        let model = makeMaintenanceModel(homebrew: homebrew)
 
         await model.updateHomebrew()
 
@@ -274,7 +233,7 @@ final class MaintenanceViewModelTests: XCTestCase {
             $0.brewBinaryProvider = { URL(fileURLWithPath: "/opt/homebrew/bin/brew") }
             $0.brewVersionProvider = { "4.6.15" }
         }
-        let model = makeModel(homebrew: homebrew)
+        let model = makeMaintenanceModel(homebrew: homebrew)
 
         await model.updateHomebrew()
 
@@ -285,27 +244,13 @@ final class MaintenanceViewModelTests: XCTestCase {
     // MARK: - Freshness
 
     @MainActor
-    private func makeSeededCategories(tag: String?) -> CategoryService {
-        let service = CategoryService()
-        service.applyData(CaskCategoryData(
-            version: 1,
-            generatedDate: "2026-08-18",
-            releaseTag: tag,
-            categories: [:],
-            tokenToCategory: [:],
-            iconTokens: nil
-        ))
-        return service
-    }
-
-    @MainActor
     func test_freshness_marks_both_widgets_current() async {
-        let homebrew = makeHomebrew(defaults: makeScratchDefaults("freshness-current"))
+        let homebrew = makeMaintenanceHomebrew(defaults: makeScratchDefaults("freshness-current"))
         await homebrew.refresh()
-        let model = makeModel(
+        let model = makeMaintenanceModel(
             homebrew: homebrew,
             latestReleaseTag: { _, repo in repo == "brew" ? "4.6.15" : "v0.7.1" },
-            categories: makeSeededCategories(tag: "v0.7.1")
+            categories: seededCategories([:], categories: [:], releaseTag: "v0.7.1")
         )
 
         await model.refreshFreshness()
@@ -316,12 +261,12 @@ final class MaintenanceViewModelTests: XCTestCase {
 
     @MainActor
     func test_freshness_reports_updates_available() async {
-        let homebrew = makeHomebrew(defaults: makeScratchDefaults("freshness-behind"))
+        let homebrew = makeMaintenanceHomebrew(defaults: makeScratchDefaults("freshness-behind"))
         await homebrew.refresh()
-        let model = makeModel(
+        let model = makeMaintenanceModel(
             homebrew: homebrew,
             latestReleaseTag: { _, repo in repo == "brew" ? "9.9.9" : "v0.8.0" },
-            categories: makeSeededCategories(tag: "v0.7.1")
+            categories: seededCategories([:], categories: [:], releaseTag: "v0.7.1")
         )
 
         await model.refreshFreshness()
@@ -332,7 +277,7 @@ final class MaintenanceViewModelTests: XCTestCase {
 
     @MainActor
     func test_freshness_is_unknown_when_the_check_fails() async {
-        let model = makeModel(latestReleaseTag: { _, _ in nil })
+        let model = makeMaintenanceModel(latestReleaseTag: { _, _ in nil })
 
         await model.refreshFreshness()
 
@@ -343,9 +288,9 @@ final class MaintenanceViewModelTests: XCTestCase {
     @MainActor
     func test_freshness_check_is_cached_within_the_ttl() async {
         let counter = Counter()
-        let homebrew = makeHomebrew(defaults: makeScratchDefaults("freshness-ttl"))
+        let homebrew = makeMaintenanceHomebrew(defaults: makeScratchDefaults("freshness-ttl"))
         await homebrew.refresh()
-        let model = makeModel(
+        let model = makeMaintenanceModel(
             homebrew: homebrew,
             latestReleaseTag: { _, _ in
                 counter.value += 1
@@ -369,7 +314,7 @@ final class MaintenanceViewModelTests: XCTestCase {
 
     @MainActor
     func test_directories_point_at_the_expected_caches() {
-        let model = makeModel()
+        let model = makeMaintenanceModel()
         XCTAssertEqual(
             model.directories(for: .cache).map(\.lastPathComponent),
             ["Homebrew"]

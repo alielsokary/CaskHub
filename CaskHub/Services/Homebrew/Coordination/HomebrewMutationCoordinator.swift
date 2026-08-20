@@ -7,15 +7,6 @@
 
 import Foundation
 
-struct HomebrewMutationRequest {
-    let action: CaskAction
-    let token: String
-    let displayName: String
-    let arguments: [String]
-    let origin: CaskActionOrigin
-    let environmentOverrides: [String: String]
-}
-
 enum HomebrewMutationRecoveryBehavior: Equatable {
     case finishMutation
     case continueSequence
@@ -40,7 +31,6 @@ struct HomebrewMutationSequenceRequest {
 struct HomebrewMutationCallbacks {
     let refresh: () async -> Void
     let strandedCopyExists: () -> Bool
-    let recoverIf: (() -> Bool)?
 }
 
 @MainActor
@@ -63,30 +53,6 @@ final class HomebrewMutationCoordinator {
         self.brewBinaryProvider = brewBinaryProvider
         self.fileManager = fileManager
         outputAggregator = BrewOutputAggregator(fileManager: fileManager)
-    }
-
-    func run(
-        _ request: HomebrewMutationRequest,
-        callbacks: HomebrewMutationCallbacks
-    ) async throws {
-        try await runSequence(
-            HomebrewMutationSequenceRequest(
-                action: request.action,
-                token: request.token,
-                displayName: request.displayName,
-                origin: request.origin,
-                steps: [
-                    HomebrewMutationStep(
-                        arguments: request.arguments,
-                        environmentOverrides: request.environmentOverrides,
-                        cancellable: request.action == .installing,
-                        recoverIf: callbacks.recoverIf,
-                        recoveryBehavior: .finishMutation
-                    )
-                ]
-            ),
-            callbacks: callbacks
-        )
     }
 
     /// Runs a multi-command workflow as one logical mutation. The current

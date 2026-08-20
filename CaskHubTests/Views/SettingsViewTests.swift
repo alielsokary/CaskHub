@@ -206,24 +206,17 @@ final class SettingsViewTests: XCTestCase {
     }
 
     @MainActor
-    private func render(_ view: some View) {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.frame = NSRect(x: 0, y: 0, width: 460, height: 480)
-        hosting.layoutSubtreeIfNeeded()
-    }
-
-    @MainActor
     func test_settings_tabs_render() {
-        render(AppearanceSettingsView())
-        render(PrivacySettingsView())
+        render(AppearanceSettingsView(), width: 460, height: 480)
+        render(PrivacySettingsView(), width: 460, height: 480)
         render(
             GeneralSettingsView()
-                .environment(ImageCacheService())
-        )
+                .environment(ImageCacheService()),
+            width: 460, height: 480)
         render(
             HomebrewSettingsView()
-                .environment(LocalHomebrewService())
-        )
+                .environment(LocalHomebrewService()),
+            width: 460, height: 480)
     }
 
     @MainActor

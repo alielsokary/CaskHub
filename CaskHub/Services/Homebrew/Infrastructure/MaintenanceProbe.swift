@@ -75,28 +75,13 @@ nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
         arguments: [String],
         environment: [String: String]?
     ) async -> BrewProbeResult? {
-        let process = Process()
-        process.executableURL = executable
-        process.arguments = arguments
-        if let environment {
-            process.environment = ProcessInfo.processInfo.environment
-                .merging(environment) { _, override in override }
-        }
-        // One pipe for both streams: a single read cannot deadlock on a full sibling buffer.
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        do {
-            try process.run()
-        } catch {
-            return nil
-        }
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        return BrewProbeResult(
-            exitCode: process.terminationStatus,
-            output: String(data: data, encoding: .utf8) ?? ""
-        )
+        guard let result = ProcessCapture.capture(
+            executable,
+            arguments: arguments,
+            environment: environment,
+            mergeStderr: true
+        ) else { return nil }
+        return BrewProbeResult(exitCode: result.status, output: result.output ?? "")
     }
 
     @concurrent

@@ -179,12 +179,7 @@ extension MaintenanceView {
         ) {
             switch model.homebrewState {
             case .idle where model.brewFreshness == .current:
-                StatusPill(
-                    title: String(localized: .maintenanceUpToDate),
-                    background: .chActionDoneBg,
-                    border: .chActionDoneBorder,
-                    foreground: .chActionDoneFg
-                )
+                StatusPill(title: String(localized: .maintenanceUpToDate))
             case .idle:
                 PillButton(
                     title: String(localized: .maintenanceWidgetHomebrewButton),
@@ -198,12 +193,7 @@ extension MaintenanceView {
             case .running:
                 WorkingPill(title: String(localized: .maintenanceWorking))
             case .done:
-                StatusPill(
-                    title: String(localized: .maintenanceWidgetHomebrewDone),
-                    background: .chActionDoneBg,
-                    border: .chActionDoneBorder,
-                    foreground: .chActionDoneFg
-                )
+                StatusPill(title: String(localized: .maintenanceWidgetHomebrewDone))
             }
         }
     }
@@ -238,12 +228,7 @@ extension MaintenanceView {
         ) {
             switch model.syncState {
             case .idle where model.collectionFreshness == .current:
-                StatusPill(
-                    title: String(localized: .maintenanceUpToDate),
-                    background: .chActionDoneBg,
-                    border: .chActionDoneBorder,
-                    foreground: .chActionDoneFg
-                )
+                StatusPill(title: String(localized: .maintenanceUpToDate))
             case .idle:
                 PillButton(
                     title: String(localized: .maintenanceWidgetSyncButton),
@@ -256,12 +241,7 @@ extension MaintenanceView {
             case .running:
                 WorkingPill(title: String(localized: .maintenanceWidgetSyncRunning))
             case .done:
-                StatusPill(
-                    title: String(localized: .maintenanceWidgetSyncDone),
-                    background: .chActionDoneBg,
-                    border: .chActionDoneBorder,
-                    foreground: .chActionDoneFg
-                )
+                StatusPill(title: String(localized: .maintenanceWidgetSyncDone))
             }
         }
     }
@@ -339,18 +319,15 @@ struct WorkingPill: View {
 
 struct StatusPill: View {
     let title: String
-    let background: Color
-    let border: Color
-    let foreground: Color
 
     var body: some View {
         Text(title)
             .font(CHType.button)
-            .foregroundStyle(foreground)
+            .foregroundStyle(Color.chActionDoneFg)
             .padding(.vertical, 4)
             .padding(.horizontal, 13)
-            .background(Capsule().fill(background))
-            .overlay(Capsule().strokeBorder(border, lineWidth: 1))
+            .background(Capsule().fill(Color.chActionDoneBg))
+            .overlay(Capsule().strokeBorder(Color.chActionDoneBorder, lineWidth: 1))
     }
 }
 

@@ -21,14 +21,7 @@ final class ShelfSetupViewTests: XCTestCase {
         updateInstallationSnapshot(of: homebrew) { fixture in
             fixture.externalAppNames = Set(externalApps.values)
             fixture.externalApplicationOwners = externalApps.mapValues { appName in
-                DetectedApplication(
-                    url: URL(fileURLWithPath: "/Applications/\(appName)"),
-                    bundleName: appName,
-                    bundleIdentifier: "com.example.\(appName)",
-                    version: nil,
-                    isMacAppStore: false,
-                    isDirectlyInApplicationDirectory: true
-                )
+                makeDetectedApplication(appName)
             }
         }
         return homebrew
@@ -107,7 +100,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(ShelfSetupView(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
     }
 
     @MainActor
@@ -120,7 +113,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(ShelfSetupView(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
     }
 
     @MainActor
@@ -172,7 +165,7 @@ final class ShelfSetupViewTests: XCTestCase {
         for phase in phases {
             render(BrewfileImportSheet(plan: plan, phase: phase)
                 .environment(homebrew)
-                .environment(ImageCacheService()))
+                .environment(ImageCacheService()), width: 1100, height: 600)
         }
         let nothingNew = BrewfileImportPlan(
             fileName: "~/Brewfile",
@@ -181,7 +174,7 @@ final class ShelfSetupViewTests: XCTestCase {
         )
         render(BrewfileImportSheet(plan: nothingNew)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
     }
 
     @MainActor
@@ -203,7 +196,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(AdoptIgnorePickerSheet(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
 
         homebrew.setAdoptIgnored("google-chrome", true)
         homebrew.setAdoptIgnored("slack", true)
@@ -211,7 +204,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(AdoptIgnorePickerSheet(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
     }
 
     @MainActor
@@ -239,9 +232,9 @@ final class ShelfSetupViewTests: XCTestCase {
 
     @MainActor
     func test_page_chrome_renders() {
-        render(UtilityTopBar(title: "Shelf Setup", summary: "3 ignored"))
-        render(UtilityTopBar(title: "Health"))
-        render(CountBadge(count: 2))
+        render(UtilityTopBar(title: "Shelf Setup", summary: "3 ignored"), width: 1100, height: 600)
+        render(UtilityTopBar(title: "Health"), width: 1100, height: 600)
+        render(CountBadge(count: 2), width: 1100, height: 600)
     }
 
     @MainActor
@@ -286,12 +279,5 @@ final class ShelfSetupViewTests: XCTestCase {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
             window.close()
         }
-    }
-
-    @MainActor
-    private func render(_ view: some View) {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.frame = NSRect(x: 0, y: 0, width: 1100, height: 600)
-        hosting.layoutSubtreeIfNeeded()
     }
 }

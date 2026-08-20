@@ -18,14 +18,7 @@ final class InstallationSnapshotTests: XCTestCase {
             installedAt: nil,
             appBundleNames: ["Firefox.app"]
         )
-        let application = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Firefox.app"),
-            bundleName: "Firefox.app",
-            bundleIdentifier: "org.mozilla.firefox",
-            version: nil,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
+        let application = makeDetectedApplication("Firefox.app", id: "org.mozilla.firefox")
         let snapshot = InstallationSnapshot(
             installedCasks: ["firefox": installed],
             applications: ApplicationInstallationSnapshot(
@@ -72,10 +65,7 @@ final class InstallationSnapshotTests: XCTestCase {
             ],
             scannedAt: Date(timeIntervalSince1970: 200)
         )
-        let scanner = StubInstalledSoftwareScanner(
-            scanned: scanned,
-            reconciled: scanned
-        )
+        let scanner = FixedInstalledSoftwareScanner(snapshot: scanned)
         let service = LocalHomebrewService(
             defaults: makeScratchDefaults("snapshot-scanner")
         ) {
@@ -128,13 +118,9 @@ final class InstallationSnapshotTests: XCTestCase {
     func test_local_date_lookup_uses_the_snapshot_token_index() {
         let indexedDate = Date(timeIntervalSince1970: 400)
         let unrelatedDate = Date(timeIntervalSince1970: 500)
-        let unrelatedApplication = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Shared.app"),
-            bundleName: "Shared.app",
-            bundleIdentifier: "com.example.unrelated",
-            version: nil,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true,
+        let unrelatedApplication = makeDetectedApplication(
+            "Shared.app",
+            id: "com.example.unrelated",
             installedAt: unrelatedDate
         )
         let service = LocalHomebrewService(
@@ -165,22 +151,6 @@ final class InstallationSnapshotTests: XCTestCase {
         )
 
         XCTAssertEqual(service.installationDates(for: cask)?.installedAt, indexedDate)
-    }
-}
-
-private nonisolated struct StubInstalledSoftwareScanner: InstalledSoftwareScanning {
-    let scanned: InstallationSnapshot
-    let reconciled: InstallationSnapshot
-
-    func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
-        scanned
-    }
-
-    func reconcileCatalog(
-        _ request: InstalledSoftwareScanRequest,
-        with current: InstallationSnapshot
-    ) async -> InstallationSnapshot {
-        reconciled
     }
 }
 

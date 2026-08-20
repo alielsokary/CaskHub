@@ -74,21 +74,12 @@ final class SystemHomebrewCommandExecutor: HomebrewCommandExecuting {
     }
 
     private nonisolated static func signalTree(pid: Int32, signal: Int32) {
-        let pgrep = Process()
-        pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
-        pgrep.arguments = ["-P", "\(pid)"]
-        let stdout = Pipe()
-        pgrep.standardOutput = stdout
-        pgrep.standardError = FileHandle.nullDevice
-        if (try? pgrep.run()) != nil {
-            let data = stdout.fileHandleForReading.readDataToEndOfFile()
-            pgrep.waitUntilExit()
-            let children = String(data: data, encoding: .utf8)?
-                .split(whereSeparator: \.isNewline)
-                .compactMap { Int32($0) } ?? []
-            for child in children {
-                signalTree(pid: child, signal: signal)
-            }
+        let output = ProcessCapture.capture(
+            URL(fileURLWithPath: "/usr/bin/pgrep"),
+            arguments: ["-P", "\(pid)"]
+        )?.output ?? ""
+        for child in output.split(whereSeparator: \.isNewline).compactMap({ Int32($0) }) {
+            signalTree(pid: child, signal: signal)
         }
         kill(pid, signal)
     }

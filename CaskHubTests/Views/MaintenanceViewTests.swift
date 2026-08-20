@@ -11,35 +11,13 @@ import XCTest
 
 final class MaintenanceViewTests: XCTestCase {
     @MainActor
-    private func makeModel(
-        probe: RecordingMaintenanceProbe? = nil,
-        function: String = #function
-    ) -> MaintenanceViewModel {
-        let probe = probe ?? RecordingMaintenanceProbe()
-        let defaults = makeScratchDefaults(function)
-        let homebrew = LocalHomebrewService(defaults: defaults) {
-            $0.softwareScanner = EmptyInstalledSoftwareScanner()
-            $0.brewBinaryProvider = { URL(fileURLWithPath: "/opt/homebrew/bin/brew") }
-            $0.brewVersionProvider = { "4.6.15" }
-        }
-        let catalog = makeViewModel(api: MockBrewAPIClient(), localHomebrew: homebrew)
-        return MaintenanceViewModel(
-            localHomebrew: homebrew,
-            catalog: catalog,
-            clearImageCache: {},
-            probe: probe,
-            defaults: defaults
-        )
-    }
-
-    @MainActor
     func test_page_renders_before_first_checkup() {
-        render(MaintenanceView(model: makeModel()))
+        render(MaintenanceView(model: makeMaintenanceModel()))
     }
 
     @MainActor
     func test_disk_card_renders_loading_state_before_first_scan() {
-        render(MaintenanceDiskCard(model: makeModel()))
+        render(MaintenanceDiskCard(model: makeMaintenanceModel()))
     }
 
     @MainActor
@@ -52,7 +30,7 @@ final class MaintenanceViewTests: XCTestCase {
               /opt/homebrew/lib/libfoo.dylib
             """)
         ]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
         await model.runCheckup()
 
         render(MaintenanceView(model: model))
@@ -71,7 +49,7 @@ final class MaintenanceViewTests: XCTestCase {
             """)
         ]
         probe.directorySizes = ["Homebrew": 1_000, "icons": 2_000, "libyaml": 300]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
         await model.refreshDisk()
         model.expandedRows = [.cache, .imageCache]
 
@@ -84,17 +62,10 @@ final class MaintenanceViewTests: XCTestCase {
         probe.resultsByFirstArgument = [
             "autoremove": BrewProbeResult(exitCode: 1, output: "Error: nope")
         ]
-        let model = makeModel(probe: probe)
+        let model = makeMaintenanceModel(probe: probe)
         await model.clean(.imageCache)
         await model.clean(.orphans)
 
         render(MaintenanceDiskCard(model: model))
-    }
-
-    @MainActor
-    private func render(_ view: some View) {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.frame = NSRect(x: 0, y: 0, width: 1100, height: 700)
-        hosting.layoutSubtreeIfNeeded()
     }
 }

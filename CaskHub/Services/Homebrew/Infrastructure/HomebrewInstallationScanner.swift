@@ -160,22 +160,6 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
 }
 
 extension HomebrewInstallationScanner {
-    /// A missing Caskroom is valid for fresh or absent Homebrew installations.
-    static func scanCaskroom(
-        fileManager: FileManager,
-        applicationDirectories: [URL]? = nil
-    ) -> [String: LocalCaskInstallation] {
-        guard let caskroomURL = HomebrewLocator.caskroomURL(
-            fileManager: fileManager
-        ) else { return [:] }
-        return scanCaskroom(
-            at: caskroomURL,
-            fileManager: fileManager,
-            applicationDirectories: applicationDirectories
-                ?? ApplicationDiscovery.defaultDirectories(fileManager: fileManager)
-        )
-    }
-
     static func scanCaskroom(
         at caskroomURL: URL,
         fileManager: FileManager,

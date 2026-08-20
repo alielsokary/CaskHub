@@ -9,14 +9,7 @@
 import XCTest
 
 final class ExternalApplicationOwnershipTests: XCTestCase {
-    private let glaze = DetectedApplication(
-        url: URL(fileURLWithPath: "/Applications/Glaze.app"),
-        bundleName: "Glaze.app",
-        bundleIdentifier: "app.glaze.macos.main",
-        version: nil,
-        isMacAppStore: false,
-        isDirectlyInApplicationDirectory: true
-    )
+    private let glaze = makeDetectedApplication("Glaze.app", id: "app.glaze.macos.main")
 
     private let glazeSignatures = [
         ApplicationCaskSignature(
@@ -30,20 +23,6 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             bundleIdentifiers: ["app.glaze.macos.main"]
         )
     ]
-
-    private func storeApplication(
-        named bundleName: String,
-        bundleIdentifier: String
-    ) -> DetectedApplication {
-        DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
-            bundleName: bundleName,
-            bundleIdentifier: bundleIdentifier,
-            version: nil,
-            isMacAppStore: true,
-            isDirectlyInApplicationDirectory: true
-        )
-    }
 
     private func storeSignature(
         token: String,
@@ -90,14 +69,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
     }
 
     func test_shared_app_name_without_one_exact_identifier_match_is_not_adoptable() {
-        let application = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Shared.app"),
-            bundleName: "Shared.app",
-            bundleIdentifier: "com.example.shared",
-            version: nil,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
+        let application = makeDetectedApplication("Shared.app", id: "com.example.shared")
         let signatures = [
             ApplicationCaskSignature(
                 token: "shared-one",
@@ -121,14 +93,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
     }
 
     func test_unique_app_name_remains_adoptable_without_bundle_identifier_metadata() {
-        let application = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Unique.app"),
-            bundleName: "Unique.app",
-            bundleIdentifier: "com.example.unique",
-            version: nil,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
+        let application = makeDetectedApplication("Unique.app", id: "com.example.unique")
         let signature = ApplicationCaskSignature(
             token: "unique",
             appBundleNames: ["Unique.app"],
@@ -146,17 +111,20 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
 
     func test_store_resolution_indexes_direct_and_bundle_family_matches() {
         let applications = [
-            storeApplication(
-                named: "Canva.app",
-                bundleIdentifier: "com.canva.CanvaDesktop"
+            makeDetectedApplication(
+                "Canva.app",
+                id: "com.canva.CanvaDesktop",
+                isMacAppStore: true
             ),
-            storeApplication(
-                named: "Tailscale.app",
-                bundleIdentifier: "io.tailscale.ipn.macos"
+            makeDetectedApplication(
+                "Tailscale.app",
+                id: "io.tailscale.ipn.macos",
+                isMacAppStore: true
             ),
-            storeApplication(
-                named: "Shade.app",
-                bundleIdentifier: "com.limit-point.Shade"
+            makeDetectedApplication(
+                "Shade.app",
+                id: "com.limit-point.Shade",
+                isMacAppStore: true
             )
         ]
         let signatures = [
@@ -198,13 +166,10 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             installedAt: nil,
             appBundleNames: ["Store.app"]
         )
-        let storeApplication = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Store.app"),
-            bundleName: "Store.app",
-            bundleIdentifier: "com.example.store",
-            version: nil,
-            isMacAppStore: true,
-            isDirectlyInApplicationDirectory: true
+        let storeApplication = makeDetectedApplication(
+            "Store.app",
+            id: "com.example.store",
+            isMacAppStore: true
         )
         let cliURL = URL(fileURLWithPath: "/usr/local/bin/tool")
 
@@ -245,14 +210,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                 launchableBundleNames: ["Gone.app"]
             )
         ]
-        let liveApplication = DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/Live.app"),
-            bundleName: "Live.app",
-            bundleIdentifier: "com.example.live",
-            version: nil,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
+        let liveApplication = makeDetectedApplication("Live.app", id: "com.example.live")
         let installed = [
             "live": LocalCaskInstallation(
                 token: "live", installedVersion: "1.0", installedAt: nil,
@@ -350,9 +308,10 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             makeCask("store-\(index)", appNames: ["Store \(index).app"])
         }
         let applications = (0..<itemCount).map { index in
-            storeApplication(
-                named: "Store \(index).app",
-                bundleIdentifier: "com.example.store\(index)"
+            makeDetectedApplication(
+                "Store \(index).app",
+                id: "com.example.store\(index)",
+                isMacAppStore: true
             )
         }
         let storeSignatures = casks.map { cask in
