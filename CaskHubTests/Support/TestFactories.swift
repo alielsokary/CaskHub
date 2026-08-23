@@ -7,6 +7,7 @@
 
 @testable import CaskHub
 import Foundation
+import Synchronization
 import SwiftUI
 
 internal nonisolated func makeDetectedApplication(
@@ -51,25 +52,54 @@ nonisolated struct FixedInstalledSoftwareScanner: InstalledSoftwareScanning {
     }
 }
 
+nonisolated final class MutableInstalledSoftwareScanner: InstalledSoftwareScanning, Sendable {
+    private let storedSnapshot: Mutex<InstallationSnapshot>
+
+    init(snapshot: InstallationSnapshot = .empty) {
+        storedSnapshot = Mutex(snapshot)
+    }
+
+    func replace(with snapshot: InstallationSnapshot) {
+        storedSnapshot.withLock { $0 = snapshot }
+    }
+
+    func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
+        storedSnapshot.withLock { $0 }
+    }
+
+    func reconcileCatalog(
+        _ request: InstalledSoftwareScanRequest,
+        with current: InstallationSnapshot
+    ) async -> InstallationSnapshot {
+        storedSnapshot.withLock { $0 }
+    }
+}
+
 @MainActor
 func makeMutationService(
     runner: StubBrewProcessRunner,
     scanner: (any InstalledSoftwareScanning)? = nil,
     permissionProbe: (@Sendable () -> AppManagementPermission.Status)? = nil
 ) -> LocalHomebrewService {
+    let softwareScanner = scanner ?? MutableInstalledSoftwareScanner()
     let service = LocalHomebrewService(
         defaults: makeScratchDefaults("mutation-runner-\(UUID().uuidString)")
     ) {
         $0.fileManager = NoFilesFileManager()
         $0.processRunner = runner
-        $0.softwareScanner = scanner
+        $0.softwareScanner = softwareScanner
         $0.brewBinaryProvider = {
             URL(fileURLWithPath: "/test/bin/brew")
         }
         $0.brewVersionProvider = { "test" }
     }
     if let permissionProbe {
-        service.permissionProbe = permissionProbe
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(
+                status: permissionProbe(),
+                evidence: .target
+            )
+        }
     }
     return service
 }
@@ -78,6 +108,7 @@ func makeMutationService(
 func seedExternalInstallation(
     of cask: Cask,
     version: String?,
+    url: URL? = nil,
     in service: LocalHomebrewService
 ) {
     let bundleName = (cask.packageAppNameCandidates + cask.appArtifactNames).first
@@ -85,7 +116,8 @@ func seedExternalInstallation(
     let application = makeDetectedApplication(
         bundleName,
         id: "com.example.\(cask.token)",
-        version: version
+        version: version,
+        url: url
     )
     updateInstallationSnapshot(of: service) {
         $0.detectedApplications.append(application)

@@ -8,7 +8,7 @@
 import AppKit
 
 enum Askpass {
-    static func runDialog(token: String?) -> Never {
+    static func runDialog(token: String?, cancellationMarker: URL?) -> Never {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
 
@@ -28,7 +28,15 @@ enum Askpass {
         alert.window.level = .floating
         app.activate()
         app.requestUserAttention(.criticalRequest)
-        guard alert.runModal() == .alertFirstButtonReturn else { exit(1) }
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn,
+              !passwordField.stringValue.isEmpty
+        else {
+            if let cancellationMarker {
+                try? Data().write(to: cancellationMarker, options: .atomic)
+            }
+            exit(1)
+        }
         print(passwordField.stringValue)
         exit(0)
     }
