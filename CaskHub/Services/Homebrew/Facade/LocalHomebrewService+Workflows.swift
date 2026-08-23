@@ -12,6 +12,11 @@ extension LocalHomebrewService {
         if let conflict = cask.conflictsWith?.caskTokens.first(where: {
             installedCasks[$0] != nil
         }) {
+            Analytics.caskActionFailed(
+                .installing,
+                token: cask.token,
+                failureKind: .caskConflict
+            )
             operationStore.send(
                 .fail(CaskOperationFailure(
                     kind: .installationPreflight,
@@ -95,18 +100,23 @@ extension LocalHomebrewService {
     /// recovery after a vendor installer refuses an in-place install), fetch the
     /// payload first, ask Homebrew to run the cask's uninstall stanza even though
     /// it has no receipt (`--force`), then install the requested package.
-    func replacePackageForAdoption(token: String) async throws {
+    func replacePackageForAdoption(
+        token: String,
+        context: HomebrewMutationContext = .none
+    ) async throws {
         try await stagedReplacement(
             token: token,
             action: .adopting,
-            origin: .individual
+            origin: .individual,
+            context: context
         )
     }
 
     private func stagedReplacement(
         token: String,
         action: CaskAction,
-        origin: CaskActionOrigin
+        origin: CaskActionOrigin,
+        context: HomebrewMutationContext = .none
     ) async throws {
         let caskroomEntry = HomebrewLocator.caskroomURL(
             customPrefix: customBrewPrefix,
@@ -148,7 +158,8 @@ extension LocalHomebrewService {
                     recoveryBehavior: .finishMutation
                 )
             ],
-            origin: origin
+            origin: origin,
+            context: context
         )
     }
 

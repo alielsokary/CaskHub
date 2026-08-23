@@ -29,8 +29,9 @@ final class LocalHomebrewService {
     @ObservationIgnored var packageCatalogGeneration = 0
 
     /// Test seam — the real probe hits TCC via the filesystem.
-    @ObservationIgnored var permissionProbe: @Sendable () -> AppManagementPermission.Status
-        = { AppManagementPermission.probe() }
+    @ObservationIgnored var permissionProbe:
+        @Sendable (URL?) -> AppManagementPermission.Assessment
+        = { AppManagementPermission.assess(target: $0) }
 
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
 
@@ -98,6 +99,7 @@ final class LocalHomebrewService {
             operationStore: operationStore,
             commandExecutor: dependencies.resolvedCommandExecutor(),
             brewBinaryProvider: dependencies.brewBinaryProvider,
+            askpassProvider: dependencies.askpassProvider,
             fileManager: dependencies.fileManager
         )
         softwareScanner = dependencies.softwareScanner
@@ -118,8 +120,10 @@ final class LocalHomebrewService {
         ) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                self.resumePendingAdoptions()
-                if self.brewVersion == nil {
+                if !self.operationStore.pendingPermissions.isEmpty {
+                    await self.refresh()
+                    await self.resumePendingAdoptions()
+                } else if self.brewVersion == nil {
                     await self.refresh()
                 }
             }

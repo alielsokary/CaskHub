@@ -108,7 +108,7 @@ final class AdoptionSurfaceTests: XCTestCase {
         XCTAssertTrue(generic.errorDescription?.contains("boom") == true)
     }
 
-    func test_cask_conflict_has_actionable_description_and_is_not_reportable() {
+    func test_cask_conflict_has_actionable_description() {
         let stderr = "Error: zen-privacy: Cask 'zen-privacy' conflicts with 'zen'."
         let error = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "zen-privacy"],
@@ -124,7 +124,7 @@ final class AdoptionSurfaceTests: XCTestCase {
                 installedCask: "zen"
             )
         )
-        XCTAssertFalse(error.shouldReport)
+        XCTAssertFalse(error.isExplicitUserDecision)
     }
 
     @MainActor
@@ -229,11 +229,13 @@ final class AdoptionSurfaceTests: XCTestCase {
     func test_same_version_package_adoption_confirms_then_replaces_cleanly() async throws {
         let runner = StubBrewProcessRunner()
         let service = makeMutationService(runner: runner)
-        service.permissionProbe = { .granted }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .granted, evidence: .target)
+        }
         let cask = makeCask(
             "zoom",
             packageIdentifiers: ["us.zoom.pkg.videomeeting"],
-            packageAppNames: ["zoom.us.app"]
+            packageAppNames: ["CaskHubTestZoom.app"]
         )
         seedExternalInstallation(of: cask, version: "1.0", in: service)
 
@@ -259,7 +261,9 @@ final class AdoptionSurfaceTests: XCTestCase {
         for status in [AppManagementPermission.Status.denied, .unknown] {
             let runner = StubBrewProcessRunner()
             let service = makeMutationService(runner: runner)
-            service.permissionProbe = { status }
+            service.permissionProbe = { _ in
+                AppManagementPermission.Assessment(status: status, evidence: .target)
+            }
 
             let application = makeCask("external-app", appNames: ["External.app"])
             let package = makeCask(
@@ -284,7 +288,9 @@ final class AdoptionSurfaceTests: XCTestCase {
     func test_adoption_resumes_at_confirmation_after_permission_is_granted() async {
         let runner = StubBrewProcessRunner()
         let service = makeMutationService(runner: runner)
-        service.permissionProbe = { .denied }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .denied, evidence: .target)
+        }
         let cask = makeCask("zoom", appNames: ["zoom.us.app"])
         seedExternalInstallation(of: cask, version: "1.0", in: service)
 
@@ -292,9 +298,10 @@ final class AdoptionSurfaceTests: XCTestCase {
         let pending = service.operationStore.pendingPermissions[cask.token]
         XCTAssertEqual(pending?.cask, cask)
 
-        service.permissionProbe = { .granted }
-        service.resumePendingAdoptions()
-        try? await Task.sleep(for: .milliseconds(100))
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .granted, evidence: .target)
+        }
+        await service.resumePendingAdoptions()
 
         XCTAssertEqual(
             service.operationStore.state(for: cask.token)?.adoptionRequest,
@@ -337,26 +344,29 @@ final class AdoptionSurfaceTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: directory) }
         let executable = URL(fileURLWithPath: "/Applications/Cask Hub's.app/Contents/MacOS/CaskHub")
 
-        let firstScript = await AskpassScriptManager.create(
+        let first = try await AskpassScriptManager.create(
             token: "first; unsafe", directory: directory, executableURL: executable
         )
-        let secondScript = await AskpassScriptManager.create(
+        let second = try await AskpassScriptManager.create(
             token: "second", directory: directory, executableURL: executable
         )
-        let first = try XCTUnwrap(firstScript)
-        let second = try XCTUnwrap(secondScript)
 
         XCTAssertNotEqual(first, second)
         XCTAssertTrue(first.lastPathComponent.hasPrefix("askpass-"))
         let script = try String(contentsOf: first, encoding: .utf8)
         XCTAssertTrue(script.contains("'firstunsafe'"))
         XCTAssertTrue(script.contains("Cask Hub'\"'\"'s.app"))
+        XCTAssertTrue(script.contains("--askpass-cancel-marker"))
         let permissions = try FileManager.default.attributesOfItem(atPath: first.path)[.posixPermissions] as? Int
         XCTAssertEqual(permissions, 0o700)
+
+        let marker = AskpassScriptManager.cancellationMarker(for: first)
+        try Data().write(to: marker)
 
         await AskpassScriptManager.remove(at: first)
         await AskpassScriptManager.remove(at: second)
         XCTAssertFalse(FileManager.default.fileExists(atPath: first.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
         XCTAssertFalse(FileManager.default.fileExists(atPath: second.path))
     }
 
@@ -379,8 +389,12 @@ final class AdoptionSurfaceTests: XCTestCase {
         )
         setenv("HOMEBREW_NO_AUTO_UPDATE", "1", 1)
 
-        let service = LocalHomebrewService(defaults: makeScratchDefaults("adopt-e2e"))
-        service.permissionProbe = { .granted }
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("adopt-e2e")) {
+            $0.softwareScanner = MutableInstalledSoftwareScanner()
+        }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .granted, evidence: .target)
+        }
         let token = "caskhub-test-nonexistent-cask"
         let cask = makeCask(token, appNames: ["No Such App.app"])
         seedExternalInstallation(of: cask, version: "1.0", in: service)
@@ -433,7 +447,9 @@ final class AdoptionSurfaceTests: XCTestCase {
         ) {
             $0.applicationDirectories = [appsDir]
         }
-        service.permissionProbe = { .granted }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .granted, evidence: .target)
+        }
         let cask = makeCask(
             "caskhub-test-nonexistent-cask", appNames: ["Fake.app"],
             binarySourcePaths: ["/Applications/Fake.app/Contents/MacOS/fake-cli"]

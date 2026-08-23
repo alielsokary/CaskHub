@@ -44,16 +44,16 @@ final class AppManagementPermissionTests: XCTestCase {
         XCTAssertEqual(attempted.count, 3)
     }
 
-    func test_probe_reports_granted_when_single_candidate_allows() {
+    func test_generic_probe_stays_unknown_when_only_one_candidate_allows() {
         let status = AppManagementPermission.probe(targets: [targets[0]]) { _ in .allowed }
-        XCTAssertEqual(status, .granted)
+        XCTAssertEqual(status, .unknown)
     }
 
     func test_probe_skips_unwritable_candidates_without_verdict() {
         let status = AppManagementPermission.probe(targets: targets) { url in
             url.lastPathComponent == "D.app" ? .allowed : .skipped
         }
-        XCTAssertEqual(status, .granted)
+        XCTAssertEqual(status, .unknown)
     }
 
     func test_probe_reports_unknown_when_no_candidate_accepts_a_write() {
@@ -62,5 +62,33 @@ final class AppManagementPermissionTests: XCTestCase {
             .unknown
         )
         XCTAssertEqual(AppManagementPermission.probe(targets: []) { _ in .allowed }, .unknown)
+    }
+
+    func test_target_probe_records_strong_target_evidence() {
+        let assessment = AppManagementPermission.assess(
+            target: targets[0],
+            fallbackTargets: Array(targets.dropFirst())
+        ) { url in
+            url == self.targets[0] ? .allowed : .blocked
+        }
+
+        XCTAssertEqual(
+            assessment,
+            AppManagementPermission.Assessment(status: .granted, evidence: .target)
+        )
+    }
+
+    func test_skipped_target_uses_conservative_generic_evidence() {
+        let assessment = AppManagementPermission.assess(
+            target: targets[0],
+            fallbackTargets: Array(targets.dropFirst())
+        ) { url in
+            url == self.targets[0] ? .skipped : .allowed
+        }
+
+        XCTAssertEqual(
+            assessment,
+            AppManagementPermission.Assessment(status: .granted, evidence: .generic)
+        )
     }
 }
