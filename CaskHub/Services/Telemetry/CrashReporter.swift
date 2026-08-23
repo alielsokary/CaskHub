@@ -16,7 +16,7 @@ protocol CrashSpan {
 protocol CrashReporterProvider {
     func start(consent: SentryConsent)
     func setConsent(_ consent: SentryConsent)
-    func capture(_ error: Error)
+    func capture(_ error: Error, tags: [String: String])
     func addBreadcrumb(_ message: String, data: [String: String])
     func setTag(_ key: String, value: String)
     func startSpan(name: String, operation: String) -> CrashSpan
@@ -81,13 +81,10 @@ enum CrashReporter {
         SentryConsent(crashReporting: isEnabled, analytics: Analytics.isEnabled)
     }
 
-    static func capture(_ error: Error) {
+    static func capture(_ error: Error, tags: [String: String] = [:]) {
         guard isEnabled, !isRunningTests else { return }
         // Task cancellation (e.g. a view disappearing mid-fetch) is not an error.
         if error is CancellationError {
-            return
-        }
-        if let localError = error as? LocalHomebrewError, !localError.shouldReport {
             return
         }
         let nsError = error as NSError
@@ -118,7 +115,7 @@ enum CrashReporter {
         let count = captureCounts[signature, default: 0]
         guard count < captureLimit else { return }
         captureCounts[signature] = count + 1
-        provider.capture(error)
+        provider.capture(error, tags: tags)
     }
 
     static func breadcrumb(_ message: String, data: [String: String] = [:]) {
@@ -370,23 +367,41 @@ final class SentryProvider: CrashReporterProvider {
         }
     }
 
-    func capture(_ error: Error) {
-        SentrySDK.capture(error: error) { scope in
+    func capture(_ error: Error, tags: [String: String]) {
+        SentrySDK.capture(error: Self.sanitized(error)) { scope in
             if let fingerprint = Self.fingerprint(for: error) {
                 scope.setFingerprint(fingerprint)
             }
-            guard let localError = error as? LocalHomebrewError,
-                  case let .brewCommandFailed(failure) = localError
-            else { return }
-            scope.setTag(value: failure.kind.rawValue, key: "brew.failure_class")
+            for (key, value) in tags {
+                scope.setTag(value: value, key: key)
+            }
+            guard let localError = error as? LocalHomebrewError else { return }
+            if let failureKind = localError.failureKind {
+                scope.setTag(value: failureKind.rawValue, key: "brew.failure_class")
+            }
+            if case let .askpassUnavailable(stage, _) = localError {
+                scope.setTag(value: stage.rawValue, key: "brew.askpass_stage")
+            }
+            guard case let .brewCommandFailed(failure) = localError else { return }
             scope.setTag(value: failure.subcommand ?? "missing", key: "brew.subcommand")
             scope.setTag(value: String(failure.exitCode), key: "brew.exit_code")
+            if let diagnosticBucket = failure.diagnosticBucket {
+                scope.setTag(value: diagnosticBucket, key: "brew.diagnostic_bucket")
+            }
         }
     }
+    private static func sanitized(_ error: Error) -> any Error {
+        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
+            return error
+        }
+        return LocalHomebrewError.brewCommandFailed(HomebrewCommandFailure(
+            arguments: failure.subcommand.map { [$0] } ?? [],
+            exitCode: failure.exitCode,
+            diagnostic: "",
+            kind: failure.kind
+        ))
+    }
 
-    /// Groups brew failures per subcommand and failure class instead of NSError
-    /// domain+code — one issue per way brew fails, so a rare destructive failure
-    /// can't hide inside a busy catch-all group.
     static func fingerprint(for error: Error) -> [String]? {
         guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
             return nil
@@ -410,24 +425,22 @@ final class SentryProvider: CrashReporterProvider {
         return SentrySpanHandle(span: SentrySDK.startTransaction(name: name, operation: operation))
     }
 
-    func pauseHangTracking() {
-        SentrySDK.pauseAppHangTracking()
-    }
-
-    func resumeHangTracking() {
-        SentrySDK.resumeAppHangTracking()
-    }
+    func pauseHangTracking() { SentrySDK.pauseAppHangTracking() }
+    func resumeHangTracking() { SentrySDK.resumeAppHangTracking() }
 }
 
 private struct SentrySpanHandle: CrashSpan {
     let span: any Span
 
-    func finish() {
-        span.finish()
-    }
+    func finish() { span.finish() }
 
     func finish(error: Error) {
-        span.setData(value: String(describing: error), key: "error")
+        span.setData(value: String(reflecting: type(of: error)), key: "error.type")
+        if case let LocalHomebrewError.brewCommandFailed(failure) = error {
+            span.setData(value: failure.kind.rawValue, key: "brew.failure_class")
+            span.setData(value: failure.subcommand ?? "missing", key: "brew.subcommand")
+            span.setData(value: failure.exitCode, key: "brew.exit_code")
+        }
         span.finish(status: .internalError)
     }
 }

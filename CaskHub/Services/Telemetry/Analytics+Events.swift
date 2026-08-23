@@ -40,9 +40,9 @@ extension Analytics {
         origin: CaskActionOrigin = .individual,
         failureKind: HomebrewFailureKind? = nil
     ) {
-        guard let verb = action.analyticsVerb else { return }
+        guard let verb = action.failureAnalyticsVerb else { return }
         var parameters = actionParameters(
-            verb: verb.base, token: token, origin: origin
+            verb: verb, token: token, origin: origin
         )
         parameters["failureClass"] = failureKind?.rawValue
         send("Cask.actionFailed", parameters: parameters)
@@ -153,6 +153,12 @@ extension Analytics {
 // MARK: - Analytics names for domain types
 
 private extension CaskAction {
+    var failureAnalyticsVerb: String? {
+        if self == .updatingHomebrew { return "updateHomebrew" }
+        if self == .opening { return "open" }
+        return analyticsVerb?.base
+    }
+
     /// Verb forms for signal names; nil means "don't track this action".
     var analyticsVerb: (base: String, past: String)? {
         switch self {

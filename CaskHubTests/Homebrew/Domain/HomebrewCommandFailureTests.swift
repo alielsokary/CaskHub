@@ -52,7 +52,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         let first = unknownFailure(
             token: "cask-alpha",
             diagnostic: """
-            Error: cask-alpha failed for /Users/alice at /private/tmp/homebrew-one/payload.dmg
+            Error: cask-alpha failed for /Users/Alice Smith/Documents/Tax Return.pdf
             Source https://one.example/cask-alpha/1.2.3/payload.dmg version 1.2.3 build 42
             Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
             UUID 123e4567-e89b-12d3-a456-426614174000
@@ -61,7 +61,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         let second = unknownFailure(
             token: "cask-beta",
             diagnostic: """
-            Error: cask-beta failed for /Users/bob at /private/tmp/homebrew-two/payload.dmg
+            Error: cask-beta failed for /Users/Bob Jones/Documents/Tax Return.pdf
             Source https://two.example/cask-beta/9.8.7/payload.dmg version 9.8.7 build 99
             Hash bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
             UUID 987e6543-e21b-43d3-b654-426614179999
@@ -74,9 +74,11 @@ final class HomebrewCommandFailureTests: XCTestCase {
         let secondFingerprint = try XCTUnwrap(second.stableFingerprint)
         XCTAssertEqual(firstFingerprint, secondFingerprint)
         XCTAssertEqual(
-            firstFingerprint,
+            Array(firstFingerprint.prefix(3)),
             ["brewCommandFailed", "install", "unknown"]
         )
+        XCTAssertEqual(firstFingerprint.count, 3)
+        XCTAssertEqual(first.rateLimitSignature, second.rateLimitSignature)
         XCTAssertFalse(first.rateLimitSignature.contains("alice"))
         XCTAssertFalse(first.rateLimitSignature.contains("cask-alpha"))
 
@@ -85,6 +87,75 @@ final class HomebrewCommandFailureTests: XCTestCase {
             diagnostic: "Error: renderer crashed before launch"
         )
         XCTAssertEqual(firstFingerprint, different.stableFingerprint)
+
+        let buckets = Set((1 ... 100).compactMap { length in
+            unknownFailure(
+                token: "example",
+                diagnostic: String(repeating: "x", count: length)
+            ).diagnosticBucket
+        })
+        XCTAssertGreaterThan(buckets.count, 1)
+        XCTAssertLessThanOrEqual(buckets.count, 32)
+    }
+
+    func test_machine_and_askpass_provenance_split_app_invariants_from_user_state() {
+        let architecture = """
+        This cask depends on hardware architecture being one of \
+        [{type: :arm, bits: 64}], but you are running {type: :intel, bits: 64}.
+        """
+        XCTAssertEqual(
+            HomebrewCommandFailure.classify(
+                arguments: ["install"],
+                exitCode: 1,
+                diagnostic: architecture,
+                machineIsAppleSilicon: true
+            ),
+            .brewArchitectureMismatch
+        )
+        XCTAssertEqual(
+            HomebrewCommandFailure.classify(
+                arguments: ["install"],
+                exitCode: 1,
+                diagnostic: architecture,
+                machineIsAppleSilicon: false
+            ),
+            .platformUnsupported
+        )
+
+        let sudoOutput = "sudo: no password was provided"
+        XCTAssertEqual(
+            HomebrewCommandFailure(
+                arguments: ["install"],
+                exitCode: 1,
+                diagnostic: sudoOutput,
+                askpassUserCancelled: true
+            ).kind,
+            .sudoDeclined
+        )
+        XCTAssertEqual(
+            HomebrewCommandFailure(
+                arguments: ["install"],
+                exitCode: 1,
+                diagnostic: sudoOutput,
+                askpassUserCancelled: false
+            ).kind,
+            .askpassUnavailable
+        )
+        XCTAssertEqual(
+            HomebrewCommandFailure(
+                arguments: ["install"],
+                exitCode: 1,
+                diagnostic: "",
+                askpassUserCancelled: true
+            ).kind,
+            .sudoDeclined
+        )
+    }
+
+    func test_only_proven_user_decision_is_explicit() {
+        XCTAssertTrue(HomebrewFailureKind.sudoDeclined.isExplicitUserDecision)
+        XCTAssertFalse(HomebrewFailureKind.sudoWrongPassword.isExplicitUserDecision)
+        XCTAssertFalse(HomebrewFailureKind.dmgMountCancelled.isExplicitUserDecision)
     }
 
     func test_unknown_disk_image_output_keeps_a_reportable_mount_class() {
@@ -95,7 +166,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
 
         XCTAssertEqual(failure.kind, .dmgMountFailed)
-        XCTAssertTrue(failure.kind.shouldReport)
+        XCTAssertFalse(failure.kind.isNormallyExternal)
     }
 
     func test_runtime_incompatible_failure_offers_update_homebrew() {
@@ -109,7 +180,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
 
         XCTAssertEqual(error.commandFailure?.kind, .homebrewRuntimeIncompatible)
-        XCTAssertFalse(error.shouldReport)
+        XCTAssertTrue(error.commandFailure?.kind.isNormallyExternal == true)
         XCTAssertEqual(
             CaskOperationFailureFactory.make(
                 from: error,
@@ -128,7 +199,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
 
         XCTAssertEqual(failure.kind, .storageFull)
-        XCTAssertFalse(failure.kind.shouldReport)
+        XCTAssertTrue(failure.kind.isNormallyExternal)
     }
 
     private func unknownFailure(

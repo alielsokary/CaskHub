@@ -67,10 +67,18 @@ extension LocalHomebrewService {
 
     private func openApplication(at url: URL?, token: String) {
         guard let url else {
-            noteFailure(
+            let error = LocalHomebrewError.appBundleNotFound(token: token)
+            noteFailure(token: token, error: error)
+            Analytics.caskActionFailed(
+                .opening,
                 token: token,
-                error: LocalHomebrewError.appBundleNotFound(token: token)
+                failureKind: error.failureKind
             )
+            CrashReporter.capture(error, tags: [
+                "brew.action": CaskAction.opening.identifier,
+                "brew.cask": token,
+                "brew.origin": CaskActionOrigin.individual.rawValue
+            ])
             return
         }
         applicationLauncher.open(url)

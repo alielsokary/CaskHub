@@ -62,6 +62,10 @@ final class AnalyticsTests: XCTestCase {
     private var originalMetrics: SentryMetricsApiProtocol!
     private var originalAnalyticsDefaults: UserDefaults!
     private var originalCrashDefaults: UserDefaults!
+    private var crashSpy: SpyCrashReporterProvider!
+    private var originalCrashProvider: CrashReporterProvider!
+    private var originalCaptureCounts: [String: Int]!
+    private var originalCrashTestState = false
 
     override func setUp() {
         super.setUp()
@@ -70,8 +74,15 @@ final class AnalyticsTests: XCTestCase {
         originalMetrics = Analytics.metrics
         originalAnalyticsDefaults = Analytics.defaults
         originalCrashDefaults = CrashReporter.defaults
+        originalCrashProvider = CrashReporter.provider
+        originalCaptureCounts = CrashReporter.captureCounts
+        originalCrashTestState = CrashReporter.isRunningTests
+        crashSpy = SpyCrashReporterProvider()
         Analytics.provider = spy
         Analytics.metrics = spy
+        CrashReporter.provider = crashSpy
+        CrashReporter.captureCounts = [:]
+        CrashReporter.isRunningTests = false
         Analytics.defaults = makeScratchDefaults(
             "analytics-\(ProcessInfo.processInfo.processIdentifier)"
         )
@@ -86,12 +97,13 @@ final class AnalyticsTests: XCTestCase {
         Analytics.metrics = originalMetrics
         Analytics.defaults = originalAnalyticsDefaults
         CrashReporter.defaults = originalCrashDefaults
+        CrashReporter.provider = originalCrashProvider
+        CrashReporter.captureCounts = originalCaptureCounts
+        CrashReporter.isRunningTests = originalCrashTestState
         super.tearDown()
     }
 
-    private var lastSignal: (name: String, parameters: [String: String])? {
-        spy.signals.last
-    }
+    private var lastSignal: (name: String, parameters: [String: String])? { spy.signals.last }
 
     // MARK: - Opt-out state
 
@@ -199,29 +211,6 @@ final class AnalyticsTests: XCTestCase {
         ])
     }
 
-    @MainActor
-    func test_failed_service_mutation_forwards_its_classification() async {
-        let runner = StubBrewProcessRunner()
-        runner.queuedResults = [BrewProcessResult(
-            exitCode: 1,
-            output: "Error: Cask 'gimp' definition is invalid: invalid "
-                + "'command_wrapper' stanza: Unknown key: :executable"
-        )]
-        let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("classified-analytics")
-        ) {
-            $0.fileManager = NoFilesFileManager()
-            $0.processRunner = runner
-            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
-            $0.brewVersionProvider = { "test" }
-        }
-
-        try? await service.install(token: "gimp")
-
-        XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
-        XCTAssertEqual(lastSignal?.parameters["failureClass"], "homebrew-runtime-incompatible")
-    }
-
     func test_cask_action_recovered_records_repair_postcondition() {
         Analytics.caskActionRecovered(.uninstalling, token: "zed", origin: .repair)
 
@@ -233,9 +222,18 @@ final class AnalyticsTests: XCTestCase {
         ])
     }
 
-    func test_cask_action_failed_ignores_app_launches() {
-        Analytics.caskActionFailed(.opening, token: "firefox")
-        XCTAssertTrue(spy.signals.isEmpty)
+    func test_cask_action_failed_tracks_missing_app_launches() {
+        Analytics.caskActionFailed(
+            .opening,
+            token: "firefox",
+            failureKind: .appBundleNotFound
+        )
+        XCTAssertEqual(lastSignal?.parameters, [
+            "action": "open",
+            "cask": "firefox",
+            "failureClass": "app-bundle-not-found",
+            "origin": "individual"
+        ])
     }
 
     func test_cask_action_events_ignore_queued_state() {
@@ -390,5 +388,213 @@ final class AnalyticsTests: XCTestCase {
         Analytics.send("Page.opened")
 
         XCTAssertTrue(crashSpy.breadcrumbs.isEmpty)
+    }
+}
+
+extension AnalyticsTests {
+    func test_homebrew_update_failure_has_its_own_action() {
+        Analytics.caskActionFailed(
+            .updatingHomebrew,
+            token: "gimp",
+            origin: .repair,
+            failureKind: .unknown
+        )
+
+        XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
+        XCTAssertEqual(lastSignal?.parameters, [
+            "action": "updateHomebrew",
+            "cask": "gimp",
+            "failureClass": "unknown",
+            "origin": "repair"
+        ])
+    }
+
+    @MainActor
+    func test_invariant_conflict_reports_context_and_failed_span() async {
+        let crashSpy = await runFailingService(
+            output: "Error: gimp: Cask 'gimp' conflicts with 'gimp-beta'."
+        )
+
+        XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "cask-conflict")
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+        XCTAssertEqual(crashSpy.capturedErrorTags, [[
+            "brew.action": "installing",
+            "brew.cask": "gimp",
+            "brew.origin": "individual"
+        ]])
+        XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+    }
+
+    @MainActor
+    func test_external_network_failure_is_metric_only_with_failed_span() async {
+        let crashSpy = await runFailingService(
+            output: "curl: (6) Could not resolve host: example.com"
+        )
+
+        XCTAssertEqual(lastSignal?.name, "Cask.actionFailed")
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "network-failure")
+        XCTAssertTrue(crashSpy.capturedErrors.isEmpty)
+        XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+    }
+
+    @MainActor
+    func test_external_homebrew_update_failure_remains_metric_only() async {
+        let crashSpy = await runFailingService(
+            output: "curl: (6) Could not resolve host: example.com",
+            operation: .updatingHomebrew
+        )
+
+        XCTAssertEqual(lastSignal?.parameters["action"], "updateHomebrew")
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "network-failure")
+        XCTAssertTrue(crashSpy.capturedErrors.isEmpty)
+        XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+    }
+
+    @MainActor
+    func test_only_proven_askpass_cancellation_is_suppressed() async {
+        let cancelled = await runFailingService(
+            output: "sudo: no password was provided",
+            markAskpassCancelled: true
+        )
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "sudo-declined")
+        XCTAssertTrue(cancelled.capturedErrors.isEmpty)
+
+        let failedHelper = await runFailingService(
+            output: "sudo: no password was provided"
+        )
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "askpass-unavailable")
+        XCTAssertEqual(failedHelper.capturedErrors.count, 1)
+    }
+
+    @MainActor
+    func test_ambiguous_password_and_disk_image_failures_are_reported() async {
+        let wrongPassword = await runFailingService(output: "sudo: 3 incorrect password attempts")
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "sudo-wrong-password")
+        XCTAssertEqual(wrongPassword.capturedErrors.count, 1)
+        let diskImage = await runFailingService(output: "hdiutil: attach canceled")
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "dmg-mount-cancelled")
+        XCTAssertEqual(diskImage.capturedErrors.count, 1)
+    }
+
+    @MainActor
+    func test_askpass_disk_full_is_metric_only() async {
+        let crashSpy = await runFailingService(
+            output: "",
+            askpassError: .fileSystem(
+                stage: .script,
+                failureKind: .storageFull
+            )
+        )
+
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "storage-full")
+        XCTAssertTrue(crashSpy.capturedErrors.isEmpty)
+        XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+    }
+
+    @MainActor
+    func test_permission_denial_after_adoption_gate_reports_invariant_context() async {
+        let crashSpy = await runFailingService(
+            output: "CaskHub does not have App Management permissions",
+            operation: .adopting
+        )
+
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "permission-denied")
+        XCTAssertEqual(crashSpy.capturedErrorTags, [[
+            "brew.action": "adopting",
+            "brew.adoption_execution": "adopt-application",
+            "brew.adoption_relationship": "same",
+            "brew.cask": "gimp",
+            "brew.origin": "individual",
+            "brew.permission_evidence": "target"
+        ]])
+    }
+
+    @MainActor
+    func test_arm_machine_with_intel_brew_runtime_reports_architecture_invariant() async throws {
+        try XCTSkipUnless(HomebrewLocator.isAppleSilicon)
+        let crashSpy = await runFailingService(output: """
+        This cask depends on hardware architecture being one of \
+        [{type: :arm, bits: 64}], but you are running {type: :intel, bits: 64}.
+        """)
+
+        XCTAssertEqual(
+            lastSignal?.parameters["failureClass"],
+            "brew-architecture-mismatch"
+        )
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+    }
+
+    @MainActor
+    func test_missing_app_open_reports_the_local_state_contradiction() {
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("missing-app-telemetry")
+        ) {
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+        }
+
+        service.open(makeCask("ghost", appNames: ["Ghost.app"]))
+
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "app-bundle-not-found")
+        XCTAssertEqual(crashSpy.capturedErrorTags, [[
+            "brew.action": "opening",
+            "brew.cask": "ghost",
+            "brew.origin": "individual"
+        ]])
+    }
+
+    @MainActor
+    private func runFailingService(
+        output: String,
+        operation: CaskAction = .installing,
+        markAskpassCancelled: Bool = false,
+        askpassError: AskpassScriptError? = nil
+    ) async -> SpyCrashReporterProvider {
+        crashSpy.capturedErrors.removeAll()
+        crashSpy.capturedErrorTags.removeAll()
+        crashSpy.spans.removeAll()
+        CrashReporter.captureCounts = [:]
+
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(exitCode: 1, output: output)]
+        let askpass = FileManager.default.temporaryDirectory
+            .appendingPathComponent("caskhub-analytics-\(UUID().uuidString)")
+        let scanner = MutableInstalledSoftwareScanner()
+        if markAskpassCancelled {
+            runner.onRequest = { _ in
+                try Data().write(to: AskpassScriptManager.cancellationMarker(
+                    for: askpass
+                ))
+            }
+        }
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("failure-telemetry-\(UUID().uuidString)")
+        ) {
+            $0.fileManager = NoFilesFileManager()
+            $0.processRunner = runner
+            $0.softwareScanner = scanner
+            $0.askpassProvider = { _ in
+                if let askpassError { throw askpassError }
+                return askpass
+            }
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+            $0.brewVersionProvider = { "test" }
+        }
+        if operation == .updatingHomebrew {
+            try? await service.updateHomebrew(for: "gimp")
+        } else if operation == .adopting {
+            let cask = makeCask("gimp", appNames: ["Gimp.app"])
+            seedExternalInstallation(of: cask, version: cask.displayVersion, in: service)
+            service.permissionProbe = { _ in
+                AppManagementPermission.Assessment(status: .granted, evidence: .target)
+            }
+            await service.requestAdoption(cask)
+            if let request = service.operationStore.state(for: cask.token)?.adoptionRequest {
+                try? await service.confirmAdoption(request)
+            }
+        } else {
+            try? await service.install(token: "gimp")
+        }
+        return crashSpy
     }
 }

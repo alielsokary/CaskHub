@@ -157,7 +157,10 @@ func updateInstallationSnapshot(
         snapshot: service.installationSnapshot
     )
     update(&fixture)
-    service.commitInstallationSnapshot(fixture.makeSnapshot())
+    let snapshot = fixture.makeSnapshot()
+    service.commitInstallationSnapshot(snapshot)
+    (service.softwareScanner as? MutableInstalledSoftwareScanner)?
+        .replace(with: snapshot)
 }
 
 @MainActor
@@ -423,6 +426,7 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
     var startedWith: [SentryConsent] = []
     var consentChanges: [SentryConsent] = []
     var capturedErrors: [Error] = []
+    var capturedErrorTags: [[String: String]] = []
     var breadcrumbs: [(message: String, data: [String: String])] = []
     var tags: [String: String] = [:]
     var spans: [SpanRecord] = []
@@ -444,8 +448,9 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
         consentChanges.append(consent)
     }
 
-    func capture(_ error: Error) {
+    func capture(_ error: Error, tags: [String: String]) {
         capturedErrors.append(error)
+        capturedErrorTags.append(tags)
     }
 
     func setTag(_ key: String, value: String) {
