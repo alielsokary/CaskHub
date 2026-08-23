@@ -327,6 +327,8 @@ final class SentryProvider: CrashReporterProvider {
         isAnalyticsEnabled: @escaping () -> Bool = { Analytics.isEnabled }
     ) {
         options.enableMetrics = true
+        // Report handled failures at app boundaries, not once per raw request attempt.
+        options.enableCaptureFailedRequests = false
         options.beforeSendMetric = { metric in
             guard isAnalyticsEnabled() else { return nil }
             var metric = metric
@@ -347,7 +349,6 @@ final class SentryProvider: CrashReporterProvider {
             options.enableNetworkTracking = false
             options.enableFileIOTracing = false
             options.enableCoreDataTracing = false
-            options.enableCaptureFailedRequests = false
             options.enableAutoBreadcrumbTracking = false
             options.enableNetworkBreadcrumbs = false
             options.enableSwizzling = false

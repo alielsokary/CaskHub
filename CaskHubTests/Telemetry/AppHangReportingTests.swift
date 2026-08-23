@@ -78,6 +78,7 @@ extension CrashReporterTests {
         XCTAssertTrue(options.enableCrashHandler)
         XCTAssertTrue(options.enableAutoSessionTracking)
         XCTAssertTrue(options.enableAppHangTracking)
+        XCTAssertFalse(options.enableCaptureFailedRequests)
         XCTAssertEqual(options.tracesSampleRate?.doubleValue, 1)
         XCTAssertNotNil(options.beforeSend)
     }
