@@ -98,7 +98,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         XCTAssertLessThanOrEqual(buckets.count, 32)
     }
 
-    func test_machine_and_askpass_provenance_split_app_invariants_from_user_state() {
+    func test_machine_provenance_splits_app_invariants_from_user_state() {
         let architecture = """
         This cask depends on hardware architecture being one of \
         [{type: :arm, bits: 64}], but you are running {type: :intel, bits: 64}.
@@ -121,7 +121,9 @@ final class HomebrewCommandFailureTests: XCTestCase {
             ),
             .platformUnsupported
         )
+    }
 
+    func test_askpass_provenance_splits_user_decision_from_helper_failure() {
         let sudoOutput = "sudo: no password was provided"
         XCTAssertEqual(
             HomebrewCommandFailure(

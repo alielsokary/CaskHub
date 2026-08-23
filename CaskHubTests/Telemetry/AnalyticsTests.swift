@@ -559,7 +559,6 @@ extension AnalyticsTests {
         runner.queuedResults = [BrewProcessResult(exitCode: 1, output: output)]
         let askpass = FileManager.default.temporaryDirectory
             .appendingPathComponent("caskhub-analytics-\(UUID().uuidString)")
-        let scanner = MutableInstalledSoftwareScanner()
         if markAskpassCancelled {
             runner.onRequest = { _ in
                 try Data().write(to: AskpassScriptManager.cancellationMarker(
@@ -567,12 +566,11 @@ extension AnalyticsTests {
                 ))
             }
         }
-        let service = LocalHomebrewService(
-            defaults: makeScratchDefaults("failure-telemetry-\(UUID().uuidString)")
-        ) {
+        let defaults = makeScratchDefaults("failure-telemetry-\(UUID().uuidString)")
+        let service = LocalHomebrewService(defaults: defaults) {
             $0.fileManager = NoFilesFileManager()
             $0.processRunner = runner
-            $0.softwareScanner = scanner
+            $0.softwareScanner = MutableInstalledSoftwareScanner()
             $0.askpassProvider = { _ in
                 if let askpassError { throw askpassError }
                 return askpass

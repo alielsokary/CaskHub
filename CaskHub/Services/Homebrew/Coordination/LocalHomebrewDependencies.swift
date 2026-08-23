@@ -34,27 +34,49 @@ enum HomebrewIssuePolicy {
         context: HomebrewMutationContext
     ) -> Bool {
         guard let localError = error as? LocalHomebrewError else { return true }
-        switch localError {
+        return shouldCaptureLocalError(
+            localError,
+            action: action,
+            context: context
+        )
+    }
+
+    private static func shouldCaptureLocalError(
+        _ error: LocalHomebrewError,
+        action: CaskAction,
+        context: HomebrewMutationContext
+    ) -> Bool {
+        switch error {
         case .brewBinaryNotFound:
             return false
-        case .incompatibleBrewPath:
-            return true
-        case .appBundleNotFound:
+        case .incompatibleBrewPath, .appBundleNotFound:
             return true
         case let .askpassUnavailable(_, failureKind):
             return !failureKind.isNormallyExternal
         case let .brewCommandFailed(failure):
-            if failure.kind.isExplicitUserDecision
-                || failure.kind.isNormallyExternal {
-                return false
-            }
-            if action == .updatingHomebrew { return true }
-            guard failure.kind == .adoptVersionMismatch else { return true }
-            guard let relationship = context.adoptionPlan?.versionRelationship else {
-                return true
-            }
-            return relationship != .same && relationship != .unknown
+            return shouldCaptureCommandFailure(
+                failure,
+                action: action,
+                context: context
+            )
         }
+    }
+
+    private static func shouldCaptureCommandFailure(
+        _ failure: HomebrewCommandFailure,
+        action: CaskAction,
+        context: HomebrewMutationContext
+    ) -> Bool {
+        if failure.kind.isExplicitUserDecision
+            || failure.kind.isNormallyExternal {
+            return false
+        }
+        guard action != .updatingHomebrew,
+              failure.kind == .adoptVersionMismatch,
+              let relationship = context.adoptionPlan?.versionRelationship else {
+            return true
+        }
+        return relationship != .same && relationship != .unknown
     }
 }
 
