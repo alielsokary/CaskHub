@@ -4,6 +4,23 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.8.0 — 2026-08-25
+
+### What's New
+
+- Added the Health page: run a Homebrew checkup, update Homebrew, sync your collection, and reclaim disk space from caches, old versions, and orphaned dependencies
+- Added Brewfile export and import in Shelf Setup to back up and restore your app shelf
+
+### Improvements
+
+- Homebrew commands now run one at a time, preventing conflicting operations
+- Sidebar hides zero counts for Installed, Updates, and Adopt Apps
+- Cleaner Settings window, with the icon cache now managed from the Health page
+
+### Bug Fixes
+
+- Fixed app adoption confirming against an outdated list of installed apps
+
 ## 0.7.1 — 2026-08-13
 
 ### What's New
