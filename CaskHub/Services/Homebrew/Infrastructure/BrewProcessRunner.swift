@@ -11,6 +11,17 @@ import Foundation
 struct BrewProcessResult: Sendable {
     let exitCode: Int32
     let output: String
+    let wasTerminatedBySignal: Bool
+
+    init(
+        exitCode: Int32,
+        output: String,
+        wasTerminatedBySignal: Bool = false
+    ) {
+        self.exitCode = exitCode
+        self.output = output
+        self.wasTerminatedBySignal = wasTerminatedBySignal
+    }
 }
 
 /// Execution seam for Homebrew mutations. Tests can supply deterministic
@@ -86,7 +97,8 @@ final class SystemBrewProcessRunner: BrewProcessRunning {
         await deliveryTask.value
         return BrewProcessResult(
             exitCode: process.terminationStatus,
-            output: output
+            output: output,
+            wasTerminatedBySignal: process.terminationReason == .uncaughtSignal
         )
     }
 }

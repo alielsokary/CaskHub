@@ -12,8 +12,19 @@ import Foundation
 /// consults the gate (TCC enforces actual writes only), so status is probed
 /// Homebrew-style: attempt a harmless write inside protected bundles.
 nonisolated enum AppManagementPermission {
-    enum Status: Equatable {
+    enum Status: Equatable, Sendable {
         case granted, denied, unknown
+    }
+
+    enum Evidence: String, Equatable, Sendable {
+        case target
+        case generic
+        case unverified
+    }
+
+    struct Assessment: Equatable, Sendable {
+        let status: Status
+        let evidence: Evidence?
     }
 
     enum WriteAttempt {
@@ -28,7 +39,41 @@ nonisolated enum AppManagementPermission {
     }
 
     nonisolated static func probe() -> Status {
-        probe(targets: probeTargets(), attempt: attemptWrite)
+        assess(target: nil).status
+    }
+
+    /// Prefer the app that will actually be adopted. Root-owned bundles cannot
+    /// be tested without another password prompt, so they fall back to the
+    /// conservative multi-bundle probe and retain that weaker provenance.
+    nonisolated static func assess(target: URL?) -> Assessment {
+        assess(
+            target: target,
+            fallbackTargets: probeTargets(),
+            attempt: attemptWrite
+        )
+    }
+
+    nonisolated static func assess(
+        target: URL?,
+        fallbackTargets: [URL],
+        attempt: (URL) -> WriteAttempt
+    ) -> Assessment {
+        if let target {
+            switch attempt(target) {
+            case .allowed:
+                return Assessment(status: .granted, evidence: .target)
+            case .blocked:
+                return Assessment(status: .denied, evidence: .target)
+            case .skipped:
+                break
+            }
+        }
+
+        let status = probe(targets: fallbackTargets, attempt: attempt)
+        return Assessment(
+            status: status,
+            evidence: status == .unknown ? nil : .generic
+        )
     }
 
     /// One blocked write proves denied; allowed writes are weaker evidence (bundles
@@ -49,7 +94,7 @@ nonisolated enum AppManagementPermission {
                 continue
             }
         }
-        return allowed > 0 ? .granted : .unknown
+        return .unknown
     }
 
     /// After the posixWritable guard only the TCC gate returns EPERM; EACCES (ACLs) is not it.

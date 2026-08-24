@@ -31,6 +31,8 @@ protocol HomebrewCommandExecuting {
 final class SystemHomebrewCommandExecutor: HomebrewCommandExecuting {
     private let processRunner: any BrewProcessRunning
     private var runningProcesses: [String: Process] = [:]
+    private static var isExecuting = false
+    private static var waiters: [CheckedContinuation<Void, Never>] = []
 
     init(processRunner: (any BrewProcessRunning)? = nil) {
         self.processRunner = processRunner ?? SystemBrewProcessRunner()
@@ -41,6 +43,9 @@ final class SystemHomebrewCommandExecutor: HomebrewCommandExecuting {
         onStart: @escaping @MainActor @Sendable () -> Void,
         onChunk: @escaping @MainActor @Sendable (String) -> Void
     ) async throws -> BrewProcessResult {
+        await Self.acquireGlobalTurn()
+        defer { Self.releaseGlobalTurn() }
+        try Task.checkCancellation()
         defer { runningProcesses[request.token] = nil }
         return try await processRunner.run(
             executableURL: request.executableURL,
@@ -52,6 +57,24 @@ final class SystemHomebrewCommandExecutor: HomebrewCommandExecuting {
             },
             onChunk: onChunk
         )
+    }
+
+    // ponytail: Homebrew uses global locks, so one FIFO is the correct ceiling
+    // until CaskHub supports independent Homebrew prefixes at the same time.
+    static func acquireGlobalTurn() async {
+        guard !isExecuting else {
+            await withCheckedContinuation { waiters.append($0) }
+            return
+        }
+        isExecuting = true
+    }
+
+    static func releaseGlobalTurn() {
+        guard !waiters.isEmpty else {
+            isExecuting = false
+            return
+        }
+        waiters.removeFirst().resume()
     }
 
     func cancel(token: String) -> Bool {

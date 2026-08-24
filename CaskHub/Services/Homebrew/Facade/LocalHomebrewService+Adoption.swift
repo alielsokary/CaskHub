@@ -9,54 +9,70 @@ import Foundation
 
 extension LocalHomebrewService {
     func requestAdoption(_ cask: Cask) async {
-        guard let plan = localState(for: cask).adoptionPlan else { return }
-        await requestAdoption(CaskAdoptionRequest(cask: cask, plan: plan))
+        guard let request = currentAdoptionRequest(for: cask, intent: .planned) else {
+            return
+        }
+        await requestAdoption(request)
     }
 
     func requestReplacementAdoption(_ cask: Cask) async {
-        let localPlan = localState(for: cask).adoptionPlan
-        let artifact: CaskAdoptionArtifact = cask.hasPackageArtifact
-            ? .packageInstaller
-            : .applicationBundle
-        let plan = CaskAdoptionPlan(
-            artifact: artifact,
-            versionRelationship: localPlan?.versionRelationship ?? .unknown,
-            operation: localPlan?.operation ?? .adopt,
-            execution: artifact == .packageInstaller
-                ? .replacePackage
-                : .replaceApplication,
-            installedVersion: localPlan?.installedVersion,
-            homebrewVersion: cask.displayVersion,
-            blockingInstalledCask: localPlan?.blockingInstalledCask
-        )
-        await requestAdoption(CaskAdoptionRequest(cask: cask, plan: plan))
+        guard let request = currentAdoptionRequest(for: cask, intent: .replacement) else {
+            return
+        }
+        await requestAdoption(request)
     }
 
     func confirmAdoption(_ request: CaskAdoptionRequest) async throws {
-        guard await requireAdoptionPermission(for: request) else { return }
+        await refresh()
+        guard let current = currentAdoptionRequest(
+            for: request.cask,
+            intent: request.intent
+        ) else {
+            operationStore.send(.clear, for: request.cask.token)
+            return
+        }
+        guard current == request else {
+            operationStore.send(.awaitAdoption(current), for: request.cask.token)
+            return
+        }
+        guard let permission = await requireAdoptionPermission(
+            for: request,
+            allowUnverified: true
+        ) else {
+            return
+        }
         guard preflightAdoption(request) else { return }
+        let context = HomebrewMutationContext(
+            adoptionPlan: request.plan, permissionEvidence: permission.evidence
+        )
 
         switch request.plan.execution {
         case .adoptApplication:
             try await runMutation(
                 .adopting,
                 token: request.cask.token,
-                args: ["install", "--cask", request.cask.token, "--adopt"]
+                args: ["install", "--cask", request.cask.token, "--adopt"],
+                context: context
             )
         case .replaceApplication:
             try await runMutation(
                 .adopting,
                 token: request.cask.token,
-                args: ["install", "--cask", request.cask.token, "--force"]
+                args: ["install", "--cask", request.cask.token, "--force"],
+                context: context
             )
         case .installPackage:
             try await runMutation(
                 .adopting,
                 token: request.cask.token,
-                args: ["install", "--cask", request.cask.token]
+                args: ["install", "--cask", request.cask.token],
+                context: context
             )
         case .replacePackage:
-            try await replacePackageForAdoption(token: request.cask.token)
+            try await replacePackageForAdoption(
+                token: request.cask.token,
+                context: context
+            )
         }
     }
 
@@ -81,26 +97,40 @@ extension LocalHomebrewService {
 
     /// Called after returning from System Settings. Permission approval resumes
     /// at confirmation; it never starts a destructive replacement implicitly.
-    func resumePendingAdoptions() {
+    func resumePendingAdoptions() async {
         let pending = operationStore.pendingPermissions
         guard !pending.isEmpty else { return }
-        Task {
-            guard await permissionAllowsAdoption() else { return }
-            for (token, request) in pending {
-                guard preflightAdoption(request) else { continue }
-                operationStore.send(.awaitAdoption(request), for: token)
+        for (token, request) in pending {
+            guard let current = currentAdoptionRequest(
+                for: request.cask,
+                intent: request.intent
+            ) else {
+                operationStore.send(.clear, for: token)
+                continue
             }
+            let assessment = await permissionAssessment(for: current)
+            guard assessment.status != .denied else { continue }
+            guard preflightAdoption(current) else { continue }
+            operationStore.send(.awaitAdoption(current), for: token)
         }
     }
 
     private func requestAdoption(_ request: CaskAdoptionRequest) async {
         guard preflightAdoption(request) else { return }
-        guard await requireAdoptionPermission(for: request) else { return }
+        guard await requireAdoptionPermission(for: request) != nil else { return }
         operationStore.send(.awaitAdoption(request), for: request.cask.token)
     }
 
     private func preflightAdoption(_ request: CaskAdoptionRequest) -> Bool {
-        if let conflict = request.plan.blockingInstalledCask {
+        if let conflict = request.cask.conflictsWith?.caskTokens
+            .filter({ installedCasks[$0] != nil })
+            .sorted()
+            .first {
+            Analytics.caskActionFailed(
+                .adopting,
+                token: request.cask.token,
+                failureKind: .caskConflict
+            )
             operationStore.send(
                 .fail(CaskOperationFailure(
                     kind: .adoptionPreflight,
@@ -121,6 +151,11 @@ extension LocalHomebrewService {
                 missing
             )
         )
+        Analytics.caskActionFailed(
+            .adopting,
+            token: request.cask.token,
+            failureKind: .missingArtifactSource
+        )
         operationStore.send(
             .fail(CaskOperationFailure(
                 kind: .adoptionPreflight,
@@ -133,24 +168,73 @@ extension LocalHomebrewService {
     }
 
     private func requireAdoptionPermission(
-        for request: CaskAdoptionRequest
-    ) async -> Bool {
-        guard await permissionAllowsAdoption() else {
+        for request: CaskAdoptionRequest,
+        allowUnverified: Bool = false
+    ) async -> AppManagementPermission.Assessment? {
+        let assessment = await permissionAssessment(for: request)
+        switch assessment.status {
+        case .granted:
+            return assessment
+        case .unknown where allowUnverified:
+            return AppManagementPermission.Assessment(
+                status: .unknown,
+                evidence: .unverified
+            )
+        case .denied, .unknown:
             operationStore.send(
                 .awaitPermission(request),
                 for: request.cask.token
             )
-            return false
+            return nil
         }
-        return true
     }
 
-    /// Adoption only proceeds after the probe positively demonstrates access.
-    /// An indeterminate probe stays gated because it cannot prove Homebrew can
-    /// modify the existing application.
-    private func permissionAllowsAdoption() async -> Bool {
+    /// The exact scanner-owned bundle is stronger evidence than a catalog name.
+    /// macOS has no public query API, so an unprobeable target can proceed only
+    /// after the user returns from Settings and confirms the adoption again.
+    private func permissionAssessment(
+        for request: CaskAdoptionRequest
+    ) async -> AppManagementPermission.Assessment {
         let probe = permissionProbe
-        let status = await Task.detached(priority: .userInitiated) { probe() }.value
-        return status == .granted
+        let bundle = installationSnapshot
+            .externalPackageApplicationOwners[request.cask.token]?.url
+            ?? installationSnapshot.externalApplicationOwners[request.cask.token]?.url
+            ?? existingBundleURL(named:
+                request.cask.packageAppNameCandidates + request.cask.appArtifactNames
+            )
+        let assessment = await Task.detached(priority: .userInitiated) {
+            probe(bundle)
+        }.value
+        return assessment
+    }
+
+    private func currentAdoptionRequest(
+        for cask: Cask,
+        intent: CaskAdoptionIntent
+    ) -> CaskAdoptionRequest? {
+        let state = localState(for: cask)
+        let current = state.adoptionPlan
+        let plan: CaskAdoptionPlan
+        switch intent {
+        case .planned:
+            guard let current else { return nil }
+            plan = current
+        case .replacement:
+            let artifact = current?.artifact ?? (cask.hasPackageArtifact
+                ? .packageInstaller
+                : .applicationBundle)
+            plan = CaskAdoptionPlan(
+                artifact: artifact,
+                versionRelationship: current?.versionRelationship ?? .unknown,
+                operation: current?.operation ?? .adopt,
+                execution: artifact == .packageInstaller
+                    ? .replacePackage
+                    : .replaceApplication,
+                installedVersion: current?.installedVersion,
+                homebrewVersion: current?.homebrewVersion ?? cask.displayVersion,
+                blockingInstalledCask: current?.blockingInstalledCask
+            )
+        }
+        return CaskAdoptionRequest(cask: cask, intent: intent, plan: plan)
     }
 }

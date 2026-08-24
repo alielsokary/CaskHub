@@ -5,11 +5,61 @@
 //  Created by Ali Elsokary on 10/08/2026.
 //
 
+import CryptoKit
 import Foundation
+
+nonisolated enum AskpassFailureStage: String, Sendable {
+    case executable
+    case directory
+    case script
+    case permissions
+    case unknown
+}
+
+nonisolated enum HomebrewDiagnosticRedactor {
+    static func normalized(_ diagnostic: String, token: String?) -> String {
+        var normalized = diagnostic.lowercased()
+        if let token {
+            normalized = normalized.replacingOccurrences(
+                of: token.lowercased(),
+                with: "<cask>"
+            )
+        }
+        let redactions = [
+            (#"https?://[^\s]+"#, "<url>"),
+            (#"[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}"#, "<email>"),
+            (#"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}"#, "<uuid>"),
+            (#"[0-9a-f]{16,}"#, "<hash>"),
+            (#"/[^\r\n]*"#, "<path>"),
+            (#"\d+(?:\.\d+)*"#, "<number>")
+        ]
+        for (pattern, replacement) in redactions {
+            normalized = normalized.replacingOccurrences(
+                of: pattern,
+                with: replacement,
+                options: .regularExpression
+            )
+        }
+        return normalized
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    static func bucket(_ diagnostic: String, token: String?) -> String {
+        let digest = SHA256.hash(data: Data(normalized(diagnostic, token: token).utf8))
+        let firstByte = digest.prefix(1).reduce(UInt8.zero) { _, byte in byte }
+        return String(Int(firstByte & 31))
+    }
+}
 
 enum LocalHomebrewError: LocalizedError {
     case brewBinaryNotFound
     case incompatibleBrewPath
+    case askpassUnavailable(
+        stage: AskpassFailureStage,
+        failureKind: HomebrewFailureKind
+    )
     case appBundleNotFound(token: String)
     case brewCommandFailed(HomebrewCommandFailure)
 
@@ -25,16 +75,19 @@ enum LocalHomebrewError: LocalizedError {
         ))
     }
 
-    /// Expected user or environment state is not an app defect.
-    var shouldReport: Bool {
+    var failureKind: HomebrewFailureKind? {
         switch self {
-        case .brewBinaryNotFound, .incompatibleBrewPath:
-            return false
-        case .appBundleNotFound:
-            return true
+        case .brewBinaryNotFound: .brewBinaryNotFound
+        case .incompatibleBrewPath: .incompatibleBrewPath
+        case let .askpassUnavailable(_, failureKind): failureKind
+        case .appBundleNotFound: .appBundleNotFound
         case let .brewCommandFailed(failure):
-            return failure.kind.shouldReport
+            failure.kind
         }
+    }
+
+    var isExplicitUserDecision: Bool {
+        commandFailure?.kind.isExplicitUserDecision == true
     }
 
     var commandFailure: HomebrewCommandFailure? {
@@ -92,6 +145,15 @@ extension LocalHomebrewError {
             return String(
                 localized: "This Mac requires Intel Homebrew. Choose /usr/local/bin/brew in Settings."
             )
+        case let .askpassUnavailable(_, failureKind):
+            if failureKind == .storageFull {
+                return String(
+                    localized: "There is not enough free storage to complete this operation. Free some space, then try again."
+                )
+            }
+            return String(
+                localized: "CaskHub couldn't prepare the administrator password prompt. Restart CaskHub and try again."
+            )
         case let .appBundleNotFound(token):
             return String(localized: "Couldn't find an installed app for \(token).")
         case let .brewCommandFailed(failure):
@@ -110,6 +172,10 @@ extension LocalHomebrewError {
                 return String(localized: .errorAdoptVersionMismatch)
             }
             switch failure.kind {
+            case .askpassUnavailable:
+                return String(
+                    localized: "CaskHub couldn't prepare the administrator password prompt. Restart CaskHub and try again."
+                )
             case .binaryConflict:
                 return "A leftover command-line tool from a previous installation "
                     + "is in the way. Replacing with Homebrew's version overwrites it — "

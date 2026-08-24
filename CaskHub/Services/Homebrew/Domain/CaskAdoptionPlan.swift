@@ -12,10 +12,10 @@ nonisolated enum CaskAdoptionArtifact: Equatable, Sendable {
     case packageInstaller
 }
 
-nonisolated enum CaskAdoptionVersionRelationship: Equatable, Sendable {
+nonisolated enum CaskAdoptionVersionRelationship: String, Equatable, Sendable {
     case same
-    case homebrewNewer
-    case homebrewOlder
+    case homebrewNewer = "homebrew-newer"
+    case homebrewOlder = "homebrew-older"
     case unknown
 }
 
@@ -25,11 +25,16 @@ nonisolated enum CaskAdoptionOperation: Equatable, Sendable {
     case downgradeAndAdopt
 }
 
-nonisolated enum CaskAdoptionExecution: Equatable, Sendable {
-    case adoptApplication
-    case replaceApplication
-    case installPackage
-    case replacePackage
+nonisolated enum CaskAdoptionExecution: String, Equatable, Sendable {
+    case adoptApplication = "adopt-application"
+    case replaceApplication = "replace-application"
+    case installPackage = "install-package"
+    case replacePackage = "replace-package"
+}
+
+nonisolated enum CaskAdoptionIntent: Equatable, Sendable {
+    case planned
+    case replacement
 }
 
 nonisolated struct CaskAdoptionPlan: Equatable, Sendable {
@@ -125,6 +130,7 @@ nonisolated struct CaskAdoptionPlan: Equatable, Sendable {
 
 nonisolated struct CaskAdoptionRequest: Equatable, Sendable {
     let cask: Cask
+    let intent: CaskAdoptionIntent
     let plan: CaskAdoptionPlan
 }
 

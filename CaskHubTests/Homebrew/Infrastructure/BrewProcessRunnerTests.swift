@@ -20,7 +20,28 @@ final class BrewProcessRunnerTests: XCTestCase {
         )
 
         XCTAssertEqual(result.exitCode, 0)
+        XCTAssertFalse(result.wasTerminatedBySignal)
         XCTAssertTrue(result.output.contains("terminal progress"))
+    }
+
+    @MainActor
+    func test_system_runner_reports_signal_termination() async throws {
+        var process: Process?
+        let resultTask = Task { @MainActor in
+            try await SystemBrewProcessRunner().run(
+                executableURL: URL(fileURLWithPath: "/bin/sleep"),
+                arguments: ["30"],
+                environment: ProcessInfo.processInfo.environment,
+                onStart: { process = $0 },
+                onChunk: { _ in }
+            )
+        }
+        while process == nil { await Task.yield() }
+        process?.terminate()
+
+        let result = try await resultTask.value
+
+        XCTAssertTrue(result.wasTerminatedBySignal)
     }
 
     @MainActor

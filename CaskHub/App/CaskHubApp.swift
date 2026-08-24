@@ -14,10 +14,20 @@ enum CaskHubMain {
         if let flagIndex = CommandLine.arguments.firstIndex(of: "--askpass") {
             let token = CommandLine.arguments.indices.contains(flagIndex + 1)
                 ? CommandLine.arguments[flagIndex + 1] : nil
-            Askpass.runDialog(token: token)
+            let marker = argument(after: "--askpass-cancel-marker").map {
+                URL(fileURLWithPath: $0)
+            }
+            Askpass.runDialog(token: token, cancellationMarker: marker)
         }
         NSWindow.allowsAutomaticWindowTabbing = false
         CaskHubApp.main()
+    }
+
+    private static func argument(after flag: String) -> String? {
+        guard let index = CommandLine.arguments.firstIndex(of: flag),
+              CommandLine.arguments.indices.contains(index + 1)
+        else { return nil }
+        return CommandLine.arguments[index + 1]
     }
 }
 

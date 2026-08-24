@@ -276,7 +276,10 @@ struct ResignFocusOnOutsideClick: ViewModifier {
                     if isFocused(),
                        let frameView = event.window?.contentView?.superview,
                        !(frameView.hitTest(event.locationInWindow) is NSTextView) {
-                        resign()
+                        DispatchQueue.main.async {
+                            guard isFocused() else { return }
+                            resign()
+                        }
                     }
                     return event
                 }

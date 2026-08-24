@@ -75,12 +75,15 @@ nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
         arguments: [String],
         environment: [String: String]?
     ) async -> BrewProbeResult? {
-        guard let result = ProcessCapture.capture(
+        await SystemHomebrewCommandExecutor.acquireGlobalTurn()
+        let result = ProcessCapture.capture(
             executable,
             arguments: arguments,
             environment: environment,
             mergeStderr: true
-        ) else { return nil }
+        )
+        await SystemHomebrewCommandExecutor.releaseGlobalTurn()
+        guard let result else { return nil }
         return BrewProbeResult(exitCode: result.status, output: result.output ?? "")
     }
 

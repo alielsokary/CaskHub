@@ -10,10 +10,13 @@ import Foundation
 nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case adoptVersionMismatch = "adopt-version-mismatch"
     case appConflict = "app-conflict"
+    case appBundleNotFound = "app-bundle-not-found"
     case artifactConflict = "artifact-conflict"
+    case askpassUnavailable = "askpass-unavailable"
     case binaryConflict = "binary-conflict"
     case brewAPIUnavailable = "brew-api-unavailable"
     case brewArchitectureMismatch = "brew-architecture-mismatch"
+    case brewBinaryNotFound = "brew-binary-not-found"
     case brewBusy = "brew-busy"
     case brewLockCleanupRace = "brew-lock-cleanup-race"
     case caskConflict = "cask-conflict"
@@ -30,6 +33,7 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case filesystemPermissionDenied = "filesystem-permission-denied"
     case homebrewNotWritable = "homebrew-not-writable"
     case homebrewRuntimeIncompatible = "homebrew-runtime-incompatible"
+    case incompatibleBrewPath = "incompatible-brew-path"
     case missingArtifactSource = "missing-artifact-source"
     case missingUninstallScript = "missing-uninstall-script"
     case networkFailure = "network-failure"
@@ -55,37 +59,25 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case unknownCask = "unknown-cask"
     case upgradeRefused = "upgrade-refused"
 
-    var shouldReport: Bool {
+    var isExplicitUserDecision: Bool {
+        self == .sudoDeclined
+    }
+
+    /// Conditions whose normal cause is outside CaskHub.
+    var isNormallyExternal: Bool {
         switch self {
-        case .adoptVersionMismatch,
-             .appConflict,
-             .artifactConflict,
-             .binaryConflict,
-             .brewArchitectureMismatch,
-             .brewBusy,
-             .brewLockCleanupRace,
-             .caskConflict,
-             .checksumMismatch,
-             .dmgMountBusy,
-             .dmgMountCancelled,
+        case .checksumMismatch,
              .dmgReadOnly,
-             .downloadCacheRace,
-             .filesystemPermissionDenied,
              .homebrewRuntimeIncompatible,
              .networkFailure,
-             .permissionDenied,
              .platformUnsupported,
-             .portableRubyUnavailable,
              .quarantineInvalid,
              .requireSHAPolicy,
-             .strandedCaskroomApp,
              .storageFull,
-             .sudoDeclined,
-             .sudoPolicyDenied,
-             .sudoWrongPassword:
-            false
-        default:
+             .sudoNotAdmin,
+             .sudoPolicyDenied:
             true
+        default: false
         }
     }
 }
@@ -96,15 +88,42 @@ nonisolated struct HomebrewCommandFailure: Equatable, Sendable {
     let diagnostic: String
     let kind: HomebrewFailureKind
 
-    init(arguments: [String], exitCode: Int32, diagnostic: String) {
+    init(
+        arguments: [String],
+        exitCode: Int32,
+        diagnostic: String,
+        machineIsAppleSilicon: Bool? = nil,
+        askpassUserCancelled: Bool? = nil
+    ) {
         self.arguments = arguments
         self.exitCode = exitCode
         self.diagnostic = diagnostic
-        kind = Self.classify(
+        let classified = Self.classify(
             arguments: arguments,
             exitCode: exitCode,
-            diagnostic: diagnostic
+            diagnostic: diagnostic,
+            machineIsAppleSilicon: machineIsAppleSilicon
         )
+        if askpassUserCancelled == true,
+           [.sudoDeclined, .noDiagnosticOutput, .unknown].contains(classified) {
+            kind = .sudoDeclined
+        } else if classified == .sudoDeclined && askpassUserCancelled == false {
+            kind = .askpassUnavailable
+        } else {
+            kind = classified
+        }
+    }
+
+    init(
+        arguments: [String],
+        exitCode: Int32,
+        diagnostic: String,
+        kind: HomebrewFailureKind
+    ) {
+        self.arguments = arguments
+        self.exitCode = exitCode
+        self.diagnostic = diagnostic
+        self.kind = kind
     }
 
     var subcommand: String? {
@@ -116,9 +135,22 @@ nonisolated struct HomebrewCommandFailure: Equatable, Sendable {
         return ["brewCommandFailed", subcommand, kind.rawValue]
     }
 
+    var diagnosticBucket: String? {
+        guard kind == .unknown else { return nil }
+        return HomebrewDiagnosticRedactor.bucket(diagnostic, token: caskToken)
+    }
+
+    private var caskToken: String? {
+        arguments.drop(while: { $0 != "--cask" }).dropFirst().first
+    }
+
     var rateLimitSignature: String {
-        ["brewCommandFailed", subcommand ?? "missing-subcommand", kind.rawValue]
-            .joined(separator: ":")
+        var components = stableFingerprint
+            ?? ["brewCommandFailed", "missing-subcommand", kind.rawValue]
+        if let diagnosticBucket {
+            components.append("bucket-\(diagnosticBucket)")
+        }
+        return components.joined(separator: ":")
     }
 }
 
@@ -126,9 +158,16 @@ nonisolated extension HomebrewCommandFailure {
     static func classify(
         arguments: [String],
         exitCode: Int32?,
-        diagnostic: String
+        diagnostic: String,
+        machineIsAppleSilicon: Bool? = nil
     ) -> HomebrewFailureKind {
         let text = diagnostic.lowercased()
+        if runtimeArchitectureContradictsMachine(
+            text,
+            machineIsAppleSilicon: machineIsAppleSilicon
+        ) {
+            return .brewArchitectureMismatch
+        }
         return privilegeKind(text: text, diagnostic: diagnostic)
             ?? processKind(text: text, exitCode: exitCode)
             ?? installerKind(text: text)
@@ -138,6 +177,18 @@ nonisolated extension HomebrewCommandFailure {
             ?? environmentKind(text: text)
             ?? downloadKind(text: text)
             ?? (text.isBlank ? .noDiagnosticOutput : .unknown)
+    }
+
+    private static func runtimeArchitectureContradictsMachine(
+        _ text: String,
+        machineIsAppleSilicon: Bool?
+    ) -> Bool {
+        guard text.contains("depends on hardware architecture"),
+              let machineIsAppleSilicon
+        else { return false }
+        let brewReportsIntel = text.contains("but you are running {type: :intel")
+        let brewReportsARM = text.contains("but you are running {type: :arm")
+        return machineIsAppleSilicon ? brewReportsIntel : brewReportsARM
     }
 
     private struct Match {

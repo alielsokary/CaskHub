@@ -165,7 +165,9 @@ final class AdoptionViewRenderTests: XCTestCase {
     @MainActor
     func test_cask_action_alerts_render_with_pending_permission_and_error() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-alerts"))
-        service.permissionProbe = { .denied }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .denied, evidence: .target)
+        }
         let cask = makeCask("chrome", appNames: ["Chrome.app"])
         let plan = CaskAdoptionPlan(
             artifact: .applicationBundle,
@@ -177,7 +179,11 @@ final class AdoptionViewRenderTests: XCTestCase {
             blockingInstalledCask: nil
         )
         service.operationStore.send(
-            .awaitPermission(CaskAdoptionRequest(cask: cask, plan: plan)),
+            .awaitPermission(CaskAdoptionRequest(
+                cask: cask,
+                intent: .planned,
+                plan: plan
+            )),
             for: cask.token
         )
 
@@ -311,7 +317,9 @@ final class AdoptionViewRenderTests: XCTestCase {
             $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
             $0.brewVersionProvider = { "test" }
         }
-        service.permissionProbe = { .denied }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .denied, evidence: .target)
+        }
         let failure = CaskOperationFailure(
             kind: .brewCommand,
             message: "short",

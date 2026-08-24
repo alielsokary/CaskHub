@@ -802,6 +802,16 @@
         }
       }
     },
+    "CaskHub couldn't prepare the administrator password prompt. Restart CaskHub and try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 无法准备管理员密码提示。请重新启动 CaskHub，然后重试。"
+          }
+        }
+      }
+    },
     "CaskHub Website" : {
 
     },
