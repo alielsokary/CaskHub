@@ -135,7 +135,6 @@ struct CaskHubApp: App {
             Settings {
                 SettingsView(selection: $settingsSection)
                     .environment(updaterService)
-                    .environment(imageCache)
                     .environment(localHomebrew)
             }
         }
