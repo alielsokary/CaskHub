@@ -92,7 +92,7 @@ struct SidebarView: View {
                 Spacer(minLength: 4)
                 if badge > 0 {
                     CountBadge(count: badge)
-                } else if let count {
+                } else if let count, count > 0 {
                     Text("\(count)")
                         .font(CHType.statusMono)
                         .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextFaint)

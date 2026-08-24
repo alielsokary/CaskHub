@@ -209,10 +209,7 @@ final class SettingsViewTests: XCTestCase {
     func test_settings_tabs_render() {
         render(AppearanceSettingsView(), width: 460, height: 480)
         render(PrivacySettingsView(), width: 460, height: 480)
-        render(
-            GeneralSettingsView()
-                .environment(ImageCacheService()),
-            width: 460, height: 480)
+        render(GeneralSettingsView(), width: 460, height: 480)
         render(
             HomebrewSettingsView()
                 .environment(LocalHomebrewService()),
