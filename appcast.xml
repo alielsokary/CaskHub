@@ -3,31 +3,29 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.7.1</title>
-            <pubDate>Thu, 13 Aug 2026 15:52:48 +0000</pubDate>
-            <sparkle:version>591</sparkle:version>
-            <sparkle:shortVersionString>0.7.1</sparkle:shortVersionString>
+            <title>0.8.0</title>
+            <pubDate>Mon, 24 Aug 2026 22:36:58 +0000</pubDate>
+            <sparkle:version>624</sparkle:version>
+            <sparkle:shortVersionString>0.8.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Added Homebrew path selection in Settings: Apple Silicon, Intel, or a custom location
+- Added the Health page: run a Homebrew checkup, update Homebrew, sync your collection, and reclaim disk space from caches, old versions, and orphaned dependencies
+- Added Brewfile export and import in Shelf Setup to back up and restore your app shelf
 
 ### Improvements
 
-- Made usage analytics and crash reporting consent independent, and search text is never collected
-- Clearer Homebrew error messages, with a guided Update Homebrew fix when your Homebrew is too old to read a cask
+- Homebrew commands now run one at a time, preventing conflicting operations
+- Sidebar hides zero counts for Installed, Updates, and Adopt Apps
+- Cleaner Settings window, with the icon cache now managed from the Health page
 
 ### Bug Fixes
 
-- Fixed adopting apps whose installed version differs from the Homebrew cask, including package-based apps like OneDrive
-- Fixed cask conflicts failing with a generic error — CaskHub now names the conflicting installed cask up front
-- Fixed ARM-only casks failing to install when an Intel Homebrew was selected on Apple Silicon
-- Fixed search text carrying over when switching pages from the sidebar
-- Fixed false hang reports while CaskHub was inactive or showing a dialog
+- Fixed app adoption confirming against an outdated list of installed apps
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.7.1/CaskHub-0.7.1.zip" length="6738790" type="application/octet-stream" sparkle:edSignature="ArK/8WbnhrEXOZlrc1KyM+9wFNJTcaPPBteKJntTMjxjy86sJndGk6dEeDl9E2rcdbatm4Y3F3XtldcWwnPgDA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.0/CaskHub-0.8.0.zip" length="7084935" type="application/octet-stream" sparkle:edSignature="Cz6B4l8fFveTg7SSACJLnnada4E22QTsmWTvwSwlerxqpLBQaFQtCi0Yf3y+MnEViLa8uuU0Q37tWzEI8QRnBw=="/>
         </item>
     </channel>
 </rss>
