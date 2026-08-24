@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-08-13",
-  "totalCasks": 3869,
+  "generatedDate": "2026-08-24",
+  "totalCasks": 3890,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -620,6 +620,10 @@
       "primary": "utilities",
       "secondary": []
     },
+    "amethyst-nostr": {
+      "primary": "communication",
+      "secondary": []
+    },
     "amiberry": {
       "primary": "games",
       "secondary": []
@@ -656,6 +660,12 @@
       "primary": "scienceEducation",
       "secondary": []
     },
+    "anarlog": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
+    },
     "anchor-wallet": {
       "primary": "financeCrypto",
       "secondary": []
@@ -675,6 +685,10 @@
       "secondary": []
     },
     "android-ndk": {
+      "primary": "developerTools",
+      "secondary": []
+    },
+    "android-performance-analyzer": {
       "primary": "developerTools",
       "secondary": []
     },
@@ -1377,6 +1391,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "bb": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "bbackupp": {
       "primary": "utilities",
       "secondary": []
@@ -1808,6 +1828,10 @@
     },
     "brainfm": {
       "primary": "utilities",
+      "secondary": []
+    },
+    "bramble": {
+      "primary": "securityPrivacy",
       "secondary": []
     },
     "brave-browser": {
@@ -2540,6 +2564,10 @@
       "primary": "videoMedia",
       "secondary": []
     },
+    "clickhouse": {
+      "primary": "developerTools",
+      "secondary": []
+    },
     "clickshare": {
       "primary": "utilities",
       "secondary": [
@@ -2938,6 +2966,10 @@
     },
     "contexts": {
       "primary": "utilities",
+      "secondary": []
+    },
+    "contour": {
+      "primary": "developerTools",
       "secondary": []
     },
     "contraste": {
@@ -3936,6 +3968,13 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "ds4-control": {
+      "primary": "menuBar",
+      "secondary": [
+        "ai",
+        "productivity"
+      ]
+    },
     "duckduckgo": {
       "primary": "browsers",
       "secondary": []
@@ -4051,6 +4090,10 @@
       "secondary": [
         "ai"
       ]
+    },
+    "easydmg": {
+      "primary": "utilities",
+      "secondary": []
     },
     "easyfind": {
       "primary": "utilities",
@@ -4444,7 +4487,7 @@
       "primary": "other",
       "secondary": []
     },
-    "eve-launcher": {
+    "eve-online": {
       "primary": "games",
       "secondary": []
     },
@@ -5382,6 +5425,12 @@
         "ai"
       ]
     },
+    "geektool": {
+      "primary": "utilities",
+      "secondary": [
+        "designGraphics"
+      ]
+    },
     "gemini": {
       "primary": "utilities",
       "secondary": []
@@ -5464,6 +5513,10 @@
     },
     "ghost-browser": {
       "primary": "browsers",
+      "secondary": []
+    },
+    "ghost-downloader": {
+      "primary": "utilities",
       "secondary": []
     },
     "ghostpepper": {
@@ -5569,6 +5622,12 @@
     },
     "glaze-app": {
       "primary": "designGraphics",
+      "secondary": [
+        "ai"
+      ]
+    },
+    "glean": {
+      "primary": "productivity",
       "secondary": [
         "ai"
       ]
@@ -7157,6 +7216,12 @@
     "keystore-explorer": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "keyty": {
+      "primary": "utilities",
+      "secondary": [
+        "videoMedia"
+      ]
     },
     "kicad": {
       "primary": "developerTools",
@@ -8976,6 +9041,12 @@
       "primary": "financeCrypto",
       "secondary": []
     },
+    "monet": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "moneydance": {
       "primary": "financeCrypto",
       "secondary": []
@@ -9003,6 +9074,12 @@
     "mongodb-realm-studio": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "mongrel": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "monitorcontrol": {
       "primary": "utilities",
@@ -10476,6 +10553,12 @@
       "primary": "scienceEducation",
       "secondary": []
     },
+    "owlocr": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "owncloud": {
       "primary": "cloudStorage",
       "secondary": []
@@ -10798,6 +10881,13 @@
       "primary": "productivity",
       "secondary": [
         "ai"
+      ]
+    },
+    "petdex": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai",
+        "utilities"
       ]
     },
     "petrichor": {
@@ -11660,6 +11750,12 @@
         "developerTools"
       ]
     },
+    "qmk-toolbox": {
+      "primary": "utilities",
+      "secondary": [
+        "developerTools"
+      ]
+    },
     "qobuz": {
       "primary": "audioMusic",
       "secondary": []
@@ -12280,6 +12376,13 @@
     "rive": {
       "primary": "designGraphics",
       "secondary": []
+    },
+    "riverscript": {
+      "primary": "productivity",
+      "secondary": [
+        "ai",
+        "audioMusic"
+      ]
     },
     "riverside-studio": {
       "primary": "audioMusic",
@@ -13089,6 +13192,10 @@
       "primary": "securityPrivacy",
       "secondary": []
     },
+    "sina-finance": {
+      "primary": "financeCrypto",
+      "secondary": []
+    },
     "singlebox": {
       "primary": "browsers",
       "secondary": []
@@ -13147,6 +13254,13 @@
     "sketchup": {
       "primary": "designGraphics",
       "secondary": []
+    },
+    "skills-manager": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai",
+        "productivity"
+      ]
     },
     "skim": {
       "primary": "productivity",
@@ -14848,6 +14962,12 @@
         "ai"
       ]
     },
+    "topcat": {
+      "primary": "scienceEducation",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "topnotch": {
       "primary": "menuBar",
       "secondary": []
@@ -15003,10 +15123,6 @@
     },
     "tripmode": {
       "primary": "utilities",
-      "secondary": []
-    },
-    "tritium": {
-      "primary": "productivity",
       "secondary": []
     },
     "trivial": {
@@ -16759,7 +16875,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.08.13",
+  "releaseTag": "caskflow-v2026.08.24",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -16878,6 +16994,7 @@
     "amazon-photos",
     "amazon-workspaces",
     "amethyst",
+    "amethyst-nostr",
     "amiberry",
     "amical",
     "amie",
@@ -16886,10 +17003,12 @@
     "amore",
     "ampps",
     "anaconda",
+    "anarlog",
     "anchor-wallet",
     "android-commandlinetools",
     "android-file-transfer",
     "android-ndk",
+    "android-performance-analyzer",
     "android-platform-tools",
     "android-studio",
     "androidtool",
@@ -17036,6 +17155,7 @@
     "battery",
     "battery-buddy",
     "bazecor",
+    "bb",
     "bbackupp",
     "bbedit",
     "bcut",
@@ -17136,6 +17256,7 @@
     "box-drive",
     "boxy-suite",
     "brainfm",
+    "bramble",
     "brave-browser",
     "brave-browser@beta",
     "brave-browser@nightly",
@@ -17368,6 +17489,7 @@
     "console",
     "context",
     "contexts",
+    "contour",
     "contraste",
     "cookie",
     "copilot-for-xcode",
@@ -17571,6 +17693,7 @@
     "dropshelf",
     "dropzone",
     "drovio",
+    "ds4-control",
     "duckduckgo",
     "duefocus",
     "duet",
@@ -17595,6 +17718,7 @@
     "easy-move+resize",
     "easydevo",
     "easydict",
+    "easydmg",
     "easyfind",
     "ebmac",
     "ecamm-live",
@@ -17681,6 +17805,7 @@
     "eusamanager",
     "ev3-classroom",
     "eve-launcher",
+    "eve-online",
     "evernote",
     "exactscan",
     "excalidrawz",
@@ -17883,6 +18008,7 @@
     "geburtstagschecker",
     "geekbench",
     "geekbench-ai",
+    "geektool",
     "gemini",
     "geneious-prime",
     "general-software-fresh",
@@ -17928,6 +18054,7 @@
     "gitup-app",
     "gitx",
     "glaze-app",
+    "glean",
     "glide",
     "glide-browser",
     "glkvm",
@@ -17987,6 +18114,7 @@
     "grid",
     "grids",
     "gridtracker2",
+    "grok-bot",
     "groove-omnidialer",
     "grs-bluewallet",
     "guilded",
@@ -18272,6 +18400,7 @@
     "keyscreen",
     "keysmith",
     "keystore-explorer",
+    "keyty",
     "kicad",
     "kid3",
     "kigb",
@@ -18661,6 +18790,7 @@
     "monal",
     "monarch",
     "monero-wallet",
+    "monet",
     "moneydance",
     "moneymanager",
     "moneymoney",
@@ -18668,6 +18798,7 @@
     "mongodb-compass-isolated-edition",
     "mongodb-compass-readonly",
     "mongodb-realm-studio",
+    "mongrel",
     "monitorcontrol",
     "mono-mdk",
     "monocle-app",
@@ -18987,6 +19118,7 @@
     "ovice",
     "ovito",
     "ovito-pro",
+    "owlocr",
     "owncloud",
     "owocr",
     "oxygen-xml-developer",
@@ -19058,6 +19190,7 @@
     "perimeter81",
     "permute",
     "perplexity",
+    "petdex",
     "petrichor",
     "pgadmin4",
     "pgen",
@@ -19245,6 +19378,7 @@
     "qlab",
     "qlc+",
     "qlmarkdown",
+    "qmk-toolbox",
     "qobuz",
     "qobuz-downloader",
     "qq",
@@ -19378,6 +19512,7 @@
     "rippling",
     "ripx",
     "rive",
+    "riverscript",
     "riverside-studio",
     "rivet",
     "rize",
@@ -19557,6 +19692,7 @@
     "simpletex",
     "simplex",
     "simplysign",
+    "sina-finance",
     "singlebox",
     "singlecrystal",
     "sip-app",
@@ -19571,6 +19707,7 @@
     "sizzy",
     "sketch",
     "sketchup",
+    "skills-manager",
     "skim",
     "skint",
     "sky",
@@ -19728,6 +19865,7 @@
     "sublime-text",
     "submariner",
     "subsurface",
+    "subtitle-edit",
     "subtitle-studio",
     "sunlogincontrol",
     "sunsama",
@@ -19931,6 +20069,7 @@
     "topaz-gigapixel",
     "topaz-photo",
     "topaz-video",
+    "topcat",
     "topnotch",
     "tor-browser",
     "torguard",
