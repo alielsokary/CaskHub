@@ -67,7 +67,6 @@ func makeCask(
         artifacts.append(ArtifactStanza(
             keys: ["binary"],
             binaryNames: binaryNames ?? [],
-            binarySourcePaths: binarySourcePaths ?? [],
             adoptionSourcePaths: binarySourcePaths ?? []
         ))
     }
@@ -158,7 +157,10 @@ func updateInstallationSnapshot(
         snapshot: service.installationSnapshot
     )
     update(&fixture)
-    service.commitInstallationSnapshot(fixture.makeSnapshot())
+    let snapshot = fixture.makeSnapshot()
+    service.commitInstallationSnapshot(snapshot)
+    (service.softwareScanner as? MutableInstalledSoftwareScanner)?
+        .replace(with: snapshot)
 }
 
 @MainActor
@@ -288,12 +290,13 @@ func makeSUT(
 
 @MainActor
 func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
-                      categories: [String: CategoryDefinition]) -> CategoryService {
+                      categories: [String: CategoryDefinition],
+                      releaseTag: String? = nil) -> CategoryService {
     let service = CategoryService()
     service.applyData(CaskCategoryData(
         version: 1,
         generatedDate: "2026-07-11",
-        releaseTag: nil,
+        releaseTag: releaseTag,
         categories: categories,
         tokenToCategory: tokenToCategory,
         iconTokens: nil
@@ -303,14 +306,68 @@ func seededCategories(_ tokenToCategory: [String: TokenCategoryMapping],
 
 @MainActor
 final class RecordingApplicationLauncher: ApplicationLaunching {
-    private(set) var openedURLs: [URL] = []
-
-    var lastOpenedURL: URL? {
-        openedURLs.last
-    }
+    private(set) var lastOpenedURL: URL?
 
     func open(_ url: URL) {
-        openedURLs.append(url)
+        lastOpenedURL = url
+    }
+}
+
+nonisolated final class RecordingMaintenanceProbe: MaintenanceProbing, @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedResults: [String: BrewProbeResult] = [:]
+    private let storedDefault = BrewProbeResult(exitCode: 0, output: "")
+    private var storedSizes: [String: Int64] = [:]
+    private var storedCommands: [[String]] = []
+    private var storedEnvironments: [[String: String]?] = []
+    private var storedRemoved: [URL] = []
+    private var storedInstallers: [CachedInstaller] = []
+
+    var resultsByFirstArgument: [String: BrewProbeResult] {
+        get { lock.withLock { storedResults } }
+        set { lock.withLock { storedResults = newValue } }
+    }
+
+    var directorySizes: [String: Int64] {
+        get { lock.withLock { storedSizes } }
+        set { lock.withLock { storedSizes = newValue } }
+    }
+
+    var cachedInstallersResult: [CachedInstaller] {
+        get { lock.withLock { storedInstallers } }
+        set { lock.withLock { storedInstallers = newValue } }
+    }
+
+    var commands: [[String]] { lock.withLock { storedCommands } }
+    var environments: [[String: String]?] { lock.withLock { storedEnvironments } }
+    var removedDirectories: [URL] { lock.withLock { storedRemoved } }
+
+    func run(
+        _ executable: URL,
+        arguments: [String],
+        environment: [String: String]?
+    ) async -> BrewProbeResult? {
+        lock.withLock {
+            storedCommands.append([executable.lastPathComponent] + arguments)
+            storedEnvironments.append(environment)
+            if let first = arguments.first, let result = storedResults[first] {
+                return result
+            }
+            return storedDefault
+        }
+    }
+
+    func directorySize(at url: URL) async -> Int64 {
+        lock.withLock { storedSizes[url.lastPathComponent] ?? 0 }
+    }
+
+    func removeDirectoryContents(at url: URL) async -> Bool {
+        lock.withLock { storedRemoved.append(url) }
+        return true
+    }
+
+    func cachedInstallers(at cacheURL: URL) async -> [CachedInstaller] {
+        lock.withLock { storedInstallers }
     }
 }
 
@@ -369,6 +426,7 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
     var startedWith: [SentryConsent] = []
     var consentChanges: [SentryConsent] = []
     var capturedErrors: [Error] = []
+    var capturedErrorTags: [[String: String]] = []
     var breadcrumbs: [(message: String, data: [String: String])] = []
     var tags: [String: String] = [:]
     var spans: [SpanRecord] = []
@@ -390,8 +448,9 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
         consentChanges.append(consent)
     }
 
-    func capture(_ error: Error) {
+    func capture(_ error: Error, tags: [String: String]) {
         capturedErrors.append(error)
+        capturedErrorTags.append(tags)
     }
 
     func setTag(_ key: String, value: String) {

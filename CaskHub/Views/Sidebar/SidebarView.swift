@@ -92,7 +92,7 @@ struct SidebarView: View {
                 Spacer(minLength: 4)
                 if badge > 0 {
                     CountBadge(count: badge)
-                } else if let count {
+                } else if let count, count > 0 {
                     Text("\(count)")
                         .font(CHType.statusMono)
                         .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextFaint)
@@ -128,7 +128,17 @@ struct SidebarView: View {
         selection: .constant(.discover(.browse)),
         categoryService: {
             let service = CategoryService()
-            service.loadCategories()
+            service.applyData(CaskCategoryData(
+                version: 1,
+                generatedDate: "",
+                releaseTag: nil,
+                categories: [
+                    "productivity": CategoryDefinition(displayName: "Productivity", icon: "checklist"),
+                    "developerTools": CategoryDefinition(displayName: "Developer Tools", icon: "hammer")
+                ],
+                tokenToCategory: [:],
+                iconTokens: nil
+            ))
             return service
         }(),
         updatesCount: 1,

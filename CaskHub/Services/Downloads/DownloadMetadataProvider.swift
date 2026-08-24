@@ -12,11 +12,7 @@ nonisolated enum DownloadSizeResult: Equatable, Sendable {
     case unknown
 }
 
-nonisolated protocol DownloadMetadataProviding: Sendable {
-    func downloadSize(for urlString: String?) async -> DownloadSizeResult
-}
-
-actor DownloadMetadataProvider: DownloadMetadataProviding {
+actor DownloadMetadataProvider {
     typealias ContentLengthLoader = @Sendable (URL) async -> Int64?
 
     static let shared = DownloadMetadataProvider()
@@ -57,11 +53,5 @@ actor DownloadMetadataProvider: DownloadMetadataProviding {
               let total = contentRange.split(separator: "/").last.flatMap({ Int64($0) })
         else { return nil }
         return total
-    }
-}
-
-nonisolated struct UnavailableDownloadMetadataProvider: DownloadMetadataProviding {
-    func downloadSize(for urlString: String?) async -> DownloadSizeResult {
-        .unknown
     }
 }

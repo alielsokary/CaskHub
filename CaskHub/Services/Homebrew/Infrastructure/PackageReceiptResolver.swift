@@ -163,18 +163,7 @@ nonisolated struct PackageReceiptResolver: Sendable {
     }
 
     static func identifier(_ identifier: String, matches pattern: String) -> Bool {
-        guard pattern.contains("*") || pattern.contains("?") else {
-            return identifier == pattern
-        }
-        var expression = NSRegularExpression.escapedPattern(for: pattern)
-        expression = expression
-            .replacingOccurrences(of: "\\*", with: ".*")
-            .replacingOccurrences(of: "\\?", with: ".")
-        guard let regex = try? NSRegularExpression(pattern: "^\(expression)$") else {
-            return false
-        }
-        let range = NSRange(identifier.startIndex..., in: identifier)
-        return regex.firstMatch(in: identifier, range: range) != nil
+        fnmatch(pattern, identifier, 0) == 0
     }
 
     static func appBundleNames(inPackageFileList output: String) -> Set<String> {
@@ -208,20 +197,10 @@ nonisolated struct PackageReceiptResolver: Sendable {
     }
 
     private static func pkgutilOutput(arguments: [String]) -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/pkgutil")
-        process.arguments = arguments
-        let output = Pipe()
-        process.standardOutput = output
-        process.standardError = FileHandle.nullDevice
-        do {
-            try process.run()
-        } catch {
-            return nil
-        }
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
-        return String(data: data, encoding: .utf8)
+        guard let result = ProcessCapture.capture(
+            URL(fileURLWithPath: "/usr/sbin/pkgutil"),
+            arguments: arguments
+        ), result.status == 0 else { return nil }
+        return result.output
     }
 }

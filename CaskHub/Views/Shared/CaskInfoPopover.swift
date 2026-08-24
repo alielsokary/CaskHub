@@ -10,7 +10,7 @@ import SwiftUI
 struct CaskInfoPopover: View {
     let cask: Cask
     let category: CaskCategoryPresentation?
-    let downloadMetadataProvider: any DownloadMetadataProviding
+    let downloadMetadataProvider: DownloadMetadataProvider
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var downloadSize: DownloadSizeResult?
@@ -18,8 +18,7 @@ struct CaskInfoPopover: View {
     init(
         cask: Cask,
         category: CaskCategoryPresentation?,
-        downloadMetadataProvider: any DownloadMetadataProviding =
-            DownloadMetadataProvider.shared
+        downloadMetadataProvider: DownloadMetadataProvider = .shared
     ) {
         self.cask = cask
         self.category = category
@@ -108,7 +107,7 @@ struct CaskInfoPopover: View {
             mainName: "Security & Privacy",
             subcategoryNames: ["Productivity"]
         ),
-        downloadMetadataProvider: UnavailableDownloadMetadataProvider()
+        downloadMetadataProvider: DownloadMetadataProvider { _ in nil }
     )
     .environment(LocalHomebrewService())
 }

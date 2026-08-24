@@ -56,18 +56,13 @@ final class CaskOperationStore {
         updateAllProgress = nil
     }
 
-    func canBeginOperation(for token: String) -> Bool {
-        guard let state = boxes[token]?.state else { return true }
-        if case .running = state { return false }
-        return true
-    }
-
     func canBeginOperation(_ action: CaskAction, for token: String) -> Bool {
         if action == .updatingHomebrew {
             return !hasActiveOperations
         }
         guard !isUpdatingHomebrew else { return false }
-        return canBeginOperation(for: token)
+        if case .running = boxes[token]?.state { return false }
+        return true
     }
 
     var isUpdatingHomebrew: Bool {

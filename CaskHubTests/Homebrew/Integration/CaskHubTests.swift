@@ -6,6 +6,8 @@
 //
 
 @testable import CaskHub
+import AppKit
+import Observation
 import XCTest
 
 final class CaskHubTests: XCTestCase {
@@ -287,18 +289,16 @@ final class CaskHubTests: XCTestCase {
     @MainActor
     func test_adopt_preflight_waits_for_app_management_permission() async throws {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("preflight"))
-        service.permissionProbe = { .denied }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .denied, evidence: .target)
+        }
         let adoptCask = makeCask(
             "chatgpt-classic",
             appNames: ["ChatGPT Classic.app"]
         )
         let replaceCask = makeCask("canva", appNames: ["Canva.app"])
-        let adoptApplication = externalApplication(
-            named: "ChatGPT Classic.app", version: "1.0"
-        )
-        let replaceApplication = externalApplication(
-            named: "Canva.app", version: "2.0"
-        )
+        let adoptApplication = makeDetectedApplication("ChatGPT Classic.app", version: "1.0")
+        let replaceApplication = makeDetectedApplication("Canva.app", version: "2.0")
         updateInstallationSnapshot(of: service) {
             $0.externalAppNames = [
                 adoptApplication.bundleName,
@@ -328,12 +328,48 @@ final class CaskHubTests: XCTestCase {
         )
 
         // Returning to the app while still denied keeps the requests pending.
-        service.resumePendingAdoptions()
-        try await Task.sleep(for: .milliseconds(100))
+        await service.resumePendingAdoptions()
         XCTAssertEqual(service.operationStore.pendingPermissions.count, 2)
 
-        service.cancelPermissionRequest(token: "canva")
+        service.clearError(for: "canva")
         XCTAssertNil(service.operationStore.pendingPermissions["canva"])
+    }
+
+    @MainActor
+    func test_activation_notification_refreshes_and_resumes_pending_adoption() async {
+        let scanner = MutableInstalledSoftwareScanner()
+        let service = LocalHomebrewService(
+            defaults: makeScratchDefaults("activation-adoption")
+        ) {
+            $0.softwareScanner = scanner
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+            $0.brewVersionProvider = { "test" }
+        }
+        let cask = makeCask("activation-adoption", appNames: ["Activation.app"])
+        seedExternalInstallation(of: cask, version: cask.displayVersion, in: service)
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .denied, evidence: .target)
+        }
+        await service.requestAdoption(cask)
+        XCTAssertNotNil(service.operationStore.pendingPermissions[cask.token])
+
+        let resumed = expectation(description: "pending adoption resumed")
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .granted, evidence: .target)
+        }
+        withObservationTracking {
+            _ = service.operationStore.state(for: cask.token)
+        } onChange: {
+            resumed.fulfill()
+        }
+        NotificationCenter.default.post(
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
+
+        await fulfillment(of: [resumed], timeout: 1)
+        XCTAssertNotNil(service.operationStore.state(for: cask.token)?.adoptionRequest)
+        XCTAssertTrue(service.operationStore.pendingPermissions.isEmpty)
     }
 
     func test_app_management_denial_maps_to_permission_guidance() {
@@ -356,7 +392,7 @@ final class CaskHubTests: XCTestCase {
         XCTAssertTrue(
             LocalHomebrewError.brewCommandFailed(
                 args: ["install", "--cask", "tool"], exitCode: 1, stderr: unrelated
-            ).shouldReport
+            ).isExplicitUserDecision == false
         )
         XCTAssertEqual(classify([], "curl: (6) Could not resolve host"), .networkFailure)
     }
@@ -483,17 +519,4 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["google-chrome"])
     }
 
-    private func externalApplication(
-        named bundleName: String,
-        version: String
-    ) -> DetectedApplication {
-        DetectedApplication(
-            url: URL(fileURLWithPath: "/Applications/\(bundleName)"),
-            bundleName: bundleName,
-            bundleIdentifier: "com.example.\(bundleName)",
-            version: version,
-            isMacAppStore: false,
-            isDirectlyInApplicationDirectory: true
-        )
-    }
 }

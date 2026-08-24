@@ -53,7 +53,7 @@ struct SettingsView: View {
                 }
                 .tag(SettingsSection.about)
         }
-        .frame(width: 460, height: 480)
+        .frame(width: 650, height: 560)
     }
 }
 
@@ -121,13 +121,8 @@ struct AboutSettingsView: View {
 }
 
 struct GeneralSettingsView: View {
-    @Environment(ImageCacheService.self) private var imageCache
-    @State private var settingsModel: GeneralSettingsModel
+    @State private var settingsModel = GeneralSettingsModel()
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
-
-    init(settingsModel: GeneralSettingsModel? = nil) {
-        _settingsModel = State(initialValue: settingsModel ?? GeneralSettingsModel())
-    }
 
     var body: some View {
         Form {
@@ -160,16 +155,6 @@ struct GeneralSettingsView: View {
                 Text(.settingsAppManagementDescription)
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            }
-            Section("Storage") {
-                LabeledContent("Clear cached app icons") {
-                    Button("Clear Cache") {
-                        Task { await imageCache.clearCache() }
-                    }
-                }
-                Text(.settingsStorageClearIconCache)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -397,6 +382,5 @@ struct PrivacySettingsView: View {
 #Preview {
     SettingsView(selection: .constant(.general))
         .environment(UpdaterService())
-        .environment(ImageCacheService())
         .environment(LocalHomebrewService())
 }

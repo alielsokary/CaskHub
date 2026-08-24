@@ -21,22 +21,36 @@ extension LocalHomebrewService {
         token: String,
         args: [String],
         origin: CaskActionOrigin = .individual,
-        environmentOverrides: [String: String] = [:],
-        recoverIf: (() -> Bool)? = nil
+        context: HomebrewMutationContext = .none
     ) async throws {
-        try await mutationCoordinator.run(
-            HomebrewMutationRequest(
+        let previousInstallation = installationSnapshot.installedCasks[token]
+        try await mutationCoordinator.runSequence(
+            HomebrewMutationSequenceRequest(
                 action: action,
                 token: token,
                 displayName: displayName(for: token),
-                arguments: args,
                 origin: origin,
-                environmentOverrides: environmentOverrides
+                steps: [
+                    HomebrewMutationStep(
+                        arguments: args,
+                        environmentOverrides: [:],
+                        cancellable: action == .installing,
+                        recoverIf: nil,
+                        recoveryBehavior: .finishMutation
+                    )
+                ],
+                context: context
             ),
             callbacks: HomebrewMutationCallbacks(
                 refresh: { [self] in await refresh() },
                 strandedCopyExists: { [self] in hasStrandedCopy(token: token) },
-                recoverIf: recoverIf
+                postconditionSatisfied: { [self] in
+                    mutationPostconditionSatisfied(
+                        action: action,
+                        token: token,
+                        previousInstallation: previousInstallation
+                    )
+                }
             )
         )
     }
@@ -46,15 +60,18 @@ extension LocalHomebrewService {
         token: String,
         steps: [HomebrewMutationStep],
         origin: CaskActionOrigin,
-        displayName: String? = nil
+        displayName: String? = nil,
+        context: HomebrewMutationContext = .none
     ) async throws {
+        let previousInstallation = installationSnapshot.installedCasks[token]
         try await mutationCoordinator.runSequence(
             HomebrewMutationSequenceRequest(
                 action: action,
                 token: token,
                 displayName: displayName ?? self.displayName(for: token),
                 origin: origin,
-                steps: steps
+                steps: steps,
+                context: context
             ),
             callbacks: HomebrewMutationCallbacks(
                 refresh: { [self] in
@@ -62,7 +79,13 @@ extension LocalHomebrewService {
                     await refresh()
                 },
                 strandedCopyExists: { [self] in hasStrandedCopy(token: token) },
-                recoverIf: nil
+                postconditionSatisfied: { [self] in
+                    mutationPostconditionSatisfied(
+                        action: action,
+                        token: token,
+                        previousInstallation: previousInstallation
+                    )
+                }
             )
         )
     }
@@ -77,5 +100,23 @@ extension LocalHomebrewService {
             token: token,
             fileManager: fileManager
         )
+    }
+
+    private func mutationPostconditionSatisfied(
+        action: CaskAction,
+        token: String,
+        previousInstallation: LocalCaskInstallation?
+    ) -> Bool {
+        let current = installationSnapshot.installedCasks[token]
+        switch action {
+        case .installing, .adopting, .repairing:
+            return current?.isZombie == false
+        case .uninstalling:
+            return current == nil
+        case .updating:
+            return current?.isZombie == false && current != previousInstallation
+        case .opening, .updatingHomebrew, .queued:
+            return false
+        }
     }
 }

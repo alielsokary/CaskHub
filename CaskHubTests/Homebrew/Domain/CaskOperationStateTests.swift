@@ -254,6 +254,7 @@ final class CaskOperationStateTests: XCTestCase {
         let cask = Cask.preview(token: "sample", version: "1.0")
         return CaskAdoptionRequest(
             cask: cask,
+            intent: .planned,
             plan: CaskAdoptionPlan(
                 artifact: .applicationBundle,
                 versionRelationship: .same,

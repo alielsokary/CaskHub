@@ -157,9 +157,9 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertTrue(spy.consentChanges.isEmpty)
     }
 
-    func test_environmental_errors_are_never_captured() {
+    func test_capture_does_not_guess_homebrew_operation_policy() {
         CrashReporter.capture(LocalHomebrewError.brewBinaryNotFound)
-        XCTAssertTrue(spy.capturedErrors.isEmpty)
+        XCTAssertEqual(spy.capturedErrors.count, 1)
     }
 
     func test_disk_full_and_truncated_payloads_are_never_captured() {
@@ -195,20 +195,11 @@ final class CrashReporterTests: XCTestCase {
         )
     }
 
-    func test_recoverable_brew_failures_are_never_captured() {
-        let architectureFailure = """
-        This cask depends on hardware architecture being one of \
-        [{type: :arm, bits: 64}], but you are running {type: :intel, bits: 64}.
-        """
+    func test_capture_does_not_apply_homebrew_operation_policy() {
         let failures = [
-            "It seems the existing App is different from the one being installed.",
-            "Error: zed: It seems there is already an App at "
-                + "'/opt/homebrew/Caskroom/zed/1.10.3/Zed.app'.",
-            "chmod: /Applications/Example.app/Contents/MacOS/example: Operation not permitted",
-            "SHA256 mismatch",
-            "Download failed: curl: (6) Could not resolve host: example.com",
-            "Error: zen-privacy: Cask 'zen-privacy' conflicts with 'zen'.",
-            architectureFailure
+            "sudo: no password was provided",
+            "sudo: 3 incorrect password attempts",
+            "hdiutil: attach canceled"
         ]
         for stderr in failures {
             CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
@@ -217,10 +208,10 @@ final class CrashReporterTests: XCTestCase {
                 stderr: stderr
             ))
         }
-        XCTAssertTrue(spy.capturedErrors.isEmpty)
+        XCTAssertEqual(spy.capturedErrors.count, 3)
     }
 
-    func test_conflicts_with_recovery_buttons_are_no_longer_captured() {
+    func test_non_user_brew_failures_reach_the_provider_when_requested() {
         CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "x"],
             exitCode: 1,
@@ -231,15 +222,13 @@ final class CrashReporterTests: XCTestCase {
             exitCode: 1,
             stderr: "Error: It seems there is already an App at '/Applications/X.app'."
         ))
-        XCTAssertTrue(spy.capturedErrors.isEmpty)
-
         CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "x"],
             exitCode: 1,
             stderr: "Error: x: Download failed on Cask 'x' with message: "
                 + "curl: (22) The requested URL returned error: 404"
         ))
-        XCTAssertEqual(spy.capturedErrors.count, 1, "classes without a recovery path still report")
+        XCTAssertEqual(spy.capturedErrors.count, 3)
     }
 
     // MARK: - Fingerprinting
@@ -420,7 +409,7 @@ final class CrashReporterTests: XCTestCase {
             SentryProvider.fingerprint(for: killed),
             ["brewCommandFailed", "install", "process-killed"]
         )
-        XCTAssertTrue(killed.shouldReport, "watch volume before deciding to suppress")
+        XCTAssertFalse(killed.isExplicitUserDecision)
     }
 
     private func classify(_ diagnostic: String, exitCode: Int32) -> String {
@@ -429,24 +418,6 @@ final class CrashReporterTests: XCTestCase {
             exitCode: exitCode,
             diagnostic: diagnostic
         ).rawValue
-    }
-
-    func test_wrong_sudo_password_is_not_reported() {
-        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
-            args: ["install", "--cask", "arq"],
-            exitCode: 1,
-            stderr: "Sorry, try again.\nsudo: 3 incorrect password attempts"
-        ))
-        XCTAssertTrue(spy.capturedErrors.isEmpty)
-    }
-
-    func test_declined_sudo_prompt_is_not_reported() {
-        CrashReporter.capture(LocalHomebrewError.brewCommandFailed(
-            args: ["uninstall", "--cask", "wetype"],
-            exitCode: 1,
-            stderr: "sudo: no password was provided\nsudo: a password is required"
-        ))
-        XCTAssertTrue(spy.capturedErrors.isEmpty)
     }
 
     func test_other_errors_keep_default_grouping() {
@@ -528,17 +499,24 @@ final class CrashReporterTests: XCTestCase {
 }
 
 extension CrashReporterTests {
-    func test_unknown_brew_diagnostics_share_one_bounded_fingerprint_and_rate_limit() {
-        let first = LocalHomebrewError.brewCommandFailed(
-            args: ["install", "--cask", "one"],
-            exitCode: 1,
-            stderr: "Error: renderer crashed before launch"
-        )
-        let second = LocalHomebrewError.brewCommandFailed(
-            args: ["install", "--cask", "two"],
-            exitCode: 1,
-            stderr: "Error: helper returned an impossible state"
-        )
+    func test_unknown_brew_diagnostics_share_one_issue_and_use_bounded_rate_buckets() throws {
+        let failures = [
+            "renderer crashed before launch",
+            "helper returned an impossible state",
+            "catalog produced an invalid artifact",
+            "installer returned an undocumented response"
+        ].map {
+            LocalHomebrewError.brewCommandFailed(
+                args: ["install", "--cask", "example"],
+                exitCode: 1,
+                stderr: "Error: \($0)"
+            )
+        }
+        let first = failures[0]
+        let firstSignature = try XCTUnwrap(first.commandFailure?.rateLimitSignature)
+        let second = try XCTUnwrap(failures.first {
+            $0.commandFailure?.rateLimitSignature != firstSignature
+        })
         XCTAssertEqual(
             SentryProvider.fingerprint(for: first),
             SentryProvider.fingerprint(for: second)
@@ -549,7 +527,7 @@ extension CrashReporterTests {
             CrashReporter.capture(second)
         }
 
-        XCTAssertEqual(spy.capturedErrors.count, 5)
-        XCTAssertEqual(CrashReporter.captureCounts.count, 1)
+        XCTAssertEqual(spy.capturedErrors.count, 10)
+        XCTAssertEqual(CrashReporter.captureCounts.count, 2)
     }
 }

@@ -21,14 +21,7 @@ final class ShelfSetupViewTests: XCTestCase {
         updateInstallationSnapshot(of: homebrew) { fixture in
             fixture.externalAppNames = Set(externalApps.values)
             fixture.externalApplicationOwners = externalApps.mapValues { appName in
-                DetectedApplication(
-                    url: URL(fileURLWithPath: "/Applications/\(appName)"),
-                    bundleName: appName,
-                    bundleIdentifier: "com.example.\(appName)",
-                    version: nil,
-                    isMacAppStore: false,
-                    isDirectlyInApplicationDirectory: true
-                )
+                makeDetectedApplication(appName)
             }
         }
         return homebrew
@@ -107,7 +100,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(ShelfSetupView(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
     }
 
     @MainActor
@@ -120,7 +113,68 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(ShelfSetupView(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
+    }
+
+    @MainActor
+    func test_make_import_plan_splits_installed_new_and_unknown_tokens() async {
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("brewfile-plan"),
+            externalApps: ["google-chrome": "Google Chrome.app"]
+        )
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("google-chrome", appNames: ["Google Chrome.app"]),
+                makeCask("raycast", appNames: ["Raycast.app"])
+            ],
+            localHomebrew: homebrew
+        )
+
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+            fileName: "~/Brewfile",
+            tokens: ["homebrew/cask/google-chrome", "raycast", "mystery-app"]
+        )
+
+        XCTAssertEqual(
+            plan.skippedEntries.map(\.token), ["homebrew/cask/google-chrome"],
+            "externally installed app counts as present, even tap-qualified"
+        )
+        XCTAssertEqual(plan.newEntries.map(\.token), ["raycast", "mystery-app"])
+        XCTAssertEqual(plan.listedCount, 3)
+        XCTAssertEqual(plan.newEntries.first?.cask?.token, "raycast")
+        XCTAssertNil(plan.newEntries.last?.cask, "unknown token keeps nil cask")
+    }
+
+    @MainActor
+    func test_brewfile_import_sheet_renders_every_phase() {
+        let homebrew = makeHomebrew(
+            defaults: makeScratchDefaults("brewfile-render"),
+            externalApps: [:]
+        )
+        let plan = BrewfileImportPlan(
+            fileName: "~/Brewfile",
+            skippedEntries: [.init(token: "google-chrome", cask: makeCask("google-chrome"))],
+            newEntries: [
+                .init(token: "raycast", cask: makeCask("raycast")),
+                .init(token: "mystery-app", cask: nil)
+            ]
+        )
+        let phases: [BrewfileImportPhase] = [
+            .preview, .running(index: 0), .done(failedCount: 0), .done(failedCount: 1)
+        ]
+        for phase in phases {
+            render(BrewfileImportSheet(plan: plan, phase: phase)
+                .environment(homebrew)
+                .environment(ImageCacheService()), width: 1100, height: 600)
+        }
+        let nothingNew = BrewfileImportPlan(
+            fileName: "~/Brewfile",
+            skippedEntries: plan.skippedEntries,
+            newEntries: []
+        )
+        render(BrewfileImportSheet(plan: nothingNew)
+            .environment(homebrew)
+            .environment(ImageCacheService()), width: 1100, height: 600)
     }
 
     @MainActor
@@ -142,7 +196,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(AdoptIgnorePickerSheet(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
 
         homebrew.setAdoptIgnored("google-chrome", true)
         homebrew.setAdoptIgnored("slack", true)
@@ -150,7 +204,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         render(AdoptIgnorePickerSheet(viewModel: vm)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService()), width: 1100, height: 600)
     }
 
     @MainActor
@@ -178,10 +232,9 @@ final class ShelfSetupViewTests: XCTestCase {
 
     @MainActor
     func test_page_chrome_renders() {
-        render(UtilityTopBar(title: "Shelf Setup", summary: "3 ignored"))
-        render(UtilityTopBar(title: "Health"))
-        render(MaintenancePlaceholderView())
-        render(CountBadge(count: 2))
+        render(UtilityTopBar(title: "Shelf Setup", summary: "3 ignored"), width: 1100, height: 600)
+        render(UtilityTopBar(title: "Health"), width: 1100, height: 600)
+        render(CountBadge(count: 2), width: 1100, height: 600)
     }
 
     @MainActor
@@ -207,7 +260,14 @@ final class ShelfSetupViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
             .environment(categories)
             .environment(homebrew)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService())
+            .environment(MaintenanceViewModel(
+                localHomebrew: homebrew,
+                catalog: vm,
+                clearImageCache: {},
+                probe: RecordingMaintenanceProbe(),
+                defaults: makeScratchDefaults("maintenance-content-render")
+            )))
         window.orderFrontRegardless()
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
 
@@ -219,12 +279,5 @@ final class ShelfSetupViewTests: XCTestCase {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
             window.close()
         }
-    }
-
-    @MainActor
-    private func render(_ view: some View) {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.frame = NSRect(x: 0, y: 0, width: 1100, height: 600)
-        hosting.layoutSubtreeIfNeeded()
     }
 }

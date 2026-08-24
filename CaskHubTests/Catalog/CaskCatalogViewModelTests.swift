@@ -409,10 +409,10 @@ final class CaskCatalogViewModelTests: XCTestCase {
     }
 
     @MainActor
-    func test_recently_added_loads_bundled_offline_snapshot() {
+    func test_recently_added_loads_bundled_offline_snapshot() async {
         let recent = RecentlyAddedService()
 
-        recent.loadBundledDates()
+        await recent.loadBundledDatesAsync()
 
         XCTAssertFalse(recent.addedDates.isEmpty)
         XCTAssertFalse(recent.generatedDate.isEmpty)
@@ -437,7 +437,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
     // MARK: - Crash reporting
 
     @MainActor
-    func test_fetch_failure_is_captured_and_finishes_span_with_error() async {
+    func test_fetch_http_500_is_captured_and_finishes_span_with_error() async throws {
         let crashSpy = SpyCrashReporterProvider()
         let originalCrash = CrashReporter.provider
         CrashReporter.provider = crashSpy
@@ -449,13 +449,14 @@ final class CaskCatalogViewModelTests: XCTestCase {
         CrashReporter.captureCounts = [:]
 
         let api = MockBrewAPIClient()
-        // Transport failures are deliberately ignored; malformed server responses are reportable.
-        api.casksError = URLError(.badServerResponse)
+        api.casksError = BrewAPIClient.HTTPError(statusCode: 500)
         let vm = makeViewModel(api: api)
 
         await vm.fetchCasks()
 
         XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+        let error = try XCTUnwrap(crashSpy.capturedErrors.first as? BrewAPIClient.HTTPError)
+        XCTAssertEqual(error.statusCode, 500)
         XCTAssertEqual(crashSpy.spans.last?.name, "catalog.fetch")
         XCTAssertEqual(crashSpy.spans.last?.operation, "http")
         XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)

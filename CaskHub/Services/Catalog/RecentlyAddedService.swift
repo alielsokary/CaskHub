@@ -39,16 +39,6 @@ final class RecentlyAddedService {
     private(set) var generatedDate = ""
     private(set) var catalogStateRevision = 0
 
-    func loadBundledDates(bundle: Bundle = .main) {
-        guard let url = bundle.url(forResource: "added_dates", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let bundled = try? JSONDecoder().decode(AddedDatesData.self, from: data),
-              bundled.version == Self.schemaVersion
-        else { return }
-
-        apply(bundled)
-    }
-
     /// Off-main decode; never overwrites fresher remote data.
     func loadBundledDatesAsync() async {
         guard let bundled = await Self.decodeBundledDates(),
@@ -76,7 +66,7 @@ final class RecentlyAddedService {
 
     // Full-dictionary filter per projection recompute hangs slow machines.
     @ObservationIgnored
-    private let recentTokensCache = MemoizedValue<String, Set<String>>()
+    private let recentTokensCache = BoundedMemoizedValues<String, Set<String>>(capacity: 1)
 
     func recentTokens(within days: Int) -> Set<String> {
         let cutoff = Self.dateString(daysAgo: days)

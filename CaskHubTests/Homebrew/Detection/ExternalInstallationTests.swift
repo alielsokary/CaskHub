@@ -261,13 +261,10 @@ final class ExternalInstallationTests: XCTestCase {
             $0.installationIndex = CaskInstallationIndex(
                 catalogTokens: [store.token, package.token],
                 macAppStoreApplications: [
-                    store.token: DetectedApplication(
-                        url: URL(fileURLWithPath: "/Applications/Store App.app"),
-                        bundleName: "Store App.app",
-                        bundleIdentifier: "com.example.store-app",
-                        version: nil,
-                        isMacAppStore: true,
-                        isDirectlyInApplicationDirectory: true
+                    store.token: makeDetectedApplication(
+                        "Store App.app",
+                        id: "com.example.store-app",
+                        isMacAppStore: true
                     )
                 ],
                 externalCLIPaths: [:]

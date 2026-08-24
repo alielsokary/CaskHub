@@ -129,13 +129,6 @@ final class CaskActionPresentationTests: XCTestCase {
 
 final class AdoptionViewRenderTests: XCTestCase {
     @MainActor
-    private func render(_ view: some View, width: CGFloat = 420, height: CGFloat = 400) {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.frame = NSRect(x: 0, y: 0, width: width, height: height)
-        hosting.layoutSubtreeIfNeeded()
-    }
-
-    @MainActor
     func test_cask_actions_render_every_external_state() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-actions"))
         updateInstallationSnapshot(of: service) {
@@ -155,24 +148,26 @@ final class AdoptionViewRenderTests: XCTestCase {
         }
 
         let adoptable = makeCask("chrome", appNames: ["Chrome.app"])
-        render(CaskActionsView(cask: adoptable).environment(service).environment(\.isAdoptPage, true))
+        render(CaskActionsView(cask: adoptable).environment(service).environment(\.isAdoptPage, true), width: 420, height: 400)
         render(
             CaskActionsView(cask: adoptable, usesIconOnlyOpenAndUpdate: true)
-                .environment(service)
-        )
-        render(CaskActionsView(cask: makeCask("store", appNames: ["Store.app"])).environment(service))
-        render(CaskActionsView(cask: makeCask("claude-code", binaryNames: ["claude"])).environment(service))
-        render(CaskActionsView(cask: makeCask("plain")).environment(service))
+                .environment(service),
+            width: 420, height: 400)
+        render(CaskActionsView(cask: makeCask("store", appNames: ["Store.app"])).environment(service), width: 420, height: 400)
+        render(CaskActionsView(cask: makeCask("claude-code", binaryNames: ["claude"])).environment(service), width: 420, height: 400)
+        render(CaskActionsView(cask: makeCask("plain")).environment(service), width: 420, height: 400)
         render(
             CaskActionsView(cask: makeCask("managed", version: "2.0"), onUninstall: {})
-                .environment(service)
-        )
+                .environment(service),
+            width: 420, height: 400)
     }
 
     @MainActor
     func test_cask_action_alerts_render_with_pending_permission_and_error() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("render-alerts"))
-        service.permissionProbe = { .denied }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .denied, evidence: .target)
+        }
         let cask = makeCask("chrome", appNames: ["Chrome.app"])
         let plan = CaskAdoptionPlan(
             artifact: .applicationBundle,
@@ -184,15 +179,19 @@ final class AdoptionViewRenderTests: XCTestCase {
             blockingInstalledCask: nil
         )
         service.operationStore.send(
-            .awaitPermission(CaskAdoptionRequest(cask: cask, plan: plan)),
+            .awaitPermission(CaskAdoptionRequest(
+                cask: cask,
+                intent: .planned,
+                plan: plan
+            )),
             for: cask.token
         )
 
         render(
             Text("host")
                 .caskActionAlerts(for: cask, showUninstallConfirmation: .constant(false))
-                .environment(service)
-        )
+                .environment(service),
+            width: 420, height: 400)
     }
 
     @MainActor
@@ -203,13 +202,13 @@ final class AdoptionViewRenderTests: XCTestCase {
                 cask: makeCask("mystery", appNames: ["NoSuchApp.app"]),
                 category: nil
             )
-            .environment(service)
-        )
+            .environment(service),
+            width: 420, height: 400)
 
         updateInstalledCask(LocalCaskInstallation(
             token: "known", installedVersion: "3.1", installedAt: .now, appBundleNames: []
         ), in: service)
-        render(CaskInfoPopover(cask: makeCask("known"), category: nil).environment(service))
+        render(CaskInfoPopover(cask: makeCask("known"), category: nil).environment(service), width: 420, height: 400)
     }
 
     @MainActor
@@ -318,7 +317,9 @@ final class AdoptionViewRenderTests: XCTestCase {
             $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
             $0.brewVersionProvider = { "test" }
         }
-        service.permissionProbe = { .denied }
+        service.permissionProbe = { _ in
+            AppManagementPermission.Assessment(status: .denied, evidence: .target)
+        }
         let failure = CaskOperationFailure(
             kind: .brewCommand,
             message: "short",

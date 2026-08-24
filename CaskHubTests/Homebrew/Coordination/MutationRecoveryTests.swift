@@ -34,6 +34,10 @@ final class MutationRecoveryTests: XCTestCase {
 
     private func makeService(
         runner: StubBrewProcessRunner,
+        scanner: (any InstalledSoftwareScanning)? = nil,
+        askpassProvider: @escaping @Sendable (String) async throws -> URL = {
+            URL(fileURLWithPath: "/private/tmp/caskhub-test-askpass-\($0)")
+        },
         brewVersionProvider: @escaping () async -> String? = { "test" }
     ) -> LocalHomebrewService {
         LocalHomebrewService(defaults: defaults) {
@@ -46,6 +50,8 @@ final class MutationRecoveryTests: XCTestCase {
                 URL(fileURLWithPath: "/test/bin/brew")
             }
             $0.brewVersionProvider = brewVersionProvider
+            $0.askpassProvider = askpassProvider
+            if let scanner { $0.softwareScanner = scanner }
         }
     }
 
@@ -135,10 +141,10 @@ final class MutationRecoveryTests: XCTestCase {
     func test_update_homebrew_runs_two_update_passes() async throws {
         let runner = StubBrewProcessRunner()
         var versionLoads = 0
-        let service = makeService(runner: runner) {
+        let service = makeService(runner: runner, brewVersionProvider: {
             versionLoads += 1
             return versionLoads == 1 ? "old" : "new"
-        }
+        })
 
         await service.refresh()
         XCTAssertEqual(service.brewVersion, "old")
@@ -174,11 +180,11 @@ final class MutationRecoveryTests: XCTestCase {
         ]
         let versionReloaded = expectation(description: "Homebrew version reloaded")
         var versionLoads = 0
-        let service = makeService(runner: runner) {
+        let service = makeService(runner: runner, brewVersionProvider: {
             versionLoads += 1
             if versionLoads == 2 { versionReloaded.fulfill() }
             return versionLoads == 1 ? "old" : "new"
-        }
+        })
         await service.refresh()
         let cask = makeCask("gimp")
 
@@ -229,6 +235,106 @@ final class MutationRecoveryTests: XCTestCase {
         }
     }
 
+    func test_askpass_setup_failure_stops_before_brew_and_surfaces_app_error() async {
+        let runner = StubBrewProcessRunner()
+        let service = makeService(runner: runner, askpassProvider: { _ in
+            throw AskpassScriptError.executableUnavailable
+        })
+
+        do {
+            try await service.install(token: "zed")
+            XCTFail("brew must not start without a working password prompt")
+        } catch let LocalHomebrewError.askpassUnavailable(stage, failureKind) {
+            XCTAssertEqual(stage, .executable)
+            XCTAssertEqual(failureKind, .askpassUnavailable)
+            XCTAssertTrue(runner.requests.isEmpty)
+            XCTAssertTrue(
+                service.operationStore.state(for: "zed")?
+                    .failure?.message.contains("password prompt") == true
+            )
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+
+    }
+
+    func test_sudo_decline_is_suppressed_only_with_the_helper_cancel_marker() async {
+        let unmarkedRunner = StubBrewProcessRunner()
+        unmarkedRunner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "sudo: no password was provided"
+        )]
+        do {
+            try await makeService(runner: unmarkedRunner).install(token: "zed")
+            XCTFail("the failed helper must not look like a user cancellation")
+        } catch let LocalHomebrewError.brewCommandFailed(failure) {
+            XCTAssertEqual(failure.kind, .askpassUnavailable)
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+
+        let markedRunner = StubBrewProcessRunner()
+        markedRunner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "sudo: no password was provided"
+        )]
+        markedRunner.onRequest = { request in
+            let script = try XCTUnwrap(request.environment["SUDO_ASKPASS"])
+            try Data().write(to: AskpassScriptManager.cancellationMarker(
+                for: URL(fileURLWithPath: script)
+            ))
+        }
+        do {
+            try await makeService(runner: markedRunner).install(token: "zed")
+            XCTFail("the user cancellation still stops the operation")
+        } catch let LocalHomebrewError.brewCommandFailed(failure) {
+            XCTAssertEqual(failure.kind, .sudoDeclined)
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+    }
+
+    func test_askpass_cancel_marker_does_not_depend_on_sudo_output() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(exitCode: 1, output: "")]
+        runner.onRequest = { request in
+            let script = try XCTUnwrap(request.environment["SUDO_ASKPASS"])
+            try Data().write(to: AskpassScriptManager.cancellationMarker(
+                for: URL(fileURLWithPath: script)
+            ))
+        }
+
+        do {
+            try await makeService(runner: runner).install(token: "zed")
+            XCTFail("the marker must prove cancellation without English sudo output")
+        } catch let LocalHomebrewError.brewCommandFailed(failure) {
+            XCTAssertEqual(failure.kind, .sudoDeclined)
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+    }
+
+    func test_askpass_disk_full_keeps_its_external_failure_kind() async {
+        let runner = StubBrewProcessRunner()
+        let service = makeService(runner: runner, askpassProvider: { _ in
+            throw AskpassScriptError.fileSystem(
+                stage: .script,
+                failureKind: .storageFull
+            )
+        })
+
+        do {
+            try await service.install(token: "zed")
+            XCTFail("brew must not start when askpass cannot be written")
+        } catch let LocalHomebrewError.askpassUnavailable(stage, failureKind) {
+            XCTAssertEqual(stage, .script)
+            XCTAssertEqual(failureKind, .storageFull)
+            XCTAssertTrue(runner.requests.isEmpty)
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+    }
+
     func test_failed_upgrade_for_uninstalled_cask_refreshes_stale_local_state() async {
         let runner = StubBrewProcessRunner()
         runner.queuedResults = [BrewProcessResult(
@@ -249,6 +355,93 @@ final class MutationRecoveryTests: XCTestCase {
             service.localState(for: thorium).isPresent,
             "brew disagreeing about install state must trigger a snapshot refresh"
         )
+    }
+
+    func test_nonzero_upgrade_is_recovered_only_when_refresh_proves_changed_receipt() async throws {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "🍺  zed was successfully upgraded!"
+        )]
+        let previous = LocalCaskInstallation(
+            token: "zed",
+            installedVersion: "1.0",
+            installedAt: nil,
+            lastUpdatedAt: Date(timeIntervalSince1970: 1),
+            appBundleNames: []
+        )
+        let refreshed = LocalCaskInstallation(
+            token: "zed",
+            installedVersion: "1.0",
+            installedAt: nil,
+            lastUpdatedAt: Date(timeIntervalSince1970: 2),
+            appBundleNames: []
+        )
+        let scanner = FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
+            installedCasks: ["zed": refreshed]
+        ))
+        let service = makeService(runner: runner, scanner: scanner)
+        updateInstalledCask(previous, in: service)
+
+        try await service.upgrade(token: "zed")
+
+        XCTAssertEqual(service.installedCasks["zed"], refreshed)
+        XCTAssertNil(service.actionAlert(for: "zed"))
+    }
+
+    func test_nonzero_upgrade_still_fails_when_refresh_does_not_prove_change() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "🍺  zed was successfully upgraded!"
+        )]
+        let scanner = FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
+            installedCasks: ["zed": installation("zed", version: "1.0")]
+        ))
+        let service = makeService(runner: runner, scanner: scanner)
+        updateInstalledCask(installation("zed", version: "1.0"), in: service)
+
+        do {
+            try await service.upgrade(token: "zed")
+            XCTFail("the unchanged snapshot must not prove success")
+        } catch let LocalHomebrewError.brewCommandFailed(failure) {
+            XCTAssertEqual(failure.kind, .exitNonzeroAfterSuccess)
+            XCTAssertNotNil(service.actionAlert(for: "zed"))
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
+    }
+
+    func test_nonzero_upgrade_does_not_treat_a_zombie_receipt_as_success() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(
+            exitCode: 1,
+            output: "🍺  zed was successfully upgraded!"
+        )]
+        let previous = installation("zed", version: "1.0")
+        let zombie = LocalCaskInstallation(
+            token: "zed",
+            installedVersion: "2.0",
+            installedAt: nil,
+            appBundleNames: ["Zed.app"],
+            isZombie: true
+        )
+        let scanner = FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
+            installedCasks: ["zed": zombie]
+        ))
+        let service = makeService(runner: runner, scanner: scanner)
+        updateInstalledCask(previous, in: service)
+
+        do {
+            try await service.upgrade(token: "zed")
+            XCTFail("a degraded installation cannot prove upgrade success")
+        } catch let LocalHomebrewError.brewCommandFailed(failure) {
+            XCTAssertEqual(failure.kind, .exitNonzeroAfterSuccess)
+            XCTAssertEqual(service.installedCasks["zed"], zombie)
+            XCTAssertNotNil(service.actionAlert(for: "zed"))
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
     }
 
     func test_brew_error_diagnostics_keep_error_before_long_cleanup_tail() async {

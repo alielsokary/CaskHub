@@ -14,10 +14,20 @@ enum CaskHubMain {
         if let flagIndex = CommandLine.arguments.firstIndex(of: "--askpass") {
             let token = CommandLine.arguments.indices.contains(flagIndex + 1)
                 ? CommandLine.arguments[flagIndex + 1] : nil
-            Askpass.runDialog(token: token)
+            let marker = argument(after: "--askpass-cancel-marker").map {
+                URL(fileURLWithPath: $0)
+            }
+            Askpass.runDialog(token: token, cancellationMarker: marker)
         }
         NSWindow.allowsAutomaticWindowTabbing = false
         CaskHubApp.main()
+    }
+
+    private static func argument(after flag: String) -> String? {
+        guard let index = CommandLine.arguments.firstIndex(of: flag),
+              CommandLine.arguments.indices.contains(index + 1)
+        else { return nil }
+        return CommandLine.arguments[index + 1]
     }
 }
 
@@ -35,6 +45,7 @@ struct CaskHubApp: App {
     @State private var localHomebrew: LocalHomebrewService
     @State private var imageCache: ImageCacheService
     @State private var catalog: CaskCatalogViewModel
+    @State private var maintenance: MaintenanceViewModel
 
     init() {
         // Tooltip delay in ms; registered (not set) so it never persists to prefs.
@@ -58,11 +69,17 @@ struct CaskHubApp: App {
         _categoryService = State(initialValue: categories)
         _recentlyAdded = State(initialValue: recent)
         _localHomebrew = State(initialValue: homebrew)
-        _catalog = State(initialValue: CaskCatalogViewModel(
+        let catalogModel = CaskCatalogViewModel(
             apiClient: BrewAPIClient(),
             categoryService: categories,
             recentlyAdded: recent,
             localHomebrew: homebrew
+        )
+        _catalog = State(initialValue: catalogModel)
+        _maintenance = State(initialValue: MaintenanceViewModel(
+            localHomebrew: homebrew,
+            catalog: catalogModel,
+            clearImageCache: { await images.clearCache() }
         ))
     }
 
@@ -92,6 +109,7 @@ struct CaskHubApp: App {
                     .environment(recentlyAdded)
                     .environment(localHomebrew)
                     .environment(imageCache)
+                    .environment(maintenance)
             }
             .defaultSize(width: 1360, height: 880)
             .windowStyle(.hiddenTitleBar)
@@ -117,7 +135,6 @@ struct CaskHubApp: App {
             Settings {
                 SettingsView(selection: $settingsSection)
                     .environment(updaterService)
-                    .environment(imageCache)
                     .environment(localHomebrew)
             }
         }

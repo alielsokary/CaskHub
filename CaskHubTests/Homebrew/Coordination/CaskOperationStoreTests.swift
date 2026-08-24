@@ -158,6 +158,7 @@ final class CaskOperationStoreTests: XCTestCase {
         let cask = makeCask("sample", appNames: ["Sample.app"])
         return CaskAdoptionRequest(
             cask: cask,
+            intent: .planned,
             plan: CaskAdoptionPlan(
                 artifact: .applicationBundle,
                 versionRelationship: .same,

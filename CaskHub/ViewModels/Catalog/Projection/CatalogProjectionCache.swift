@@ -16,19 +16,6 @@ struct CatalogLibrarySnapshot {
     let localStates: [String: CaskLocalState]
 }
 
-final class MemoizedValue<Key: Equatable, Value> {
-    private var entry: (key: Key, value: Value)?
-
-    func value(for key: Key, create: () -> Value) -> Value {
-        if let entry, entry.key == key {
-            return entry.value
-        }
-        let value = create()
-        entry = (key, value)
-        return value
-    }
-}
-
 final class BoundedMemoizedValues<Key: Equatable, Value> {
     private let capacity: Int
     private var entries: [(key: Key, value: Value)] = []

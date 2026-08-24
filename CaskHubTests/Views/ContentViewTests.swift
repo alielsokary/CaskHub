@@ -92,6 +92,8 @@ final class ContentViewTests: XCTestCase {
 
         click(at: NSPoint(x: 20, y: 20), in: window)
 
+        XCTAssertEqual(probe.resignCount, 0)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.02))
         XCTAssertEqual(probe.resignCount, 1)
     }
 
@@ -105,17 +107,19 @@ final class ContentViewTests: XCTestCase {
         window.contentView!.addSubview(fieldEditor)
 
         click(at: NSPoint(x: 100, y: 100), in: window)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.02))
 
         XCTAssertEqual(probe.resignCount, 0)
     }
 
     @MainActor
-    func test_click_while_unfocused_is_ignored() {
+    func test_deferred_resign_rechecks_focus() {
         let probe = FocusProbe()
         let window = makeWindow(probe: probe)
-        probe.focused = false
 
         click(at: NSPoint(x: 20, y: 20), in: window)
+        probe.focused = false
+        RunLoop.main.run(until: Date().addingTimeInterval(0.02))
 
         XCTAssertEqual(probe.resignCount, 0)
     }
@@ -128,6 +132,7 @@ final class ContentViewTests: XCTestCase {
         window.contentView = NSView()
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         click(at: NSPoint(x: 20, y: 20), in: window)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.02))
 
         XCTAssertEqual(probe.resignCount, 0)
     }
@@ -375,7 +380,14 @@ final class TopBarViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
             .environment(categories)
             .environment(local)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService())
+            .environment(MaintenanceViewModel(
+                localHomebrew: local,
+                catalog: vm,
+                clearImageCache: {},
+                probe: RecordingMaintenanceProbe(),
+                defaults: makeScratchDefaults("maintenance-browse-render")
+            )))
         window.orderFrontRegardless()
 
         let deadline = Date().addingTimeInterval(2)
@@ -449,7 +461,14 @@ final class TopBarViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
             .environment(categories)
             .environment(local)
-            .environment(ImageCacheService()))
+            .environment(ImageCacheService())
+            .environment(MaintenanceViewModel(
+                localHomebrew: local,
+                catalog: vm,
+                clearImageCache: {},
+                probe: RecordingMaintenanceProbe(),
+                defaults: makeScratchDefaults("maintenance-harness-render")
+            )))
         window.orderFrontRegardless()
         RunLoop.main.run(until: Date().addingTimeInterval(0.25))
 

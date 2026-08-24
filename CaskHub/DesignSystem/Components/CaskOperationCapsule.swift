@@ -41,7 +41,8 @@ struct CaskOperationCapsule: View {
                     .foregroundStyle(Color.chTextBody)
                     .lineLimit(1)
             } else {
-                operationLabel
+                Text(label)
+                    .font(CHType.bodySm)
                     .foregroundStyle(Color.chTextBody)
                     .lineLimit(1)
             }
@@ -86,17 +87,6 @@ struct CaskOperationCapsule: View {
         .accessibilityLabel(label.replacingOccurrences(of: " · ", with: ", "))
     }
 
-    @ViewBuilder
-    private var operationLabel: some View {
-        if isCanceling {
-            Text("Canceling…")
-                .font(CHType.bodySm)
-        } else {
-            Text(progress?.inlineLabel ?? action.inProgressLabel)
-                .font(CHType.bodySm)
-        }
-    }
-
     private var downloadByteProgress: CaskByteProgress? {
         guard !isCanceling, progress?.phase.showsByteProgress == true else { return nil }
         return progress?.byteProgress
@@ -104,7 +94,7 @@ struct CaskOperationCapsule: View {
 
     private var label: String {
         if isCanceling {
-            return "Canceling…"
+            return String(localized: "Canceling…")
         }
         return progress?.inlineLabel ?? action.inProgressLabel
     }

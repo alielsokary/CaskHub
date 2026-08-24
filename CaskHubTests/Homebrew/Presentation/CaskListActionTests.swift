@@ -23,18 +23,6 @@ final class CaskListActionTests: XCTestCase {
         return cache
     }
 
-    @discardableResult
-    private func render(
-        _ view: some View,
-        width: CGFloat = 760,
-        height: CGFloat = 64
-    ) -> NSHostingView<AnyView> {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.frame = NSRect(x: 0, y: 0, width: width, height: height)
-        hosting.layoutSubtreeIfNeeded()
-        return hosting
-    }
-
     private func row(
         _ cask: Cask,
         service: LocalHomebrewService,
@@ -135,7 +123,7 @@ final class CaskListActionTests: XCTestCase {
             presentMenu: { presentedTitles = $0.items.map(\.title) }
         )
 
-        render(button)
+        render(button, width: 760, height: 64)
         button.presentActionsMenu()
 
         XCTAssertEqual(
@@ -201,10 +189,10 @@ final class CaskListActionTests: XCTestCase {
             ]
         }
 
-        render(row(makeCask("plain", desc: "A new app"), service: service))
-        render(row(makeCask("adoptable", appNames: ["Adoptable.app"]), service: service))
-        render(row(makeCask("store", appNames: ["Store.app"]), service: service))
-        render(row(makeCask("native", binaryNames: ["native-cli"]), service: service, downloads: nil))
+        render(row(makeCask("plain", desc: "A new app"), service: service), width: 760, height: 64)
+        render(row(makeCask("adoptable", appNames: ["Adoptable.app"]), service: service), width: 760, height: 64)
+        render(row(makeCask("store", appNames: ["Store.app"]), service: service), width: 760, height: 64)
+        render(row(makeCask("native", binaryNames: ["native-cli"]), service: service, downloads: nil), width: 760, height: 64)
     }
 
     func test_list_rows_render_every_managed_action_layout() throws {
@@ -231,20 +219,20 @@ final class CaskListActionTests: XCTestCase {
             appBundleNames: ["Managed.app"]
         ), in: service)
 
-        render(row(managed, service: service))
-        render(row(makeCask("managed", version: "2.0", appNames: ["Managed.app"]), service: service))
+        render(row(managed, service: service), width: 760, height: 64)
+        render(row(makeCask("managed", version: "2.0", appNames: ["Managed.app"]), service: service), width: 760, height: 64)
 
         service.operationStore.send(.enqueue(.updating), for: managed.token)
-        render(row(managed, service: service))
+        render(row(managed, service: service), width: 760, height: 64)
         service.operationStore.send(.clear, for: managed.token)
 
         let installedOnly = makeCask("installed-only")
         updateInstalledCask(installation(installedOnly.token, version: "1.0"), in: service)
-        render(row(installedOnly, service: service))
+        render(row(installedOnly, service: service), width: 760, height: 64)
 
         let updateOnly = makeCask("update-only", version: "2.0")
         updateInstalledCask(installation(updateOnly.token, version: "1.0"), in: service)
-        render(row(updateOnly, service: service))
+        render(row(updateOnly, service: service), width: 760, height: 64)
 
         let zombie = makeCask("zombie", appNames: ["Missing.app"])
         updateInstalledCask(LocalCaskInstallation(
@@ -254,7 +242,7 @@ final class CaskListActionTests: XCTestCase {
             appBundleNames: ["Missing.app"],
             isZombie: true
         ), in: service)
-        render(row(zombie, service: service))
+        render(row(zombie, service: service), width: 760, height: 64)
     }
 
     func test_icon_only_open_and_update_controls_render() {
@@ -262,7 +250,7 @@ final class CaskListActionTests: XCTestCase {
             HStack {
                 ActionCapsuleIconButton(action: .open) {}
                 ActionCapsuleIconButton(action: .update) {}
-            }
-        )
+            },
+            width: 760, height: 64)
     }
 }
