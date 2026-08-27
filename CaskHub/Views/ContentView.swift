@@ -22,10 +22,9 @@ struct ContentView: View {
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
 
-    let columns = Array(
-        repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
-        count: 4
-    )
+    let columns = [
+        GridItem(.adaptive(minimum: 250, maximum: 380), spacing: CHSpace.gridGap)
+    ]
 
     var body: some View {
         NavigationSplitView(columnVisibility: $sidebarVisibility) {
@@ -50,7 +49,6 @@ struct ContentView: View {
                         catalogTopBar
                     }
                 }
-                .frame(maxWidth: CHSize.contentWidth)
                 .padding(.horizontal, CHSpace.s5)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, CHSpace.s4)
@@ -59,9 +57,8 @@ struct ContentView: View {
                     Text("Results for “\(viewModel.searchText)”")
                         .font(CHType.section)
                         .foregroundStyle(Color.chTextTitle)
-                        .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
                         .padding(.horizontal, CHSpace.s5)
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.bottom, CHSpace.s4)
                 }
 

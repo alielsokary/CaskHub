@@ -32,7 +32,8 @@ struct CaskCardView: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 15)
-        .frame(width: CHSize.cardWidth, height: CHSize.cardHeight, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: CHSize.cardHeight)
         .glassPanel(radius: CHRadius.card)
         .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }

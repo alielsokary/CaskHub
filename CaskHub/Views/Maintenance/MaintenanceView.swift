@@ -21,9 +21,8 @@ struct MaintenanceView: View {
                 }
                 MaintenanceDiskCard(model: model)
             }
-            .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
             .padding(.horizontal, CHSpace.s5)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .animation(.easeOut(duration: 0.25), value: model.checks)
             .animation(.easeOut(duration: 0.2), value: model.advisoriesExpanded)
         }
