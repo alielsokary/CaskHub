@@ -446,13 +446,36 @@ final class TopBarViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_adaptive_catalog_grid_renders_at_compact_and_wide_widths() async {
+        let api = MockBrewAPIClient()
+        api.casks = (0 ..< 8).map { makeCask("cask-\($0)") }
+        let categories = CategoryService()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("grid-adaptive-render"))
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await vm.fetchCasks()
+
+        let storedViewMode = UserDefaults.standard.string(forKey: "viewMode")
+        addTeardownBlock { @MainActor in
+            UserDefaults.standard.set(storedViewMode, forKey: "viewMode")
+        }
+        UserDefaults.standard.set(ViewMode.grid.rawValue, forKey: "viewMode")
+
+        // Compact width (860pt)
+        renderInWindow(vm, categories: categories, local: local, size: CGSize(width: 860, height: 600))
+
+        // Wide width (1600pt)
+        renderInWindow(vm, categories: categories, local: local, size: CGSize(width: 1600, height: 900))
+    }
+
+    @MainActor
     private func renderInWindow(
         _ vm: CaskCatalogViewModel,
         categories: CategoryService,
-        local: LocalHomebrewService
+        local: LocalHomebrewService,
+        size: CGSize = CGSize(width: 1200, height: 800)
     ) {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: .borderless,
             backing: .buffered,
             defer: false
