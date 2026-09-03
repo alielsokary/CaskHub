@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://trendshift.io/repositories/87516?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-87516" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/87516" alt="alielsokary%2FCaskHub | Trendshift" width="250" height="55"/></a>
-  <a href="https://www.producthunt.com/products/caskhub?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-caskhub" target="_blank" rel="noopener noreferrer"><img alt="CaskHub - The Mac app store Homebrew never had | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1233154&amp;theme=light&amp;t=1788444308443"></a>
+  <a href="https://www.producthunt.com/products/caskhub?utm_source=badge-follow&utm_medium=badge&utm_source=badge-caskhub" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1302237&theme=neutral" alt="CaskHub - The&#0032;Mac&#0032;app&#0032;store&#0032;Homebrew&#0032;never&#0032;had | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 </p>
 
 <p align="center">
