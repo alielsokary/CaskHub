@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-08-24",
-  "totalCasks": 3890,
+  "generatedDate": "2026-09-03",
+  "totalCasks": 3919,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -350,6 +350,10 @@
       "primary": "designGraphics",
       "secondary": []
     },
+    "afterglow": {
+      "primary": "screensaverWallpaper",
+      "secondary": []
+    },
     "agent-tars": {
       "primary": "developerTools",
       "secondary": [
@@ -452,6 +456,12 @@
     "airserver": {
       "primary": "utilities",
       "secondary": []
+    },
+    "airstats": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
     },
     "airsync": {
       "primary": "utilities",
@@ -900,6 +910,10 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "aptible": {
+      "primary": "developerTools",
+      "secondary": []
+    },
     "aqua-data-studio": {
       "primary": "developerTools",
       "secondary": []
@@ -969,6 +983,12 @@
     "arm-performance-libraries": {
       "primary": "scienceEducation",
       "secondary": []
+    },
+    "arm-performix": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
     },
     "arq": {
       "primary": "cloudStorage",
@@ -1043,6 +1063,12 @@
     "athas": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "atlas-app": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "atok": {
       "primary": "utilities",
@@ -1311,10 +1337,6 @@
       "primary": "developerTools",
       "secondary": []
     },
-    "bananas": {
-      "primary": "utilities",
-      "secondary": []
-    },
     "bankid": {
       "primary": "securityPrivacy",
       "secondary": []
@@ -1529,6 +1551,10 @@
     },
     "bibdesk": {
       "primary": "scienceEducation",
+      "secondary": []
+    },
+    "bifrost": {
+      "primary": "utilities",
       "secondary": []
     },
     "big-mean-folder-machine": {
@@ -2245,6 +2271,13 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "channel-works": {
+      "primary": "communication",
+      "secondary": [
+        "ai",
+        "productivity"
+      ]
+    },
     "charles": {
       "primary": "developerTools",
       "secondary": []
@@ -2273,12 +2306,6 @@
     },
     "chatgpt": {
       "primary": "productivity",
-      "secondary": [
-        "ai"
-      ]
-    },
-    "chatgpt-atlas": {
-      "primary": "browsers",
       "secondary": [
         "ai"
       ]
@@ -2501,6 +2528,13 @@
     "claudebar": {
       "primary": "menuBar",
       "secondary": [
+        "ai"
+      ]
+    },
+    "clawd-on-desk": {
+      "primary": "utilities",
+      "secondary": [
+        "developerTools",
         "ai"
       ]
     },
@@ -3108,6 +3142,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "crisp": {
+      "primary": "utilities",
+      "secondary": [
+        "menuBar"
+      ]
+    },
     "cro-mag-rally": {
       "primary": "games",
       "secondary": []
@@ -3310,6 +3350,12 @@
       "primary": "menuBar",
       "secondary": []
     },
+    "davit": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "dayflow": {
       "primary": "productivity",
       "secondary": []
@@ -3317,6 +3363,12 @@
     "db-browser-for-sqlite": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "db-pro": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "dbeaver-community": {
       "primary": "developerTools",
@@ -3770,6 +3822,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "dockdoor-pro": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "docker-desktop": {
       "primary": "developerTools",
       "secondary": []
@@ -3951,6 +4009,13 @@
     "droplr": {
       "primary": "utilities",
       "secondary": []
+    },
+    "droppy": {
+      "primary": "utilities",
+      "secondary": [
+        "menuBar",
+        "productivity"
+      ]
     },
     "dropshare": {
       "primary": "cloudStorage",
@@ -4709,6 +4774,10 @@
     },
     "fellow": {
       "primary": "productivity",
+      "secondary": []
+    },
+    "fender-universal-control": {
+      "primary": "audioMusic",
       "secondary": []
     },
     "ferdium": {
@@ -6716,6 +6785,12 @@
       "primary": "designGraphics",
       "secondary": []
     },
+    "itraffic": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "itsycal": {
       "primary": "menuBar",
       "secondary": []
@@ -7167,6 +7242,10 @@
       "primary": "utilities",
       "secondary": []
     },
+    "keychron-assistant": {
+      "primary": "utilities",
+      "secondary": []
+    },
     "keyclu": {
       "primary": "utilities",
       "secondary": []
@@ -7567,6 +7646,12 @@
       "primary": "scienceEducation",
       "secondary": []
     },
+    "leigod": {
+      "primary": "utilities",
+      "secondary": [
+        "games"
+      ]
+    },
     "lemonade-server": {
       "primary": "developerTools",
       "secondary": [
@@ -7642,6 +7727,12 @@
     "librepcb": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "librewolf": {
+      "primary": "browsers",
+      "secondary": [
+        "securityPrivacy"
+      ]
     },
     "licecap": {
       "primary": "utilities",
@@ -8159,6 +8250,12 @@
         "utilities"
       ]
     },
+    "macshot-offline": {
+      "primary": "utilities",
+      "secondary": [
+        "designGraphics"
+      ]
+    },
     "macskk": {
       "primary": "utilities",
       "secondary": []
@@ -8376,6 +8473,12 @@
     "markright": {
       "primary": "productivity",
       "secondary": []
+    },
+    "markviewer": {
+      "primary": "productivity",
+      "secondary": [
+        "developerTools"
+      ]
     },
     "marsedit": {
       "primary": "productivity",
@@ -9492,6 +9595,13 @@
       "primary": "productivity",
       "secondary": []
     },
+    "nativ": {
+      "primary": "productivity",
+      "secondary": [
+        "ai",
+        "developerTools"
+      ]
+    },
     "native-access": {
       "primary": "audioMusic",
       "secondary": []
@@ -10575,6 +10685,10 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "p2p-kiwi": {
+      "primary": "utilities",
+      "secondary": []
+    },
     "p4": {
       "primary": "developerTools",
       "secondary": [
@@ -11081,6 +11195,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "pixcake": {
+      "primary": "designGraphics",
+      "secondary": [
+        "ai"
+      ]
+    },
     "pixel-shift-combiner": {
       "primary": "designGraphics",
       "secondary": []
@@ -11413,10 +11533,6 @@
       "secondary": [
         "designGraphics"
       ]
-    },
-    "presonus-universal-control": {
-      "primary": "audioMusic",
-      "secondary": []
     },
     "prettyclean": {
       "primary": "utilities",
@@ -11811,6 +11927,12 @@
     "quakespasm": {
       "primary": "games",
       "secondary": []
+    },
+    "quarkclouddrive": {
+      "primary": "cloudStorage",
+      "secondary": [
+        "utilities"
+      ]
     },
     "quarto": {
       "primary": "scienceEducation",
@@ -13247,6 +13369,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "sjmcl": {
+      "primary": "games",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "sketch": {
       "primary": "designGraphics",
       "secondary": []
@@ -14358,6 +14486,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "tabularis": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "taccy": {
       "primary": "securityPrivacy",
       "secondary": []
@@ -14454,6 +14588,12 @@
       "primary": "productivity",
       "secondary": [
         "ai"
+      ]
+    },
+    "tcp-viewer": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
       ]
     },
     "tdr-kotelnikov": {
@@ -14726,6 +14866,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "thoughtdag": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
+    },
     "threema": {
       "primary": "securityPrivacy",
       "secondary": [
@@ -14920,11 +15066,22 @@
       "primary": "productivity",
       "secondary": []
     },
+    "token-monitor": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai",
+        "menuBar"
+      ]
+    },
     "tolaria": {
       "primary": "productivity",
       "secondary": [
         "ai"
       ]
+    },
+    "tone3000": {
+      "primary": "audioMusic",
+      "secondary": []
     },
     "toneprint": {
       "primary": "utilities",
@@ -15104,6 +15261,10 @@
       "secondary": [
         "productivity"
       ]
+    },
+    "triggerflo": {
+      "primary": "productivity",
+      "secondary": []
     },
     "trilium-notes": {
       "primary": "productivity",
@@ -15455,6 +15616,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "unsloth": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "updatest": {
       "primary": "utilities",
       "secondary": []
@@ -15699,10 +15866,6 @@
       "secondary": []
     },
     "virtual-desktop-streamer": {
-      "primary": "games",
-      "secondary": []
-    },
-    "virtual-ii": {
       "primary": "games",
       "secondary": []
     },
@@ -15988,6 +16151,12 @@
     "wakatime": {
       "primary": "menuBar",
       "secondary": []
+    },
+    "waku": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "wallpaper-wizard": {
       "primary": "screensaverWallpaper",
@@ -16875,7 +17044,7 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.08.24",
+  "releaseTag": "caskflow-v2026.09.03",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -16939,6 +17108,7 @@
     "aerial",
     "affine",
     "affinity",
+    "afterglow",
     "agent-tars",
     "agentkube",
     "agentsmesh",
@@ -16960,6 +17130,7 @@
     "airparrot",
     "airscroll",
     "airserver",
+    "airstats",
     "airsync",
     "airtable",
     "airtame",
@@ -17067,6 +17238,7 @@
     "arduino-ide",
     "ares-emulator",
     "ariax",
+    "arm-performix",
     "arq",
     "arq-cloud-backup",
     "artisan",
@@ -17084,6 +17256,7 @@
     "atemosc",
     "atext",
     "athas",
+    "atlas-app",
     "atoll",
     "atomic-wallet",
     "atuin-desktop",
@@ -17187,6 +17360,7 @@
     "beyond-compare@4",
     "bezel",
     "bibdesk",
+    "bifrost",
     "big-mean-folder-machine",
     "bike",
     "bilibili",
@@ -17347,6 +17521,7 @@
     "cernbox",
     "chalk",
     "changes",
+    "channel-works",
     "charles",
     "charles@4",
     "charmstone",
@@ -17399,6 +17574,7 @@
     "claude-devtools",
     "claude-status-bar",
     "claudebar",
+    "clawd-on-desk",
     "cleanapp",
     "cleanclip",
     "cleaneronepro",
@@ -17515,6 +17691,7 @@
     "creality-slicer",
     "creative",
     "crescendo",
+    "crisp",
     "cro-mag-rally",
     "crossover",
     "crosspaste",
@@ -17557,10 +17734,13 @@
     "datasette-desktop",
     "datovka",
     "datweatherdoe",
+    "davit",
     "dayflow",
     "db-browser-for-sqlite",
+    "db-pro",
     "dbeaver-community",
     "dbeaverlite",
+    "dbeaverultimate",
     "dbgate",
     "dbngin",
     "dbvisualizer",
@@ -17621,6 +17801,7 @@
     "dictionaries",
     "diffusionbee",
     "digicheck-ng",
+    "digiexam",
     "dingtalk",
     "dintch",
     "direqual",
@@ -17649,6 +17830,7 @@
     "dnclient",
     "dnsmonitor",
     "dockdoor",
+    "dockdoor-pro",
     "docker-desktop",
     "dockey",
     "dockfix",
@@ -17689,6 +17871,7 @@
     "dropbox-dash",
     "dropdmg",
     "droplr",
+    "droppy",
     "dropshare",
     "dropshelf",
     "dropzone",
@@ -17748,6 +17931,7 @@
     "electrum",
     "electrum-grs",
     "electrum-ltc",
+    "electrumsv",
     "elegoo-slicer",
     "elektron-overbridge",
     "element",
@@ -18029,6 +18213,7 @@
     "gfxcardstatus",
     "gg",
     "ghost-browser",
+    "ghost-downloader",
     "ghostpepper",
     "ghostty",
     "ghostty@tip",
@@ -18290,6 +18475,7 @@
     "itermbrowserplugin",
     "itermcompanion",
     "itk-snap",
+    "itraffic",
     "itsycal",
     "itsypad",
     "itsytv",
@@ -18353,6 +18539,7 @@
     "jump-desktop-connect",
     "jumpcloud-password-manager",
     "jumpcut",
+    "jumpshare",
     "jupyterlab-app",
     "juxtacode",
     "jyutping",
@@ -18390,6 +18577,7 @@
     "keyboard-maestro",
     "keyboardcleantool",
     "keycastr",
+    "keychron-assistant",
     "keyclu",
     "keycombiner",
     "keycue",
@@ -18474,6 +18662,7 @@
     "leech",
     "legcord",
     "lehreroffice",
+    "leigod",
     "lemonade-server",
     "lens",
     "letos",
@@ -18485,6 +18674,7 @@
     "libreoffice",
     "libreoffice-still",
     "librepcb",
+    "librewolf",
     "licecap",
     "licensed-app",
     "liclipse",
@@ -18497,6 +18687,7 @@
     "linearmouse",
     "lingon-x",
     "linguax",
+    "linkandroid",
     "linphone",
     "linqpad",
     "litecoin",
@@ -18596,6 +18787,7 @@
     "macrorecorder",
     "macs-fan-control",
     "macshot",
+    "macshot-offline",
     "macskk",
     "macsvg",
     "macsymbolicator",
@@ -18644,6 +18836,7 @@
     "marked-app",
     "markedit",
     "markright",
+    "markviewer",
     "marsedit",
     "marta",
     "maru-jan",
@@ -18708,6 +18901,7 @@
     "metamer",
     "metarename",
     "metashape",
+    "metashapepro",
     "metavideo",
     "mgba-app",
     "mi",
@@ -18891,6 +19085,7 @@
     "nanosaur2",
     "nao",
     "naps2",
+    "nativ",
     "native-access",
     "naver-whale",
     "navicat-data-modeler",
@@ -19123,6 +19318,7 @@
     "owocr",
     "oxygen-xml-developer",
     "oxygen-xml-editor",
+    "p2p-kiwi",
     "p4v",
     "pacifist",
     "packages",
@@ -19136,6 +19332,7 @@
     "pale-moon",
     "paletro",
     "pallotron-yubiswitch",
+    "pally",
     "palmier-pro",
     "pandora",
     "pangolin",
@@ -19326,6 +19523,7 @@
     "proclaim",
     "productive",
     "profind",
+    "profit",
     "progressive-downloader",
     "projectlibre",
     "pronotes",
@@ -19390,6 +19588,7 @@
     "qt-creator",
     "quakenotch",
     "quakespasm",
+    "quarkclouddrive",
     "quarto",
     "quba",
     "qudedup-extract-tool",
@@ -19705,6 +19904,7 @@
     "siyuan",
     "sizeup",
     "sizzy",
+    "sjmcl",
     "sketch",
     "sketchup",
     "skills-manager",
@@ -19937,6 +20137,7 @@
     "tablepro",
     "tabtab",
     "tabula",
+    "tabularis",
     "taccy",
     "tad",
     "tag-app",
@@ -19956,6 +20157,7 @@
     "taskpaper",
     "tastytrade",
     "tauritavern",
+    "tcp-viewer",
     "teacode",
     "teambition",
     "teamspeak-client",
@@ -19976,6 +20178,7 @@
     "tencent-lemon",
     "tencent-meeting",
     "tencent-ugit",
+    "tentacle-sync-studio",
     "terax",
     "termius",
     "termora",
@@ -20015,6 +20218,7 @@
     "thonny",
     "thor",
     "thorium",
+    "thoughtdag",
     "threema",
     "threema-work",
     "threema@beta",
@@ -20062,7 +20266,9 @@
     "todoist-app",
     "todometer",
     "tofu",
+    "token-monitor",
     "tolaria",
+    "tone3000",
     "toolhive-studio",
     "toolreleases",
     "toontown-rewritten",
@@ -20100,6 +20306,7 @@
     "trex",
     "trezor-suite",
     "trickster",
+    "triggerflo",
     "trilium-notes",
     "trim-enabler",
     "trimmy",
@@ -20169,6 +20376,7 @@
     "unraid-usb-creator",
     "unraid-usb-creator-next",
     "unshaky",
+    "unsloth",
     "updatest",
     "updf",
     "upscayl",
@@ -20282,6 +20490,7 @@
     "wacom-tablet",
     "wailbrew",
     "wakatime",
+    "waku",
     "wallpaper-wizard",
     "wallspace",
     "waltr",
@@ -20294,6 +20503,7 @@
     "waterfox",
     "wave",
     "wavebox",
+    "waveforms",
     "waves-central",
     "wch-ch34x-usb-serial-driver",
     "wealthfolio",
@@ -20403,6 +20613,7 @@
     "xmlmind-editor",
     "xmplify",
     "xnapper",
+    "xnconvert",
     "xnviewmp",
     "xonotic",
     "xprocheck",
