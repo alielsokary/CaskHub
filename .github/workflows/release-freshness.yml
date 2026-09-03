@@ -6,6 +6,9 @@ name: Release freshness
 on:
   pull_request:
     branches: [master]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
 
 permissions:
   contents: read
