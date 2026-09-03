@@ -4,6 +4,12 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.8.1 — 2026-09-03
+
+### What's New
+
+- Added Ukrainian localization, translated by @Disconnecter
+
 ## 0.8.0 — 2026-08-25
 
 ### What's New
