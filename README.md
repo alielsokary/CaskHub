@@ -112,12 +112,13 @@ CaskHub also sends crash reports and technical diagnostics through [Sentry](http
 
 You can opt out of everything at any time in **Settings → Privacy**.
 
-## Localization
+## Localization 🌎
 
 CaskHub speaks your language. Currently available in:
 
 - 🇬🇧 **English**
 - 🇨🇳 **简体中文 (Simplified Chinese)** — translated by [@carty900-jpg](https://github.com/carty900-jpg)
+- 🇺🇦 **Українська (Ukrainian)** — translated by [@Disconnecter](https://github.com/Disconnecter)
 
 macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.
 
