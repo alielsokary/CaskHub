@@ -1,13 +1,22 @@
 # CaskHub
 
-[![Tests](https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml/badge.svg?branch=develop)](https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b2d4203ef8724bc0a2265af613ac29c9)](https://app.codacy.com/gh/alielsokary/CaskHub/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![codecov](https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg)](https://codecov.io/gh/alielsokary/CaskHub)
-[![macOS](https://img.shields.io/badge/macOS-15.6%2B-blue)](https://github.com/alielsokary/CaskHub/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/alielsokary/CaskHub)](https://github.com/alielsokary/CaskHub/releases/latest)
+<p align="center">
+  <a href="https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml"><img src="https://github.com/alielsokary/CaskHub/actions/workflows/tests.yml/badge.svg?branch=develop" alt="Tests"></a>
+  <a href="https://app.codacy.com/gh/alielsokary/CaskHub/dashboard?utm_source=gh&amp;utm_medium=referral&amp;utm_content=&amp;utm_campaign=Badge_grade"><img src="https://app.codacy.com/project/badge/Grade/b2d4203ef8724bc0a2265af613ac29c9" alt="Codacy Badge"></a>
+  <a href="https://codecov.io/gh/alielsokary/CaskHub"><img src="https://codecov.io/gh/alielsokary/CaskHub/branch/develop/graph/badge.svg" alt="codecov"></a>
+  <a href="https://github.com/alielsokary/CaskHub/releases/latest"><img src="https://img.shields.io/badge/macOS-15.6%2B-blue" alt="macOS"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://github.com/alielsokary/CaskHub/releases/latest"><img src="https://img.shields.io/github/v/release/alielsokary/CaskHub" alt="Latest release"></a>
+</p>
 
-<img width="850" height="250" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
+<p align="center">
+  <a href="https://trendshift.io/repositories/87516?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-87516" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/87516" alt="alielsokary%2FCaskHub | Trendshift" width="250" height="55"/></a>
+  <a href="https://www.producthunt.com/products/caskhub?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-caskhub" target="_blank" rel="noopener noreferrer"><img alt="CaskHub - The Mac app store Homebrew never had | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1233154&amp;theme=light&amp;t=1788444308443"></a>
+</p>
+
+<p align="center">
+  <img width="850" height="250" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
+</p>
 
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
@@ -103,12 +112,13 @@ CaskHub also sends crash reports and technical diagnostics through [Sentry](http
 
 You can opt out of everything at any time in **Settings → Privacy**.
 
-## Localization
+## Localization 🌎
 
 CaskHub speaks your language. Currently available in:
 
 - 🇬🇧 **English**
 - 🇨🇳 **简体中文 (Simplified Chinese)** — translated by [@carty900-jpg](https://github.com/carty900-jpg)
+- 🇺🇦 **Українська (Ukrainian)** — translated by [@Disconnecter](https://github.com/Disconnecter)
 
 macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.
 
