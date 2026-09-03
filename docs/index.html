@@ -152,6 +152,7 @@
   }
   .btn-ghost { border: 1px solid var(--line); color: var(--cream); background: rgba(244, 234, 213, .04); }
   .btn-ghost:hover { background: rgba(244, 234, 213, .09); color: var(--cream); transform: translateY(-2px); }
+  .btn .count { display: inline-flex; align-items: center; gap: 5px; margin-left: 2px; padding: 3px 10px; border-radius: 999px; background: rgba(244, 234, 213, .1); font-size: .88rem; color: var(--gold); }
   .hero .meta { margin-top: 22px; font-size: .9rem; color: var(--text-dim); font-weight: 600; }
   .hero .meta span { margin: 0 6px; }
   .hero .badges { margin-top: 18px; align-items: center; }
@@ -375,13 +376,17 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg>
         Download for macOS
       </a>
-      <a class="btn btn-ghost" href="https://github.com/alielsokary/CaskHub">View source</a>
+      <a class="btn btn-ghost" id="gh-star" href="https://github.com/alielsokary/CaskHub" aria-label="Star CaskHub on GitHub">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        Star on GitHub
+        <span class="count"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg><span id="gh-stars">1.1k</span></span>
+      </a>
     </div>
     <p class="meta rise d6">100% free &amp; open source <span>·</span> MIT licensed <span>·</span> macOS 15.6+</p>
-    <!-- Product Hunt badge is fetched live (upvote count); the bundled SVG is only a fallback if the request fails -->
+    <!-- Product Hunt badge is fetched live; the bundled SVG is a fallback for blocked requests (Fanboy annoyance list blocks api.producthunt.com) -->
     <div class="cta-row badges rise d7">
       <a href="https://trendshift.io/repositories/87516?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-87516" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/87516" alt="alielsokary%2FCaskHub | Trendshift" width="250" height="55"/></a>
-      <a href="https://www.producthunt.com/products/caskhub?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-caskhub" target="_blank" rel="noopener noreferrer"><img alt="CaskHub - The Mac app store Homebrew never had | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1233154&amp;theme=light&amp;t=1788444308443" onerror="this.onerror=null;this.src='assets/producthunt-badge.svg'"></a>
+      <a href="https://www.producthunt.com/products/caskhub?utm_source=badge-follow&amp;utm_medium=badge&amp;utm_campaign=badge-caskhub" target="_blank" rel="noopener noreferrer"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1302237&amp;theme=light" onerror="this.onerror=null;this.src='assets/producthunt-badge.svg'" alt="CaskHub - The Mac app store Homebrew never had | Product Hunt" width="250" height="54"></a>
     </div>
     <video class="app-shot rise d7" autoplay muted loop playsinline poster="assets/app-screenshot.webp" width="2064" height="1272" aria-label="CaskHub's Browse tab scrolling through curated shelves, Most Popular and Recently Added casks, and categories">
       <source src="assets/app-demo.mp4" type="video/mp4">
@@ -549,6 +554,14 @@
     demo.removeAttribute("autoplay");
     demo.pause();
   }
+  fetch("https://api.github.com/repos/alielsokary/CaskHub")
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(({ stargazers_count: n }) => {
+      document.getElementById("gh-stars").textContent =
+        new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n).toLowerCase();
+      document.getElementById("gh-star").setAttribute("aria-label", `Star CaskHub on GitHub, ${n.toLocaleString("en")} stars`);
+    })
+    .catch(() => {});
   const copyBtn = document.getElementById("copy");
   copyBtn.addEventListener("click", async () => {
     await navigator.clipboard.writeText(document.getElementById("brew-cmd").textContent);
