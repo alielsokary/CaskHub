@@ -9,6 +9,11 @@
 
 <img width="850" height="250" alt="caskhub-banner-dark" src="https://github.com/user-attachments/assets/24326700-e485-4714-993f-648c2a36c25b" />
 
+<p align="center">
+  <a href="https://trendshift.io/repositories/87516?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-87516" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/87516" alt="alielsokary%2FCaskHub | Trendshift" width="250" height="55"/></a>
+  <a href="https://www.producthunt.com/products/caskhub?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-caskhub" target="_blank" rel="noopener noreferrer"><img alt="CaskHub - The Mac app store Homebrew never had | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1233154&amp;theme=light&amp;t=1788444308443"></a>
+</p>
+
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
 CaskHub is 100% free and open source, no subscription, no premium tier, no ads, nothing.
