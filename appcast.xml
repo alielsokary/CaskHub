@@ -3,29 +3,18 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.8.0</title>
-            <pubDate>Mon, 24 Aug 2026 22:36:58 +0000</pubDate>
-            <sparkle:version>624</sparkle:version>
-            <sparkle:shortVersionString>0.8.0</sparkle:shortVersionString>
+            <title>0.8.1</title>
+            <pubDate>Thu, 03 Sep 2026 15:09:15 +0000</pubDate>
+            <sparkle:version>637</sparkle:version>
+            <sparkle:shortVersionString>0.8.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Added the Health page: run a Homebrew checkup, update Homebrew, sync your collection, and reclaim disk space from caches, old versions, and orphaned dependencies
-- Added Brewfile export and import in Shelf Setup to back up and restore your app shelf
-
-### Improvements
-
-- Homebrew commands now run one at a time, preventing conflicting operations
-- Sidebar hides zero counts for Installed, Updates, and Adopt Apps
-- Cleaner Settings window, with the icon cache now managed from the Health page
-
-### Bug Fixes
-
-- Fixed app adoption confirming against an outdated list of installed apps
+- Added Ukrainian localization, translated by @Disconnecter
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.0/CaskHub-0.8.0.zip" length="7084935" type="application/octet-stream" sparkle:edSignature="Cz6B4l8fFveTg7SSACJLnnada4E22QTsmWTvwSwlerxqpLBQaFQtCi0Yf3y+MnEViLa8uuU0Q37tWzEI8QRnBw=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.1/CaskHub-0.8.1.zip" length="7100039" type="application/octet-stream" sparkle:edSignature="9Z0qrz7xo1FvtblhdZcnVaY3m7sBabirTKCRv1Yos2YoLgQoXmiRIvS61pzam5LoTTC1qpnl9lydoVp99dD4DA=="/>
         </item>
     </channel>
 </rss>
