@@ -121,6 +121,7 @@ struct AboutSettingsView: View {
 }
 
 struct GeneralSettingsView: View {
+    @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var settingsModel = GeneralSettingsModel()
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
 
@@ -140,6 +141,19 @@ struct GeneralSettingsView: View {
                 Text("Adopt Apps lists installed apps that Homebrew can start managing for you.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
+            }
+            Section {
+                Toggle(isOn: Binding(
+                    get: { localHomebrew.zapOnUninstall },
+                    set: { localHomebrew.setZapOnUninstall($0) }
+                )) {
+                    Text(.settingsUninstallRemoveAppData)
+                }
+                Text(.settingsUninstallDescription)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text(.settingsUninstallTitle)
             }
             Section("Permissions") {
                 LabeledContent("App Management") {
