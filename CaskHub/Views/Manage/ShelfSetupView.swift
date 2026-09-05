@@ -21,9 +21,8 @@ struct ShelfSetupView: View {
                 brewfileCard
                 ignoreCard
             }
-            .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
             .padding(.horizontal, CHSpace.s5)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)

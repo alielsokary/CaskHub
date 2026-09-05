@@ -47,8 +47,8 @@ extension ContentView {
                 caskGrid(viewModel.displayedCasks, showsReveal: true)
             }
         }
-        .frame(width: CHSize.contentWidth, alignment: .leading)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, CHSpace.s5)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -74,8 +74,8 @@ extension ContentView {
                     browseSectionView(section)
                 }
             }
-            .frame(width: CHSize.contentWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, CHSpace.s5)
+            .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             LazyVStack(spacing: 0) {
                 caskList(viewModel.displayedCasks)
@@ -83,7 +83,7 @@ extension ContentView {
                     RevealSentinel { viewModel.revealMore() }
                 }
             }
-            .frame(width: CHSize.contentWidth)
+            .padding(.horizontal, CHSpace.s5)
             .frame(maxWidth: .infinity)
         }
     }

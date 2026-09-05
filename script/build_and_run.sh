@@ -12,12 +12,19 @@ APP_BINARY="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 
+CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY:--}"
+DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-}"
+CODE_SIGN_STYLE="${CODE_SIGN_STYLE:-Manual}"
+
 xcodebuild \
   -project "$ROOT_DIR/CaskHub.xcodeproj" \
   -scheme "$APP_NAME" \
   -configuration Debug \
   -destination "platform=macOS" \
   -derivedDataPath "$DERIVED_DATA_DIR" \
+  CODE_SIGN_IDENTITY="$CODE_SIGN_IDENTITY" \
+  CODE_SIGN_STYLE="$CODE_SIGN_STYLE" \
+  DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
   build
 
 open_app() {

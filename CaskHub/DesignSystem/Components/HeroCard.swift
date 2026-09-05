@@ -59,7 +59,8 @@ struct HeroCard: View {
         }
         .padding(.vertical, 22)
         .padding(.horizontal, 28)
-        .frame(width: CHSize.contentWidth, height: CHSize.heroHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: CHSize.heroHeight)
         .glassPanel(radius: CHRadius.hero, surface: .chSurfaceHero, shadow: .chShadowHero)
     }
 

@@ -37,10 +37,12 @@ struct TopBarView: View {
             Text(title)
                 .font(CHType.topBarTitle)
                 .foregroundStyle(Color.chTextTitle)
+                .lineLimit(1)
 
             Text("\(caskCount) casks")
                 .font(CHType.countMeta)
                 .foregroundStyle(Color.chTextMuted)
+                .lineLimit(1)
 
             Spacer(minLength: 10)
 
@@ -252,7 +254,7 @@ struct TopBarView: View {
         }
         .padding(.vertical, 5)
         .padding(.horizontal, 12)
-        .frame(width: 240)
+        .frame(minWidth: 140, idealWidth: 200, maxWidth: 240)
         .background(Capsule().fill(Color.chSurfaceField))
         .overlay(Capsule().strokeBorder(Color.chHairlineStrong, lineWidth: 1))
     }
