@@ -213,13 +213,19 @@ final class AdoptionViewRenderTests: XCTestCase {
 
     @MainActor
     func test_uninstall_alert_shows_copyable_command_with_destructive_button() {
-        let alert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina", name: "IINA"))
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("uninstall-alert"))
+        let alert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina", name: "IINA"), service: service)
 
         XCTAssertEqual(alert.messageText, "Uninstall IINA?")
         XCTAssertEqual(alert.informativeText, "This will run:")
         XCTAssertNotNil(alert.accessoryView)
         XCTAssertEqual(alert.buttons.map(\.title), ["Uninstall", "Cancel"])
         XCTAssertTrue(alert.buttons[0].hasDestructiveAction)
+
+        service.setZapOnUninstall(true)
+        let zapAlert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina"), service: service)
+        XCTAssertTrue(zapAlert.informativeText.contains("preferences, caches, and support files"))
+        XCTAssertNotNil(zapAlert.accessoryView)
     }
 
     @MainActor

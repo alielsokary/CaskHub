@@ -463,3 +463,64 @@ final class MutationRecoveryTests: XCTestCase {
         }
     }
 }
+
+extension MutationRecoveryTests {
+    func test_uninstall_zap_preference_persists_and_controls_commands() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeService(runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty))
+        XCTAssertFalse(service.zapOnUninstall)
+        try await service.uninstall(token: "zed")
+
+        service.setZapOnUninstall(true)
+        let restored = makeService(runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty))
+        XCTAssertTrue(restored.zapOnUninstall)
+        try await restored.uninstall(token: "zed")
+
+        updateInstalledCask(LocalCaskInstallation(
+            token: "zed", installedVersion: "1.0", installedAt: nil,
+            appBundleNames: ["Zed.app"], isZombie: true
+        ), in: restored)
+        try await restored.uninstall(token: "zed")
+
+        restored.setZapOnUninstall(false)
+        let disabled = makeService(runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty))
+        XCTAssertFalse(disabled.zapOnUninstall)
+        try await disabled.uninstall(token: "zed")
+
+        XCTAssertEqual(runner.requests.map(\.arguments), [
+            ["uninstall", "--cask", "zed"],
+            ["uninstall", "--cask", "zed", "--zap"],
+            ["uninstall", "--cask", "zed", "--force", "--zap"],
+            ["uninstall", "--cask", "zed"]
+        ])
+    }
+
+    func test_repair_and_replacement_preserve_data_when_zap_is_enabled() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeService(runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty))
+        service.setZapOnUninstall(true)
+
+        try await service.repair(token: "zed")
+        try await service.repairReinstalling(token: "zed")
+        try await service.replacePackageForAdoption(token: "zed")
+
+        let uninstalls = runner.requests.filter { $0.arguments.first == "uninstall" }
+        XCTAssertEqual(uninstalls.count, 3)
+        XCTAssertTrue(uninstalls.allSatisfy { $0.arguments == ["uninstall", "--cask", "zed", "--force"] })
+    }
+
+    func test_zap_cleanup_failure_is_reported_even_after_app_removal() async {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(exitCode: 1, output: "Error: zap cleanup failed")]
+        let service = makeService(runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty))
+        service.setZapOnUninstall(true)
+
+        do {
+            try await service.uninstall(token: "zed")
+            XCTFail("cleanup failure must not be hidden when the app is already removed")
+        } catch {
+            XCTAssertNotNil(service.actionAlert(for: "zed"))
+            XCTAssertEqual(runner.requests.first?.arguments, ["uninstall", "--cask", "zed", "--zap"])
+        }
+    }
+}

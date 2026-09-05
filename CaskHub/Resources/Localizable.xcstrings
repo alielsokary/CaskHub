@@ -185,6 +185,102 @@
         }
       }
     },
+    "alert.uninstall.zap" : {
+      "comment" : "Uninstall confirmation when app data cleanup is enabled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This also removes preferences, caches, and support files listed by the cask, including any shared files. This will run:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також буде видалено налаштування, кеші та допоміжні файли, зазначені в Cask, зокрема спільні файли. Буде виконано:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这也会移除 Cask 中列出的偏好设置、缓存和支持文件，包括共享文件。将执行："
+          }
+        }
+      }
+    },
+    "settings.uninstall.description" : {
+      "comment" : "Settings footnote explaining Homebrew zap cleanup",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uses Homebrew’s --zap to remove preferences, caches, and support files listed by the cask."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовує параметр --zap у Homebrew для видалення налаштувань, кешів і допоміжних файлів, зазначених у Cask."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Homebrew 的 --zap 移除 Cask 中列出的偏好设置、缓存和支持文件。"
+          }
+        }
+      }
+    },
+    "settings.uninstall.removeAppData" : {
+      "comment" : "Toggle for removing app data when uninstalling a cask",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove app data on uninstall"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляти дані програми під час її видалення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载时移除应用数据"
+          }
+        }
+      }
+    },
+    "settings.uninstall.title" : {
+      "comment" : "General settings section for app uninstallation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载"
+          }
+        }
+      }
+    },
     "© 2026 Ali Elsokary. All rights reserved." : {
       "shouldTranslate" : false
     },

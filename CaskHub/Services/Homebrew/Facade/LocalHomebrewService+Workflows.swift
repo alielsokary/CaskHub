@@ -42,14 +42,20 @@ extension LocalHomebrewService {
     }
 
     func uninstall(token: String) async throws {
-        // Brew rejects plain uninstall for caskfile-less zombies; --force works.
-        let force = installedCasks[token]?.isZombie == true
         try await runMutation(
             .uninstalling,
             token: token,
-            args: ["uninstall", "--cask", token] + (force ? ["--force"] : []),
+            args: uninstallArguments(token: token),
             origin: .individual
         )
+    }
+
+    func uninstallArguments(token: String) -> [String] {
+        // Brew rejects plain uninstall for caskfile-less zombies; --force works.
+        let force = installedCasks[token]?.isZombie == true
+        return ["uninstall", "--cask", token]
+            + (force ? ["--force"] : [])
+            + (zapOnUninstall ? ["--zap"] : [])
     }
 
     /// Clears a zombie Caskroom entry — the app is already gone, `--force`
