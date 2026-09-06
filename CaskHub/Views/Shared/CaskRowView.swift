@@ -92,6 +92,8 @@ struct CaskRowView: View {
         Text(cask.metaLine(downloads: downloads))
             .font(CHType.statusMono)
             .foregroundStyle(Color.chTextMuted)
+            .lineLimit(2)
+            .help(cask.metaLine(downloads: downloads))
     }
 
     // MARK: - Actions

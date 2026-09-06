@@ -87,7 +87,7 @@ struct CaskHubApp: App {
         Group {
             Window("CaskHub", id: CaskHubWindowID.main) {
                 ContentView(viewModel: catalog)
-                    .frame(minWidth: 1380, minHeight: 640)
+                    .frame(minWidth: 900, minHeight: 500)
                     .background {
                         WindowCloseButtonConfigurator(
                             onClose: { terminationCoordinator.requestTermination() },

@@ -22,10 +22,16 @@ struct ContentView: View {
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
 
-    let columns = Array(
-        repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
-        count: 4
-    )
+    @State private var detailWidth: CGFloat = CHSize.contentWidth + 2 * CHSize.catalogInset
+
+    var catalogWidth: CGFloat {
+        CHSize.catalogWidth(availableWidth: detailWidth - 2 * CHSize.catalogInset)
+    }
+
+    var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: CHSize.minimumCardWidth, maximum: CHSize.maximumCardWidth),
+                  spacing: CHSpace.gridGap)]
+    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: $sidebarVisibility) {
@@ -50,8 +56,8 @@ struct ContentView: View {
                         catalogTopBar
                     }
                 }
-                .frame(maxWidth: CHSize.contentWidth)
-                .padding(.horizontal, CHSpace.s5)
+                .frame(maxWidth: isUtilityPage ? CHSize.contentWidth : catalogWidth)
+                .padding(.horizontal, isUtilityPage ? CHSpace.s5 : CHSize.catalogInset)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, CHSpace.s4)
 
@@ -59,8 +65,8 @@ struct ContentView: View {
                     Text("Results for “\(viewModel.searchText)”")
                         .font(CHType.section)
                         .foregroundStyle(Color.chTextTitle)
-                        .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
-                        .padding(.horizontal, CHSpace.s5)
+                        .frame(maxWidth: catalogWidth, alignment: .leading)
+                        .padding(.horizontal, CHSize.catalogInset)
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, CHSpace.s4)
                 }
@@ -68,6 +74,9 @@ struct ContentView: View {
                 detailContent
                     .environment(\.isAdoptPage, selectedSidebar == .library(.adopt))
             }
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.size.width
+            } action: { detailWidth = $0 }
             .ignoresSafeArea(.container, edges: .top)
         }
         .overlay {

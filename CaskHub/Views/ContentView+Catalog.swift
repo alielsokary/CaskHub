@@ -47,7 +47,8 @@ extension ContentView {
                 caskGrid(viewModel.displayedCasks, showsReveal: true)
             }
         }
-        .frame(width: CHSize.contentWidth, alignment: .leading)
+        .frame(maxWidth: catalogWidth, alignment: .leading)
+        .padding(.horizontal, CHSize.catalogInset)
         .frame(maxWidth: .infinity)
     }
 
@@ -74,7 +75,8 @@ extension ContentView {
                     browseSectionView(section)
                 }
             }
-            .frame(width: CHSize.contentWidth, alignment: .leading)
+            .frame(maxWidth: catalogWidth, alignment: .leading)
+            .padding(.horizontal, CHSize.catalogInset)
             .frame(maxWidth: .infinity)
         } else {
             LazyVStack(spacing: 0) {
@@ -83,7 +85,8 @@ extension ContentView {
                     RevealSentinel { viewModel.revealMore() }
                 }
             }
-            .frame(width: CHSize.contentWidth)
+            .frame(maxWidth: catalogWidth)
+            .padding(.horizontal, CHSize.catalogInset)
             .frame(maxWidth: .infinity)
         }
     }

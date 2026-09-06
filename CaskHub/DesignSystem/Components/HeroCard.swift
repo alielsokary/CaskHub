@@ -35,11 +35,13 @@ struct HeroCard: View {
                         .padding(.top, 5)
                 }
 
-                HStack(spacing: 14) {
-                    CaskActionsView(cask: cask, localState: localState, fullWidth: false)
-                    Text(metaLine)
-                        .font(CHType.statusMono)
-                        .foregroundStyle(Color.chTextMuted)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 14) {
+                        heroActions
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        heroActions
+                    }
                 }
                 .padding(.top, 14)
             }
@@ -59,8 +61,16 @@ struct HeroCard: View {
         }
         .padding(.vertical, 22)
         .padding(.horizontal, 28)
-        .frame(width: CHSize.contentWidth, height: CHSize.heroHeight)
+        .frame(maxWidth: .infinity, minHeight: CHSize.heroHeight)
         .glassPanel(radius: CHRadius.hero, surface: .chSurfaceHero, shadow: .chShadowHero)
+    }
+
+    @ViewBuilder
+    private var heroActions: some View {
+        CaskActionsView(cask: cask, localState: localState, fullWidth: false)
+        Text(metaLine)
+            .font(CHType.statusMono)
+            .foregroundStyle(Color.chTextMuted)
     }
 
     private var metaLine: String {

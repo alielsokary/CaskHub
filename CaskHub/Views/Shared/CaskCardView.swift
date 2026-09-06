@@ -32,7 +32,8 @@ struct CaskCardView: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 15)
-        .frame(width: CHSize.cardWidth, height: CHSize.cardHeight, alignment: .topLeading)
+        .frame(maxWidth: .infinity)
+        .frame(height: CHSize.cardHeight, alignment: .topLeading)
         .glassPanel(radius: CHRadius.card)
         .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }
@@ -102,6 +103,8 @@ struct CaskCardView: View {
         Text(cask.metaLine(downloads: downloads))
             .font(CHType.metaMono)
             .foregroundStyle(Color.chTextMuted)
+            .lineLimit(1)
+            .help(cask.metaLine(downloads: downloads))
     }
 }
 
