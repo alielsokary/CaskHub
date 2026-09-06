@@ -219,10 +219,8 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
                 ("Motion.app", "com.apple.motionapp"),
                 ("Verified.app", "com.example.verified")
             ] {
-                try makeApplicationBundle(
-                    in: root, named: name, bundleIdentifier: identifier,
-                    macAppStoreReceipt: hasReceipt
-                )
+                try makeApplicationBundle(in: root, named: name,
+                                          bundleIdentifier: identifier, macAppStoreReceipt: hasReceipt)
             }
             let classicCollision = makeCask("spark-app", appNames: ["Spark.app"])
             let motionCollision = makeCask("motion", appNames: ["Motion.app"])
