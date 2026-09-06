@@ -180,6 +180,8 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     let autoUpdates: Bool?
     let conflictsWith: CaskConflicts?
     var artifacts: [ArtifactStanza]?
+    /// Verified identities supplied by CaskFlow, scoped to this cask's app artifacts.
+    var catalogBundleIdentifiers: [String]?
 
     var id: String {
         token
@@ -206,11 +208,9 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
         artifacts?.flatMap(\.packageIdentifiers) ?? []
     }
 
-    /// Bundle IDs Homebrew asks to quit before uninstalling. Unlike pkgutil
-    /// receipts, these identify the application itself and can safely relate
-    /// App Store and direct-download variants of the same product family.
+    /// Bundle IDs declared by Homebrew or verified in the CaskFlow identity manifest.
     var applicationBundleIdentifiers: [String] {
-        artifacts?.flatMap(\.applicationBundleIdentifiers) ?? []
+        (artifacts?.flatMap(\.applicationBundleIdentifiers) ?? []) + (catalogBundleIdentifiers ?? [])
     }
 
     /// Application bundles installed indirectly by a package artifact.

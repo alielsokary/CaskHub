@@ -79,10 +79,10 @@ final class CaskHubTests: XCTestCase {
     func test_adoptable_requires_on_disk_app_and_no_brew_install() {
         let service = LocalHomebrewService()
         updateInstallationSnapshot(of: service) {
-            $0.externalAppNames = ["Google Chrome.app"]
+            $0.detectedApplications = [makeDetectedApplication("Google Chrome.app", id: "com.google.Chrome")]
         }
 
-        let chrome = makeCask("google-chrome", appNames: ["Google Chrome.app"])
+        let chrome = makeCask("google-chrome", appNames: ["Google Chrome.app"], applicationBundleIdentifiers: ["com.google.Chrome"])
         XCTAssertTrue(service.localState(for: chrome).isAdoptable)
 
         updateInstalledCask(installation("google-chrome", version: "1.0"), in: service)
@@ -134,9 +134,7 @@ final class CaskHubTests: XCTestCase {
         XCTAssertEqual(service.localState(for: managed).uninstallAvailability, .available)
 
         let adoptable = makeCask("adoptable", appNames: ["Adoptable.app"])
-        updateInstallationSnapshot(of: service) {
-            $0.externalAppNames = ["Adoptable.app"]
-        }
+        seedExternalInstallation(of: adoptable, version: "1.0", in: service)
         let adoptHint = String(
             localized: "Adopt this app first so CaskHub can manage/uninstall it."
         )
@@ -145,9 +143,10 @@ final class CaskHubTests: XCTestCase {
             adoptHint
         )
 
-        let store = makeCask("store", appNames: ["Store.app"])
+        let store = makeCask("store", appNames: ["Store.app"], applicationBundleIdentifiers: ["com.example.store"])
         updateInstallationSnapshot(of: service) {
             $0.macAppStoreAppNames = ["Store.app"]
+            $0.macAppStoreBundleIdentifiers = ["Store.app": ["com.example.store"]]
         }
         let storeHint = String(
             localized: """
@@ -506,11 +505,11 @@ final class CaskHubTests: XCTestCase {
     func test_adopt_sidebar_filter_lists_only_adoptable_casks() async {
         let homebrew = LocalHomebrewService()
         updateInstallationSnapshot(of: homebrew) {
-            $0.externalAppNames = ["Google Chrome.app"]
+            $0.detectedApplications = [makeDetectedApplication("Google Chrome.app", id: "com.google.Chrome")]
         }
         let (vm, _) = await makeSUT(
             casks: [
-                makeCask("google-chrome", appNames: ["Google Chrome.app"]),
+                makeCask("google-chrome", appNames: ["Google Chrome.app"], applicationBundleIdentifiers: ["com.google.Chrome"]),
                 makeCask("slack", appNames: ["Slack.app"])
             ],
             localHomebrew: homebrew

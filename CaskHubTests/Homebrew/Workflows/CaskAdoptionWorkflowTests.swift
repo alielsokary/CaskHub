@@ -352,4 +352,34 @@ extension CaskAdoptionWorkflowTests {
             "install", "--cask", cask.token, "--force"
         ]])
     }
+    func test_homebrew_package_replacement_recovery_preserves_package_execution() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeMutationService(runner: runner, permissionProbe: { .granted })
+        let cask = makeCask("managed", packageIdentifiers: ["com.example.managed"])
+        updateInstalledCask(installation(cask.token, version: "1.0"), in: service)
+
+        await service.requestReplacementAdoption(cask)
+
+        let request = try XCTUnwrap(service.operationStore.state(for: cask.token)?.adoptionRequest)
+        XCTAssertEqual(request.plan.execution, .replacePackage)
+        XCTAssertTrue(runner.requests.isEmpty)
+    }
+
+    func test_replacement_confirmation_stops_when_identity_is_no_longer_resolved() async throws {
+        let runner = StubBrewProcessRunner()
+        let service = makeMutationService(
+            runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty),
+            permissionProbe: { .granted }
+        )
+        let cask = makeCask("changed", appNames: ["Changed.app"])
+        seedExternalInstallation(of: cask, version: "1.0", in: service)
+        await service.requestReplacementAdoption(cask)
+        let request = try XCTUnwrap(service.operationStore.state(for: cask.token)?.adoptionRequest)
+
+        try await service.confirmAdoption(request)
+
+        XCTAssertTrue(runner.requests.isEmpty)
+        XCTAssertNil(service.operationStore.state(for: cask.token))
+    }
+
 }

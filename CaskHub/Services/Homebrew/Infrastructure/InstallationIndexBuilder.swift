@@ -195,7 +195,6 @@ nonisolated struct InstallationIndexBuilder: Sendable {
         _ application: DetectedApplication,
         matches signature: MacAppStoreCaskSignature
     ) -> Bool {
-        guard signature.hasPackageArtifact else { return true }
         guard let bundleIdentifier = application.bundleIdentifier else { return false }
         if !signature.applicationBundleIdentifiers.isEmpty {
             return ApplicationIdentityMatcher.applicationBundleIdentifier(
@@ -203,7 +202,7 @@ nonisolated struct InstallationIndexBuilder: Sendable {
                 matchesAny: signature.applicationBundleIdentifiers
             )
         }
-        return ApplicationIdentityMatcher.bundleIdentifier(
+        return signature.hasPackageArtifact && ApplicationIdentityMatcher.bundleIdentifier(
             bundleIdentifier,
             matchesPackageIdentifiers: signature.packageIdentifiers
         )
