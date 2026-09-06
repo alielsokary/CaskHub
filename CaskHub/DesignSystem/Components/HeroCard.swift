@@ -13,6 +13,10 @@ struct HeroCard: View {
     var categoryName: String?
     var localState: CaskLocalState?
 
+    @Environment(\.catalogTextScale) private var textScale
+
+    private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
+
     var body: some View {
         HStack(spacing: 28) {
             VStack(alignment: .leading, spacing: 0) {
@@ -23,12 +27,12 @@ struct HeroCard: View {
                     .padding(.bottom, 6)
 
                 Text(cask.displayName)
-                    .font(CHType.heroTitle)
+                    .font(typography.hero)
                     .foregroundStyle(Color.chTextTitle)
 
                 if let desc = cask.desc {
                     Text(desc)
-                        .font(CHType.body)
+                        .font(typography.body)
                         .foregroundStyle(Color.chTextBody)
                         .lineLimit(2)
                         .frame(maxWidth: 520, alignment: .leading)
@@ -69,7 +73,7 @@ struct HeroCard: View {
     private var heroActions: some View {
         CaskActionsView(cask: cask, localState: localState, fullWidth: false)
         Text(metaLine)
-            .font(CHType.statusMono)
+            .font(typography.status)
             .foregroundStyle(Color.chTextMuted)
     }
 

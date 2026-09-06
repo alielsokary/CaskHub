@@ -16,6 +16,7 @@ struct ContentView: View {
     @Environment(CategoryService.self) private var categoryService
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(MaintenanceViewModel.self) private var maintenance
+    @AppStorage("catalogTextSize") private var catalogTextSize: CatalogTextSize = .standard
     @AppStorage("viewMode") var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var sidebarVisibility: NavigationSplitViewVisibility = .all
@@ -79,6 +80,7 @@ struct ContentView: View {
             } action: { detailWidth = $0 }
             .ignoresSafeArea(.container, edges: .top)
         }
+        .environment(\.catalogTextScale, catalogTextSize.scale)
         .overlay {
             Button("") { searchFocused = true }
                 .keyboardShortcut("f", modifiers: .command)

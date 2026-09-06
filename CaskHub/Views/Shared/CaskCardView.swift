@@ -18,6 +18,10 @@ struct CaskCardView: View {
     @State private var showingInfo = false
     @State private var showDeleteConfirmation = false
 
+    @Environment(\.catalogTextScale) private var textScale
+
+    private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             headerRow
@@ -33,7 +37,7 @@ struct CaskCardView: View {
         .padding(.vertical, 14)
         .padding(.horizontal, 15)
         .frame(maxWidth: .infinity)
-        .frame(height: CHSize.cardHeight, alignment: .topLeading)
+        .frame(height: CHSize.cardHeight * textScale, alignment: .topLeading)
         .glassPanel(radius: CHRadius.card)
         .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }
@@ -51,7 +55,7 @@ struct CaskCardView: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(cask.displayName)
-                    .font(CHType.cardTitle)
+                    .font(typography.title)
                     .foregroundStyle(Color.chTextTitle)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -60,7 +64,7 @@ struct CaskCardView: View {
                         onSelectCategory?(category.mainID)
                     } label: {
                         Text(category.mainName)
-                            .font(CHType.tag)
+                            .font(typography.tag)
                             .foregroundStyle(Color.chTextBrand)
                     }
                     .buttonStyle(.plain)
@@ -72,7 +76,7 @@ struct CaskCardView: View {
 
             infoButton
         }
-        .frame(height: 48, alignment: .top)
+        .frame(height: 48 * textScale, alignment: .top)
     }
 
     private var infoButton: some View {
@@ -93,15 +97,15 @@ struct CaskCardView: View {
 
     private var descriptionText: some View {
         Text(cask.desc ?? " ")
-            .font(CHType.bodySm)
+            .font(typography.description)
             .foregroundStyle(Color.chTextBody)
             .lineLimit(2)
-            .frame(minHeight: 30, alignment: .top)
+            .frame(minHeight: 30 * textScale, alignment: .top)
     }
 
     private var metadataLine: some View {
         Text(cask.metaLine(downloads: downloads))
-            .font(CHType.metaMono)
+            .font(typography.meta)
             .foregroundStyle(Color.chTextMuted)
             .lineLimit(1)
             .help(cask.metaLine(downloads: downloads))

@@ -14,20 +14,20 @@ enum CHType {
 
     // Display — wordmark, screen titles, section heads
     static let wordmark = Font.custom(displayFamily, size: 19).weight(.heavy)
-    static let heroTitle = Font.custom(displayFamily, size: 28).weight(.heavy)
+    static let heroTitle = Catalog(scale: 1).hero
     static let section = Font.custom(displayFamily, size: 16).weight(.heavy)
 
     static let topBarTitle = Font.custom(displayFamily, size: 18).weight(.heavy)
 
     // UI — everything else
-    static let cardTitle = Font.custom(uiFamily, size: 13).weight(.heavy)
-    static let tag = Font.custom(uiFamily, size: 10).weight(.bold) // card category tag
+    static let cardTitle = Catalog(scale: 1).title
+    static let tag = Catalog(scale: 1).tag
     static let countMeta = Font.custom(uiFamily, size: 11.5).weight(.semibold) // "3,781 casks" in top bar
     static let field = Font.custom(uiFamily, size: 12.5).weight(.semibold) // search field
     static let navItem = Font.custom(uiFamily, size: 13).weight(.semibold)
     static let navActive = Font.custom(uiFamily, size: 13).weight(.heavy)
-    static let bodySm = Font.custom(uiFamily, size: 11).weight(.semibold)
-    static let body = Font.custom(uiFamily, size: 13).weight(.semibold)
+    static let bodySm = Catalog(scale: 1).description
+    static let body = Catalog(scale: 1).body
     static let button = Font.custom(uiFamily, size: 12).weight(.heavy)
     static let downloadLabel = Font.custom(uiFamily, size: 10).weight(.semibold)
     static let downloadProgress = Font.custom(uiFamily, size: 9).weight(.semibold)
@@ -35,10 +35,41 @@ enum CHType {
     static let labelSm = Font.custom(uiFamily, size: 9).weight(.heavy) // row eyebrow
 
     // Mono — versions, counts, keycaps, status bar
-    static let metaMono = Font.custom(monoFamily, size: 9.5)
-    static let statusMono = Font.custom(monoFamily, size: 10.5)
+    static let metaMono = Catalog(scale: 1).meta
+    static let statusMono = Catalog(scale: 1).status
     static let keycap = Font.custom(monoFamily, size: 9.5).weight(.bold)
 
     static let trackingLabel: CGFloat = 2
     static let trackingEyebrow: CGFloat = 2.2
+}
+
+/// A catalog-only preference; display scaling remains controlled by macOS.
+enum CatalogTextSize: String, CaseIterable {
+    case standard, larger, largest
+
+    var scale: CGFloat {
+        switch self {
+        case .standard: 1
+        case .larger: 1.1
+        case .largest: 1.2
+        }
+    }
+}
+
+extension EnvironmentValues {
+    @Entry var catalogTextScale: CGFloat = 1
+}
+
+extension CHType {
+    struct Catalog {
+        let scale: CGFloat
+
+        var title: Font { .custom(uiFamily, size: 13 * scale).weight(.heavy) }
+        var tag: Font { .custom(uiFamily, size: 10 * scale).weight(.bold) }
+        var description: Font { .custom(uiFamily, size: 11 * scale).weight(.semibold) }
+        var body: Font { .custom(uiFamily, size: 13 * scale).weight(.semibold) }
+        var meta: Font { .custom(monoFamily, size: 9.5 * scale) }
+        var status: Font { .custom(monoFamily, size: 10.5 * scale) }
+        var hero: Font { .custom(displayFamily, size: 28 * scale).weight(.heavy) }
+    }
 }
