@@ -142,13 +142,12 @@ nonisolated struct ApplicationOwnershipResolver: Sendable {
         for application: DetectedApplication,
         candidates: [ApplicationCaskSignature]
     ) -> ApplicationCaskSignature? {
-        if candidates.count == 1 { return candidates[0] }
-        guard candidates.count > 1,
-              let identifier = application.bundleIdentifier?.lowercased()
-        else { return nil }
+        guard let identifier = application.bundleIdentifier else { return nil }
 
         let exactMatches = candidates.filter { signature in
-            signature.bundleIdentifiers.contains { $0.lowercased() == identifier }
+            ApplicationIdentityMatcher.applicationBundleIdentifier(
+                identifier, matchesAny: Array(signature.bundleIdentifiers)
+            )
         }
         return exactMatches.count == 1 ? exactMatches[0] : nil
     }
@@ -163,13 +162,8 @@ nonisolated enum ApplicationIdentityMatcher {
         _ identifier: String,
         matchesAny candidates: [String]
     ) -> Bool {
-        let actual = identifier.lowercased().split(separator: ".").map(String.init)
-        return candidates.contains { candidate in
-            let expected = candidate.lowercased().split(separator: ".").map(String.init)
-            if actual == expected { return true }
-            return zip(actual, expected).prefix { pair in
-                pair.0 == pair.1
-            }.count >= 3
+        !identifier.isEmpty && candidates.contains {
+            $0.caseInsensitiveCompare(identifier) == .orderedSame
         }
     }
 

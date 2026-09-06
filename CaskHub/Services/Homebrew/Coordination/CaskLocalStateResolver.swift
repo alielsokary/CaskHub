@@ -26,12 +26,19 @@ struct CaskLocalStateResolver {
 
     func isAdoptableApplication(_ cask: Cask) -> Bool {
         guard !isInstalled(token: cask.token) else { return false }
-        if hasRegisteredApplicationCatalog {
+        if hasRegisteredApplicationCatalog || snapshot.externalApplicationOwners[cask.token] != nil {
             return snapshot.externalApplicationOwners[cask.token] != nil
         }
-        return cask.appArtifactNames.contains(
-            where: snapshot.externalAppNames.contains
-        )
+        return cask.appArtifactNames.lazy
+            .flatMap { snapshot.detectedApplicationsByBundleName[$0] ?? [] }
+            .contains { application in
+                guard !application.isMacAppStore,
+                      application.isDirectlyInApplicationDirectory,
+                      let identifier = application.bundleIdentifier else { return false }
+                return ApplicationIdentityMatcher.applicationBundleIdentifier(
+                    identifier, matchesAny: cask.applicationBundleIdentifiers
+                )
+            }
     }
 
     func isExternalPackageInstalled(_ cask: Cask) -> Bool {
@@ -52,7 +59,6 @@ struct CaskLocalStateResolver {
         .intersection(snapshot.macAppStoreAppNames)
         guard !matchingNames.isEmpty else { return false }
 
-        guard cask.hasPackageArtifact else { return true }
         return matchingNames.contains { appName in
             snapshot.macAppStoreBundleIdentifiers[appName]?.contains {
                 storeBundleIdentifier($0, matches: cask)
@@ -251,7 +257,6 @@ struct CaskLocalStateResolver {
             .flatMap { snapshot.detectedApplicationsByBundleName[$0] ?? [] }
             .first { application in
                 guard application.isMacAppStore else { return false }
-                guard cask.hasPackageArtifact else { return true }
                 guard let bundleIdentifier = application.bundleIdentifier else {
                     return false
                 }
@@ -269,7 +274,7 @@ struct CaskLocalStateResolver {
                 matchesAny: cask.applicationBundleIdentifiers
             )
         }
-        return ApplicationIdentityMatcher.bundleIdentifier(
+        return cask.hasPackageArtifact && ApplicationIdentityMatcher.bundleIdentifier(
             identifier,
             matchesPackageIdentifiers: cask.packageIdentifiers
         )

@@ -73,7 +73,8 @@ func makeCask(
     if packageIdentifiers != nil || packageAppNames != nil
         || applicationBundleIdentifiers != nil {
         artifacts.append(ArtifactStanza(
-            keys: ["pkg", "uninstall"],
+            keys: packageIdentifiers != nil || packageAppNames != nil
+                ? ["pkg", "uninstall"] : ["uninstall"],
             adoptionSourcePaths: [],
             packageIdentifiers: packageIdentifiers ?? [],
             deletedAppNames: packageAppNames ?? [],
@@ -466,4 +467,18 @@ final class SpyCrashReporterProvider: CrashReporterProvider {
         spans.append(SpanRecord(name: name, operation: operation, span: span))
         return span
     }
+}
+
+@MainActor
+func makeIdentityCategoryService() throws -> CategoryService {
+    let data = Data(#"""
+    {"version":2,"generatedDate":"2026-09-06","categories":{},"tokenToCategory":{},
+     "appIdentities":{
+       "readdle-spark":[{"bundleName":"Spark Desktop.app","bundleIdentifier":"com.readdle.SparkDesktop.appstore"}],
+       "tailscale-app":[{"bundleName":"Tailscale.app","bundleIdentifier":"io.tailscale.ipn.macos"}],
+       "element":[{"bundleName":"Element.app","bundleIdentifier":"im.riot.app"}]}}
+    """#.utf8)
+    let service = CategoryService()
+    service.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: data))
+    return service
 }
