@@ -26,6 +26,11 @@ nonisolated struct TokenCategoryMapping: Codable, Hashable {
     let secondary: [CategoryID]
 }
 
+nonisolated struct CaskAppIdentity: Decodable, Hashable, Sendable {
+    let bundleName: String
+    let bundleIdentifier: String
+}
+
 nonisolated struct CaskCategoryData: Decodable {
     let version: Int
     let generatedDate: String
@@ -35,6 +40,9 @@ nonisolated struct CaskCategoryData: Decodable {
     /// Manifest of tokens with an icon on the CaskFlow icons branch, stamped
     /// into the release asset. Absent in pre-2026.07 data → nil.
     let iconTokens: [String]?
+    // Optional for releases predating app identity metadata.
+    var appIdentities: [String: [CaskAppIdentity]]?
+    var metadataUpdatedAt: String?
 }
 
 @MainActor
@@ -46,6 +54,8 @@ final class CategoryService {
     private(set) var generatedDate: String = ""
     private(set) var releaseTag: String?
     private(set) var iconTokens: Set<String>?
+    private(set) var appIdentities: [String: [CaskAppIdentity]] = [:]
+    private(set) var metadataUpdatedAt: String?
     private(set) var catalogStateRevision = 0
 
     var orderedCategories: [(id: CategoryID, definition: CategoryDefinition)] {
@@ -62,8 +72,8 @@ final class CategoryService {
 
     /// Off-main decode; never overwrites fresher remote data.
     func loadBundledCategoriesAsync() async {
-        guard let catalog = await Self.decodeBundledCategories(),
-              catalog.generatedDate > generatedDate
+        guard version == 0 else { return }
+        guard let catalog = await Self.decodeBundledCategories(), version == 0
         else { return }
         applyData(catalog)
     }
@@ -76,12 +86,30 @@ final class CategoryService {
     }
 
     func refreshFromRemote() async {
-        guard let remote = await CaskFlowReleases.fetch(CaskCategoryData.self, asset: "categories.json"),
-              remote.version == version,
-              remote.generatedDate > generatedDate
-        else { return }
+        await loadBundledCategoriesAsync()
+        guard let remote = await CaskFlowReleases.fetch(CaskCategoryData.self, asset: "categories.json") else { return }
+        applyRemoteData(remote)
+    }
 
+    func applyRemoteData(_ remote: CaskCategoryData) {
+        guard remote.version == version, remote.generatedDate >= generatedDate,
+              remote.generatedDate > generatedDate
+                || (remote.metadataUpdatedAt ?? "") > (metadataUpdatedAt ?? "") else { return }
         applyData(remote)
+    }
+
+    func addingAppIdentities(to casks: [Cask]) -> [Cask] {
+        casks.map { cask in
+            var enriched = cask
+            let names = Set(cask.appArtifactNames + cask.packageAppNameCandidates)
+            enriched.catalogBundleIdentifiers = (appIdentities[cask.token] ?? []).filter {
+                names.contains($0.bundleName)
+                    && $0.bundleIdentifier.range(
+                        of: #"^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"#, options: .regularExpression
+                    ) != nil
+            }.map(\.bundleIdentifier)
+            return enriched
+        }
     }
 
     func applyData(_ catalog: CaskCategoryData) {
@@ -92,6 +120,8 @@ final class CategoryService {
         generatedDate = catalog.generatedDate
         releaseTag = catalog.releaseTag
         iconTokens = catalog.iconTokens.map(Set.init)
+        if let identities = catalog.appIdentities { appIdentities = identities }
+        if let updatedAt = catalog.metadataUpdatedAt { metadataUpdatedAt = updatedAt }
         catalogStateRevision &+= 1
     }
 

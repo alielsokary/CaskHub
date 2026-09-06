@@ -322,3 +322,55 @@ final class CaskCatalogSortTests: XCTestCase {
         XCTAssertEqual(vm.categoryCounts["utilities"], 1)
     }
 }
+
+extension CaskCatalogSortTests {
+    @MainActor
+    func test_identity_only_metadata_update_and_revocation_do_not_require_new_category_date() throws {
+        let service = CategoryService()
+        let legacy = Data(#"{"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{}}"#.utf8)
+        var catalog = try JSONDecoder().decode(CaskCategoryData.self, from: legacy)
+        service.applyData(catalog)
+        catalog.appIdentities = ["mail": [CaskAppIdentity(bundleName: "Mail.app", bundleIdentifier: "org.example.mail")]]
+        catalog.metadataUpdatedAt = "2026-09-06T10:00:00.000000+00:00"
+        service.applyRemoteData(catalog)
+        XCTAssertEqual(service.appIdentities["mail"]?.first?.bundleIdentifier, "org.example.mail")
+        let cask = makeCask("mail", appNames: ["Mail.app"])
+        let enriched = service.addingAppIdentities(to: [cask])[0]
+        XCTAssertEqual(enriched.applicationBundleIdentifiers, ["org.example.mail"])
+        XCTAssertTrue(service.addingAppIdentities(to: [makeCask("mail", appNames: ["Different.app"])])[0]
+            .applicationBundleIdentifiers.isEmpty)
+        catalog.appIdentities = [:]
+        catalog.metadataUpdatedAt = "2026-09-06T11:00:00.000000+00:00"
+        service.applyRemoteData(catalog)
+        XCTAssertTrue(service.addingAppIdentities(to: [enriched])[0].applicationBundleIdentifiers.isEmpty)
+        catalog.appIdentities = ["mail": [CaskAppIdentity(bundleName: "Mail.app", bundleIdentifier: "org.example.stale")]]
+        catalog.metadataUpdatedAt = "2026-09-06T09:00:00.000000+00:00"
+        service.applyRemoteData(catalog)
+        XCTAssertTrue(service.appIdentities.isEmpty)
+    }
+
+    @MainActor
+    func test_catalog_fetch_registers_manifest_identity_with_the_real_app_scanner() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("manifest-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try makeApplicationBundle(in: root, named: "Example.app", bundleIdentifier: "org.example.mail", macAppStoreReceipt: true)
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("manifest-scanner")) {
+            $0.applicationDirectories = [root]
+        }
+        let categories = CategoryService()
+        let data = Data(#"""
+        {"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{},
+         "appIdentities":{"example":[{"bundleName":"Example.app","bundleIdentifier":"org.example.mail"}]}}
+        """#.utf8)
+        categories.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: data))
+        let api = MockBrewAPIClient()
+        api.casks = [makeCask("example", appNames: ["Example.app"])]
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+
+        await vm.fetchCasks()
+
+        XCTAssertEqual(vm.casks.first?.applicationBundleIdentifiers, ["org.example.mail"])
+        XCTAssertEqual(local.localState(for: vm.casks[0]).installationSource, .macAppStore)
+        XCTAssertFalse(local.localState(for: vm.casks[0]).isAdoptable)
+    }
+}

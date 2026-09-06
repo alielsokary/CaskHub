@@ -168,6 +168,11 @@ final class CaskCatalogViewModel {
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
         _ = await (catalog, local, categories, addedDates)
+        let enriched = categoryService.addingAppIdentities(to: casks)
+        if enriched != casks {
+            casks = enriched
+            await localHomebrew.updatePackageCatalog(casks)
+        }
     }
 
     func refreshIfStale(maxAge: TimeInterval = 3600) async {
@@ -188,12 +193,13 @@ final class CaskCatalogViewModel {
             async let analyticsRequest = apiClient.fetchAnalytics(period: .days365)
 
             let allCasks = try await caskRequest
-            casks = allCasks.filter { cask in
+            await categoryService.loadBundledCategoriesAsync()
+            casks = categoryService.addingAppIdentities(to: allCasks.filter { cask in
                 !cask.deprecated
                     && !cask.disabled
                     && !cask.token.contains("@")
                     && !cask.token.hasPrefix("font-")
-            }
+            })
             await localHomebrew.updatePackageCatalog(casks)
 
             if let analytics = try? await analyticsRequest {
