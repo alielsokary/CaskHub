@@ -80,7 +80,6 @@ struct ContentView: View {
             } action: { detailWidth = $0 }
             .ignoresSafeArea(.container, edges: .top)
         }
-        .environment(\.catalogTextScale, catalogTextSize.scale)
         .overlay {
             Button("") { searchFocused = true }
                 .keyboardShortcut("f", modifiers: .command)
@@ -94,6 +93,7 @@ struct ContentView: View {
                 caskFlowRelease: categoryService.releaseTag
             )
         }
+        .environment(\.catalogTextScale, catalogTextSize.scale)
         .containerBackground(for: .window) {
             WindowBackdrop()
         }

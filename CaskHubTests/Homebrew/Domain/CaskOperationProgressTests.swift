@@ -266,6 +266,15 @@ final class CaskOperationProgressTests: XCTestCase {
     }
 
     @MainActor
+    func test_status_bar_text_grows_with_text_size_preference() {
+        let bar = StatusBarView(caskCount: 3_781, caskFlowRelease: "caskflow-v2026.07.18")
+        let standard = NSHostingView(rootView: bar.environment(\.catalogTextScale, 1))
+        let larger = NSHostingView(rootView: bar.environment(\.catalogTextScale, 1.2))
+
+        XCTAssertGreaterThan(larger.fittingSize.width, standard.fittingSize.width)
+    }
+
+    @MainActor
     func test_progress_capsule_and_status_bar_render() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("progress-render"))
         service.mutationCoordinator.beginOperation(

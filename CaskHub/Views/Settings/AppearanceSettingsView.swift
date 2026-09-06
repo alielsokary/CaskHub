@@ -24,7 +24,7 @@ struct AppearanceSettingsView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
             }
-            Section("Catalog Text") {
+            Section("Text Size") {
                 HStack(alignment: .top) {
                     Text("Text size")
                     Spacer(minLength: 16)
@@ -48,7 +48,7 @@ struct AppearanceSettingsView: View {
                     .frame(maxWidth: 320)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                Text("Adjust app names, descriptions, and details in cards and lists.")
+                Text("Adjust text in app cards, lists, the sidebar, and the status bar.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -18,6 +18,10 @@ struct SidebarView: View {
     var adoptableCount: Int = 0
     var categoryCounts: [String: Int] = [:]
 
+    @Environment(\.catalogTextScale) private var textScale
+
+    private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             BrandWordmark()
@@ -82,19 +86,20 @@ struct SidebarView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12 * textScale, weight: .medium))
                     .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextMuted)
-                    .frame(width: 16)
+                    .frame(width: 16 * textScale)
                 Text(title)
-                    .font(isSelected ? CHType.navActive : CHType.navItem)
+                    .font(isSelected ? typography.navigationActive : typography.navigation)
                     .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextNav)
                     .lineLimit(1)
+                    .help(title)
                 Spacer(minLength: 4)
                 if badge > 0 {
                     CountBadge(count: badge)
                 } else if let count, count > 0 {
                     Text("\(count)")
-                        .font(CHType.statusMono)
+                        .font(typography.status)
                         .foregroundStyle(isSelected ? Color.chActionInstallFg : Color.chTextFaint)
                 }
             }
@@ -114,7 +119,7 @@ struct SidebarView: View {
 
     private func sectionHeader(_ title: LocalizedStringKey) -> some View {
         Text(title)
-            .font(CHType.label)
+            .font(typography.label)
             .kerning(CHType.trackingLabel)
             .foregroundStyle(Color.chTextMuted)
             .padding(.top, 16)
