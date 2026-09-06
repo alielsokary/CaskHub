@@ -18,8 +18,7 @@ enum CHRadius {
 /// Catalog content stays bounded while fitting compact windows.
 enum CHSize {
     static let catalogInset: CGFloat = 20
-    static let contentWidth: CGFloat = 1086 // hero + grid column: 4×cardWidth + 3×gridGap
-    static let cardWidth: CGFloat = 261
+    static let contentWidth: CGFloat = 1086 // shared hero and grid width, capped at four columns
     static let minimumCardWidth: CGFloat = 250
     static let maximumCardWidth: CGFloat = 280
 

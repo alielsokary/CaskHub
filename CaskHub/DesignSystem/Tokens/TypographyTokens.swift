@@ -13,7 +13,6 @@ enum CHType {
     static let monoFamily = "JetBrains Mono"
 
     // Display — wordmark, screen titles, section heads
-    static let wordmark = Catalog(scale: 1).wordmark
     static let heroTitle = Catalog(scale: 1).hero
     static let section = Font.custom(displayFamily, size: 16).weight(.heavy)
 
@@ -21,7 +20,6 @@ enum CHType {
 
     // UI — everything else
     static let cardTitle = Catalog(scale: 1).title
-    static let tag = Catalog(scale: 1).tag
     static let countMeta = Font.custom(uiFamily, size: 11.5).weight(.semibold) // "3,781 casks" in top bar
     static let field = Font.custom(uiFamily, size: 12.5).weight(.semibold) // search field
     static let navItem = Catalog(scale: 1).navigation
@@ -35,9 +33,7 @@ enum CHType {
     static let labelSm = Font.custom(uiFamily, size: 9).weight(.heavy) // row eyebrow
 
     // Mono — versions, counts, keycaps, status bar
-    static let metaMono = Catalog(scale: 1).meta
     static let statusMono = Catalog(scale: 1).status
-    static let keycap = Catalog(scale: 1).keycap
 
     static let trackingLabel: CGFloat = 2
     static let trackingEyebrow: CGFloat = 2.2
