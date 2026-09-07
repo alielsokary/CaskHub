@@ -125,24 +125,26 @@ struct ActionCapsuleIconButton: View {
 }
 
 struct CountBadge: View {
+    @Environment(\.catalogTextScale) private var textScale
     let count: Int
 
     var body: some View {
         Text("\(count)")
-            .font(CHType.statusMono.bold())
+            .font(CHType.Catalog(scale: textScale).status.bold())
             .foregroundStyle(Color.chBadgeFg)
     }
 }
 
 struct Keycap: View {
+    @Environment(\.catalogTextScale) private var textScale
     let symbol: String
 
     var body: some View {
         HStack(spacing: 1) {
             Image(systemName: "command")
-                .font(.system(size: 8.5, weight: .bold))
+                .font(.system(size: 8.5 * textScale, weight: .bold))
             Text(symbol.dropFirst())
-                .font(CHType.keycap)
+                .font(CHType.Catalog(scale: textScale).keycap)
         }
         .foregroundStyle(Color.chTextTitle)
         .padding(.horizontal, 6)

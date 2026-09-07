@@ -433,6 +433,45 @@ final class TopBarViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_catalog_width_is_bounded_at_display_sizes_and_breakpoints() {
+        for available in stride(from: CGFloat(250), through: 2200, by: 1) {
+            let width = CHSize.catalogWidth(availableWidth: available)
+            let count = Int((width + CHSpace.gridGap) / (CHSize.minimumCardWidth + CHSpace.gridGap))
+            let cardWidth = (width - CGFloat(count - 1) * CHSpace.gridGap) / CGFloat(count)
+            XCTAssertLessThanOrEqual(width, available)
+            XCTAssertLessThanOrEqual(width, CHSize.contentWidth)
+            XCTAssertTrue((1 ... 4).contains(count))
+            XCTAssertTrue((250 ... 280).contains(cardWidth))
+        }
+        XCTAssertEqual(CHSize.catalogWidth(availableWidth: 730), 574)
+        XCTAssertEqual(CHSize.catalogWidth(availableWidth: 853), 853)
+        XCTAssertEqual(CHSize.catalogWidth(availableWidth: 1058), 1058)
+        XCTAssertEqual(CHSize.catalogWidth(availableWidth: 1506), 1086)
+    }
+
+    @MainActor
+    func test_catalog_compact_window_does_not_force_horizontal_overflow() async {
+        let api = MockBrewAPIClient()
+        api.casks = (0 ..< 8).map { makeCask("cask-\($0)") }
+        let categories = CategoryService()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("compact-layout"))
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await vm.fetchCasks()
+        let storedMode = UserDefaults.standard.string(forKey: "viewMode")
+        let storedSize = UserDefaults.standard.string(forKey: "catalogTextSize")
+        defer {
+            UserDefaults.standard.set(storedMode, forKey: "viewMode")
+            UserDefaults.standard.set(storedSize, forKey: "catalogTextSize")
+        }
+        for mode in [ViewMode.grid, .list] {
+            UserDefaults.standard.set(mode.rawValue, forKey: "viewMode")
+            UserDefaults.standard.set(CatalogTextSize.largest.rawValue, forKey: "catalogTextSize")
+            let window = renderInWindow(vm, categories: categories, local: local, width: 1008)
+            XCTAssertLessThanOrEqual(window.contentView?.fittingSize.width ?? .infinity, 1008)
+        }
+    }
+
+    @MainActor
     func test_error_state_renders_retry_view() async {
         let api = MockBrewAPIClient()
         api.casksError = URLError(.notConnectedToInternet)
@@ -446,13 +485,15 @@ final class TopBarViewTests: XCTestCase {
     }
 
     @MainActor
+    @discardableResult
     private func renderInWindow(
         _ vm: CaskCatalogViewModel,
         categories: CategoryService,
-        local: LocalHomebrewService
-    ) {
+        local: LocalHomebrewService,
+        width: CGFloat = 1200
+    ) -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1200, height: 800),
+            contentRect: NSRect(x: 0, y: 0, width: width, height: 550),
             styleMask: .borderless,
             backing: .buffered,
             defer: false
@@ -477,5 +518,6 @@ final class TopBarViewTests: XCTestCase {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
             window.close()
         }
+        return window
     }
 }

@@ -16,16 +16,23 @@ struct ContentView: View {
     @Environment(CategoryService.self) private var categoryService
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(MaintenanceViewModel.self) private var maintenance
+    @AppStorage("catalogTextSize") private var catalogTextSize: CatalogTextSize = .standard
     @AppStorage("viewMode") var viewMode: ViewMode = .grid
     @FocusState private var searchFocused: Bool
     @State private var sidebarVisibility: NavigationSplitViewVisibility = .all
     @State private var showsResultsHeader = false
     @State private var searchSignalTask: Task<Void, Never>?
 
-    let columns = Array(
-        repeating: GridItem(.fixed(CHSize.cardWidth), spacing: CHSpace.gridGap),
-        count: 4
-    )
+    @State private var detailWidth: CGFloat = CHSize.contentWidth + 2 * CHSize.catalogInset
+
+    var catalogWidth: CGFloat {
+        CHSize.catalogWidth(availableWidth: detailWidth - 2 * CHSize.catalogInset)
+    }
+
+    var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: CHSize.minimumCardWidth, maximum: CHSize.maximumCardWidth),
+                  spacing: CHSpace.gridGap)]
+    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: $sidebarVisibility) {
@@ -50,8 +57,8 @@ struct ContentView: View {
                         catalogTopBar
                     }
                 }
-                .frame(maxWidth: CHSize.contentWidth)
-                .padding(.horizontal, CHSpace.s5)
+                .frame(maxWidth: isUtilityPage ? CHSize.contentWidth : catalogWidth)
+                .padding(.horizontal, isUtilityPage ? CHSpace.s5 : CHSize.catalogInset)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, CHSpace.s4)
 
@@ -59,8 +66,8 @@ struct ContentView: View {
                     Text("Results for “\(viewModel.searchText)”")
                         .font(CHType.section)
                         .foregroundStyle(Color.chTextTitle)
-                        .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
-                        .padding(.horizontal, CHSpace.s5)
+                        .frame(maxWidth: catalogWidth, alignment: .leading)
+                        .padding(.horizontal, CHSize.catalogInset)
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, CHSpace.s4)
                 }
@@ -68,6 +75,9 @@ struct ContentView: View {
                 detailContent
                     .environment(\.isAdoptPage, selectedSidebar == .library(.adopt))
             }
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.size.width
+            } action: { detailWidth = $0 }
             .ignoresSafeArea(.container, edges: .top)
         }
         .overlay {
@@ -83,6 +93,7 @@ struct ContentView: View {
                 caskFlowRelease: categoryService.releaseTag
             )
         }
+        .environment(\.catalogTextScale, catalogTextSize.scale)
         .containerBackground(for: .window) {
             WindowBackdrop()
         }

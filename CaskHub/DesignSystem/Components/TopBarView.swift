@@ -33,41 +33,64 @@ struct TopBarView: View {
     @State private var showUpdateAllConfirmation = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            Text(title)
-                .font(CHType.topBarTitle)
-                .foregroundStyle(Color.chTextTitle)
-
-            Text("\(caskCount) casks")
-                .font(CHType.countMeta)
-                .foregroundStyle(Color.chTextMuted)
-
-            Spacer(minLength: 10)
-
-            if let greedyUpdates {
-                greedyChip(isOn: greedyUpdates)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                heading
+                Spacer(minLength: 10)
+                filters
+                viewModeToggle
+                searchField
             }
-            if onUpdateAll != nil {
-                updateAllChip
-            }
-            if showsSort {
-                sortChip
-            }
-            if let analyticsPeriod {
-                periodChip(current: analyticsPeriod, options: AnalyticsPeriod.allCases, label: \.label) {
-                    onSelectPeriod?($0)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
+                    heading
+                    Spacer(minLength: 10)
+                    viewModeToggle
+                    searchField
+                }
+                HStack(spacing: 10) {
+                    filters
+                    Spacer(minLength: 0)
                 }
             }
-            if let recentWindow {
-                periodChip(current: recentWindow, options: RecentlyAddedWindow.allCases, label: \.label) {
-                    onSelectWindow?($0)
-                }
-            }
-            viewModeToggle
-            searchField
         }
         .padding(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 10))
-        .glassPanel(radius: 999, surface: .chSurfaceToolbar)
+        .glassPanel(radius: 24, surface: .chSurfaceToolbar)
+    }
+
+    @ViewBuilder
+    private var heading: some View {
+        Text(title)
+            .font(CHType.topBarTitle)
+            .foregroundStyle(Color.chTextTitle)
+            .lineLimit(1)
+        Text("\(caskCount) casks")
+            .font(CHType.countMeta)
+            .foregroundStyle(Color.chTextMuted)
+            .lineLimit(1)
+    }
+
+    @ViewBuilder
+    private var filters: some View {
+        if let greedyUpdates {
+            greedyChip(isOn: greedyUpdates)
+        }
+        if onUpdateAll != nil {
+            updateAllChip
+        }
+        if showsSort {
+            sortChip
+        }
+        if let analyticsPeriod {
+            periodChip(current: analyticsPeriod, options: AnalyticsPeriod.allCases, label: \.label) {
+                onSelectPeriod?($0)
+            }
+        }
+        if let recentWindow {
+            periodChip(current: recentWindow, options: RecentlyAddedWindow.allCases, label: \.label) {
+                onSelectWindow?($0)
+            }
+        }
     }
 
     // MARK: - Greedy updates chip
@@ -252,7 +275,7 @@ struct TopBarView: View {
         }
         .padding(.vertical, 5)
         .padding(.horizontal, 12)
-        .frame(width: 240)
+        .frame(minWidth: 140, idealWidth: 200, maxWidth: 240)
         .background(Capsule().fill(Color.chSurfaceField))
         .overlay(Capsule().strokeBorder(Color.chHairlineStrong, lineWidth: 1))
     }

@@ -13,6 +13,10 @@ struct HeroCard: View {
     var categoryName: String?
     var localState: CaskLocalState?
 
+    @Environment(\.catalogTextScale) private var textScale
+
+    private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
+
     var body: some View {
         HStack(spacing: 28) {
             VStack(alignment: .leading, spacing: 0) {
@@ -23,23 +27,25 @@ struct HeroCard: View {
                     .padding(.bottom, 6)
 
                 Text(cask.displayName)
-                    .font(CHType.heroTitle)
+                    .font(typography.hero)
                     .foregroundStyle(Color.chTextTitle)
 
                 if let desc = cask.desc {
                     Text(desc)
-                        .font(CHType.body)
+                        .font(typography.body)
                         .foregroundStyle(Color.chTextBody)
                         .lineLimit(2)
                         .frame(maxWidth: 520, alignment: .leading)
                         .padding(.top, 5)
                 }
 
-                HStack(spacing: 14) {
-                    CaskActionsView(cask: cask, localState: localState, fullWidth: false)
-                    Text(metaLine)
-                        .font(CHType.statusMono)
-                        .foregroundStyle(Color.chTextMuted)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 14) {
+                        heroActions
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        heroActions
+                    }
                 }
                 .padding(.top, 14)
             }
@@ -59,8 +65,16 @@ struct HeroCard: View {
         }
         .padding(.vertical, 22)
         .padding(.horizontal, 28)
-        .frame(width: CHSize.contentWidth, height: CHSize.heroHeight)
+        .frame(maxWidth: .infinity, minHeight: CHSize.heroHeight)
         .glassPanel(radius: CHRadius.hero, surface: .chSurfaceHero, shadow: .chShadowHero)
+    }
+
+    @ViewBuilder
+    private var heroActions: some View {
+        CaskActionsView(cask: cask, localState: localState, fullWidth: false)
+        Text(metaLine)
+            .font(typography.status)
+            .foregroundStyle(Color.chTextMuted)
     }
 
     private var metaLine: String {

@@ -32,17 +32,24 @@ struct StatusBarView: View {
     var caskFlowRelease: String?
     var operation: CaskOperationStatus?
 
+    @Environment(\.catalogTextScale) private var textScale
+
+    private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
+
     var body: some View {
         HStack(spacing: 16) {
             BarrelMark()
                 .frame(width: 16, height: 16)
 
             Text(statusLine)
-                .font(CHType.statusMono)
+                .font(typography.status)
                 .foregroundStyle(Color.chTextBody)
+                .lineLimit(1)
+                .help(statusLine)
 
             if let operation {
                 operationView(operation)
+                    .layoutPriority(1)
                     .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
@@ -51,9 +58,10 @@ struct StatusBarView: View {
             HStack(spacing: 5) {
                 Keycap(symbol: "⌘F")
                 Text("search")
-                    .font(CHType.bodySm)
+                    .font(typography.description)
                     .foregroundStyle(Color.chTextBody)
             }
+            .fixedSize()
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 7)
@@ -79,7 +87,7 @@ struct StatusBarView: View {
                 .tint(Color.chTextBrand)
 
             Text(operation.message)
-                .font(CHType.statusMono)
+                .font(typography.status)
                 .monospacedDigit()
                 .foregroundStyle(Color.chTextBody)
                 .lineLimit(1)

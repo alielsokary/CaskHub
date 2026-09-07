@@ -97,7 +97,7 @@ nonisolated struct SystemMaintenanceProbe: MaintenanceProbing {
             includingPropertiesForKeys: Array(keys)
         ) else { return 0 }
         var total: Int64 = 0
-        for case let fileURL as URL in enumerator {
+        while let fileURL = enumerator.nextObject() as? URL {
             guard let values = try? fileURL.resourceValues(forKeys: keys),
                   values.isRegularFile == true
             else { continue }

@@ -86,12 +86,6 @@
         "uk" : {
           "variations" : {
             "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld пакет Cask"
-                }
-              },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
@@ -102,6 +96,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld пакетів Cask"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld пакет Cask"
                 }
               },
               "other" : {
@@ -181,102 +181,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "`%@` 执行失败（退出码 %d）。"
-          }
-        }
-      }
-    },
-    "alert.uninstall.zap" : {
-      "comment" : "Uninstall confirmation when app data cleanup is enabled",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This also removes preferences, caches, and support files listed by the cask, including any shared files. This will run:"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Також буде видалено налаштування, кеші та допоміжні файли, зазначені в Cask, зокрема спільні файли. Буде виконано:"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这也会移除 Cask 中列出的偏好设置、缓存和支持文件，包括共享文件。将执行："
-          }
-        }
-      }
-    },
-    "settings.uninstall.description" : {
-      "comment" : "Settings footnote explaining Homebrew zap cleanup",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uses Homebrew’s --zap to remove preferences, caches, and support files listed by the cask."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Використовує параметр --zap у Homebrew для видалення налаштувань, кешів і допоміжних файлів, зазначених у Cask."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用 Homebrew 的 --zap 移除 Cask 中列出的偏好设置、缓存和支持文件。"
-          }
-        }
-      }
-    },
-    "settings.uninstall.removeAppData" : {
-      "comment" : "Toggle for removing app data when uninstalling a cask",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove app data on uninstall"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видаляти дані програми під час її видалення"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "卸载时移除应用数据"
-          }
-        }
-      }
-    },
-    "settings.uninstall.title" : {
-      "comment" : "General settings section for app uninstallation",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uninstall"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видалення"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "卸载"
           }
         }
       }
@@ -398,6 +302,9 @@
           }
         }
       }
+    },
+    "Adjust text in app cards, lists, the sidebar, and the status bar." : {
+
     },
     "Adopt" : {
       "localizations" : {
@@ -861,6 +768,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Homebrew 操作仍在进行中。此时退出可能会让相关应用处于不完整状态。"
+          }
+        }
+      }
+    },
+    "alert.uninstall.zap" : {
+      "comment" : "Uninstall confirmation when app data cleanup is enabled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This also removes preferences, caches, and support files listed by the cask, including any shared files. This will run:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також буде видалено налаштування, кеші та допоміжні файли, зазначені в Cask, зокрема спільні файли. Буде виконано:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这也会移除 Cask 中列出的偏好设置、缓存和支持文件，包括共享文件。将执行："
           }
         }
       }
@@ -3405,6 +3336,14 @@
         }
       }
     },
+    "Larger (110%)" : {
+      "comment" : "A label displayed in the settings view that describes the larger text size.",
+      "isCommentAutoGenerated" : true
+    },
+    "Largest (120%)" : {
+      "comment" : "A label displayed in the settings view that describes the largest text size.",
+      "isCommentAutoGenerated" : true
+    },
     "Last Scan" : {
       "localizations" : {
         "uk" : {
@@ -3789,12 +3728,6 @@
         "uk" : {
           "variations" : {
             "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld пакет Cask під керуванням"
-                }
-              },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
@@ -3805,6 +3738,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld пакетів Cask під керуванням"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld пакет Cask під керуванням"
                 }
               },
               "other" : {
@@ -4641,12 +4580,6 @@
         "uk" : {
           "variations" : {
             "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "brew doctor: %lld рекомендація для перегляду. Нічого критичного."
-                }
-              },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
@@ -4657,6 +4590,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "brew doctor: %lld рекомендацій для перегляду. Нічого критичного."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "brew doctor: %lld рекомендація для перегляду. Нічого критичного."
                 }
               },
               "other" : {
@@ -4821,12 +4760,6 @@
         "uk" : {
           "variations" : {
             "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld для перегляду"
-                }
-              },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
@@ -4834,6 +4767,12 @@
                 }
               },
               "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld для перегляду"
+                }
+              },
+              "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld для перегляду"
@@ -5217,12 +5156,6 @@
         "uk" : {
           "variations" : {
             "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld пакет Cask синхронізовано"
-                }
-              },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
@@ -5233,6 +5166,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld пакетів Cask синхронізовано"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld пакет Cask синхронізовано"
                 }
               },
               "other" : {
@@ -6144,6 +6083,78 @@
         }
       }
     },
+    "settings.uninstall.description" : {
+      "comment" : "Settings footnote explaining Homebrew zap cleanup",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uses Homebrew’s --zap to remove preferences, caches, and support files listed by the cask."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовує параметр --zap у Homebrew для видалення налаштувань, кешів і допоміжних файлів, зазначених у Cask."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Homebrew 的 --zap 移除 Cask 中列出的偏好设置、缓存和支持文件。"
+          }
+        }
+      }
+    },
+    "settings.uninstall.removeAppData" : {
+      "comment" : "Toggle for removing app data when uninstalling a cask",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove app data on uninstall"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляти дані програми під час її видалення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载时移除应用数据"
+          }
+        }
+      }
+    },
+    "settings.uninstall.title" : {
+      "comment" : "General settings section for app uninstallation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载"
+          }
+        }
+      }
+    },
     "settings.updates.automaticChecks" : {
       "comment" : "Settings footnote for the automatic update checks toggle",
       "extractionState" : "manual",
@@ -7050,6 +7061,10 @@
         }
       }
     },
+    "Standard" : {
+      "comment" : "A label displayed in the settings view for the text size.",
+      "isCommentAutoGenerated" : true
+    },
     "Startup" : {
       "localizations" : {
         "uk" : {
@@ -7202,6 +7217,13 @@
           }
         }
       }
+    },
+    "Text size" : {
+      "comment" : "A label displayed above a slider that lets the user adjust the size of text in the app",
+      "isCommentAutoGenerated" : true
+    },
+    "Text Size" : {
+
     },
     "The disk image is already in use. Eject any mounted copy of it, then try again." : {
       "localizations" : {

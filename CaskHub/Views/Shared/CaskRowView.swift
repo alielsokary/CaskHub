@@ -20,6 +20,10 @@ struct CaskRowView: View {
     @State private var showDeleteConfirmation = false
     @State private var showingInfo = false
 
+    @Environment(\.catalogTextScale) private var textScale
+
+    private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
+
     var body: some View {
         HStack(spacing: 12) {
             CaskIconView(cask: cask, size: 40)
@@ -47,18 +51,18 @@ struct CaskRowView: View {
                     .padding(.bottom, 4)
             }
             Text(cask.displayName)
-                .font(CHType.cardTitle)
+                .font(typography.title)
                 .foregroundStyle(Color.chTextTitle)
                 .lineLimit(1)
             if let desc = cask.desc {
                 Text(desc)
-                    .font(CHType.bodySm)
+                    .font(typography.description)
                     .foregroundStyle(Color.chTextBody)
                     .lineLimit(1)
             }
             if isAdoptPage, let plan = actionPresentation.localState.adoptionPlan {
                 Text("Cask: \(cask.token)")
-                    .font(CHType.statusMono)
+                    .font(typography.status)
                     .foregroundStyle(Color.chTextMuted)
                 adoptionVersionLine(plan)
             }
@@ -75,7 +79,7 @@ struct CaskRowView: View {
             Text(homebrewVersionLabel(plan))
                 .foregroundStyle(Color.chTextBrand)
         }
-        .font(CHType.statusMono)
+        .font(typography.status)
         .lineLimit(1)
     }
 
@@ -90,8 +94,10 @@ struct CaskRowView: View {
 
     private var metadata: some View {
         Text(cask.metaLine(downloads: downloads))
-            .font(CHType.statusMono)
+            .font(typography.status)
             .foregroundStyle(Color.chTextMuted)
+            .lineLimit(2)
+            .help(cask.metaLine(downloads: downloads))
     }
 
     // MARK: - Actions
