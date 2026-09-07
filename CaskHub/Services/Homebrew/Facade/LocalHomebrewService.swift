@@ -66,6 +66,8 @@ final class LocalHomebrewService {
         didSet { catalogStateRevision &+= 1 }
     }
 
+    private(set) var zapOnUninstall: Bool
+
     /// Tokens the user excluded from Adopt Apps, mapped to when they ignored them.
     private(set) var adoptIgnoredDates: [String: Date] {
         didSet { catalogStateRevision &+= 1 }
@@ -75,6 +77,7 @@ final class LocalHomebrewService {
     private let defaults: UserDefaults
     let applicationDirectories: [URL]
 
+    private static let zapOnUninstallKey = "zapOnUninstall"
     private static let greedyKey = "greedyUpdates"
     private static let adoptIgnoredKey = "adoptIgnoredDates"
 
@@ -106,6 +109,7 @@ final class LocalHomebrewService {
             ?? HomebrewInstallationScanner()
         brewBinaryProvider = dependencies.brewBinaryProvider
         brewVersionProvider = dependencies.brewVersionProvider
+        zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]
         customBrewPrefix = defaults.string(forKey: HomebrewLocator.customPrefixKey)
@@ -134,6 +138,11 @@ final class LocalHomebrewService {
         if let activationObserver {
             NotificationCenter.default.removeObserver(activationObserver)
         }
+    }
+
+    func setZapOnUninstall(_ enabled: Bool) {
+        zapOnUninstall = enabled
+        defaults.set(enabled, forKey: Self.zapOnUninstallKey)
     }
 
     func setGreedyUpdates(_ enabled: Bool) {

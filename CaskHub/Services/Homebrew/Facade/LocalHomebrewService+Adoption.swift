@@ -214,6 +214,8 @@ extension LocalHomebrewService {
     ) -> CaskAdoptionRequest? {
         let state = localState(for: cask)
         let current = state.adoptionPlan
+        guard current != nil || state.installationSource == .externalExecutable
+            || state.installationSource == .homebrew else { return nil }
         let plan: CaskAdoptionPlan
         switch intent {
         case .planned:

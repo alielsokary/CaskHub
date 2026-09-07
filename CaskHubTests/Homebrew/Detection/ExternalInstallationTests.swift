@@ -14,8 +14,12 @@ final class ExternalInstallationTests: XCTestCase {
         let service = LocalHomebrewService()
         updateInstallationSnapshot(of: service) {
             $0.macAppStoreAppNames = ["Canva.app"]
+            $0.macAppStoreBundleIdentifiers = ["Canva.app": ["com.canva.CanvaDesktop"]]
         }
-        let canva = makeCask("canva", appNames: ["Canva.app"])
+        let canva = makeCask(
+            "canva", appNames: ["Canva.app"],
+            applicationBundleIdentifiers: ["com.canva.CanvaDesktop"]
+        )
         let state = service.localState(for: canva)
 
         XCTAssertEqual(state.installationSource, .macAppStore)
@@ -181,7 +185,10 @@ final class ExternalInstallationTests: XCTestCase {
                 scan.macAppStoreBundleIdentifiers
             $0.detectedApplications = scan.applications
         }
-        let cask = makeCask("whatsapp", name: "WhatsApp", appNames: ["WhatsApp.app"])
+        let cask = makeCask(
+            "whatsapp", name: "WhatsApp", appNames: ["WhatsApp.app"],
+            applicationBundleIdentifiers: ["net.whatsapp.WhatsApp"]
+        )
         let state = service.localState(for: cask)
 
         XCTAssertEqual(state.installationSource, .macAppStore)

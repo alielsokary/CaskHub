@@ -156,7 +156,7 @@ final class InstallationSnapshotTests: XCTestCase {
 
 extension ExternalInstallationTests {
     @MainActor
-    func test_store_tailscale_matches_package_cask_by_application_bundle_family() throws {
+    func test_store_tailscale_matches_package_cask_by_manifest_identity() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("store-tailscale-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -189,17 +189,148 @@ extension ExternalInstallationTests {
             packageIdentifiers: ["com.tailscale.ipn.macsys"],
             applicationBundleIdentifiers: ["io.tailscale.ipn.macsys"]
         )
-        let state = service.localState(for: tailscale)
+        let categories = try makeIdentityCategoryService()
+        let verified = categories.addingAppIdentities(to: [tailscale])[0]
+        let state = service.localState(for: verified)
 
         XCTAssertEqual(state.installationSource, .macAppStore)
         XCTAssertTrue(state.isPresent)
         XCTAssertFalse(state.isAdoptable)
         XCTAssertTrue(state.canOpen)
 
-        service.openExternalApp(cask: tailscale)
+        service.openExternalApp(cask: verified)
         XCTAssertEqual(
             launcher.lastOpenedURL?.standardizedFileURL,
             tailscaleApp.standardizedFileURL
         )
+    }
+}
+
+@MainActor
+final class ApplicationIdentityCollisionTests: XCTestCase {
+    func test_catalog_scan_rejects_spark_classic_and_apple_motion_collisions() async throws {
+        let categories = try makeIdentityCategoryService()
+        for hasReceipt in [true, false] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("identity-\(UUID().uuidString)")
+            defer { try? FileManager.default.removeItem(at: root) }
+            for (name, identifier) in [
+                ("Spark.app", "com.readdle.smartemail-Mac"),
+                ("Spark Desktop.app", "com.readdle.SparkDesktop.appstore"),
+                ("Motion.app", "com.apple.motionapp"),
+                ("Verified.app", "com.example.verified")
+            ] {
+                try makeApplicationBundle(in: root, named: name,
+                                          bundleIdentifier: identifier, macAppStoreReceipt: hasReceipt)
+            }
+            let classicCollision = makeCask("spark-app", appNames: ["Spark.app"])
+            let motionCollision = makeCask("motion", appNames: ["Motion.app"])
+            let mail = categories.addingAppIdentities(to: [makeCask("readdle-spark", appNames: ["Spark Desktop.app"])])[0]
+            let verified = makeCask("verified", appNames: ["Verified.app"], applicationBundleIdentifiers: ["com.example.verified"])
+            let service = LocalHomebrewService(defaults: makeScratchDefaults("identity-collisions")) {
+                $0.applicationDirectories = [root]
+            }
+            let scan = ApplicationDiscovery().scan(fileManager: .default, directories: [root])
+            updateInstallationSnapshot(of: service) {
+                $0.detectedApplications = scan.applications
+                $0.externalAppNames = scan.adoptableNames
+                $0.macAppStoreAppNames = scan.macAppStoreNames
+                $0.macAppStoreBundleIdentifiers = scan.macAppStoreBundleIdentifiers
+            }
+            // The unregistered fallback must enforce the same identity rules.
+            for cask in [classicCollision, motionCollision] {
+                XCTAssertFalse(service.localState(for: cask).isPresent)
+                XCTAssertFalse(service.localState(for: cask).isAdoptable)
+            }
+            await service.updatePackageCatalog([classicCollision, motionCollision, mail, verified])
+            for cask in [classicCollision, motionCollision] {
+                let state = service.localState(for: cask)
+                XCTAssertFalse(state.isPresent)
+                XCTAssertFalse(state.canOpen)
+                XCTAssertNil(state.adoptionPlan)
+                await service.requestReplacementAdoption(cask)
+                XCTAssertNil(service.operationStore.state(for: cask.token))
+            }
+            for cask in [mail, verified] {
+                let state = service.localState(for: cask)
+                XCTAssertEqual(state.installationSource, hasReceipt ? .macAppStore : .externalApplication)
+                XCTAssertTrue(state.canOpen)
+                XCTAssertEqual(state.isAdoptable, !hasReceipt)
+            }
+        }
+    }
+
+    func test_element_rejects_kushview_package_and_accepts_matrix() async throws {
+        let categories = try makeIdentityCategoryService()
+        let matrix = categories.addingAppIdentities(to: [makeCask("element", appNames: ["Element.app"])])[0]
+        XCTAssertEqual(matrix.applicationBundleIdentifiers, ["im.riot.app"])
+        let registration = InstallationCatalogBuilder().build([matrix])
+        XCTAssertTrue(registration.packageSignatures.isEmpty)
+        // Observed from Kushview's 1.1.1 installer, not Homebrew metadata.
+        let receipts = Set(["ElementApp", "ElementVST2", "ElementVST3", "ElementAU", "ElementLV2", "ElementCLAP"]
+            .map { "net.kushview.pkg." + $0 })
+        for (identifier, expectedPresent) in [("net.kushview.Element", false), ("im.riot.app", true)] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("element-\(UUID().uuidString)")
+            defer { try? FileManager.default.removeItem(at: root) }
+            try makeApplicationBundle(in: root, named: "Element.app", bundleIdentifier: identifier)
+            let scan = ApplicationDiscovery().scan(fileManager: .default, directories: [root])
+            XCTAssertEqual(scan.applications.count, 1)
+            let packages = PackageReceiptResolver().resolve(
+                signatures: registration.packageSignatures, installedReceipts: receipts,
+                packageFileLists: ["net.kushview.pkg.ElementApp": "Applications/Element.app"],
+                availableAppNames: scan.adoptableNames
+            )
+            XCTAssertTrue(packages.isEmpty)
+            let service = LocalHomebrewService(defaults: makeScratchDefaults("element-collision")) {
+                $0.applicationDirectories = [root]
+            }
+            updateInstallationSnapshot(of: service) {
+                $0.detectedApplications = scan.applications
+                $0.externalAppNames = scan.adoptableNames
+                $0.externalPackageInstallations = packages
+            }
+            XCTAssertEqual(service.localState(for: matrix).isAdoptable, expectedPresent)
+            await service.updatePackageCatalog([matrix])
+            let state = service.localState(for: matrix)
+            XCTAssertEqual(state.isPresent, expectedPresent)
+            XCTAssertEqual(state.isAdoptable, expectedPresent)
+            XCTAssertEqual(state.canOpen, expectedPresent)
+            XCTAssertEqual(state.adoptionPlan != nil, expectedPresent)
+            if !expectedPresent {
+                await service.requestReplacementAdoption(matrix)
+                XCTAssertNil(service.operationStore.state(for: matrix.token))
+            }
+        }
+    }
+
+    func test_known_conflicting_identifier_cannot_claim_unique_filename() {
+        let application = makeDetectedApplication("Motion.app", id: "com.apple.motionapp")
+        let expectedIdentifier = "com.electron.motion"
+        XCTAssertTrue(ApplicationOwnershipResolver().resolve(
+            signatures: [ApplicationCaskSignature(
+                token: "motion", appBundleNames: ["Motion.app"],
+                bundleIdentifiers: [expectedIdentifier]
+            )],
+            applications: [application], installedCasks: [:]
+        ).isEmpty)
+        let storeApp = makeDetectedApplication(
+            "Motion.app", id: "com.apple.motionapp", isMacAppStore: true
+        )
+        XCTAssertTrue(InstallationIndexBuilder().resolveMacAppStoreApplications(
+            signatures: [MacAppStoreCaskSignature(
+                token: "motion", bundleNames: ["Motion.app"], hasPackageArtifact: false,
+                applicationBundleIdentifiers: [expectedIdentifier], packageIdentifiers: []
+            )],
+            applications: [storeApp], installedCasks: [:]
+        ).isEmpty)
+    }
+
+    func test_bundle_identifier_prefix_is_not_identity() {
+        XCTAssertFalse(ApplicationIdentityMatcher.applicationBundleIdentifier(
+            "com.vendor.suite.unrelated", matchesAny: ["com.vendor.suite.app"]
+        ))
+        XCTAssertFalse(ApplicationIdentityMatcher.applicationBundleIdentifier("", matchesAny: [""]))
+        XCTAssertTrue(ApplicationIdentityMatcher.applicationBundleIdentifier(
+            "com.vendor.App", matchesAny: ["com.vendor.app"]
+        ))
     }
 }

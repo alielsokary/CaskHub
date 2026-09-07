@@ -15,10 +15,19 @@ enum CHRadius {
     // fields, pills and buttons are capsules
 }
 
-/// Fixed content metrics (1360×880 window, 4-card grid).
+/// Catalog content stays bounded while fitting compact windows.
 enum CHSize {
-    static let contentWidth: CGFloat = 1086 // hero + grid column: 4×cardWidth + 3×gridGap
-    static let cardWidth: CGFloat = 261
+    static let catalogInset: CGFloat = 20
+    static let contentWidth: CGFloat = 1086 // shared hero and grid width, capped at four columns
+    static let minimumCardWidth: CGFloat = 250
+    static let maximumCardWidth: CGFloat = 280
+
+    static func catalogWidth(availableWidth: CGFloat) -> CGFloat {
+        let available = max(0, min(contentWidth, availableWidth))
+        let count = max(1, min(4, Int((available + CHSpace.gridGap) / (minimumCardWidth + CHSpace.gridGap))))
+        return min(available, CGFloat(count) * maximumCardWidth + CGFloat(count - 1) * CHSpace.gridGap)
+    }
+
     static let cardHeight: CGFloat = 176
     static let heroHeight: CGFloat = 180
     static let actionCapsuleHeight: CGFloat = 28

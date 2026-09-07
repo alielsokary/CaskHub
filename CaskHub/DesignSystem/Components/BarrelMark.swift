@@ -78,15 +78,17 @@ struct BarrelMark: View {
 }
 
 struct BrandWordmark: View {
+    @Environment(\.catalogTextScale) private var textScale
+
     var body: some View {
         HStack(spacing: 9) {
             BarrelMark()
-                .frame(width: 30, height: 30)
+                .frame(width: 30 * textScale, height: 30 * textScale)
             HStack(spacing: 0) {
                 Text("Cask").foregroundStyle(Color.chTextTitle)
                 Text("Hub").foregroundStyle(Color.chTextBrand)
             }
-            .font(CHType.wordmark)
+            .font(CHType.Catalog(scale: textScale).wordmark)
         }
     }
 }

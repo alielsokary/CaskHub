@@ -92,7 +92,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         XCTAssertTrue(owners.isEmpty)
     }
 
-    func test_unique_app_name_remains_adoptable_without_bundle_identifier_metadata() {
+    func test_unique_app_name_without_bundle_identifier_metadata_is_not_adoptable() {
         let application = makeDetectedApplication("Unique.app", id: "com.example.unique")
         let signature = ApplicationCaskSignature(
             token: "unique",
@@ -106,7 +106,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             installedCasks: [:]
         )
 
-        XCTAssertEqual(owners["unique"], application)
+        XCTAssertTrue(owners.isEmpty)
     }
 
     func test_store_resolution_indexes_direct_and_bundle_family_matches() {
@@ -131,13 +131,14 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             storeSignature(
                 token: "canva",
                 bundleName: "Canva.app",
-                hasPackage: false
+                hasPackage: false,
+                applicationIdentifiers: ["com.canva.CanvaDesktop"]
             ),
             storeSignature(
                 token: "tailscale-app",
                 bundleName: "Tailscale.app",
                 hasPackage: true,
-                applicationIdentifiers: ["io.tailscale.ipn.macsys"],
+                applicationIdentifiers: ["io.tailscale.ipn.macsys", "io.tailscale.ipn.macos"],
                 packageIdentifiers: ["com.tailscale.ipn.macsys"]
             ),
             storeSignature(
@@ -318,7 +319,8 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             storeSignature(
                 token: cask.token,
                 bundleName: cask.appArtifactNames[0],
-                hasPackage: false
+                hasPackage: false,
+                applicationIdentifiers: ["com.example.store\(cask.token.dropFirst(6))"]
             )
         }
         updateInstallationSnapshot(of: service) {

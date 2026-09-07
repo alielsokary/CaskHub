@@ -150,7 +150,7 @@ private extension View {
                 isPresented.wrappedValue = false
                 return
             }
-            let alert = CaskActionAlertFactory.uninstallAlert(for: cask)
+            let alert = CaskActionAlertFactory.uninstallAlert(for: cask, service: service)
             alert.beginSheetModal(for: window) { response in
                 if response == .alertFirstButtonReturn {
                     service.send(.uninstall(token: cask.token))
@@ -214,12 +214,14 @@ private extension View {
 
 @MainActor
 enum CaskActionAlertFactory {
-    static func uninstallAlert(for cask: Cask) -> NSAlert {
+    static func uninstallAlert(for cask: Cask, service: LocalHomebrewService) -> NSAlert {
         let alert = NSAlert()
         alert.messageText = "Uninstall \(cask.displayName)?"
-        alert.informativeText = "This will run:"
+        alert.informativeText = service.zapOnUninstall
+            ? String(localized: .alertUninstallZap)
+            : "This will run:"
         let command = NSHostingView(
-            rootView: CommandBlock(command: "brew uninstall --cask \(cask.token)")
+            rootView: CommandBlock(command: (["brew"] + service.uninstallArguments(token: cask.token)).joined(separator: " "))
         )
         command.setFrameSize(command.fittingSize)
         alert.accessoryView = command
