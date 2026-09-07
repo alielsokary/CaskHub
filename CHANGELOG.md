@@ -9,7 +9,7 @@ Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/
 ### What's New
 
 - Added a text size slider in Settings → Appearance for Standard, 110%, and 120% text across the catalog and sidebar
-- Added an optional Remove app data on uninstall setting that also clears the preferences, caches, and support files a cask lists
+- Added an optional Remove app data on uninstall setting that runs Homebrew's `--zap` to also clear the preferences, caches, and support files a cask lists
 
 ### Improvements
 
