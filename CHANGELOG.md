@@ -4,6 +4,22 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.8.2 — 2026-09-07
+
+### What's New
+
+- Added a text size slider in Settings → Appearance for Standard, 110%, and 120% text across the catalog and sidebar
+- Added an optional Remove app data on uninstall setting that runs Homebrew's `--zap` to also clear the preferences, caches, and support files a cask lists
+
+### Improvements
+
+- Catalog cards and lists keep readable widths in smaller windows, and toolbar filters wrap onto a second row when space runs out
+
+### Bug Fixes
+
+- Fixed the window being forced off-screen on scaled displays by lowering the minimum window size
+- Fixed apps that share a name, such as Element or Motion, being offered for the wrong cask by matching a verified bundle identity
+
 ## 0.8.1 — 2026-09-03
 
 ### What's New

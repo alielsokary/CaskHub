@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-09-03",
-  "totalCasks": 3919,
+  "generatedDate": "2026-09-06",
+  "totalCasks": 3928,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -355,6 +355,12 @@
       "secondary": []
     },
     "agent-tars": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
+    "agentide": {
       "primary": "developerTools",
       "secondary": [
         "ai"
@@ -3723,6 +3729,10 @@
       "secondary": []
     },
     "disk-jockey": {
+      "primary": "utilities",
+      "secondary": []
+    },
+    "diskboard": {
       "primary": "utilities",
       "secondary": []
     },
@@ -8125,6 +8135,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "mac-performance-monitor": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "mac-sai": {
       "primary": "utilities",
       "secondary": [
@@ -8415,6 +8431,12 @@
     "mamp": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "mangodisk": {
+      "primary": "utilities",
+      "secondary": [
+        "securityPrivacy"
+      ]
     },
     "manico": {
       "primary": "utilities",
@@ -10152,6 +10174,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "omniwm": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "ondesoft-audiobook-converter": {
       "primary": "audioMusic",
       "secondary": []
@@ -11701,6 +11729,12 @@
     "provideoplayer": {
       "primary": "videoMedia",
       "secondary": []
+    },
+    "provisionql": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
     },
     "prowritingaid": {
       "primary": "productivity",
@@ -14340,6 +14374,12 @@
         "menuBar"
       ]
     },
+    "sxitch": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "symboliclinker": {
       "primary": "utilities",
       "secondary": []
@@ -14708,6 +14748,12 @@
       "primary": "developerTools",
       "secondary": [
         "ai"
+      ]
+    },
+    "terminal-browser": {
+      "primary": "browsers",
+      "secondary": [
+        "developerTools"
       ]
     },
     "termius": {
@@ -15756,6 +15802,10 @@
     },
     "veracrypt-fuse-t": {
       "primary": "securityPrivacy",
+      "secondary": []
+    },
+    "vernier-graphical-analysis": {
+      "primary": "scienceEducation",
       "secondary": []
     },
     "vernier-spectral-analysis": {
@@ -17044,7 +17094,44 @@
       "secondary": []
     }
   },
-  "releaseTag": "caskflow-v2026.09.03",
+  "appIdentities": {
+    "element": [
+      {
+        "bundleName": "Element.app",
+        "bundleIdentifier": "im.riot.app"
+      }
+    ],
+    "motion": [
+      {
+        "bundleName": "Motion.app",
+        "bundleIdentifier": "com.electron.motion"
+      }
+    ],
+    "readdle-spark": [
+      {
+        "bundleName": "Spark Desktop.app",
+        "bundleIdentifier": "com.readdle.SparkDesktop"
+      },
+      {
+        "bundleName": "Spark Desktop.app",
+        "bundleIdentifier": "com.readdle.SparkDesktop.appstore"
+      }
+    ],
+    "spark-app": [
+      {
+        "bundleName": "Spark.app",
+        "bundleIdentifier": "com.xenonium.Spark"
+      }
+    ],
+    "tailscale-app": [
+      {
+        "bundleName": "Tailscale.app",
+        "bundleIdentifier": "io.tailscale.ipn.macos"
+      }
+    ]
+  },
+  "metadataUpdatedAt": "2026-09-06T17:46:47.618188+00:00",
+  "releaseTag": "caskflow-v2026.09.06",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -17110,6 +17197,7 @@
     "affinity",
     "afterglow",
     "agent-tars",
+    "agentide",
     "agentkube",
     "agentsmesh",
     "agentsview",
@@ -17812,6 +17900,7 @@
     "disk-drill",
     "disk-expert",
     "disk-jockey",
+    "diskboard",
     "diskcatalogmaker",
     "diskspace",
     "displaperture",
@@ -18760,6 +18849,7 @@
     "mac-monitor",
     "mac-mouse-fix",
     "mac-mouse-fix@2",
+    "mac-performance-monitor",
     "mac-sai",
     "macai",
     "macbreakz",
@@ -18824,6 +18914,7 @@
     "malus",
     "malwarebytes",
     "mamp",
+    "mangodisk",
     "manico",
     "manictime",
     "manila",
@@ -18953,6 +19044,7 @@
     "minitube",
     "miniwol",
     "minizincide",
+    "minmaxcal",
     "minstaller",
     "mints",
     "mipony",
@@ -19209,6 +19301,7 @@
     "omniplan",
     "omnipresence",
     "omnissa-horizon-client",
+    "omniwm",
     "ondesoft-audiobook-converter",
     "one-switch",
     "onecast",
@@ -19539,6 +19632,7 @@
     "protonvpn",
     "protopie",
     "provideoplayer",
+    "provisionql",
     "prowritingaid",
     "proxifier",
     "proxy-audio-device",
@@ -20108,6 +20202,7 @@
     "switch",
     "switchhosts",
     "switchy",
+    "sxitch",
     "synalyze-it-pro",
     "sync",
     "syncmate",
@@ -20405,6 +20500,7 @@
     "vellum",
     "veracrypt",
     "veracrypt-fuse-t",
+    "vernier-graphical-analysis",
     "vernier-spectral-analysis",
     "vero",
     "versatility",
