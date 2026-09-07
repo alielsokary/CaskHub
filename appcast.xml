@@ -3,18 +3,28 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.8.1</title>
-            <pubDate>Thu, 03 Sep 2026 15:09:15 +0000</pubDate>
-            <sparkle:version>637</sparkle:version>
-            <sparkle:shortVersionString>0.8.1</sparkle:shortVersionString>
+            <title>0.8.2</title>
+            <pubDate>Mon, 07 Sep 2026 11:30:26 +0000</pubDate>
+            <sparkle:version>662</sparkle:version>
+            <sparkle:shortVersionString>0.8.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Added Ukrainian localization, translated by @Disconnecter
+- Added a text size slider in Settings → Appearance for Standard, 110%, and 120% text across the catalog and sidebar
+- Added an optional Remove app data on uninstall setting that also clears the preferences, caches, and support files a cask lists
+
+### Improvements
+
+- Catalog cards and lists keep readable widths in smaller windows, and toolbar filters wrap onto a second row when space runs out
+
+### Bug Fixes
+
+- Fixed the window being forced off-screen on scaled displays by lowering the minimum window size
+- Fixed apps that share a name, such as Element or Motion, being offered for the wrong cask by matching a verified bundle identity
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.1/CaskHub-0.8.1.zip" length="7100039" type="application/octet-stream" sparkle:edSignature="9Z0qrz7xo1FvtblhdZcnVaY3m7sBabirTKCRv1Yos2YoLgQoXmiRIvS61pzam5LoTTC1qpnl9lydoVp99dD4DA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.2/CaskHub-0.8.2.zip" length="7145271" type="application/octet-stream" sparkle:edSignature="KscRY4DVfLBGNSNzTMygeFE785scDCRYtJW8FxGXDBrLDIgumiXcdokJt76INday8rKK4Jll8ugWtVqBI7Y1Cw=="/>
         </item>
     </channel>
 </rss>
