@@ -88,6 +88,7 @@
 		A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */; };
 		A29100000000000000000207 /* CatalogScrollSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000206 /* CatalogScrollSupport.swift */; };
 		A29100000000000000000307 /* BrewOutputAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000306 /* BrewOutputAggregator.swift */; };
+		CE0920260000000000000001 /* IconRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0920260000000000000002 /* IconRefreshTests.swift */; };
 		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
 		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
 		B08000000000000000000002 /* CaskHubCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08000000000000000000001 /* CaskHubCommands.swift */; };
@@ -240,6 +241,7 @@
 		A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutputDiagnosticsTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000206 /* CatalogScrollSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogScrollSupport.swift; sourceTree = "<group>"; };
 		A29100000000000000000306 /* BrewOutputAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewOutputAggregator.swift; sourceTree = "<group>"; };
+		CE0920260000000000000002 /* IconRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconRefreshTests.swift; sourceTree = "<group>"; };
 		ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewTests.swift; sourceTree = "<group>"; };
 		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
 		B08000000000000000000001 /* CaskHubCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubCommands.swift; sourceTree = "<group>"; };
@@ -780,6 +782,7 @@
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
 				B09200000000000000000001 /* HelpViewTests.swift */,
 				AA1000000000000000000010 /* MaintenanceViewTests.swift */,
+				CE0920260000000000000002 /* IconRefreshTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
 				B0C000000000000000000004 /* ShelfSetupViewTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
@@ -1144,6 +1147,7 @@
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				B09200000000000000000002 /* HelpViewTests.swift in Sources */,
+				CE0920260000000000000001 /* IconRefreshTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
 				B0C000000000000000000005 /* ShelfSetupViewTests.swift in Sources */,
 				AA100000000000000000000D /* MaintenanceParsingTests.swift in Sources */,

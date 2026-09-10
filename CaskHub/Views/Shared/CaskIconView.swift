@@ -51,9 +51,11 @@ struct CaskIconView: View {
             }
         }
         .animation(.easeIn(duration: 0.2), value: loadedImage != nil)
-        .task(id: cask.token) {
+        .task(id: [cask.token, imageCache.iconHash(for: cask.token) ?? "", String(imageCache.iconRefreshRevision)]) {
             didResolve = false
-            loadedImage = await imageCache.image(for: cask)
+            let image = await imageCache.image(for: cask)
+            guard !Task.isCancelled else { return }
+            loadedImage = image
             didResolve = true
         }
     }
