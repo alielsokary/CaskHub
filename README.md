@@ -11,7 +11,6 @@
 
 <p align="center">
   <a href="https://trendshift.io/repositories/87516?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-87516" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/87516" alt="alielsokary%2FCaskHub | Trendshift" width="250" height="55"/></a>
-  <a href="https://www.producthunt.com/products/caskhub?utm_source=badge-follow&utm_medium=badge&utm_source=badge-caskhub" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1302237&theme=neutral" alt="CaskHub - The&#0032;Mac&#0032;app&#0032;store&#0032;Homebrew&#0032;never&#0032;had | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 </p>
 
 <p align="center">
@@ -77,6 +76,13 @@ Categories, first-seen dates, and original app icons are produced by the compani
 - **macOS 15.6** or later
 - **[Homebrew](https://brew.sh)** - required for installing, updating, and uninstalling casks (browsing works without it)
 
+## Architecture
+
+- **SwiftUI + MVVM** with `@Observable` view models and `@MainActor` isolation
+- **Protocol-based networking layer** for testability (`BrewAPIClientProtocol`, `NetworkServiceProtocol`) with dependency injection throughout
+- **Two-tier icon caching** (memory + disk) and HTTP-header-based download-size resolution
+- **Minimal dependencies** - three focused packages: [Sparkle](https://sparkle-project.org) for app updates, [Sentry](https://sentry.io) for crash reporting and usage metrics, and [TelemetryDeck](https://telemetrydeck.com) for session and acquisition analytics
+
 ## Building from Source
 
 Prefer building it yourself? You'll need Xcode 26 or later:
@@ -89,20 +95,25 @@ open CaskHub.xcodeproj
 
 Select the **CaskHub** scheme and run (⌘R). Xcode resolves the Swift package dependencies ([Sparkle](https://github.com/sparkle-project/Sparkle), [Sentry](https://github.com/getsentry/sentry-cocoa), and [TelemetryDeck](https://github.com/TelemetryDeck/SwiftSDK)) automatically.
 
-## Architecture
-
-- **SwiftUI + MVVM** with `@Observable` view models and `@MainActor` isolation
-- **Protocol-based networking layer** for testability (`BrewAPIClientProtocol`, `NetworkServiceProtocol`) with dependency injection throughout
-- **Two-tier icon caching** (memory + disk) and HTTP-header-based download-size resolution
-- **Minimal dependencies** - three focused packages: [Sparkle](https://sparkle-project.org) for app updates, [Sentry](https://sentry.io) for crash reporting and usage metrics, and [TelemetryDeck](https://telemetrydeck.com) for session and acquisition analytics
-
-## Testing & CI
+### Testing & CI
 
 Tests run with XCTest on pull requests to `master` and `develop`, and on pushes to `develop`, with coverage reported to Codecov and static analysis by Codacy. A release-freshness check on PRs to `master` ensures the bundled category data is up to date with the latest CaskFlow release.
 
 ```bash
 xcodebuild test -project CaskHub.xcodeproj -scheme CaskHub -destination 'platform=macOS'
 ```
+
+## 🌎 Localization
+
+CaskHub speaks your language. Currently available in:
+
+- 🇬🇧 **English**
+- 🇨🇳 **简体中文 (Simplified Chinese)** - translated by [@carty900-jpg](https://github.com/carty900-jpg)
+- 🇺🇦 **Українська (Ukrainian)** - translated by [@Disconnecter](https://github.com/Disconnecter)
+
+macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.
+
+Want CaskHub in your language? Translations live in a single [String Catalog](CaskHub/Resources/Localizable.xcstrings) - open an issue or PR to add yours.
 
 ## Privacy & Analytics
 
@@ -112,18 +123,6 @@ CaskHub also sends crash reports and technical diagnostics through [Sentry](http
 
 You can opt out of everything at any time in **Settings → Privacy**.
 
-## Localization 🌎
-
-CaskHub speaks your language. Currently available in:
-
-- 🇬🇧 **English**
-- 🇨🇳 **简体中文 (Simplified Chinese)** — translated by [@carty900-jpg](https://github.com/carty900-jpg)
-- 🇺🇦 **Українська (Ukrainian)** — translated by [@Disconnecter](https://github.com/Disconnecter)
-
-macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.
-
-Want CaskHub in your language? Translations live in a single [String Catalog](CaskHub/Resources/Localizable.xcstrings) — open an issue or PR to add yours.
-
 ## Contributing
 
 Interested in contributing to CaskHub? We welcome contributions of all kinds!
@@ -132,12 +131,12 @@ Interested in contributing to CaskHub? We welcome contributions of all kinds!
 - **Bug reports**: [Found an issue? Let us know](https://github.com/alielsokary/CaskHub/issues/new/choose)
 - **Feature requests**: [Have an idea? We'd love to hear it](https://github.com/alielsokary/CaskHub/issues/new/choose)
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request — note that all PRs target the `develop` branch.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request - note that all PRs target the `develop` branch.
 
 ## Acknowledgements
 
-- [CaskFlow](https://github.com/alielsokary/CaskFlow) — the data pipeline behind CaskHub's categories, Recently Added dates, and app icons
-- [Homebrew](https://brew.sh) — the package manager CaskHub is built on
+- [CaskFlow](https://github.com/alielsokary/CaskFlow) - the data pipeline behind CaskHub's categories, Recently Added dates, and app icons
+- [Homebrew](https://brew.sh) - the package manager CaskHub is built on
 
 ## License
 
