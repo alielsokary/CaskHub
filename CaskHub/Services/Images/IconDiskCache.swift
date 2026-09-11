@@ -41,7 +41,7 @@ actor IconDiskCache {
         generation expectedGeneration: UInt64,
         fromCaskFlow: Bool
     ) throws -> Bool {
-        guard generation == expectedGeneration else { return false }
+        guard !Task.isCancelled, generation == expectedGeneration else { return false }
         try ensureDirectory()
         try writeAtomically(data, to: path(token: token, fileExtension: "png"))
         try? FileManager.default.removeItem(at: path(token: token, fileExtension: "miss"))
