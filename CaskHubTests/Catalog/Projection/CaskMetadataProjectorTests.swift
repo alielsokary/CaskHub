@@ -147,10 +147,12 @@ final class CaskMetadataProjectorTests: XCTestCase {
                 localState: CaskLocalState(
                     installationSource: nil,
                     externalVersion: nil,
+                    homebrewAppVersion: nil,
                     adoptionPlan: nil,
                     externalCLIPath: nil,
                     uninstallAvailability: .unavailable(reason: "Not installed"),
                     hasAvailableUpdate: false,
+                    isOutdated: false,
                     isZombie: false,
                     canOpen: false
                 ),
@@ -181,6 +183,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
         let localState = CaskLocalState(
             installationSource: source,
             externalVersion: externalVersion,
+            homebrewAppVersion: nil,
             adoptionPlan: CaskAdoptionPlan.make(
                 installationSource: source,
                 installedVersion: externalVersion,
@@ -193,6 +196,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
                 ? .available
                 : .unavailable(reason: "Managed elsewhere"),
             hasAvailableUpdate: false,
+            isOutdated: false,
             isZombie: false,
             canOpen: true
         )

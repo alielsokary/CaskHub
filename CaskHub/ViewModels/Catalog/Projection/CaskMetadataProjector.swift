@@ -63,7 +63,7 @@ nonisolated enum CaskInfoProjector {
                 dates: input.installationDates
             )
             + metadataRows(for: input.cask, category: input.category)
-            + statusRows(for: input.cask)
+            + statusRows(for: input.cask, isOutdated: input.actionPresentation.localState.isOutdated)
     }
 
     private static func identityRows(for cask: Cask) -> [CaskInfoRow] {
@@ -174,9 +174,9 @@ nonisolated enum CaskInfoProjector {
         return rows
     }
 
-    private static func statusRows(for cask: Cask) -> [CaskInfoRow] {
+    private static func statusRows(for cask: Cask, isOutdated: Bool) -> [CaskInfoRow] {
         [
-            CaskInfoRow(property: String(localized: "Outdated"), value: yesNo(cask.outdated)),
+            CaskInfoRow(property: String(localized: "Outdated"), value: yesNo(isOutdated)),
             CaskInfoRow(property: String(localized: "Deprecated"), value: yesNo(cask.deprecated)),
             CaskInfoRow(property: String(localized: "Disabled"), value: yesNo(cask.disabled))
         ]
@@ -190,11 +190,10 @@ nonisolated enum CaskInfoProjector {
         presentation: CaskActionPresentation,
         externalVersion: String?
     ) -> String {
-        if let version = presentation.homebrewInstallation?.installedVersion {
+        if let version = presentation.localState.homebrewAppVersion
+            ?? presentation.homebrewInstallation?.installedVersion
+            ?? externalVersion {
             return version
-        }
-        if let externalVersion {
-            return externalVersion
         }
         return presentation.localState.installationSource == nil
             ? String(localized: "Not installed")

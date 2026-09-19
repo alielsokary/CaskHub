@@ -27,6 +27,7 @@ final class CaskCatalogSortTests: XCTestCase {
         CaskLocalState(
             installationSource: source,
             externalVersion: nil,
+            homebrewAppVersion: nil,
             adoptionPlan: CaskAdoptionPlan.make(
                 installationSource: source,
                 installedVersion: nil,
@@ -39,6 +40,7 @@ final class CaskCatalogSortTests: XCTestCase {
                 ? .available
                 : .unavailable(reason: "Adopt first"),
             hasAvailableUpdate: hasAvailableUpdate,
+            isOutdated: hasAvailableUpdate,
             isZombie: false,
             canOpen: true
         )
