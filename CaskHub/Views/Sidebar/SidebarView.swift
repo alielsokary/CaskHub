@@ -22,11 +22,18 @@ struct SidebarView: View {
 
     private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
 
+    private var brandTopPadding: CGFloat {
+        if #available(macOS 27, *) {
+            return 50
+        }
+        return 40
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             BrandWordmark()
                 .padding(.horizontal, 18)
-                .padding(.top, 38)
+                .padding(.top, brandTopPadding)
                 .padding(.bottom, 6)
 
             ScrollView {

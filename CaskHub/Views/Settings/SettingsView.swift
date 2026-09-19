@@ -89,26 +89,35 @@ struct AboutSettingsView: View {
             Spacer()
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Support")
+                Text("Support & community")
                     .font(.headline)
+                    .padding(.horizontal, 10)
 
                 GroupBox {
-                    HStack(spacing: 12) {
-                        Image(systemName: "ladybug")
-                            .accessibilityHidden(true)
+                    VStack(spacing: 0) {
+                        supportLink(
+                            "Report a bug",
+                            subtitle: "Help make CaskHub better.",
+                            symbol: "ladybug",
+                            service: "GitHub Issues",
+                            destination: CaskHubLinks.issues
+                        )
 
-                        Text("Submit a bug or feature request")
+                        Divider()
+                            .padding(.horizontal, 4)
 
-                        Spacer()
-
-                        Link("View", destination: CaskHubLinks.issues)
-                            .buttonStyle(.bordered)
+                        supportLink(
+                            "Ask a question or share an idea",
+                            subtitle: "Start a conversation with the community.",
+                            symbol: "bubble.left.and.bubble.right",
+                            service: "GitHub Discussions",
+                            destination: CaskHubLinks.discussions
+                        )
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
             .padding(.bottom, 12)
 
             Text("© 2026 Ali Elsokary. All rights reserved.")
@@ -117,6 +126,47 @@ struct AboutSettingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+    }
+
+    private func supportLink(
+        _ title: LocalizedStringKey,
+        subtitle: LocalizedStringKey,
+        symbol: String,
+        service: LocalizedStringKey,
+        destination: URL
+    ) -> some View {
+        Link(destination: destination) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                    Text(subtitle)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 12)
+
+                Text(service)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                Image(systemName: "arrow.up.forward")
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -201,7 +251,6 @@ struct GeneralSettingsView: View {
         }
         .foregroundStyle(tint)
     }
-
 }
 
 struct HomebrewSettingsView: View {
