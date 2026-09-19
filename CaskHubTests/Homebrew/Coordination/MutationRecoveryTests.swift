@@ -96,6 +96,43 @@ final class MutationRecoveryTests: XCTestCase {
         }
     }
 
+    func test_failed_repair_refreshes_removed_receipt_and_keeps_conflict_visible() async throws {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [
+            BrewProcessResult(exitCode: 0, output: "fetched"),
+            BrewProcessResult(exitCode: 0, output: "uninstalled"),
+            BrewProcessResult(exitCode: 1, output: "Error: It seems there is already an App at '/Applications/Zed.app'.")
+        ]
+        let app = try makeApplicationBundle(in: root.appendingPathComponent("Applications"),
+                                            named: "Zed.app", bundleIdentifier: "dev.zed.Zed")
+        let detected = makeDetectedApplication("Zed.app", id: "dev.zed.Zed", url: app)
+        let scanner = FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
+            applications: ApplicationInstallationSnapshot(
+                externalApplicationOwners: ["zed": detected], externalPackageApplicationOwners: [:],
+                detectedApplications: [detected]
+            )
+        ))
+        let service = makeService(runner: runner, scanner: scanner)
+        updateInstalledCask(LocalCaskInstallation(token: "zed", installedVersion: "1.0", installedAt: nil,
+                                                appBundleNames: ["Zed.app"]), in: service)
+        runner.onRequest = { [root, fileManager] request in
+            if request.arguments.first == "uninstall" {
+                try fileManager.removeItem(at: root!.appendingPathComponent("Caskroom/zed"))
+            }
+        }
+        do {
+            try await service.repairReinstalling(token: "zed")
+            XCTFail("expected the surviving-app conflict")
+        } catch {
+            XCTAssertNil(service.installedCasks["zed"])
+            XCTAssertEqual(service.installationSnapshot.externalApplicationOwners["zed"]?.url, app)
+            XCTAssertNotNil(service.operationStore.state(for: "zed")?.failure)
+            XCTAssertTrue(fileManager.fileExists(atPath: app.path))
+            XCTAssertEqual(runner.requests.last?.arguments, ["install", "--cask", "zed"])
+            XCTAssertEqual(runner.requests.count, 3)
+        }
+    }
+
     func test_package_replacement_stops_when_forced_uninstall_leaves_external_app() async throws {
         let runner = StubBrewProcessRunner()
         runner.queuedResults = [
