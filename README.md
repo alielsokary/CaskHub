@@ -25,7 +25,7 @@ CaskHub is 100% free and open source, no subscription, no premium tier, no ads, 
 
 ## Install
 
-<a href="https://github.com/alielsokary/CaskHub/releases/download/0.8.2/CaskHub-0.8.2.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
+<a href="https://github.com/alielsokary/CaskHub/releases/download/0.8.3/CaskHub-0.8.3.zip"><img src=".github/assets/download-for-macos.png" alt="Download app for macOS" width="194"></a>
 
 Or install with Homebrew:
 
@@ -109,7 +109,7 @@ CaskHub speaks your language. Currently available in:
 
 - 🇬🇧 **English**
 - 🇨🇳 **简体中文 (Simplified Chinese)** - translated by [@carty900-jpg](https://github.com/carty900-jpg)
-- 🇹🇼 **繁體中文 (Traditional Chinese)** - translated by [@koala1023](https://github.com/koala1023)
+- 🇨🇳 **繁體中文 (Traditional Chinese)** - translated by [@koala1023](https://github.com/koala1023)
 - 🇷🇺 **Русский (Russian)** - translated by [@gavrilyak201360-pixel](https://github.com/gavrilyak201360-pixel)
 - 🇺🇦 **Українська (Ukrainian)** - translated by [@Disconnecter](https://github.com/Disconnecter)
 
