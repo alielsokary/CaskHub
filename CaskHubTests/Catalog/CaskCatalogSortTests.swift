@@ -352,27 +352,48 @@ extension CaskCatalogSortTests {
     }
 
     @MainActor
-    func test_catalog_fetch_registers_manifest_identity_with_the_real_app_scanner() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("manifest-\(UUID().uuidString)")
-        defer { try? FileManager.default.removeItem(at: root) }
-        try makeApplicationBundle(in: root, named: "Example.app", bundleIdentifier: "org.example.mail", macAppStoreReceipt: true)
-        let local = LocalHomebrewService(defaults: makeScratchDefaults("manifest-scanner")) {
-            $0.applicationDirectories = [root]
-        }
+    func test_catalog_identities_reject_malformed_identifiers_and_unrelated_bundle_names() throws {
         let categories = CategoryService()
-        let data = Data(#"""
-        {"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{},
-         "appIdentities":{"example":[{"bundleName":"Example.app","bundleIdentifier":"org.example.mail"}]}}
-        """#.utf8)
-        categories.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: data))
-        let api = MockBrewAPIClient()
-        api.casks = [makeCask("example", appNames: ["Example.app"])]
-        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        let data = Data(#"{"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{}}"#.utf8)
+        var catalog = try JSONDecoder().decode(CaskCategoryData.self, from: data)
+        let invalid = ["", "invalid_id", "white space", "path/app", "trailing\n", ".leading", "double..dot"]
+        catalog.appIdentities = ["blockbench": invalid.map {
+            CaskAppIdentity(bundleName: "Blockbench.app", bundleIdentifier: $0)
+        } + [CaskAppIdentity(bundleName: "Unrelated.app", bundleIdentifier: "blockbench")]]
+        categories.applyData(catalog)
+        let cask = makeCask("blockbench", appNames: ["Blockbench.app"])
+        XCTAssertTrue(categories.addingAppIdentities(to: [cask])[0].applicationBundleIdentifiers.isEmpty)
+    }
 
-        await vm.fetchCasks()
+    @MainActor
+    func test_catalog_fetch_registers_manifest_identity_with_the_real_app_scanner() async throws {
+        for (token, name, identifier, store) in [
+            ("example", "Example.app", "org.example.mail", true),
+            ("blockbench", "Blockbench.app", "blockbench", false),
+            ("aigcpanel", "AigcPanel.app", "AigcPanel", false)
+        ] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("manifest-\(UUID().uuidString)")
+            defer { try? FileManager.default.removeItem(at: root) }
+            try makeApplicationBundle(in: root, named: name, bundleIdentifier: identifier, macAppStoreReceipt: store)
+            let local = LocalHomebrewService(defaults: makeScratchDefaults("manifest-scanner")) {
+                $0.applicationDirectories = [root]
+            }
+            let categories = CategoryService()
+            let data = Data("""
+            {"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{},
+             "appIdentities":{"\(token)":[{"bundleName":"\(name)","bundleIdentifier":"\(identifier)"}]}}
+            """.utf8)
+            categories.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: data))
+            let api = MockBrewAPIClient()
+            api.casks = [makeCask(token, appNames: [name])]
+            let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
 
-        XCTAssertEqual(vm.casks.first?.applicationBundleIdentifiers, ["org.example.mail"])
-        XCTAssertEqual(local.localState(for: vm.casks[0]).installationSource, .macAppStore)
-        XCTAssertFalse(local.localState(for: vm.casks[0]).isAdoptable)
+            await vm.fetchCasks()
+
+            XCTAssertEqual(vm.casks.first?.applicationBundleIdentifiers, [identifier])
+            let state = local.localState(for: vm.casks[0])
+            XCTAssertEqual(state.installationSource, store ? .macAppStore : .externalApplication)
+            XCTAssertEqual(state.isAdoptable, !store)
+        }
     }
 }
