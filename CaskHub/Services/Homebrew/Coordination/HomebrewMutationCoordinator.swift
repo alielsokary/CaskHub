@@ -170,7 +170,8 @@ extension HomebrewMutationCoordinator {
         await AskpassScriptManager.remove(at: askpass)
 
         guard result.exitCode != 0 else { return }
-        if result.wasTerminatedBySignal,
+        // Homebrew catches SIGINT and exits 130 instead of terminating by an uncaught signal.
+        if result.wasTerminatedBySignal || result.exitCode == 130,
            operationStore.state(for: token)?.cancellationRequested == true {
             throw CancellationError()
         }

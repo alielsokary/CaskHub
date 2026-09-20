@@ -100,6 +100,79 @@ final class HomebrewCommandExecutorTests: XCTestCase {
         XCTAssertNotNil(service.operationStore.state(for: "firefox")?.failure)
     }
 
+    func test_install_cancellation_preserves_error_and_success_reporting() async {
+        let originalProvider = CrashReporter.provider
+        let originalDefaults = CrashReporter.defaults
+        let originalTestState = CrashReporter.isRunningTests
+        let originalCaptureCounts = CrashReporter.captureCounts
+        let originalAnalyticsDefaults = Analytics.defaults
+        let defaults = makeScratchDefaults("install-cancellation-reporting")
+        defaults.set(true, forKey: CrashReporter.enabledKey)
+        defaults.set(false, forKey: Analytics.enabledKey)
+        CrashReporter.defaults = defaults
+        CrashReporter.isRunningTests = false
+        Analytics.defaults = defaults
+        defer {
+            CrashReporter.provider = originalProvider
+            CrashReporter.defaults = originalDefaults
+            CrashReporter.isRunningTests = originalTestState
+            CrashReporter.captureCounts = originalCaptureCounts
+            Analytics.defaults = originalAnalyticsDefaults
+        }
+        // swiftlint:disable:next large_tuple
+        let cases: [(exitCode: Int32, cancel: Bool, output: String, failure: HomebrewFailureKind?)] = [
+            (130, true, "", nil),
+            (130, true, "Downloading example\n", nil),
+            (130, false, "", .processKilled),
+            (1, true, "Error: rollback failed", .unknown),
+            (0, true, "", nil)
+        ]
+        for testCase in cases {
+            let spy = SpyCrashReporterProvider()
+            CrashReporter.provider = spy
+            CrashReporter.captureCounts = [:]
+            await assertInstallOutcome(
+                result: BrewProcessResult(exitCode: testCase.exitCode, output: testCase.output),
+                cancel: testCase.cancel, expectedFailure: testCase.failure, spy: spy
+            )
+        }
+    }
+
+    private func assertInstallOutcome(
+        result: BrewProcessResult, cancel: Bool, expectedFailure: HomebrewFailureKind?, spy: SpyCrashReporterProvider
+    ) async {
+        let executor = SuspendingHomebrewCommandExecutor()
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("install-outcome")) {
+            $0.commandExecutor = executor
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+            $0.brewVersionProvider = { "test" }
+        }
+        let mutation = Task { () -> Bool in
+            do { try await service.install(token: "firefox"); return true } catch { return false }
+        }
+        while executor.requests.isEmpty { await Task.yield() }
+        if cancel { service.cancelInstall(token: "firefox") }
+        XCTAssertEqual(service.operationStore.state(for: "firefox")?.cancellationRequested, cancel)
+        executor.finish(result)
+        let completedWithoutError = await mutation.value
+
+        XCTAssertEqual(completedWithoutError, expectedFailure == nil)
+        let state = service.operationStore.state(for: "firefox")
+        XCTAssertEqual(state == nil, expectedFailure == nil)
+        XCTAssertEqual(state?.failure != nil, expectedFailure != nil)
+        XCTAssertEqual(spy.capturedErrors.count, expectedFailure == nil ? 0 : 1)
+        XCTAssertEqual((spy.capturedErrors.first as? LocalHomebrewError)?.failureKind, expectedFailure)
+        let messages = spy.breadcrumbs.map(\.message)
+        XCTAssertEqual(messages.contains("Cask.actionFailed"), expectedFailure != nil)
+        XCTAssertEqual(messages.contains("Cask.installed"), result.exitCode == 0)
+        XCTAssertEqual(spy.spans.first?.span.finished, true)
+        XCTAssertEqual(spy.spans.first?.span.finishedError != nil, expectedFailure != nil)
+        if expectedFailure != nil {
+            XCTAssertEqual(spy.capturedErrorTags.first?["brew.cancellation_requested"], cancel ? "true" : nil)
+        }
+    }
+
     func test_services_share_global_process_fifo() async throws {
         let overlap = expectation(description: "Homebrew processes overlap")
         overlap.isInverted = true
