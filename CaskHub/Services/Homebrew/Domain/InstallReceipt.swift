@@ -23,6 +23,13 @@ nonisolated struct InstallReceipt {
         var apps: [String] = []
         if let artifacts = root["uninstall_artifacts"] as? [[String: Any]] {
             for artifact in artifacts {
+                if let entries = artifact["artifact"] as? [Any], entries.count == 2,
+                   let source = entries[0] as? String,
+                   let options = entries[1] as? [String: Any],
+                   let target = options["target"] as? String,
+                   let name = ArtifactStanza.applicationArtifactName(source: source, target: target) {
+                    apps.append(name)
+                }
                 guard let appList = artifact["app"] as? [Any] else { continue }
                 for entry in appList {
                     if let name = entry as? String {

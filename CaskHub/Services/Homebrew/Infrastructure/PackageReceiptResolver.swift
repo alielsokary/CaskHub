@@ -21,6 +21,7 @@ nonisolated struct PackageReceiptResolver: Sendable {
     func scan(
         signatures: [PackageCaskSignature],
         availableAppNames: Set<String>,
+        applications: [DetectedApplication],
         homebrewInstalledTokens: Set<String> = []
     ) -> [String: ExternalPackageInstallation] {
         guard !signatures.isEmpty,
@@ -46,6 +47,7 @@ nonisolated struct PackageReceiptResolver: Sendable {
             installedReceipts: installedReceipts,
             packageFileLists: fileLists,
             availableAppNames: availableAppNames,
+            applications: applications,
             homebrewInstalledTokens: homebrewInstalledTokens
         )
     }
@@ -56,15 +58,27 @@ nonisolated struct PackageReceiptResolver: Sendable {
         installedReceipts: Set<String>,
         packageFileLists: [String: String],
         availableAppNames: Set<String>,
+        applications: [DetectedApplication],
         homebrewInstalledTokens: Set<String> = []
     ) -> [String: ExternalPackageInstallation] {
-        var candidates = signatures.compactMap {
-            candidate(
-                for: $0,
+        let applicationsByName = Dictionary(
+            grouping: applications.filter { !$0.isMacAppStore && $0.isDirectlyInApplicationDirectory },
+            by: \.bundleName
+        )
+        var candidates = signatures.compactMap { signature -> PackageInstallationCandidate? in
+            let rejectedNames = signature.verifiedBundleIdentifiersByName.keys.filter { name in
+                let matches = applicationsByName[name] ?? []
+                guard matches.count == 1, let identifier = matches.first?.bundleIdentifier else { return true }
+                return !ApplicationIdentityMatcher.applicationBundleIdentifier(
+                    identifier, matchesAny: signature.verifiedBundleIdentifiersByName[name] ?? []
+                )
+            }
+            return candidate(
+                for: signature,
                 installedReceipts: installedReceipts,
                 packageFileLists: packageFileLists,
-                availableAppNames: availableAppNames,
-                isHomebrewInstalled: homebrewInstalledTokens.contains($0.token)
+                availableAppNames: availableAppNames.subtracting(rejectedNames),
+                isHomebrewInstalled: homebrewInstalledTokens.contains(signature.token)
             )
         }
         candidates.sort {

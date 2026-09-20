@@ -29,6 +29,18 @@ nonisolated struct TokenCategoryMapping: Codable, Hashable {
 nonisolated struct CaskAppIdentity: Decodable, Hashable, Sendable {
     let bundleName: String
     let bundleIdentifier: String
+    // Absent for direct apps and legacy metadata. Both are required to extend
+    // a package cask's declared name candidates with verified payload evidence.
+    var packageIdentifier: String?
+    var installedPath: String?
+
+    func verifiesPackageApp(for cask: Cask) -> Bool {
+        guard cask.hasPackageArtifact, let packageIdentifier,
+              bundleName.hasSuffix(".app"), !bundleName.contains("/"),
+              installedPath == "/Applications/\(bundleName)"
+        else { return false }
+        return cask.packageIdentifiers.contains { fnmatch($0, packageIdentifier, 0) == 0 }
+    }
 }
 
 nonisolated struct CaskCategoryData: Decodable {
@@ -101,12 +113,18 @@ final class CategoryService {
     func addingAppIdentities(to casks: [Cask]) -> [Cask] {
         casks.map { cask in
             var enriched = cask
-            let names = Set(cask.appArtifactNames + cask.packageAppNameCandidates)
-            enriched.catalogBundleIdentifiers = (appIdentities[cask.token] ?? []).filter {
+            let identities = (appIdentities[cask.token] ?? []).filter {
+                $0.bundleIdentifier.range(
+                    of: #"\A[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\z"#, options: .regularExpression
+                ) != nil
+            }
+            enriched.catalogPackageAppIdentifiers = Dictionary(
+                grouping: identities.filter { $0.verifiesPackageApp(for: cask) },
+                by: \.bundleName
+            ).mapValues { $0.map(\.bundleIdentifier) }
+            let names = Set(enriched.appArtifactNames + enriched.packageAppNameCandidates)
+            enriched.catalogBundleIdentifiers = identities.filter {
                 names.contains($0.bundleName)
-                    && $0.bundleIdentifier.range(
-                        of: #"\A[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\z"#, options: .regularExpression
-                    ) != nil
             }.map(\.bundleIdentifier)
             return enriched
         }

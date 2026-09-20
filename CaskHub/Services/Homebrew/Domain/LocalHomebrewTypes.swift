@@ -160,6 +160,7 @@ nonisolated struct PackageCaskSignature: Sendable {
     let displayName: String
     let receiptPatterns: [String]
     let appNameCandidates: [String]
+    let verifiedBundleIdentifiersByName: [String: [String]]
 }
 
 nonisolated struct PackageInstallationCandidate {

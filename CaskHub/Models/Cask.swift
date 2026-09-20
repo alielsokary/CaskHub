@@ -111,6 +111,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
         }
         keys = Set(container.allKeys.map(\.stringValue))
         appNames = Self.artifactNames(in: container, key: "app")
+            + Self.genericApplicationNames(in: container)
         binaryNames = Self.artifactNames(in: container, key: "binary")
         adoptionSourcePaths = Self.adoptionLinkKeys.flatMap { key in
             AnyKey(stringValue: key)
@@ -133,6 +134,36 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
     private static let adoptionLinkKeys = [
         "binary", "bash_completion", "zsh_completion", "fish_completion", "manpage"
     ]
+
+    private static func genericApplicationNames(
+        in container: KeyedDecodingContainer<AnyKey>
+    ) -> [String] {
+        guard let key = AnyKey(stringValue: "artifact"),
+              let entries = try? container.decode([AppEntry].self, forKey: key),
+              entries.count == 2,
+              let source = entries[0].name,
+              let target = entries[1].target,
+              let name = applicationArtifactName(source: source, target: target)
+        else { return [] }
+        return [name]
+    }
+
+    /// Generic artifacts use Homebrew's moved-artifact behavior, but only a
+    /// direct app-directory destination qualifies for single-app detection.
+    static func applicationArtifactName(source: String, target: String) -> String? {
+        guard source.hasSuffix(".app"), !source.hasPrefix("/"),
+              !source.split(separator: "/").contains(".."),
+              source.rangeOfCharacter(from: CharacterSet(charactersIn: "$*?[]~")) == nil
+        else { return nil }
+        let destination = target.replacingOccurrences(of: "$APPDIR/", with: "/Applications/", options: .anchored)
+        let parts = destination.split(separator: "/", omittingEmptySubsequences: false)
+        guard parts.count == 3, parts[0].isEmpty, parts[1] == "Applications",
+              parts[2].hasSuffix(".app"),
+              parts[2] == source.split(separator: "/").last,
+              parts[2].rangeOfCharacter(from: CharacterSet(charactersIn: "$*?[]~")) == nil
+        else { return nil }
+        return String(parts[2])
+    }
 
     /// Entries can be names or staged paths, with `{"target": …}` rename dicts
     /// following the entry they rename — the on-disk name is the target's basename.
@@ -182,6 +213,12 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     var artifacts: [ArtifactStanza]?
     /// Verified identities supplied by CaskFlow, scoped to this cask's app artifacts.
     var catalogBundleIdentifiers: [String]?
+    /// Payload names verified against a cask's package receipts and install paths.
+    var catalogPackageAppIdentifiers: [String: [String]]?
+
+    var catalogPackageAppNames: [String] {
+        catalogPackageAppIdentifiers?.keys.sorted() ?? []
+    }
 
     var id: String {
         token
@@ -227,14 +264,15 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     var packageAppNameCandidates: [String] {
         guard hasPackageArtifact else { return [] }
         var seen: Set<String> = []
-        return (appArtifactNames + deletedAppNames + ["\(displayName).app"]).filter {
+        return (appArtifactNames + deletedAppNames + ["\(displayName).app"] + catalogPackageAppNames).filter {
             seen.insert($0).inserted
         }
     }
 
     var isCLI: Bool {
         guard let artifacts, !artifacts.isEmpty else { return false }
-        return artifacts.contains { !$0.keys.isDisjoint(with: ["binary", "stageOnly", "stage_only"]) }
+        return appArtifactNames.isEmpty
+            && artifacts.contains { !$0.keys.isDisjoint(with: ["binary", "stageOnly", "stage_only"]) }
             && !artifacts.contains { !$0.keys.isDisjoint(with: ["app", "suite", "pkg"]) }
     }
 

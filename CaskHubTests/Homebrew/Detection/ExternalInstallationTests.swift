@@ -349,7 +349,7 @@ final class ExternalInstallationTests: XCTestCase {
             token: "sf-symbols",
             displayName: "SF Symbols",
             receiptPatterns: ["com.apple.pkg.SFSymbols"],
-            appNameCandidates: ["SF Symbols.app"]
+            appNameCandidates: ["SF Symbols.app"], verifiedBundleIdentifiersByName: [:]
         )
 
         let result = PackageReceiptResolver().resolve(
@@ -358,7 +358,7 @@ final class ExternalInstallationTests: XCTestCase {
             packageFileLists: [
                 "com.apple.pkg.SFSymbols": "Applications/SF Symbols Beta.app"
             ],
-            availableAppNames: ["SF Symbols Beta.app"]
+            availableAppNames: ["SF Symbols Beta.app"], applications: []
         )
 
         XCTAssertTrue(result.isEmpty)
@@ -371,13 +371,13 @@ final class ExternalInstallationTests: XCTestCase {
                 token: "zoom",
                 displayName: "Zoom",
                 receiptPatterns: [receipt],
-                appNameCandidates: ["Zoom.app", "zoom.us.app"]
+                appNameCandidates: ["Zoom.app", "zoom.us.app"], verifiedBundleIdentifiersByName: [:]
             ),
             PackageCaskSignature(
                 token: "zoom-for-it-admins",
                 displayName: "Zoom for IT Admins",
                 receiptPatterns: [receipt],
-                appNameCandidates: ["Zoom for IT Admins.app", "zoom.us.app"]
+                appNameCandidates: ["Zoom for IT Admins.app", "zoom.us.app"], verifiedBundleIdentifiersByName: [:]
             )
         ]
 
@@ -385,7 +385,7 @@ final class ExternalInstallationTests: XCTestCase {
             signatures: signatures,
             installedReceipts: [receipt],
             packageFileLists: [:],
-            availableAppNames: ["zoom.us.app"]
+            availableAppNames: ["zoom.us.app"], applications: []
         )
 
         XCTAssertEqual(Set(result.keys), ["zoom"])

@@ -91,7 +91,8 @@ nonisolated struct InstallationCatalogBuilder: Sendable {
                 token: cask.token,
                 displayName: cask.displayName,
                 receiptPatterns: cask.packageIdentifiers,
-                appNameCandidates: cask.packageAppNameCandidates
+                appNameCandidates: cask.packageAppNameCandidates,
+                verifiedBundleIdentifiersByName: cask.catalogPackageAppIdentifiers ?? [:]
             )
         }
     }

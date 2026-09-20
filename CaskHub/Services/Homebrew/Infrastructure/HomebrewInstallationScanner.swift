@@ -28,7 +28,7 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
     private let applicationDiscovery = ApplicationDiscovery()
     private let applicationOwnershipResolver = ApplicationOwnershipResolver()
     private let installationIndexBuilder = InstallationIndexBuilder()
-    private let packageReceiptResolver = PackageReceiptResolver()
+    private let packageReceiptResolver: PackageReceiptResolver
 
     private struct ScanComponents: Sendable {
         let applications: ExternalApplicationScan
@@ -37,7 +37,9 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
         let packages: [String: ExternalPackageInstallation]
     }
 
-    init() {}
+    init(packageReceiptResolver: PackageReceiptResolver = PackageReceiptResolver()) {
+        self.packageReceiptResolver = packageReceiptResolver
+    }
 
     func scan(_ request: InstalledSoftwareScanRequest) async -> InstallationSnapshot {
         // FileManager enumeration and pkgutil are synchronous. This task owns a
@@ -61,6 +63,7 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
             let packages = packageReceiptResolver.scan(
                 signatures: request.packageSignatures,
                 availableAppNames: applications.nonStoreNames,
+                applications: applications.applications,
                 homebrewInstalledTokens: Set(installedCasks.keys)
             )
             let components = ScanComponents(
@@ -93,6 +96,7 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
                 packageReceiptResolver.scan(
                     signatures: request.packageSignatures,
                     availableAppNames: applications.nonStoreNames,
+                    applications: applications.applications,
                     homebrewInstalledTokens: Set(current.installedCasks.keys)
                 )
             let components = ScanComponents(
