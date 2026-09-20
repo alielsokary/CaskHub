@@ -213,10 +213,10 @@ extension ArtifactIdentityTests {
 
     private func conditionalReceiptReplies(mode: String, volume: URL) throws -> [String: String] {
         let receipt = "org.example.optional.component"
-        let location = mode == "relative-location" ? "/Applications" :
-            (mode == "bundle-location" ? "/Applications/Optional.app" : "/")
-        let files = mode == "relative-location" ? "Optional.app/Contents/Info.plist" :
-            (mode == "bundle-location" ? "Contents/Info.plist" : "Applications/Optional.app/Contents/Info.plist")
+        let (location, files) = [
+            "relative-location": ("/Applications", "Optional.app/Contents/Info.plist"),
+            "bundle-location": ("/Applications/Optional.app", "Contents/Info.plist")
+        ][mode] ?? ("/", "Applications/Optional.app/Contents/Info.plist")
         let plist = try PropertyListSerialization.data(fromPropertyList: [
             "pkgid": receipt, "volume": mode == "wrong-volume" ? "/" : volume.path, "install-location": location
         ], format: .xml, options: 0)
