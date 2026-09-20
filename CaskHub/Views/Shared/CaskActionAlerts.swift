@@ -30,9 +30,7 @@ private struct CaskActionAlerts: ViewModifier {
                 cask: cask, service: localHomebrew, isPresented: $showUninstallConfirmation
             )
             .caskBrewMissingAlert(isPresented: hasBrewMissingError)
-            .caskActionErrorAlert(
-                cask: cask, service: localHomebrew, isPresented: hasActionError
-            )
+            .caskActionErrorAlert(cask: cask, service: localHomebrew)
     }
 
     private var actionAlert: CaskActionAlert? {
@@ -63,18 +61,6 @@ private struct CaskActionAlerts: ViewModifier {
                 if !$0 {
                     localHomebrew.send(.cancelAdoption(token: cask.token))
                 }
-            }
-        )
-    }
-
-    private var hasActionError: Binding<Bool> {
-        Binding(
-            get: {
-                guard case .failure = actionAlert else { return false }
-                return true
-            },
-            set: {
-                if !$0 { localHomebrew.send(.dismissFailure(token: cask.token)) }
             }
         )
     }
@@ -173,23 +159,18 @@ private extension View {
 
     func caskActionErrorAlert(
         cask: Cask,
-        service: LocalHomebrewService,
-        isPresented: Binding<Bool>
+        service: LocalHomebrewService
     ) -> some View {
-        onChange(of: isPresented.wrappedValue) { _, show in
-            guard show else { return }
-            guard let window = NSApp.keyWindow,
-                  let failure = failure(for: cask, service: service) else {
-                isPresented.wrappedValue = false
-                return
-            }
+        onChange(of: failure(for: cask, service: service)) { _, failure in
+            guard let failure else { return }
+            guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return }
             let (alert, actions) = CaskActionAlertFactory.errorAlert(
                 for: cask, failure: failure, service: service
             )
             alert.beginSheetModal(for: window) { response in
                 let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+                service.send(.dismissFailure(token: cask.token))
                 if actions.indices.contains(index) { actions[index]() }
-                isPresented.wrappedValue = false
             }
         }
     }
@@ -237,6 +218,7 @@ enum CaskActionAlertFactory {
         failure: CaskOperationFailure,
         service: LocalHomebrewService
     ) -> (alert: NSAlert, actions: [() -> Void]) {
+        let failure = failureForPresentation(failure, cask: cask, service: service)
         let alert = NSAlert()
         alert.messageText = failure.kind == .installationPreflight
             ? String(localized: .alertInstallConflictTitle(cask.displayName))
@@ -270,6 +252,42 @@ enum CaskActionAlertFactory {
         alert.addButton(withTitle: "OK")
         actions.append {}
         return (alert, actions)
+    }
+
+    private static func failureForPresentation(
+        _ failure: CaskOperationFailure, cask: Cask, service: LocalHomebrewService
+    ) -> CaskOperationFailure {
+        guard failure.kind == .applicationConflict else { return failure }
+        let owner = service.installationSnapshot.externalApplicationOwners[cask.token]
+            ?? service.installationSnapshot.installationIndex.homebrewApplications[cask.token]
+        if let app = failure.conflictingApplication, let owner,
+           app.standardizedFileURL.path == owner.url.standardizedFileURL.path,
+           cask.appArtifactNames.contains(app.lastPathComponent) { return failure }
+        let guidance: String
+        if let app = failure.conflictingApplication, cask.appArtifactNames.contains(app.lastPathComponent) {
+            guidance = String(localized: """
+            CaskHub couldn't verify that this copy belongs to \(cask.displayName). \
+            Refresh the catalog and try again, or move the existing app out of the installation folder first.
+            """)
+        } else if let app = failure.conflictingApplication {
+            guidance = String(localized: """
+            The conflict is with \(app.lastPathComponent), which may be a required app. \
+            Adopt or repair that app separately in CaskHub, then retry \(cask.displayName).
+            """)
+        } else {
+            guidance = String(localized: """
+            CaskHub couldn't identify which app blocked this installation. \
+            Resolve the app conflict in Homebrew before retrying.
+            """)
+        }
+        // A dependency collision cannot be repaired by adopting/replacing the parent.
+        return CaskOperationFailure(
+            kind: failure.kind,
+            message: failure.message + "\n\n" + guidance,
+            title: failure.title,
+            recoveries: failure.recoveries.subtracting([.adoptExisting, .replaceWithHomebrew]),
+            conflictingApplication: failure.conflictingApplication
+        )
     }
 }
 
@@ -348,7 +366,7 @@ extension CaskAdoptionPlan {
     }
 
     func confirmationMessage(for cask: Cask) -> String {
-        switch execution {
+        let message = switch execution {
         case .adoptApplication:
             String(localized: .alertAdoptExistingApplication(cask.displayName))
         case .replaceApplication:
@@ -361,6 +379,10 @@ extension CaskAdoptionPlan {
         case .replacePackage:
             String(localized: .alertAdoptReplacePackage)
         }
+        guard artifact == .applicationBundle, cask.hasPackageArtifact else { return message }
+        return message + "\n\n" + String(localized:
+            "Homebrew will also run this app's helper installers, which may request administrator permission."
+        )
     }
 }
 

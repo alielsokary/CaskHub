@@ -80,8 +80,8 @@ struct CaskLocalStateResolver {
     func installationSource(for cask: Cask) -> CaskInstallationSource? {
         if isInstalled(token: cask.token) { return .homebrew }
         if isMacAppStoreInstalled(cask) { return .macAppStore }
-        if isExternalPackageInstalled(cask) { return .packageInstaller }
         if isAdoptableApplication(cask) { return .externalApplication }
+        if isExternalPackageInstalled(cask) { return .packageInstaller }
         if externalCLIPath(cask) != nil { return .externalExecutable }
         return nil
     }

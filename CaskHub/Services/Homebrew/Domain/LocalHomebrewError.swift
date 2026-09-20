@@ -116,6 +116,16 @@ enum LocalHomebrewError: LocalizedError {
         )
     }
 
+    static func conflictingApplication(stderr: String) -> URL? {
+        guard let range = stderr.range(
+            of: #"(?m)^(?:Error: )?(?:[A-Za-z0-9@._+/-]+: )?It seems there is already an App at '(/[^\r\n]+\.app)'\.\r?$"#,
+            options: .regularExpression
+        ) else { return nil }
+        let line = stderr[range].trimmingCharacters(in: .newlines)
+        guard let start = line.range(of: " at '") else { return nil }
+        return URL(fileURLWithPath: String(line[start.upperBound...].dropLast(2)))
+    }
+
     static func caskConflictDescription(
         requestedCask: String,
         installedCask: String
@@ -181,10 +191,10 @@ extension LocalHomebrewError {
                     + "is in the way. Replacing with Homebrew's version overwrites it — "
                     + "your settings and data are kept."
             case .appConflict:
-                return "This app is already on your Mac, but Homebrew doesn't manage "
-                    + "it yet. Adopt keeps your current copy and hands management to "
-                    + "Homebrew; Replace installs Homebrew's copy fresh. Settings and "
-                    + "data are kept either way."
+                if let app = Self.conflictingApplication(stderr: trimmed) {
+                    return String(localized: "Homebrew stopped because an app already exists at \(app.path).")
+                }
+                return String(localized: "Homebrew stopped because an app already exists at the installation destination.")
             case .caskConflict:
                 let requestedCask = args.drop(while: { $0 != "--cask" }).dropFirst().first
                 guard let requestedCask,

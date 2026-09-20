@@ -17,6 +17,7 @@ enum CaskOperationFailureFactory {
             ?? error.localizedDescription
         var kind = CaskOperationFailure.Kind.brewCommand
         var recoveries: Set<CaskRecoveryAction> = []
+        var conflictingApplication: URL?
 
         switch error {
         case LocalHomebrewError.brewBinaryNotFound:
@@ -28,6 +29,10 @@ enum CaskOperationFailureFactory {
         case let LocalHomebrewError.brewCommandFailed(failure):
             let arguments = failure.arguments
             let stderr = failure.diagnostic
+            if failure.kind == .appConflict {
+                kind = .applicationConflict
+                conflictingApplication = LocalHomebrewError.conflictingApplication(stderr: stderr)
+            }
             if failure.kind == .permissionDenied {
                 kind = .appManagementDenied
                 recoveries.insert(.openAppManagementSettings)
@@ -53,7 +58,8 @@ enum CaskOperationFailureFactory {
             kind: kind,
             message: message,
             title: title,
-            recoveries: recoveries
+            recoveries: recoveries,
+            conflictingApplication: conflictingApplication
         )
     }
 

@@ -93,6 +93,19 @@ nonisolated struct ApplicationDiscovery: Sendable {
             shortVersion: info["CFBundleShortVersionString"] as? String
         )
     }
+
+    func hasOtherBundle(
+        named names: [String], than verifiedURL: URL?,
+        directories: [URL], fileManager: FileManager
+    ) -> Bool {
+        names.contains { name in
+            directories.contains { directory in
+                let candidate = directory.appendingPathComponent(name).standardizedFileURL
+                return candidate.path != verifiedURL?.standardizedFileURL.path
+                    && fileManager.fileExists(atPath: candidate.path)
+            }
+        }
+    }
 }
 
 nonisolated struct ApplicationOwnershipResolver: Sendable {
