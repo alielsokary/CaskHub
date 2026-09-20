@@ -99,7 +99,7 @@ final class HomebrewPackageLaunchTests: XCTestCase {
             packageFileLists: [
                 "com.example.pkg.app": "Applications/Example App Beta.app"
             ],
-            availableAppNames: ["Example App Beta.app"],
+            availableAppNames: ["Example App Beta.app"], applications: [],
             homebrewInstalledTokens: [token]
         )
     }

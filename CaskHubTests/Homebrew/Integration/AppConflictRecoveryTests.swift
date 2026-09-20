@@ -253,7 +253,7 @@ final class AppConflictRecoveryTests: XCTestCase {
         let packages = PackageReceiptResolver().resolve(
             signatures: registration.packageSignatures, installedReceipts: ["org.example.helper"],
             packageFileLists: ["org.example.helper": "Applications/Hybrid.app"],
-            availableAppNames: ["Hybrid.app"], homebrewInstalledTokens: []
+            availableAppNames: ["Hybrid.app"], applications: [], homebrewInstalledTokens: []
         )
         updateInstallationSnapshot(of: service) {
             $0.externalPackageInstallations = packages
