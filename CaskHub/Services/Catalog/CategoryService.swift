@@ -105,7 +105,7 @@ final class CategoryService {
             enriched.catalogBundleIdentifiers = (appIdentities[cask.token] ?? []).filter {
                 names.contains($0.bundleName)
                     && $0.bundleIdentifier.range(
-                        of: #"^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"#, options: .regularExpression
+                        of: #"\A[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\z"#, options: .regularExpression
                     ) != nil
             }.map(\.bundleIdentifier)
             return enriched
