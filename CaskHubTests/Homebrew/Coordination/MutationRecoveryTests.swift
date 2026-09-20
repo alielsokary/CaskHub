@@ -561,3 +561,36 @@ extension MutationRecoveryTests {
         }
     }
 }
+
+extension MutationRecoveryTests {
+    func test_upgrade_license_failure_stays_visible_and_reported_without_automatic_recovery() async {
+        let crashSpy = SpyCrashReporterProvider()
+        let originalProvider = CrashReporter.provider
+        let originalDefaults = CrashReporter.defaults
+        let originalTestState = CrashReporter.isRunningTests
+        CrashReporter.provider = crashSpy
+        CrashReporter.defaults = makeScratchDefaults("license-reporting")
+        CrashReporter.isRunningTests = false
+        defer {
+            CrashReporter.provider = originalProvider
+            CrashReporter.defaults = originalDefaults
+            CrashReporter.isRunningTests = originalTestState
+        }
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(exitCode: 1, output:
+            "Error: You have not agreed to the Xcode license. Please resolve this by running:\n"
+                + "  sudo xcodebuild -license accept"
+        )]
+        let service = makeService(runner: runner, scanner: EmptyInstalledSoftwareScanner())
+        try? await service.upgrade(token: "gimp")
+        let reported = crashSpy.capturedErrors.first as? LocalHomebrewError
+        XCTAssertEqual(reported?.commandFailure?.kind, .xcodeLicenseNotAccepted)
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+        XCTAssertEqual(crashSpy.capturedErrorTags.last?["brew.action"], "updating")
+        XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+        XCTAssertEqual(runner.requests.map(\.arguments), [["upgrade", "--cask", "gimp"]])
+        let failure = service.operationStore.state(for: "gimp")?.failure
+        XCTAssertTrue(failure?.message.contains("review and accept") == true)
+        XCTAssertEqual(failure?.recoveries, [])
+    }
+}

@@ -192,6 +192,26 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
     }
 
+    func test_xcode_license_failure_has_specific_guidance_without_reinstall_recovery() {
+        let diagnostic = "Error: You have not agreed to the Xcode license. Please resolve this by running:\n"
+            + "  sudo xcodebuild -license accept"
+        for command in ["install", "upgrade", "uninstall"] {
+            let error = LocalHomebrewError.brewCommandFailed(args: [command, "--cask", "example"],
+                                                           exitCode: 1, stderr: diagnostic)
+            XCTAssertEqual(error.commandFailure?.kind.rawValue, "xcode-license-not-accepted")
+            XCTAssertNil(error.commandFailure?.diagnosticBucket)
+            XCTAssertFalse(error.commandFailure?.kind.isNormallyExternal ?? true)
+            let presentation = CaskOperationFailureFactory.make(from: error, strandedCopyExists: true)
+            XCTAssertTrue(presentation.message.contains("review and accept"))
+            XCTAssertTrue(presentation.message.contains("sudo xcodebuild -license"))
+            XCTAssertFalse(presentation.message.contains("-license accept"))
+            XCTAssertTrue(presentation.recoveries.isEmpty)
+        }
+        XCTAssertEqual(HomebrewCommandFailure.classify(
+            arguments: ["upgrade"], exitCode: 1, diagnostic: "Error: Vendor license not found."
+        ), .unknown)
+    }
+
     func test_terminal_environment_failure_wins_over_download_wrapper() {
         let failure = HomebrewCommandFailure(
             arguments: ["install", "--cask", "example"],

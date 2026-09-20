@@ -41,7 +41,7 @@ enum CaskOperationFailureFactory {
                 recoveries.insert(.replaceWithHomebrew)
             }
             if failure.kind == .strandedCaskroomApp
-                || (arguments.first == "upgrade" && strandedCopyExists) {
+                || (arguments.first == "upgrade" && strandedCopyExists && failure.kind != .xcodeLicenseNotAccepted) {
                 recoveries.insert(.repairAndReinstall)
             }
             recoveries.formUnion(classRecoveries(
