@@ -11,6 +11,7 @@ nonisolated struct ApplicationBundleMetadata {
     let bundleIdentifier: String?
     let version: String?
     let shortVersion: String?
+    let buildVersion: String?
 }
 
 nonisolated struct DetectedApplication: Hashable, Sendable {
@@ -20,6 +21,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
     let version: String?
     /// Release version only; a CFBundleVersion build number is not comparable to it.
     let shortVersion: String?
+    let buildVersion: String?
     let isMacAppStore: Bool
     let isDirectlyInApplicationDirectory: Bool
     let installedAt: Date?
@@ -31,6 +33,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         bundleIdentifier: String?,
         version: String?,
         shortVersion: String?,
+        buildVersion: String?,
         isMacAppStore: Bool,
         isDirectlyInApplicationDirectory: Bool,
         installedAt: Date? = nil,
@@ -41,6 +44,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         self.bundleIdentifier = bundleIdentifier
         self.version = version
         self.shortVersion = shortVersion
+        self.buildVersion = buildVersion
         self.isMacAppStore = isMacAppStore
         self.isDirectlyInApplicationDirectory = isDirectlyInApplicationDirectory
         self.installedAt = installedAt

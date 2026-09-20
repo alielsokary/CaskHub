@@ -142,12 +142,9 @@ struct CaskLocalStateResolver {
               !installation.isZombie
         else { return false }
         // Self-updaters can advance the app without updating Homebrew's receipt.
-        // Composite cask versions and build-only metadata keep the receipt policy.
         if autoUpdates == true,
-           let version = snapshot.installationIndex.homebrewApplications[token]?.shortVersion,
-           version.allSatisfy({ $0.isNumber || $0 == "." }),
-           remoteVersion.allSatisfy({ $0.isNumber || $0 == "." }),
-           let comparison = NumericVersionComparison.compare(version, remoteVersion) {
+           let application = snapshot.installationIndex.homebrewApplications[token],
+           let comparison = Self.compareApplicationVersion(application, to: remoteVersion) {
             return comparison == .orderedAscending
         }
         return Self.comparableVersion(installation.installedVersion)
@@ -278,5 +275,28 @@ struct CaskLocalStateResolver {
             identifier,
             matchesPackageIdentifiers: cask.packageIdentifiers
         )
+    }
+}
+
+private extension CaskLocalStateResolver {
+    static func compareApplicationVersion(
+        _ application: DetectedApplication, to remoteVersion: String
+    ) -> ComparisonResult? {
+        let parts = remoteVersion.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
+        // Only numeric release or release,build formats have a known bundle mapping.
+        guard (1 ... 2).contains(parts.count),
+              parts.allSatisfy({ numericComparison($0, $0) != nil }),
+              let release = application.shortVersion,
+              let comparison = numericComparison(release, parts[0])
+        else { return nil }
+        guard comparison == .orderedSame, parts.count == 2 else { return comparison }
+        guard let build = application.buildVersion else { return nil }
+        return numericComparison(build, parts[1])
+    }
+
+    static func numericComparison(_ lhs: String, _ rhs: String) -> ComparisonResult? {
+        guard lhs.allSatisfy({ $0.isNumber || $0 == "." }),
+              rhs.allSatisfy({ $0.isNumber || $0 == "." }) else { return nil }
+        return NumericVersionComparison.compare(lhs, rhs)
     }
 }

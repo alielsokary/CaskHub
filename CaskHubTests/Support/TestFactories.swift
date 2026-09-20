@@ -25,6 +25,7 @@ internal nonisolated func makeDetectedApplication(
         bundleIdentifier: id ?? "com.example.\(bundleName)",
         version: version,
         shortVersion: version,
+        buildVersion: nil,
         isMacAppStore: isMacAppStore,
         isDirectlyInApplicationDirectory: inApplicationsDirectory,
         installedAt: installedAt

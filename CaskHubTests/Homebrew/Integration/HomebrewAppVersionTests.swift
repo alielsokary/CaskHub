@@ -41,6 +41,50 @@ final class HomebrewAppVersionTests: XCTestCase {
         }
     }
 
+    func test_composite_versions_use_installed_release_and_build_for_updates() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = try makeInstallation(in: root)
+        let service = makeService(in: root)
+        await service.refresh()
+        let (vm, _) = await makeSUT(
+            casks: [makeAntinote(version: "4.2.19,317")], categories: makeCategories(), localHomebrew: service
+        )
+        let cask = try XCTUnwrap(vm.casks.first)
+        vm.selectedSidebar = .library(.updates)
+        let scenarios: [((String, String?), Bool)] = [
+            (("4.2.18", "999"), true),
+            (("4.2.19", "316"), true),
+            (("4.2.19", "317"), false),
+            (("4.2.19", "318"), false),
+            (("4.2.20", "1"), false),
+            (("4.2.19", nil), true),
+            (("4.2.19", "317beta"), true),
+            (("4.2.19", ""), true)
+        ]
+        for ((release, build), expectedOutdated) in scenarios {
+            try setApplicationVersion(release, at: app)
+            let plistURL = app.appendingPathComponent("Contents/Info.plist")
+            var info = try XCTUnwrap(
+                PropertyListSerialization.propertyList(from: Data(contentsOf: plistURL), format: nil) as? [String: Any]
+            )
+            info["CFBundleVersion"] = build
+            try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(to: plistURL)
+            await service.refresh()
+            XCTAssertEqual(service.installationSnapshot.installationIndex.homebrewApplications[cask.token]?.buildVersion, build)
+            for greedy in [false, true] {
+                service.setGreedyUpdates(greedy)
+                let values = infoValues(for: cask, service: service)
+                XCTAssertEqual(values[String(localized: "Installed Version")], release)
+                XCTAssertEqual(values[String(localized: "Outdated")],
+                               expectedOutdated ? String(localized: "Yes") : String(localized: "No"))
+                XCTAssertEqual(service.localState(for: cask).hasAvailableUpdate, greedy && expectedOutdated)
+                XCTAssertEqual(vm.updatesCount, greedy && expectedOutdated ? 1 : 0)
+                XCTAssertEqual(vm.filteredCasks.map(\.token), greedy && expectedOutdated ? [cask.token] : [])
+            }
+        }
+    }
+
     func test_ambiguous_identity_and_uncomparable_versions_keep_receipt_policy() async throws {
         let scenarios = ["wrong-id", "store", "duplicate", "missing-id", "multiple-apps", "build-only",
                          "composite", "beta", "beta-bundle", "manual-updates", "alias"]
@@ -49,7 +93,7 @@ final class HomebrewAppVersionTests: XCTestCase {
             defer { try? FileManager.default.removeItem(at: root) }
             let app = try makeInstallation(in: root)
             try setApplicationVersion("2.2.0", at: app)
-            let version = scenario == "composite" ? "2.1.3,99" : scenario == "beta" ? "2.1.3beta" : "2.1.3"
+            let version = scenario == "composite" ? "2.1.3,abcdef" : scenario == "beta" ? "2.1.3beta" : "2.1.3"
             var cask = makeAntinote(version: version, autoUpdates: scenario != "manual-updates")
             try configure(scenario, app: app, cask: &cask)
             var casks = [cask]
