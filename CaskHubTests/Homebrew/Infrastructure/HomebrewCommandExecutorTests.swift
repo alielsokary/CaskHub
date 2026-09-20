@@ -158,11 +158,9 @@ final class HomebrewCommandExecutorTests: XCTestCase {
         let completedWithoutError = await mutation.value
 
         XCTAssertEqual(completedWithoutError, expectedFailure == nil)
-        if expectedFailure == nil {
-            XCTAssertNil(service.operationStore.state(for: "firefox"))
-        } else {
-            XCTAssertNotNil(service.operationStore.state(for: "firefox")?.failure)
-        }
+        let state = service.operationStore.state(for: "firefox")
+        XCTAssertEqual(state == nil, expectedFailure == nil)
+        XCTAssertEqual(state?.failure != nil, expectedFailure != nil)
         XCTAssertEqual(spy.capturedErrors.count, expectedFailure == nil ? 0 : 1)
         XCTAssertEqual((spy.capturedErrors.first as? LocalHomebrewError)?.failureKind, expectedFailure)
         let messages = spy.breadcrumbs.map(\.message)
