@@ -4,8 +4,8 @@
         <title>CaskHub</title>
         <item>
             <title>0.8.3</title>
-            <pubDate>Sun, 20 Sep 2026 17:46:49 +0000</pubDate>
-            <sparkle:version>714</sparkle:version>
+            <pubDate>Sun, 20 Sep 2026 18:09:33 +0000</pubDate>
+            <sparkle:version>717</sparkle:version>
             <sparkle:shortVersionString>0.8.3</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
@@ -29,7 +29,7 @@
 - Fixed the sidebar logo sitting too close to the top on macOS 27
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.3/CaskHub-0.8.3.zip" length="7364164" type="application/octet-stream" sparkle:edSignature="dV2krmMYum6ftq9VvucFPlkYQ8tptCboK3IQ9LGcN5D73s25TcsAt+aS+vjVdEI7hJeRq2lxjybUdI45q68DBA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.3/CaskHub-0.8.3.zip" length="7365115" type="application/octet-stream" sparkle:edSignature="FnYymKGLhgvgzKNxPlzgtU03BQA84IRyo9q25EaExl5/pRjtxUA3BXOWjNI95lqNxuM06rMNEPwH6dlB8fJBCQ=="/>
         </item>
     </channel>
 </rss>
