@@ -54,6 +54,7 @@ nonisolated struct CaskCategoryData: Decodable {
     let iconTokens: [String]?
     // Optional for releases predating app identity metadata.
     var appIdentities: [String: [CaskAppIdentity]]?
+    var packageAppCandidates: [String: [PackageApplicationIdentity]]?
     var metadataUpdatedAt: String?
 }
 
@@ -67,6 +68,7 @@ final class CategoryService {
     private(set) var releaseTag: String?
     private(set) var iconTokens: Set<String>?
     private(set) var appIdentities: [String: [CaskAppIdentity]] = [:]
+    private(set) var packageAppCandidates: [String: [PackageApplicationIdentity]] = [:]
     private(set) var metadataUpdatedAt: String?
     private(set) var catalogStateRevision = 0
 
@@ -126,6 +128,16 @@ final class CategoryService {
             enriched.catalogBundleIdentifiers = identities.filter {
                 names.contains($0.bundleName)
             }.map(\.bundleIdentifier)
+            enriched.catalogPackageCandidates = (packageAppCandidates[cask.token] ?? []).filter { candidate in
+                let identity = CaskAppIdentity(
+                    bundleName: candidate.bundleName, bundleIdentifier: candidate.bundleIdentifier,
+                    packageIdentifier: candidate.packageIdentifier, installedPath: candidate.installedPath
+                )
+                return identity.verifiesPackageApp(for: cask)
+                    && candidate.bundleIdentifier.range(
+                        of: #"\A[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\z"#, options: .regularExpression
+                    ) != nil
+            }
             return enriched
         }
     }
@@ -139,6 +151,8 @@ final class CategoryService {
         releaseTag = catalog.releaseTag
         iconTokens = catalog.iconTokens.map(Set.init)
         if let identities = catalog.appIdentities { appIdentities = identities }
+        // Missing candidate metadata revokes prior conditional evidence.
+        packageAppCandidates = catalog.packageAppCandidates ?? [:]
         if let updatedAt = catalog.metadataUpdatedAt { metadataUpdatedAt = updatedAt }
         catalogStateRevision &+= 1
     }

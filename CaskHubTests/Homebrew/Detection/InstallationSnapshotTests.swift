@@ -275,9 +275,10 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
             let scan = ApplicationDiscovery().scan(fileManager: .default, directories: [root])
             XCTAssertEqual(scan.applications.count, 1)
             let packages = PackageReceiptResolver().resolve(
-                signatures: registration.packageSignatures, installedReceipts: receipts,
-                packageFileLists: ["net.kushview.pkg.ElementApp": "Applications/Element.app"],
-                availableAppNames: scan.adoptableNames, applications: []
+                signatures: registration.packageSignatures,
+                receipts: Dictionary(uniqueKeysWithValues: receipts.map {
+                    ($0, PackageReceiptResolver.Receipt(files: "Applications/Element.app", location: nil))
+                }), availableAppNames: scan.adoptableNames, applications: []
             )
             XCTAssertTrue(packages.isEmpty)
             let service = LocalHomebrewService(defaults: makeScratchDefaults("element-collision")) {

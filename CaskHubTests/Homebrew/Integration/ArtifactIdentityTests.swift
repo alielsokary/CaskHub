@@ -149,3 +149,125 @@ final class ArtifactIdentityTests: XCTestCase {
     }
 
 }
+
+extension ArtifactIdentityTests {
+    func test_conditional_package_candidates_require_receipt_path_and_bundle_agreement() async throws {
+        for mode in [
+            "valid", "relative-location", "bundle-location", "missing-receipt", "wrong-component", "missing-files",
+            "wrong-path", "wrong-id", "same-name-wrong-id", "store", "duplicate", "bad-receipt", "wrong-volume"
+        ] {
+            try await checkConditionalPackage(mode: mode)
+        }
+    }
+
+    private func checkConditionalPackage(mode: String) async throws {
+        let volume = FileManager.default.temporaryDirectory.appendingPathComponent("conditional-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: volume) }
+        let apps = volume.appendingPathComponent("Applications")
+        let identifier = mode.hasSuffix("wrong-id") ? "org.unrelated.app" : "org.example.optional"
+        let app = try makeApplicationBundle(in: apps, named: "Optional.app", bundleIdentifier: identifier)
+        if mode == "store" {
+            let receipt = app.appendingPathComponent("Contents/_MASReceipt")
+            try FileManager.default.createDirectory(at: receipt, withIntermediateDirectories: true)
+            try Data().write(to: receipt.appendingPathComponent("receipt"))
+        }
+        var directories = [apps]
+        if mode == "duplicate" {
+            let second = volume.appendingPathComponent("Duplicate")
+            try makeApplicationBundle(in: second, named: "Optional.app", bundleIdentifier: identifier)
+            directories.append(second)
+        }
+        let replies = try conditionalReceiptReplies(mode: mode, volume: volume)
+        let scanner = HomebrewInstallationScanner(packageReceiptResolver: PackageReceiptResolver { replies[$0.joined(separator: " ")] })
+        let launcher = RecordingApplicationLauncher()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("conditional-\(mode)")) {
+            $0.applicationDirectories = directories
+            $0.softwareScanner = scanner
+            $0.applicationLauncher = launcher
+        }
+        let categories = CategoryService()
+        let data = Data(#"""
+        {"version":2,"generatedDate":"2026-09-20","categories":{},"tokenToCategory":{},
+         "packageAppCandidates":{"optional":[{"bundleName":"Optional.app","bundleIdentifier":"org.example.optional",
+          "packageIdentifier":"org.example.optional.component","installedPath":"/Applications/Optional.app"}]}}
+        """#.utf8)
+        categories.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: data))
+        let api = MockBrewAPIClient()
+        api.casks = [makeCask("optional", name: mode == "same-name-wrong-id" ? "Optional" : "Catalog Product",
+                              packageIdentifiers: ["org.example.*"])]
+        let viewModel = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await viewModel.fetchCasks()
+        let enriched = try XCTUnwrap(viewModel.casks.first)
+        XCTAssertTrue(enriched.applicationBundleIdentifiers.isEmpty, mode)
+        XCTAssertTrue(enriched.catalogPackageAppNames.isEmpty, mode)
+        let accepted = ["valid", "relative-location", "bundle-location"].contains(mode)
+        let state = local.localState(for: enriched)
+        XCTAssertEqual(state.installationSource == .packageInstaller, accepted, mode)
+        XCTAssertEqual(state.isAdoptable, accepted, mode)
+        if accepted {
+            XCTAssertTrue(state.canOpen, mode)
+            local.open(enriched)
+            XCTAssertEqual(launcher.lastOpenedURL?.standardizedFileURL, app.standardizedFileURL, mode)
+        }
+    }
+
+    private func conditionalReceiptReplies(mode: String, volume: URL) throws -> [String: String] {
+        let receipt = "org.example.optional.component"
+        let location = mode == "relative-location" ? "/Applications" :
+            (mode == "bundle-location" ? "/Applications/Optional.app" : "/")
+        let files = mode == "relative-location" ? "Optional.app/Contents/Info.plist" :
+            (mode == "bundle-location" ? "Contents/Info.plist" : "Applications/Optional.app/Contents/Info.plist")
+        let plist = try PropertyListSerialization.data(fromPropertyList: [
+            "pkgid": receipt, "volume": mode == "wrong-volume" ? "/" : volume.path, "install-location": location
+        ], format: .xml, options: 0)
+        let xml = try XCTUnwrap(String(data: plist, encoding: .utf8))
+        return [
+            "--pkgs": mode == "missing-receipt" ? "" : (mode == "wrong-component" ? "org.example.helper" : receipt),
+            "--files \(receipt)": mode == "missing-files" ? "" : (mode == "wrong-path" ? "Library/Optional.app" : files),
+            "--pkg-info-plist \(receipt)": mode == "bad-receipt" ? "invalid" : xml
+        ]
+    }
+
+    func test_conditional_candidates_are_revoked_when_the_feed_omits_them() throws {
+        let categories = CategoryService()
+        var data = try JSONDecoder().decode(CaskCategoryData.self, from: Data(
+            #"{"version":2,"generatedDate":"2026-09-20","categories":{},"tokenToCategory":{}}"#.utf8
+        ))
+        data.packageAppCandidates = ["optional": [PackageApplicationIdentity(
+            bundleName: "Optional.app", bundleIdentifier: "org.example.optional",
+            packageIdentifier: "org.example.component", installedPath: "/Applications/Optional.app"
+        )]]
+        categories.applyData(data)
+        let cask = makeCask("optional", packageIdentifiers: ["org.example.*"])
+        let enriched = categories.addingAppIdentities(to: [cask])[0]
+        XCTAssertEqual(enriched.catalogPackageCandidates?.count, 1)
+        data.packageAppCandidates = nil
+        categories.applyData(data)
+        XCTAssertEqual(categories.addingAppIdentities(to: [enriched])[0].catalogPackageCandidates, [])
+    }
+
+    func test_conditional_receipt_shared_by_casks_needs_an_unambiguous_owner() {
+        let identity = PackageApplicationIdentity(
+            bundleName: "Optional.app", bundleIdentifier: "org.example.optional",
+            packageIdentifier: "org.example.component", installedPath: "/Applications/Optional.app"
+        )
+        let signatures = ["optional", "optional-enterprise"].map { token in
+            PackageCaskSignature(
+                token: token, displayName: "Optional", receiptPatterns: ["org.example.*"],
+                appNameCandidates: ["Optional.app"], verifiedBundleIdentifiersByName: [:], receiptCandidates: [identity]
+            )
+        }
+        let receipt = PackageReceiptResolver.Receipt(
+            files: "Applications/Optional.app/Contents/Info.plist",
+            location: .init(volume: URL(fileURLWithPath: "/"), installLocation: "/")
+        )
+        let application = makeDetectedApplication("Optional.app", id: "org.example.optional")
+        for installed: Set<String> in [[], ["optional"], ["optional", "optional-enterprise"]] {
+            let result = PackageReceiptResolver().resolve(
+                signatures: signatures, receipts: [identity.packageIdentifier: receipt],
+                availableAppNames: [identity.bundleName], applications: [application], homebrewInstalledTokens: installed
+            )
+            XCTAssertEqual(Set(result.keys), installed.count == 1 ? installed : [])
+        }
+    }
+}

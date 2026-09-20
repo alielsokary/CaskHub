@@ -215,6 +215,8 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     var catalogBundleIdentifiers: [String]?
     /// Payload names verified against a cask's package receipts and install paths.
     var catalogPackageAppIdentifiers: [String: [String]]?
+    /// Conditional payloads, used only by the installed-package receipt scanner.
+    var catalogPackageCandidates: [PackageApplicationIdentity]?
 
     var catalogPackageAppNames: [String] {
         catalogPackageAppIdentifiers?.keys.sorted() ?? []

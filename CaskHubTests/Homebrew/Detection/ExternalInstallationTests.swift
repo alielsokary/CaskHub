@@ -349,15 +349,12 @@ final class ExternalInstallationTests: XCTestCase {
             token: "sf-symbols",
             displayName: "SF Symbols",
             receiptPatterns: ["com.apple.pkg.SFSymbols"],
-            appNameCandidates: ["SF Symbols.app"], verifiedBundleIdentifiersByName: [:]
+            appNameCandidates: ["SF Symbols.app"], verifiedBundleIdentifiersByName: [:], receiptCandidates: []
         )
 
         let result = PackageReceiptResolver().resolve(
             signatures: [signature],
-            installedReceipts: ["com.apple.pkg.SFSymbols"],
-            packageFileLists: [
-                "com.apple.pkg.SFSymbols": "Applications/SF Symbols Beta.app"
-            ],
+            receipts: ["com.apple.pkg.SFSymbols": .init(files: "Applications/SF Symbols Beta.app", location: nil)],
             availableAppNames: ["SF Symbols Beta.app"], applications: []
         )
 
@@ -371,20 +368,19 @@ final class ExternalInstallationTests: XCTestCase {
                 token: "zoom",
                 displayName: "Zoom",
                 receiptPatterns: [receipt],
-                appNameCandidates: ["Zoom.app", "zoom.us.app"], verifiedBundleIdentifiersByName: [:]
+                appNameCandidates: ["Zoom.app", "zoom.us.app"], verifiedBundleIdentifiersByName: [:], receiptCandidates: []
             ),
             PackageCaskSignature(
                 token: "zoom-for-it-admins",
                 displayName: "Zoom for IT Admins",
                 receiptPatterns: [receipt],
-                appNameCandidates: ["Zoom for IT Admins.app", "zoom.us.app"], verifiedBundleIdentifiersByName: [:]
+                appNameCandidates: ["Zoom for IT Admins.app", "zoom.us.app"], verifiedBundleIdentifiersByName: [:], receiptCandidates: []
             )
         ]
 
         let result = PackageReceiptResolver().resolve(
             signatures: signatures,
-            installedReceipts: [receipt],
-            packageFileLists: [:],
+            receipts: [receipt: .init(files: nil, location: nil)],
             availableAppNames: ["zoom.us.app"], applications: []
         )
 
