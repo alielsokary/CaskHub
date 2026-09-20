@@ -58,6 +58,7 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case unknown
     case unknownCask = "unknown-cask"
     case upgradeRefused = "upgrade-refused"
+    case xcodeLicenseNotAccepted = "xcode-license-not-accepted"
 
     var isExplicitUserDecision: Bool {
         self == .sudoDeclined
@@ -283,6 +284,10 @@ nonisolated extension HomebrewCommandFailure {
     private static func policyKind(text: String) -> HomebrewFailureKind? {
         if isHomebrewRuntimeIncompatible(text) { return .homebrewRuntimeIncompatible }
         return firstMatch(in: text, [
+            Match(
+                fragments: ["you have not agreed to the xcode license"],
+                kind: .xcodeLicenseNotAccepted
+            ),
             Match(
                 fragments: ["does not have a sha256 checksum defined", "--require-sha"],
                 kind: .requireSHAPolicy

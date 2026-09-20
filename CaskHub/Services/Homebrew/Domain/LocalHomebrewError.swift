@@ -270,6 +270,14 @@ extension LocalHomebrewError {
                     Update Homebrew, then try again. If it still fails, run `brew doctor` in Terminal.
                     """
                 )
+            case .xcodeLicenseNotAccepted:
+                return String(
+                    localized: """
+                    Homebrew cannot run until you review and accept the Xcode license. \
+                    Open Xcode to review it, or run `sudo xcodebuild -license` in Terminal. \
+                    After accepting the license, retry this operation in CaskHub.
+                    """
+                )
             case .portableRubyUnavailable:
                 return String(
                     localized: """
