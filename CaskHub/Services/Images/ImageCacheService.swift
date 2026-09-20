@@ -14,7 +14,6 @@ import Observation
 @Observable
 final class ImageCacheService {
     private let memoryCache = NSCache<NSString, NSImage>()
-    private let normalizedImages = NSCache<NSImage, NSImage>()
     private var memoryHashes: [String: String] = [:]
     private var inFlightTasks: [String: Task<NSImage?, Never>] = [:]
     private var upgradeInFlight: Set<String> = []
@@ -44,7 +43,6 @@ final class ImageCacheService {
         self.session = session
         self.diskCache = diskCache
         memoryCache.countLimit = 500
-        normalizedImages.countLimit = 500
         Task {
             do {
                 try await diskCache.purgeGeneratedIconsIfNeeded()
@@ -55,37 +53,30 @@ final class ImageCacheService {
     }
 
     func image(for cask: Cask) async -> NSImage? {
-        guard let source = await sourceImage(for: cask), !Task.isCancelled else { return nil }
-        if let cached = normalizedImages.object(forKey: source) { return cached }
-        let normalized = await Task.detached(priority: .utility) {
-            Self.normalizedIcon(source)
-        }.value
-        guard !Task.isCancelled else { return nil }
-        normalizedImages.setObject(normalized, forKey: source)
-        return normalized
+        let token = cask.token
+        if let hash = iconHash(for: token) { return await hashedImage(for: cask, hash: hash) }
+        if let cached = memoryCache.object(forKey: token as NSString) { return cached }
+        if let existing = inFlightTasks[token] { return await existing.value }
+        let task = Task {
+            let generation = await diskCache.currentGeneration()
+            return await loadImage(for: cask, generation: generation)
+        }
+        inFlightTasks[token] = task
+        let image = await task.value
+        inFlightTasks.removeValue(forKey: token)
+        return image
     }
 
-    private func sourceImage(for cask: Cask) async -> NSImage? {
+    private func loadImage(for cask: Cask, generation: UInt64) async -> NSImage? {
         let token = cask.token
-
-        if let hash = iconHash(for: token) {
-            return await hashedImage(for: cask, hash: hash)
-        }
-
-        if let cached = memoryCache.object(forKey: token as NSString) {
-            return cached
-        }
-        let generation = await diskCache.currentGeneration()
-
         if cask.isCLI {
             await purgeStaleCLIIcon(token: token)
         }
 
         if let data = await diskCache.loadData(token: token),
-           let diskImage = NSImage(data: data),
-           diskImage.isValid {
+           let diskImage = await Self.preparedImage(from: data) {
             guard !Task.isCancelled, await diskCache.isCurrent(generation) else { return nil }
-            if iconHash(for: token) != nil { return await sourceImage(for: cask) }
+            if iconHash(for: token) != nil { return await image(for: cask) }
             memoryCache.setObject(diskImage, forKey: token as NSString)
             memoryHashes.removeValue(forKey: token)
             await maybeUpgradeFallbackIcon(token: token, generation: generation)
@@ -111,29 +102,13 @@ final class ImageCacheService {
             return nil
         }
 
-        if let existing = inFlightTasks[token] {
-            return await existing.value
-        }
-
-        let task = Task {
-            await fetchImage(
-                for: cask,
-                inManifest: inManifest,
-                generation: generation
-            )
-        }
-
-        inFlightTasks[token] = task
-        let result = await task.value
-        inFlightTasks.removeValue(forKey: token)
-        return result
+        return await fetchImage(for: cask, inManifest: inManifest, generation: generation)
     }
 
     func clearCache() async {
         inFlightTasks.values.forEach { $0.cancel() }
         inFlightTasks.removeAll()
         upgradeInFlight.removeAll()
-        normalizedImages.removeAllObjects()
         memoryCache.removeAllObjects()
         memoryHashes.removeAll()
         do {
@@ -143,11 +118,11 @@ final class ImageCacheService {
         }
         // A task already returning to the main actor may have populated memory
         // while the disk actor was clearing. The generation check rejects its write.
-        normalizedImages.removeAllObjects()
         memoryCache.removeAllObjects()
     }
 
     // MARK: - Private
+
     private func fetchImage(
         for cask: Cask,
         inManifest: Bool,
@@ -155,31 +130,26 @@ final class ImageCacheService {
     ) async -> NSImage? {
         let token = cask.token
         var sawHTTPResponse = false
-        func fetch(_ url: URL) async -> NSImage? {
-            let (image, responded) = await downloadImage(from: url)
+        func fetch(_ url: URL) async -> Data? {
+            let (data, responded) = await downloadImage(from: url)
             sawHTTPResponse = sawHTTPResponse || responded
-            return image
+            return data
         }
 
         if inManifest {
             for url in CaskIconURL.caskFlowIconURLs(for: token) {
-                if let image = await fetch(url) {
-                    await cache(
-                        image: image,
-                        token: token,
-                        generation: generation,
-                        fromCaskFlow: true
-                    )
-                    return image
+                if let data = await fetch(url) {
+                    if let image = await cache(data: data, token: token, generation: generation, fromCaskFlow: true) {
+                        return image
+                    }
                 }
             }
         }
 
         if !cask.isCLI,
            let url = CaskIconURL.appFairIconURL(for: token),
-           let image = await fetch(url) {
-            await cache(image: image, token: token, generation: generation)
-            return image
+           let data = await fetch(url) {
+            if let image = await cache(data: data, token: token, generation: generation) { return image }
         }
 
         if sawHTTPResponse {
@@ -192,48 +162,39 @@ final class ImageCacheService {
         return nil
     }
 
-    private func downloadImage(from url: URL) async -> (image: NSImage?, gotResponse: Bool) {
+    private func downloadImage(from url: URL) async -> (data: Data?, gotResponse: Bool) {
         guard let (data, response) = try? await session.data(from: url),
-              let httpResponse = response as? HTTPURLResponse
-        else {
-            return (nil, false)
-        }
-        guard httpResponse.statusCode == 200,
-              let image = NSImage(data: data),
-              image.isValid
-        else {
-            return (nil, true)
-        }
-        return (image, true)
+              let httpResponse = response as? HTTPURLResponse else { return (nil, false) }
+        guard httpResponse.statusCode == 200 else { return (nil, true) }
+        return (data, true)
     }
 
     private func cache(
-        image: NSImage,
+        data: Data,
         token: String,
         generation: UInt64,
         fromCaskFlow: Bool = false,
         expectedHash: String? = nil
-    ) async {
-        guard await diskCache.isCurrent(generation), iconHash(for: token) == expectedHash else { return }
-        guard let pngData = await Self.pngData(for: image) else { return }
-        guard !Task.isCancelled, iconHash(for: token) == expectedHash else { return }
+    ) async -> NSImage? {
+        guard let image = await Self.preparedImage(from: data),
+              !Task.isCancelled, await diskCache.isCurrent(generation),
+              iconHash(for: token) == expectedHash else { return nil }
         do {
             guard try await diskCache.store(
-                pngData,
-                token: token,
-                generation: generation,
-                fromCaskFlow: fromCaskFlow
-            ) else { return }
+                data, token: token, generation: generation, fromCaskFlow: fromCaskFlow
+            ) else { return nil }
             guard !Task.isCancelled, await diskCache.isCurrent(generation),
-                  iconHash(for: token) == expectedHash else { return }
+                  iconHash(for: token) == expectedHash else { return nil }
             memoryCache.setObject(image, forKey: token as NSString)
             memoryHashes.removeValue(forKey: token)
         } catch {
             CrashReporter.capture(error)
         }
+        return image
     }
 
     // MARK: - CLI cutover purge
+
     private static let cliIconCutover = Date(timeIntervalSince1970: 1_783_598_400)
 
     private func purgeStaleCLIIcon(token: String) async {
@@ -269,15 +230,11 @@ final class ImageCacheService {
                 inFlightTasks.removeValue(forKey: key)
             }
             for url in CaskIconURL.caskFlowIconURLs(for: token) {
-                let (image, _) = await downloadImage(from: url)
-                if let image {
-                    await cache(
-                        image: image,
-                        token: token,
-                        generation: generation,
-                        fromCaskFlow: true
-                    )
-                    return image
+                let (data, _) = await downloadImage(from: url)
+                if let data {
+                    if let image = await cache(data: data, token: token, generation: generation, fromCaskFlow: true) {
+                        return image
+                    }
                 }
             }
             try? await diskCache.touchFallback(token: token, generation: generation)
@@ -285,15 +242,10 @@ final class ImageCacheService {
         }
     }
 
-    private nonisolated static func pngData(for image: NSImage) async -> Data? {
+    private nonisolated static func preparedImage(from data: Data) async -> NSImage? {
         await Task.detached(priority: .utility) {
-            guard let tiffData = image.tiffRepresentation,
-                  let bitmap = NSBitmapImageRep(data: tiffData),
-                  let pngData = bitmap.representation(using: .png, properties: [:])
-            else {
-                return nil
-            }
-            return pngData
+            guard let image = NSImage(data: data), image.isValid else { return nil }
+            return normalizedIcon(image)
         }.value
     }
 }
@@ -305,7 +257,7 @@ extension ImageCacheService {
            let image = memoryCache.object(forKey: token as NSString) { return image }
         let generation = await diskCache.currentGeneration()
         let key = "\(token):\(hash):\(generation)"
-        guard iconHash(for: token) == hash else { return await sourceImage(for: cask) }
+        guard iconHash(for: token) == hash else { return await image(for: cask) }
         for (otherKey, task) in inFlightTasks where otherKey != key
             && (otherKey == token || otherKey.hasPrefix("\(token):")) {
             task.cancel()
@@ -324,7 +276,7 @@ extension ImageCacheService {
         let token = cask.token
         var previous = memoryCache.object(forKey: token as NSString)
         if let data = await diskCache.loadData(token: token),
-           let image = NSImage(data: data), image.isValid {
+           let image = await Self.preparedImage(from: data) {
             previous = image
             if Self.gitBlobHash(data) == hash {
                 guard !Task.isCancelled, await diskCache.isCurrent(generation),
@@ -337,10 +289,9 @@ extension ImageCacheService {
         if let image = await downloadHashedImage(token: token, hash: hash, generation: generation) { return image }
         guard !Task.isCancelled, iconHash(for: token) == hash else { return previous }
         if previous == nil, !cask.isCLI, let url = CaskIconURL.appFairIconURL(for: token) {
-            let (image, _) = await downloadImage(from: url)
-            if let image {
-                await cache(image: image, token: token, generation: generation, expectedHash: hash)
-                return image
+            let (data, _) = await downloadImage(from: url)
+            if let data {
+                return await cache(data: data, token: token, generation: generation, expectedHash: hash)
             }
         }
         return previous
@@ -354,7 +305,7 @@ extension ImageCacheService {
             guard let (data, response) = try? await session.data(for: request),
                   (response as? HTTPURLResponse)?.statusCode == 200,
                   Self.gitBlobHash(data) == hash,
-                  let image = NSImage(data: data), image.isValid else { continue }
+                  let image = await Self.preparedImage(from: data) else { continue }
             guard !Task.isCancelled, await diskCache.isCurrent(generation),
                   iconHash(for: token) == hash else { return nil }
             do {

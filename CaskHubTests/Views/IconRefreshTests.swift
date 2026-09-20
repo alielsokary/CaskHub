@@ -102,17 +102,21 @@ final class IconRefreshTests: XCTestCase {
         }
         pixels[3] = 1 // A nearly invisible shadow tail must not set the bounds.
         let original = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
-        for usesManifest in [false, true] {
+        for mode in 0..<4 {
             let directory = directory()
             defer { try? FileManager.default.removeItem(at: directory) }
             let disk = IconDiskCache(directory: directory)
-            try await disk.store(original, token: "antinote", generation: 0, fromCaskFlow: true)
+            if mode < 2 { try await disk.store(original, token: "antinote", generation: 0, fromCaskFlow: true) }
+            IconRefreshProtocol.handler.withLock { $0 = { _ in original } }
             let images = cache(directory)
-            if usesManifest {
+            if mode.isMultiple(of: 2) {
                 images.applyIconManifest(try metadata(hash: ImageCacheService.gitBlobHash(original)))
             }
-            let loaded = await images.image(for: Cask.preview(token: "antinote"))
+            async let first = images.image(for: Cask.preview(token: "antinote"))
+            async let second = images.image(for: Cask.preview(token: "antinote"))
+            let (loaded, concurrent) = await (first, second)
             let image = try XCTUnwrap(loaded)
+            XCTAssertTrue(concurrent === image)
             XCTAssertEqual(image.size, NSSize(width: 44, height: 24))
             let raster = try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
             let result = NSBitmapImageRep(cgImage: raster)
@@ -124,6 +128,9 @@ final class IconRefreshTests: XCTestCase {
             let stored = await disk.loadData(token: "antinote")
             XCTAssertEqual(stored, original)
         }
+    }
+
+    func test_normalization_preserves_empty_and_opaque_images() throws {
         for alpha: UInt8 in [0, 255] {
             let solid = NSBitmapImageRep(
                 bitmapDataPlanes: nil, pixelsWide: 10, pixelsHigh: 10,
