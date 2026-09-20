@@ -224,6 +224,28 @@ final class HomebrewCommandFailureTests: XCTestCase {
         XCTAssertTrue(failure.kind.isNormallyExternal)
     }
 
+    func test_install_success_requires_the_exact_requested_cask() {
+        for flags in [[], ["--adopt"], ["--force"]] {
+            for badge in ["", "🍺  ", "✅  "] {
+                XCTAssertEqual(HomebrewCommandFailure.classify(
+                    arguments: ["install", "--cask", "inkstitch"] + flags,
+                    exitCode: 1, diagnostic: badge + "inkstitch was successfully installed!\nError: cleanup failed"
+                ), .exitNonzeroAfterSuccess)
+            }
+        }
+        for token in ["inkscape", "other-inkstitch"] {
+            XCTAssertEqual(HomebrewCommandFailure.classify(
+                arguments: ["install", "--cask", "inkstitch"], exitCode: 1,
+                diagnostic: "🍺  \(token) was successfully installed!\nError: inkstitch failed"
+            ), .unknown)
+        }
+        for arguments in [["install"], ["uninstall", "--cask", "inkstitch"]] {
+            XCTAssertEqual(HomebrewCommandFailure.classify(
+                arguments: arguments, exitCode: 1, diagnostic: "🍺  inkstitch was successfully installed!"
+            ), .unknown)
+        }
+    }
+
     private func unknownFailure(
         token: String,
         diagnostic: String

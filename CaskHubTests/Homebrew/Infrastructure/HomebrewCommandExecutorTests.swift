@@ -10,6 +10,46 @@ import XCTest
 
 @MainActor
 final class HomebrewCommandExecutorTests: XCTestCase {
+    func test_nonzero_install_requires_its_own_success_and_a_changed_healthy_receipt() async {
+        let old = installation("zed", version: "1.0")
+        let fresh = installation("zed", version: "2.0")
+        let zombie = LocalCaskInstallation(token: "zed", installedVersion: "2.0", installedAt: nil,
+                                          appBundleNames: ["Zed.app"], isZombie: true)
+        // swiftlint:disable:next large_tuple
+        let cases: [(previous: LocalCaskInstallation?, refreshed: LocalCaskInstallation?, marker: String,
+                     failure: HomebrewFailureKind?)] = [
+            (nil, fresh, "zed", nil), (old, fresh, "zed", nil),
+            (old, old, "zed", .exitNonzeroAfterSuccess),
+            (nil, nil, "zed", .exitNonzeroAfterSuccess),
+            (nil, zombie, "zed", .exitNonzeroAfterSuccess),
+            (nil, fresh, "dependency", .unknown)
+        ]
+        for testCase in cases {
+            let runner = StubBrewProcessRunner()
+            runner.queuedResults = [BrewProcessResult(exitCode: 1, output:
+                "🍺  \(testCase.marker) was successfully installed!\n"
+                    + "Error: Permission denied @ apply2files - /usr/local/share/doc/unrelated/file"
+            )]
+            let snapshot = InstallationSnapshot(installedCasks: testCase.refreshed.map { ["zed": $0] } ?? [:])
+            let service = LocalHomebrewService(defaults: makeScratchDefaults("install-reconciliation")) {
+                $0.processRunner = runner
+                $0.softwareScanner = FixedInstalledSoftwareScanner(snapshot: snapshot)
+                $0.brewBinaryProvider = { URL(fileURLWithPath: "/test/bin/brew") }
+                $0.brewVersionProvider = { "test" }
+                $0.askpassProvider = { _ in URL(fileURLWithPath: "/private/tmp/caskhub-test-install-reconciliation") }
+            }
+            if let previous = testCase.previous { updateInstalledCask(previous, in: service) }
+            var failure: HomebrewFailureKind?
+            do { try await service.install(token: "zed") } catch let error as LocalHomebrewError {
+                failure = error.failureKind
+            } catch { XCTFail("unexpected error: \(error)") }
+            XCTAssertEqual(failure, testCase.failure)
+            XCTAssertEqual(service.actionAlert(for: "zed") == nil, testCase.failure == nil)
+            if testCase.marker == "zed" { XCTAssertEqual(service.installedCasks["zed"], testCase.refreshed) }
+            XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "zed"]])
+        }
+    }
+
     func test_incompatible_brew_is_rejected_before_process_start() async {
         let executor = SuspendingHomebrewCommandExecutor()
         let incompatiblePrefix = HomebrewLocator.isAppleSilicon

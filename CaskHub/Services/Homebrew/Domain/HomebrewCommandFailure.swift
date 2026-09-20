@@ -177,7 +177,20 @@ nonisolated extension HomebrewCommandFailure {
             ?? artifactKind(arguments: arguments, text: text, diagnostic: diagnostic)
             ?? environmentKind(text: text)
             ?? downloadKind(text: text)
+            ?? successfulInstallKind(arguments: arguments, text: text)
             ?? (text.isBlank ? .noDiagnosticOutput : .unknown)
+    }
+
+    private static func successfulInstallKind(arguments: [String], text: String) -> HomebrewFailureKind? {
+        guard arguments.first == "install",
+              let token = arguments.drop(while: { $0 != "--cask" }).dropFirst().first
+        else { return nil }
+        let summary = "\(token.lowercased()) was successfully installed!"
+        // Match the requested cask, never a dependency that succeeded before it failed.
+        let succeeded = text.components(separatedBy: .newlines).contains {
+            $0 == summary || $0.hasSuffix("  \(summary)")
+        }
+        return succeeded ? .exitNonzeroAfterSuccess : nil
     }
 
     private static func runtimeArchitectureContradictsMachine(
