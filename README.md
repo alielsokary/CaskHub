@@ -109,6 +109,8 @@ CaskHub speaks your language. Currently available in:
 
 - 🇬🇧 **English**
 - 🇨🇳 **简体中文 (Simplified Chinese)** - translated by [@carty900-jpg](https://github.com/carty900-jpg)
+- 🇹🇼 **繁體中文 (Traditional Chinese)** - translated by [@koala1023](https://github.com/koala1023)
+- 🇷🇺 **Русский (Russian)** - translated by [@gavrilyak201360-pixel](https://github.com/gavrilyak201360-pixel)
 - 🇺🇦 **Українська (Ukrainian)** - translated by [@Disconnecter](https://github.com/Disconnecter)
 
 macOS picks the language automatically from your system preferences; a per-app override is available under **System Settings → General → Language & Region → Applications**.

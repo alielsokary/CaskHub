@@ -2076,6 +2076,23 @@
     "CaskHub" : {
       "shouldTranslate" : false
     },
+    "CaskHub couldn't identify which app blocked this installation. Resolve the app conflict in Homebrew before retrying." : {
+      "comment" : "Shown when Homebrew reports an app conflict but does not identify the conflicting app.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub не удалось определить, какое приложение заблокировало установку. Устраните конфликт приложений в Homebrew, затем повторите попытку."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 無法識別哪個 App 阻擋了此次安裝。請先解決 Homebrew 中的 App 衝突，再重試。"
+          }
+        }
+      }
+    },
     "CaskHub couldn't prepare the administrator password prompt. Restart CaskHub and try again." : {
       "localizations" : {
         "ru" : {
@@ -2100,6 +2117,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CaskHub 無法準備管理員密碼提示。請重新啟動 CaskHub，然後重試。"
+          }
+        }
+      }
+    },
+    "CaskHub couldn't verify an installed app for %@. Refresh the catalog and try again. If this persists, move the existing app out of the installation folder before installing with Homebrew." : {
+      "comment" : "Shown when an existing app cannot be verified for adoption into Homebrew management. %@ is the requested app name. Move the app; do not delete it.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub не удалось проверить установленное приложение для %@. Обновите каталог и повторите попытку. Если проблема сохраняется, переместите существующее приложение из папки установки, прежде чем устанавливать его через Homebrew."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 無法驗證 %@ 對應的已安裝 App。請重新整理目錄後再試一次。若問題持續發生，請先將現有 App 移出安裝檔案夾，再透過 Homebrew 安裝。"
+          }
+        }
+      }
+    },
+    "CaskHub couldn't verify that this copy belongs to %@. Refresh the catalog and try again, or move the existing app out of the installation folder first." : {
+      "comment" : "Shown when the existing app cannot be verified as the requested app. %@ is the requested app name. Move the app; do not delete it.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub не удалось подтвердить, что эта копия относится к %@. Обновите каталог и повторите попытку или сначала переместите существующее приложение из папки установки."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 無法確認此副本是否屬於 %@。請重新整理目錄後再試一次，或先將現有 App 移出安裝檔案夾。"
           }
         }
       }
@@ -4827,6 +4878,23 @@
     "Homebrew" : {
       "shouldTranslate" : false
     },
+    "Homebrew cannot run until you review and accept the Xcode license. Open Xcode to review it, or run `sudo xcodebuild -license` in Terminal. After accepting the license, retry this operation in CaskHub." : {
+      "comment" : "Recovery guidance for an unaccepted Xcode license. Preserve the literal command `sudo xcodebuild -license`.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew не может работать, пока вы не ознакомитесь с лицензионным соглашением Xcode и не примете его. Откройте Xcode или выполните `sudo xcodebuild -license` в Терминале. После принятия соглашения повторите операцию в CaskHub."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您必須先閱讀並接受 Xcode 授權條款，Homebrew 才能執行。請開啟 Xcode 閱讀條款，或在「終端機」中執行 `sudo xcodebuild -license`。接受條款後，請在 CaskHub 中重試此操作。"
+          }
+        }
+      }
+    },
     "Homebrew could not extract this disk image because its layout is read-only. Try again once; if it repeats, the cask needs to be corrected upstream." : {
       "localizations" : {
         "ru" : {
@@ -5103,6 +5171,40 @@
         }
       }
     },
+    "Homebrew stopped because an app already exists at %@." : {
+      "comment" : "Homebrew installation conflict. %@ is the full filesystem path of the existing app.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew остановлен, поскольку по пути %@ уже существует приложение."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 已停止，因為 %@ 已有 App 存在。"
+          }
+        }
+      }
+    },
+    "Homebrew stopped because an app already exists at the installation destination." : {
+      "comment" : "Homebrew installation conflict when the existing app path is unavailable.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew остановлен, поскольку в папке установки уже существует приложение."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 已停止，因為安裝位置已有 App 存在。"
+          }
+        }
+      }
+    },
     "Homebrew tried to run code for the wrong processor architecture. Select the compatible Homebrew path in Settings, then try again." : {
       "localizations" : {
         "ru" : {
@@ -5183,6 +5285,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此 Mac 上未找到 Homebrew。"
+          }
+        }
+      }
+    },
+    "Homebrew will also run this app's helper installers, which may request administrator permission." : {
+      "comment" : "Installation warning: helper installers bundled with the app may request administrator permission.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew также запустит вспомогательные установщики этого приложения, которые могут запросить права администратора."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 也會執行此 App 的輔助安裝程式，這些程式可能會要求管理員權限。"
           }
         }
       }
@@ -11900,6 +12019,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文字大小"
+          }
+        }
+      }
+    },
+    "The conflict is with %@, which may be a required app. Adopt or repair that app separately in CaskHub, then retry %@." : {
+      "comment" : "Conflict with another app, possibly a dependency. %1$@ is the conflicting app filename; %2$@ is the requested app name. Adopt means bring an existing app under Homebrew management.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The conflict is with %1$@, which may be a required app. Adopt or repair that app separately in CaskHub, then retry %2$@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфликт возник с %1$@ — это приложение может быть необходимо для установки. Отдельно передайте его под управление Homebrew или восстановите через CaskHub, затем повторите попытку для %2$@."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "衝突涉及 %1$@，這可能是必要的 App。請先在 CaskHub 中個別接管或修復該 App，再重試 %2$@。"
           }
         }
       }
