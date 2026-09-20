@@ -35922,7 +35922,7 @@
       }
     ]
   },
-  "metadataUpdatedAt": "2026-09-20T17:38:59.886985+00:00",
+  "metadataUpdatedAt": "2026-09-20T17:44:14.035481+00:00",
   "releaseTag": "caskflow-v2026.09.20",
   "iconTokens": [
     "0-ad",
@@ -39628,5 +39628,177 @@
     "zush",
     "zwift",
     "zxpinstaller"
-  ]
+  ],
+  "packageAppCandidates": {
+    "arq": [
+      {
+        "bundleName": "Arq.app",
+        "bundleIdentifier": "com.haystacksoftware.Arq",
+        "packageIdentifier": "com.haystacksoftware.Arq",
+        "installedPath": "/Applications/Arq.app"
+      }
+    ],
+    "displaylink": [
+      {
+        "bundleName": "DisplayLink Manager.app",
+        "bundleIdentifier": "com.displaylink.DisplayLinkUserAgent",
+        "packageIdentifier": "com.displaylink.displaylinkmanagerapp",
+        "installedPath": "/Applications/DisplayLink Manager.app"
+      }
+    ],
+    "elgato-camera-hub": [
+      {
+        "bundleName": "Camera Hub.app",
+        "bundleIdentifier": "com.elgato.CameraHub",
+        "packageIdentifier": "com.elgato.CameraHub.Installer",
+        "installedPath": "/Applications/Camera Hub.app"
+      }
+    ],
+    "google-drive": [
+      {
+        "bundleName": "Google Docs.app",
+        "bundleIdentifier": "com.google.drivefs.shortcuts.docs",
+        "packageIdentifier": "com.google.drivefs.shortcuts",
+        "installedPath": "/Applications/Google Docs.app"
+      },
+      {
+        "bundleName": "Google Sheets.app",
+        "bundleIdentifier": "com.google.drivefs.shortcuts.sheets",
+        "packageIdentifier": "com.google.drivefs.shortcuts",
+        "installedPath": "/Applications/Google Sheets.app"
+      },
+      {
+        "bundleName": "Google Slides.app",
+        "bundleIdentifier": "com.google.drivefs.shortcuts.slides",
+        "packageIdentifier": "com.google.drivefs.shortcuts",
+        "installedPath": "/Applications/Google Slides.app"
+      }
+    ],
+    "intune-company-portal": [
+      {
+        "bundleName": "Company Portal.app",
+        "bundleIdentifier": "com.microsoft.CompanyPortalMac",
+        "packageIdentifier": "com.microsoft.CompanyPortalMac",
+        "installedPath": "/Applications/Company Portal.app"
+      }
+    ],
+    "microsoft-teams": [
+      {
+        "bundleName": "Microsoft Teams.app",
+        "bundleIdentifier": "com.microsoft.teams2",
+        "packageIdentifier": "com.microsoft.teams2",
+        "installedPath": "/Applications/Microsoft Teams.app"
+      }
+    ],
+    "onedrive": [
+      {
+        "bundleName": "OneDrive.app",
+        "bundleIdentifier": "com.microsoft.OneDrive",
+        "packageIdentifier": "com.microsoft.OneDrive",
+        "installedPath": "/Applications/OneDrive.app"
+      }
+    ],
+    "pritunl": [
+      {
+        "bundleName": "Pritunl.app",
+        "bundleIdentifier": "com.electron.pritunl",
+        "packageIdentifier": "com.pritunl.pkg.Pritunl",
+        "installedPath": "/Applications/Pritunl.app"
+      }
+    ],
+    "teamviewer": [
+      {
+        "bundleName": "TeamViewer.app",
+        "bundleIdentifier": "com.teamviewer.TeamViewer",
+        "packageIdentifier": "com.teamviewer.teamviewer",
+        "installedPath": "/Applications/TeamViewer.app"
+      }
+    ],
+    "virtualbox": [
+      {
+        "bundleName": "VirtualBox.app",
+        "bundleIdentifier": "org.virtualbox.app.VirtualBox",
+        "packageIdentifier": "org.virtualbox.pkg.virtualbox",
+        "installedPath": "/Applications/VirtualBox.app"
+      }
+    ],
+    "wacom-tablet": [
+      {
+        "bundleName": "Wacom Center.app",
+        "bundleIdentifier": "com.wacom.WacomCenter",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/Wacom Center.app"
+      },
+      {
+        "bundleName": "Wacom Display Settings.app",
+        "bundleIdentifier": "com.wacom.Wacom-Display-Settings",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/Wacom Display Settings.app"
+      },
+      {
+        "bundleName": "Wacom Tablet Utility.app",
+        "bundleIdentifier": "com.wacom.RemoveWacomTablet",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/Wacom Tablet Utility.app"
+      },
+      {
+        "bundleName": "TabletDriver.app",
+        "bundleIdentifier": "com.wacom.TabletDriver",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/.Tablet/TabletDriver.app"
+      },
+      {
+        "bundleName": "FirmwareUpdater.app",
+        "bundleIdentifier": "com.wacom.FirmwareUpdater",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/.Tablet/FirmwareUpdater.app"
+      },
+      {
+        "bundleName": "UpgradeHelper.app",
+        "bundleIdentifier": "com.wacom.UpgradeHelper",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/.Tablet/UpgradeHelper.app"
+      },
+      {
+        "bundleName": "WacomTabletDriver.app",
+        "bundleIdentifier": "com.wacom.wacomtablet",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/.Tablet/WacomTabletDriver.app"
+      },
+      {
+        "bundleName": "WacomADCV.app",
+        "bundleIdentifier": "com.wacom.WacomADCV",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/.Tablet/WacomADCV.app"
+      },
+      {
+        "bundleName": "Wacom Experience Program.app",
+        "bundleIdentifier": "com.wacom.WacomExperienceProgram",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/.Tablet/Wacom Experience Program.app"
+      },
+      {
+        "bundleName": "WacomTouchDriver.app",
+        "bundleIdentifier": "com.wacom.WacomTouchDriver",
+        "packageIdentifier": "com.wacom.TabletInstaller",
+        "installedPath": "/Applications/Wacom Tablet.localized/.Tablet/WacomTouchDriver.app"
+      }
+    ],
+    "windows-app": [
+      {
+        "bundleName": "Windows App.app",
+        "bundleIdentifier": "com.microsoft.rdc.macos",
+        "packageIdentifier": "com.microsoft.rdc.macos",
+        "installedPath": "/Applications/Windows App.app"
+      }
+    ],
+    "zoom": [
+      {
+        "bundleName": "zoom.us.app",
+        "bundleIdentifier": "us.zoom.xos",
+        "packageIdentifier": "us.zoom.pkg.videomeeting",
+        "installedPath": "/Applications/zoom.us.app"
+      }
+    ]
+  }
 }
