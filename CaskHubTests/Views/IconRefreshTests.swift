@@ -85,6 +85,57 @@ final class IconRefreshTests: XCTestCase {
         FileManager.default.temporaryDirectory.appendingPathComponent("icon-refresh-\(UUID().uuidString)")
     }
 
+    func test_normalized_icons_trim_padding_preserve_shape_and_original_cache_bytes() async throws {
+        let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: 100, pixelsHigh: 100,
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        )!
+        let pixels = bitmap.bitmapData!
+        pixels.initialize(repeating: 0, count: bitmap.bytesPerRow * bitmap.pixelsHigh)
+        for row in 30..<50 {
+            for column in 20..<60 {
+                let offset = row * bitmap.bytesPerRow + column * 4
+                pixels[offset] = 255
+                pixels[offset + 3] = 255
+            }
+        }
+        pixels[3] = 1 // A nearly invisible shadow tail must not set the bounds.
+        let original = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
+        for usesManifest in [false, true] {
+            let directory = directory()
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let disk = IconDiskCache(directory: directory)
+            try await disk.store(original, token: "antinote", generation: 0, fromCaskFlow: true)
+            let images = cache(directory)
+            if usesManifest {
+                images.applyIconManifest(try metadata(hash: ImageCacheService.gitBlobHash(original)))
+            }
+            let loaded = await images.image(for: Cask.preview(token: "antinote"))
+            let image = try XCTUnwrap(loaded)
+            XCTAssertEqual(image.size, NSSize(width: 44, height: 24))
+            let raster = try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
+            let result = NSBitmapImageRep(cgImage: raster)
+            XCTAssertEqual(result.colorAt(x: 2, y: 2)?.alphaComponent, 1)
+            XCTAssertEqual(result.colorAt(x: 41, y: 21)?.alphaComponent, 1)
+            XCTAssertEqual(result.colorAt(x: 0, y: 0)?.alphaComponent, 0)
+            let cached = await images.image(for: Cask.preview(token: "antinote"))
+            XCTAssertTrue(cached === image)
+            let stored = await disk.loadData(token: "antinote")
+            XCTAssertEqual(stored, original)
+        }
+        for alpha: UInt8 in [0, 255] {
+            let solid = NSBitmapImageRep(
+                bitmapDataPlanes: nil, pixelsWide: 10, pixelsHigh: 10,
+                bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+            )!
+            solid.bitmapData!.initialize(repeating: alpha, count: solid.bytesPerRow * solid.pixelsHigh)
+            let image = NSImage(cgImage: try XCTUnwrap(solid.cgImage), size: NSSize(width: 10, height: 10))
+            XCTAssertEqual(ImageCacheService.normalizedIcon(image).size, image.size)
+        }
+    }
+
     func test_git_blob_hash_uses_git_header() {
         XCTAssertEqual(ImageCacheService.gitBlobHash(Data("hello".utf8)), "b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0")
     }

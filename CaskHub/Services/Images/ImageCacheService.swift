@@ -14,6 +14,7 @@ import Observation
 @Observable
 final class ImageCacheService {
     private let memoryCache = NSCache<NSString, NSImage>()
+    private let normalizedImages = NSCache<NSImage, NSImage>()
     private var memoryHashes: [String: String] = [:]
     private var inFlightTasks: [String: Task<NSImage?, Never>] = [:]
     private var upgradeInFlight: Set<String> = []
@@ -43,6 +44,7 @@ final class ImageCacheService {
         self.session = session
         self.diskCache = diskCache
         memoryCache.countLimit = 500
+        normalizedImages.countLimit = 500
         Task {
             do {
                 try await diskCache.purgeGeneratedIconsIfNeeded()
@@ -53,6 +55,17 @@ final class ImageCacheService {
     }
 
     func image(for cask: Cask) async -> NSImage? {
+        guard let source = await sourceImage(for: cask), !Task.isCancelled else { return nil }
+        if let cached = normalizedImages.object(forKey: source) { return cached }
+        let normalized = await Task.detached(priority: .utility) {
+            Self.normalizedIcon(source)
+        }.value
+        guard !Task.isCancelled else { return nil }
+        normalizedImages.setObject(normalized, forKey: source)
+        return normalized
+    }
+
+    private func sourceImage(for cask: Cask) async -> NSImage? {
         let token = cask.token
 
         if let hash = iconHash(for: token) {
@@ -72,7 +85,7 @@ final class ImageCacheService {
            let diskImage = NSImage(data: data),
            diskImage.isValid {
             guard !Task.isCancelled, await diskCache.isCurrent(generation) else { return nil }
-            if iconHash(for: token) != nil { return await image(for: cask) }
+            if iconHash(for: token) != nil { return await sourceImage(for: cask) }
             memoryCache.setObject(diskImage, forKey: token as NSString)
             memoryHashes.removeValue(forKey: token)
             await maybeUpgradeFallbackIcon(token: token, generation: generation)
@@ -115,6 +128,7 @@ final class ImageCacheService {
         inFlightTasks.values.forEach { $0.cancel() }
         inFlightTasks.removeAll()
         upgradeInFlight.removeAll()
+        normalizedImages.removeAllObjects()
         memoryCache.removeAllObjects()
         memoryHashes.removeAll()
         do {
@@ -124,6 +138,7 @@ final class ImageCacheService {
         }
         // A task already returning to the main actor may have populated memory
         // while the disk actor was clearing. The generation check rejects its write.
+        normalizedImages.removeAllObjects()
         memoryCache.removeAllObjects()
     }
 
@@ -287,7 +302,7 @@ extension ImageCacheService {
            let image = memoryCache.object(forKey: token as NSString) { return image }
         let generation = await diskCache.currentGeneration()
         let key = "\(token):\(hash):\(generation)"
-        guard iconHash(for: token) == hash else { return await image(for: cask) }
+        guard iconHash(for: token) == hash else { return await sourceImage(for: cask) }
         for (otherKey, task) in inFlightTasks where otherKey != key
             && (otherKey == token || otherKey.hasPrefix("\(token):")) {
             task.cancel()
@@ -398,5 +413,37 @@ extension ImageCacheService {
     private nonisolated struct IconManifest: Decodable {
         let version: Int
         let hashes: [String: String]
+    }
+}
+
+extension ImageCacheService {
+    nonisolated static func normalizedIcon(_ image: NSImage) -> NSImage {
+        guard let source = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return image }
+        let width = source.width, height = source.height
+        guard let context = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        ), let data = context.data else { return image }
+        context.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let pixels = data.assumingMemoryBound(to: UInt8.self)
+        var minX = width, minY = height, maxX = -1, maxY = -1
+        for row in 0..<height {
+            for column in 0..<width where pixels[row * context.bytesPerRow + column * 4 + 3] > 8 {
+                minX = min(minX, column)
+                minY = min(minY, row)
+                maxX = max(maxX, column)
+                maxY = max(maxY, row)
+            }
+        }
+        guard maxX >= minX, maxY >= minY else { return image }
+        // Ignore near-invisible shadow tails, retaining a 3% margin for soft edges.
+        let bounds = CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+        let margin = ceil(max(bounds.width, bounds.height) * 0.03)
+        let crop = bounds.insetBy(dx: -margin, dy: -margin).intersection(
+            CGRect(x: 0, y: 0, width: width, height: height)
+        )
+        guard let raster = context.makeImage(), let cropped = raster.cropping(to: crop) else { return image }
+        return NSImage(cgImage: cropped, size: crop.size)
     }
 }
