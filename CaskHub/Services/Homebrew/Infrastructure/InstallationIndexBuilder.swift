@@ -8,6 +8,12 @@
 import Foundation
 
 nonisolated struct InstallationIndexBuilder: Sendable {
+    struct HomebrewApplicationState {
+        let launchableTokens: Set<String>
+        let zombieTokens: Set<String>
+        let verifiedApplications: [String: DetectedApplication]
+    }
+
     @MainActor
     func makeApplicationSignatures(
         _ casks: [Cask]
@@ -23,7 +29,8 @@ nonisolated struct InstallationIndexBuilder: Sendable {
             return CaskApplicationSignature(
                 token: cask.token,
                 currentBundleNames: currentBundleNames,
-                launchableBundleNames: launchableBundleNames
+                launchableBundleNames: launchableBundleNames,
+                bundleIdentifiers: Set(cask.applicationBundleIdentifiers)
             )
         }
     }
@@ -53,6 +60,7 @@ nonisolated struct InstallationIndexBuilder: Sendable {
                 binaryPaths: binaryPaths,
                 installedCasks: installedCasks
             ),
+            homebrewApplications: homebrewApplications.verifiedApplications,
             launchableHomebrewTokens: homebrewApplications.launchableTokens,
             verifiedZombieTokens: homebrewApplications.zombieTokens
         )
@@ -103,14 +111,20 @@ nonisolated struct InstallationIndexBuilder: Sendable {
         applications: [DetectedApplication],
         installedCasks: [String: LocalCaskInstallation],
         packageInstallations: [String: ExternalPackageInstallation] = [:]
-    ) -> (launchableTokens: Set<String>, zombieTokens: Set<String>) {
+    ) -> HomebrewApplicationState {
         let signaturesByToken = Dictionary(
             signatures.map { ($0.token, $0) },
             uniquingKeysWith: { first, _ in first }
         )
         let validBundleNames = Set(applications.map(\.bundleName))
+        let applicationsByName = Dictionary(grouping: applications, by: \.bundleName)
+        let installedClaimsByName = Dictionary(
+            grouping: signaturesByToken.values.filter { installedCasks[$0.token] != nil }.flatMap(\.currentBundleNames),
+            by: { $0 }
+        )
         var launchableTokens: Set<String> = []
         var zombieTokens: Set<String> = []
+        var verifiedApplications: [String: DetectedApplication] = [:]
 
         for (token, installation) in installedCasks {
             guard let signature = signaturesByToken[token] else { continue }
@@ -125,8 +139,24 @@ nonisolated struct InstallationIndexBuilder: Sendable {
                signature.currentBundleNames.isDisjoint(with: validBundleNames) {
                 zombieTokens.insert(token)
             }
+            // Multiple app artifacts or copies have no unambiguous installed version.
+            guard !installation.isZombie,
+                  signature.currentBundleNames.count == 1,
+                  let bundleName = signature.currentBundleNames.first,
+                  installedClaimsByName[bundleName]?.count == 1,
+                  let candidates = applicationsByName[bundleName], candidates.count == 1,
+                  let application = candidates.first,
+                  application.isDirectlyInApplicationDirectory,
+                  !application.isMacAppStore,
+                  let identifier = application.bundleIdentifier,
+                  ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array(signature.bundleIdentifiers))
+            else { continue }
+            verifiedApplications[token] = application
         }
-        return (launchableTokens, zombieTokens)
+        return HomebrewApplicationState(
+            launchableTokens: launchableTokens, zombieTokens: zombieTokens,
+            verifiedApplications: verifiedApplications
+        )
     }
 
     func resolveInstallationDates(

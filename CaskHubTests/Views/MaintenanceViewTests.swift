@@ -12,7 +12,7 @@ import XCTest
 final class MaintenanceViewTests: XCTestCase {
     @MainActor
     func test_page_renders_before_first_checkup() {
-        render(MaintenanceView(model: makeMaintenanceModel()))
+        render(MaintenanceView(model: makeMaintenanceModel()).environment(ImageCacheService()))
     }
 
     @MainActor
@@ -33,7 +33,7 @@ final class MaintenanceViewTests: XCTestCase {
         let model = makeMaintenanceModel(probe: probe)
         await model.runCheckup()
 
-        render(MaintenanceView(model: model))
+        render(MaintenanceView(model: model).environment(ImageCacheService()))
     }
 
     @MainActor

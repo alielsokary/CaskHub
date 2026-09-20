@@ -183,7 +183,7 @@ final class ZombieDetectionTests: XCTestCase {
         service.noteFailure(token: "wireshark-app", error: error)
         let recoveries = service.operationStore.state(for: "wireshark-app")?.failure?.recoveries
         XCTAssertEqual(recoveries, [.adoptExisting, .replaceWithHomebrew])
-        XCTAssertTrue(error.errorDescription?.contains("Adopt") == true)
+        XCTAssertTrue(error.errorDescription?.contains("/Applications/Wireshark.app") == true)
     }
 
     @MainActor

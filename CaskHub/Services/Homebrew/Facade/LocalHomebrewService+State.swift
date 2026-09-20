@@ -55,6 +55,15 @@ extension LocalHomebrewService {
         makeLocalStateResolver().existingBundleURL(named: names)
     }
 
+    func hasUnverifiedAppDestination(for cask: Cask) -> Bool {
+        let owner = installationSnapshot.externalApplicationOwners[cask.token]
+            ?? installationSnapshot.installationIndex.homebrewApplications[cask.token]
+        return ApplicationDiscovery().hasOtherBundle(
+            named: cask.appArtifactNames, than: owner?.url,
+            directories: applicationDirectories, fileManager: fileManager
+        )
+    }
+
     private func makeLocalStateResolver() -> CaskLocalStateResolver {
         CaskLocalStateResolver(
             snapshot: installationSnapshot,

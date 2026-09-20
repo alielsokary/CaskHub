@@ -4,6 +4,27 @@ User-facing changes to CaskHub, newest first. The top entry becomes the GitHub
 release body and the Sparkle update dialog notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.8.3 — 2026-09-20
+
+### What's New
+
+- Added Russian and Traditional Chinese, contributed by @gavrilyak201360-pixel and @koala1023
+- Added a GitHub Discussions link in About for questions and ideas, next to the bug report link
+
+### Improvements
+
+- Cask icons now share a consistent size with softer frames, and changed icons refresh on their own
+- Installed versions now follow apps that update themselves, so up-to-date apps no longer show in Updates
+
+### Bug Fixes
+
+- Fixed cancelled installs being reported as failures
+- Fixed installs that finished but hit an unrelated cleanup error being reported as failures
+- Fixed apps installed through packages or under a different bundle name not being detected as installed
+- Fixed Adopt and Replace recovery failing quietly when another app occupied the destination
+- Fixed an unaccepted Xcode license during upgrade showing as an unknown failure, now explained with next steps
+- Fixed the sidebar logo sitting too close to the top on macOS 27
+
 ## 0.8.2 — 2026-09-07
 
 ### What's New

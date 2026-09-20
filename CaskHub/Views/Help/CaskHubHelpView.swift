@@ -11,6 +11,7 @@ enum CaskHubLinks {
     static let website = URL(string: "https://caskhub.app")!
     static let repository = URL(string: "https://github.com/alielsokary/CaskHub")!
     static let issues = URL(string: "https://github.com/alielsokary/CaskHub/issues/new/choose")!
+    static let discussions = URL(string: "https://github.com/alielsokary/CaskHub/discussions")!
     static let homebrew = URL(string: "https://brew.sh")!
 }
 

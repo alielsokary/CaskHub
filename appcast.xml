@@ -3,28 +3,33 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.8.2</title>
-            <pubDate>Mon, 07 Sep 2026 11:30:26 +0000</pubDate>
-            <sparkle:version>662</sparkle:version>
-            <sparkle:shortVersionString>0.8.2</sparkle:shortVersionString>
+            <title>0.8.3</title>
+            <pubDate>Sun, 20 Sep 2026 18:09:33 +0000</pubDate>
+            <sparkle:version>717</sparkle:version>
+            <sparkle:shortVersionString>0.8.3</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[
 ### What's New
 
-- Added a text size slider in Settings → Appearance for Standard, 110%, and 120% text across the catalog and sidebar
-- Added an optional Remove app data on uninstall setting that runs Homebrew's `--zap` to also clear the preferences, caches, and support files a cask lists
+- Added Russian and Traditional Chinese, contributed by @gavrilyak201360-pixel and @koala1023
+- Added a GitHub Discussions link in About for questions and ideas, next to the bug report link
 
 ### Improvements
 
-- Catalog cards and lists keep readable widths in smaller windows, and toolbar filters wrap onto a second row when space runs out
+- Cask icons now share a consistent size with softer frames, and changed icons refresh on their own
+- Installed versions now follow apps that update themselves, so up-to-date apps no longer show in Updates
 
 ### Bug Fixes
 
-- Fixed the window being forced off-screen on scaled displays by lowering the minimum window size
-- Fixed apps that share a name, such as Element or Motion, being offered for the wrong cask by matching a verified bundle identity
+- Fixed cancelled installs being reported as failures
+- Fixed installs that finished but hit an unrelated cleanup error being reported as failures
+- Fixed apps installed through packages or under a different bundle name not being detected as installed
+- Fixed Adopt and Replace recovery failing quietly when another app occupied the destination
+- Fixed an unaccepted Xcode license during upgrade showing as an unknown failure, now explained with next steps
+- Fixed the sidebar logo sitting too close to the top on macOS 27
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.2/CaskHub-0.8.2.zip" length="7145271" type="application/octet-stream" sparkle:edSignature="KscRY4DVfLBGNSNzTMygeFE785scDCRYtJW8FxGXDBrLDIgumiXcdokJt76INday8rKK4Jll8ugWtVqBI7Y1Cw=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.8.3/CaskHub-0.8.3.zip" length="7365115" type="application/octet-stream" sparkle:edSignature="FnYymKGLhgvgzKNxPlzgtU03BQA84IRyo9q25EaExl5/pRjtxUA3BXOWjNI95lqNxuM06rMNEPwH6dlB8fJBCQ=="/>
         </item>
     </channel>
 </rss>

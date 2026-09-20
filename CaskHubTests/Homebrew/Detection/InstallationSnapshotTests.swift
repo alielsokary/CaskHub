@@ -248,7 +248,7 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
                 XCTAssertFalse(state.canOpen)
                 XCTAssertNil(state.adoptionPlan)
                 await service.requestReplacementAdoption(cask)
-                XCTAssertNil(service.operationStore.state(for: cask.token))
+                XCTAssertEqual(service.operationStore.state(for: cask.token)?.failure?.kind, .adoptionPreflight)
             }
             for cask in [mail, verified] {
                 let state = service.localState(for: cask)
@@ -275,9 +275,10 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
             let scan = ApplicationDiscovery().scan(fileManager: .default, directories: [root])
             XCTAssertEqual(scan.applications.count, 1)
             let packages = PackageReceiptResolver().resolve(
-                signatures: registration.packageSignatures, installedReceipts: receipts,
-                packageFileLists: ["net.kushview.pkg.ElementApp": "Applications/Element.app"],
-                availableAppNames: scan.adoptableNames
+                signatures: registration.packageSignatures,
+                receipts: Dictionary(uniqueKeysWithValues: receipts.map {
+                    ($0, PackageReceiptResolver.Receipt(files: "Applications/Element.app", location: nil))
+                }), availableAppNames: scan.adoptableNames, applications: []
             )
             XCTAssertTrue(packages.isEmpty)
             let service = LocalHomebrewService(defaults: makeScratchDefaults("element-collision")) {
@@ -297,7 +298,7 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
             XCTAssertEqual(state.adoptionPlan != nil, expectedPresent)
             if !expectedPresent {
                 await service.requestReplacementAdoption(matrix)
-                XCTAssertNil(service.operationStore.state(for: matrix.token))
+                XCTAssertEqual(service.operationStore.state(for: matrix.token)?.failure?.kind, .adoptionPreflight)
             }
         }
     }

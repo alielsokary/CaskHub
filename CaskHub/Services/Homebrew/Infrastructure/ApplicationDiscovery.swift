@@ -53,6 +53,8 @@ nonisolated struct ApplicationDiscovery: Sendable {
                     bundleName: entry.lastPathComponent,
                     bundleIdentifier: metadata.bundleIdentifier,
                     version: metadata.version,
+                    shortVersion: metadata.shortVersion,
+                    buildVersion: metadata.buildVersion,
                     isMacAppStore: fileManager.fileExists(atPath: masReceipt.path),
                     isDirectlyInApplicationDirectory:
                         entry.deletingLastPathComponent().standardizedFileURL
@@ -88,8 +90,23 @@ nonisolated struct ApplicationDiscovery: Sendable {
         return ApplicationBundleMetadata(
             bundleIdentifier: info["CFBundleIdentifier"] as? String,
             version: info["CFBundleShortVersionString"] as? String
-                ?? info["CFBundleVersion"] as? String
+                ?? info["CFBundleVersion"] as? String,
+            shortVersion: info["CFBundleShortVersionString"] as? String,
+            buildVersion: info["CFBundleVersion"] as? String
         )
+    }
+
+    func hasOtherBundle(
+        named names: [String], than verifiedURL: URL?,
+        directories: [URL], fileManager: FileManager
+    ) -> Bool {
+        names.contains { name in
+            directories.contains { directory in
+                let candidate = directory.appendingPathComponent(name).standardizedFileURL
+                return candidate.path != verifiedURL?.standardizedFileURL.path
+                    && fileManager.fileExists(atPath: candidate.path)
+            }
+        }
     }
 }
 

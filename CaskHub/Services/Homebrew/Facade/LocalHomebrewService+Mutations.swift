@@ -109,12 +109,10 @@ extension LocalHomebrewService {
     ) -> Bool {
         let current = installationSnapshot.installedCasks[token]
         switch action {
-        case .installing, .adopting, .repairing:
-            return current?.isZombie == false
+        case .installing, .adopting, .repairing, .updating:
+            return current?.isZombie == false && current != previousInstallation
         case .uninstalling:
             return current == nil
-        case .updating:
-            return current?.isZombie == false && current != previousInstallation
         case .opening, .updatingHomebrew, .queued:
             return false
         }

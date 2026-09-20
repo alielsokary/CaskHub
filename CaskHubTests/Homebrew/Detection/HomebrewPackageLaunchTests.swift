@@ -95,11 +95,8 @@ final class HomebrewPackageLaunchTests: XCTestCase {
     ) -> [String: ExternalPackageInstallation] {
         PackageReceiptResolver().resolve(
             signatures: registration.packageSignatures,
-            installedReceipts: ["com.example.pkg.app"],
-            packageFileLists: [
-                "com.example.pkg.app": "Applications/Example App Beta.app"
-            ],
-            availableAppNames: ["Example App Beta.app"],
+            receipts: ["com.example.pkg.app": .init(files: "Applications/Example App Beta.app", location: nil)],
+            availableAppNames: ["Example App Beta.app"], applications: [],
             homebrewInstalledTokens: [token]
         )
     }

@@ -203,12 +203,14 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             CaskApplicationSignature(
                 token: "live",
                 currentBundleNames: ["Live.app"],
-                launchableBundleNames: ["Live.app"]
+                launchableBundleNames: ["Live.app"],
+                bundleIdentifiers: ["com.example.live"]
             ),
             CaskApplicationSignature(
                 token: "gone",
                 currentBundleNames: ["Gone.app"],
-                launchableBundleNames: ["Gone.app"]
+                launchableBundleNames: ["Gone.app"],
+                bundleIdentifiers: ["com.example.gone"]
             )
         ]
         let liveApplication = makeDetectedApplication("Live.app", id: "com.example.live")
@@ -253,6 +255,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                 catalogTokens: [cask.token],
                 macAppStoreApplications: [:],
                 externalCLIPaths: [:],
+                homebrewApplications: [:],
                 launchableHomebrewTokens: [],
                 verifiedZombieTokens: [cask.token]
             )

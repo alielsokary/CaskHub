@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D24400000000000000000002 /* AppConflictRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24400000000000000000001 /* AppConflictRecoveryTests.swift */; };
+		B23300000000000000000002 /* HomebrewAppVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23300000000000000000001 /* HomebrewAppVersionTests.swift */; };
 		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
 		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
 		41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10132F68B00400BEABB8 /* CrashReporter.swift */; };
@@ -88,6 +90,7 @@
 		A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */; };
 		A29100000000000000000207 /* CatalogScrollSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000206 /* CatalogScrollSupport.swift */; };
 		A29100000000000000000307 /* BrewOutputAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000306 /* BrewOutputAggregator.swift */; };
+		CE0920260000000000000001 /* IconRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0920260000000000000002 /* IconRefreshTests.swift */; };
 		ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */; };
 		ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */; };
 		B08000000000000000000002 /* CaskHubCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08000000000000000000001 /* CaskHubCommands.swift */; };
@@ -121,6 +124,7 @@
 		F24000000000000000000002 /* CaskOperationCapsule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000002 /* CaskOperationCapsule.swift */; };
 		F24000000000000000000003 /* CaskOperationProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000003 /* CaskOperationProgressTests.swift */; };
 		F24000000000000000000004 /* BrewProcessRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000004 /* BrewProcessRunnerTests.swift */; };
+		A49000000000000000000001 /* ArtifactIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A49000000000000000000002 /* ArtifactIdentityTests.swift */; };
 		F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25000000000000000000001 /* CaskCatalogSortTests.swift */; };
 		F26000000000000000000001 /* CaskListActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E26000000000000000000001 /* CaskListActionTests.swift */; };
 		F27000000000000000000002 /* CatalogProjectionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27000000000000000000001 /* CatalogProjectionCache.swift */; };
@@ -170,6 +174,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D24400000000000000000001 /* AppConflictRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConflictRecoveryTests.swift; sourceTree = "<group>"; };
+		B23300000000000000000001 /* HomebrewAppVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewAppVersionTests.swift; sourceTree = "<group>"; };
 		41AD10042F68A00400BEABB8 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
 		41AD10132F68B00400BEABB8 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
 		41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
@@ -240,6 +246,7 @@
 		A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutputDiagnosticsTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000206 /* CatalogScrollSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogScrollSupport.swift; sourceTree = "<group>"; };
 		A29100000000000000000306 /* BrewOutputAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewOutputAggregator.swift; sourceTree = "<group>"; };
+		CE0920260000000000000002 /* IconRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconRefreshTests.swift; sourceTree = "<group>"; };
 		ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewTests.swift; sourceTree = "<group>"; };
 		ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewTests.swift; sourceTree = "<group>"; };
 		B08000000000000000000001 /* CaskHubCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubCommands.swift; sourceTree = "<group>"; };
@@ -285,6 +292,7 @@
 		E24000000000000000000002 /* CaskOperationCapsule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationCapsule.swift; sourceTree = "<group>"; };
 		E24000000000000000000003 /* CaskOperationProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationProgressTests.swift; sourceTree = "<group>"; };
 		E24000000000000000000004 /* BrewProcessRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewProcessRunnerTests.swift; sourceTree = "<group>"; };
+		A49000000000000000000002 /* ArtifactIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtifactIdentityTests.swift; sourceTree = "<group>"; };
 		E25000000000000000000001 /* CaskCatalogSortTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogSortTests.swift; sourceTree = "<group>"; };
 		E26000000000000000000001 /* CaskListActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskListActionTests.swift; sourceTree = "<group>"; };
 		E29000000000000000000001 /* CaskOperationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationState.swift; sourceTree = "<group>"; };
@@ -780,6 +788,7 @@
 				ABCA0F0600ABCA0F0600ABCA /* ContentViewTests.swift */,
 				B09200000000000000000001 /* HelpViewTests.swift */,
 				AA1000000000000000000010 /* MaintenanceViewTests.swift */,
+				CE0920260000000000000002 /* IconRefreshTests.swift */,
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
 				B0C000000000000000000004 /* ShelfSetupViewTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
@@ -878,6 +887,9 @@
 		F3200000000000000000002C /* Integration */ = {
 			isa = PBXGroup;
 			children = (
+				D24400000000000000000001 /* AppConflictRecoveryTests.swift */,
+				A49000000000000000000002 /* ArtifactIdentityTests.swift */,
+				B23300000000000000000001 /* HomebrewAppVersionTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
 			);
 			path = Integration;
@@ -953,6 +965,8 @@
 				en,
 				Base,
 				"zh-Hans",
+				"zh-Hant",
+				ru,
 				uk,
 			);
 			mainGroup = 41EBDCD82F37FD8B00BEABB8;
@@ -1137,6 +1151,7 @@
 				A29100000000000000000004 /* CaskMetadataProjectorTests.swift in Sources */,
 				41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */,
 				41DFD4B630028F9F00608C7A /* CaskCatalogViewModelTests.swift in Sources */,
+				A49000000000000000000001 /* ArtifactIdentityTests.swift in Sources */,
 				F25000000000000000000001 /* CaskCatalogSortTests.swift in Sources */,
 				C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */,
 				C15000000000000000000001 /* ExternalInstallationTests.swift in Sources */,
@@ -1144,6 +1159,7 @@
 				41DFD4B430028F9F00608C7A /* CaskHubTests.swift in Sources */,
 				ABCA0F0500ABCA0F0500ABCA /* ContentViewTests.swift in Sources */,
 				B09200000000000000000002 /* HelpViewTests.swift in Sources */,
+				CE0920260000000000000001 /* IconRefreshTests.swift in Sources */,
 				ABCA0F0300ABCA0F0300ABCA /* SettingsViewTests.swift in Sources */,
 				B0C000000000000000000005 /* ShelfSetupViewTests.swift in Sources */,
 				AA100000000000000000000D /* MaintenanceParsingTests.swift in Sources */,
@@ -1161,6 +1177,8 @@
 				B0F000000000000000000004 /* HomebrewCommandFailureTests.swift in Sources */,
 				F29000000000000000000007 /* CaskOperationStoreTests.swift in Sources */,
 				F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */,
+				D24400000000000000000002 /* AppConflictRecoveryTests.swift in Sources */,
+				B23300000000000000000002 /* HomebrewAppVersionTests.swift in Sources */,
 				F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */,
 				A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */,
 				A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */,
@@ -1338,7 +1356,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.8.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -1377,7 +1395,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.8.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

@@ -13,6 +13,7 @@ enum ViewMode: String {
 
 struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
+    @Environment(ImageCacheService.self) private var imageCache
     @Environment(CategoryService.self) private var categoryService
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(MaintenanceViewModel.self) private var maintenance
@@ -102,14 +103,20 @@ struct ContentView: View {
         .windowToolbarFullScreenVisibility(.onHover)
         .tint(Color.chTerracotta)
         .task {
+            async let icons: Void = imageCache.refreshIconManifest()
             await viewModel.load()
+            await icons
         }
         .onReceive(
             NotificationCenter.default.publisher(
                 for: NSApplication.didBecomeActiveNotification
             )
         ) { _ in
-            Task { await viewModel.refreshIfStale() }
+            Task {
+                async let icons: Void = imageCache.refreshIconManifest()
+                await viewModel.refreshIfStale()
+                await icons
+            }
         }
         .onChange(of: viewModel.selectedSidebar) { _, newValue in
             Analytics.pageOpened(newValue)

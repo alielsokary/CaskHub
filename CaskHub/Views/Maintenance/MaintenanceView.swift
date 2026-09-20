@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MaintenanceView: View {
+    @Environment(ImageCacheService.self) private var imageCache
+    @State private var isSyncingIcons = false
     let model: MaintenanceViewModel
     @State private var expandedChecks: Set<String> = []
 
@@ -190,6 +192,7 @@ extension MaintenanceView {
                     Task { await model.updateHomebrew() }
                 }
                 .disabled(model.brewVersion == nil || model.hasActiveOperations)
+                .disabled(isSyncingIcons)
             case .running:
                 WorkingPill(title: String(localized: .maintenanceWorking))
             case .done:
@@ -227,21 +230,24 @@ extension MaintenanceView {
             metaColor: syncMeta.color
         ) {
             switch model.syncState {
-            case .idle where model.collectionFreshness == .current:
-                StatusPill(title: String(localized: .maintenanceUpToDate))
-            case .idle:
+            case .idle, .done:
                 PillButton(
                     title: String(localized: .maintenanceWidgetSyncButton),
                     background: .chActionInstallBg,
                     border: .chActionInstallBorder,
                     foreground: .chActionInstallFg
                 ) {
-                    Task { await model.syncCollection() }
+                    isSyncingIcons = true
+                    Task {
+                        async let icons: Void = imageCache.refreshIconManifest(force: true)
+                        await model.syncCollection()
+                        await icons
+                        isSyncingIcons = false
+                    }
                 }
+                .disabled(isSyncingIcons)
             case .running:
                 WorkingPill(title: String(localized: .maintenanceWidgetSyncRunning))
-            case .done:
-                StatusPill(title: String(localized: .maintenanceWidgetSyncDone))
             }
         }
     }
@@ -346,6 +352,7 @@ struct StatusPill: View {
         catalog: catalog,
         clearImageCache: {}
     ))
+    .environment(ImageCacheService())
     .frame(width: 1100, height: 700)
     .background(WindowBackdrop())
 }
