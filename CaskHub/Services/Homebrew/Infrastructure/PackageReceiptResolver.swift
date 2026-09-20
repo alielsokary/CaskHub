@@ -257,7 +257,10 @@ extension PackageReceiptResolver {
             for identity in signature.receiptCandidates where
                 signature.receiptPatterns.contains(where: { Self.identifier(identity.packageIdentifier, matches: $0) })
                     && receipts[identity.packageIdentifier] != nil {
-                guard let applications = applicationsByName[identity.bundleName], applications.count == 1,
+                // A component can contain auxiliary apps (for example, Google Drive's Docs shortcut).
+                // Receipt ownership alone must not identify those as the parent product.
+                guard Self.payloadAppName(identity.bundleName, matches: signature.appNameCandidates),
+                      let applications = applicationsByName[identity.bundleName], applications.count == 1,
                       let application = applications.first,
                       let location = receipts[identity.packageIdentifier]?.location,
                       let files = receipts[identity.packageIdentifier]?.files,

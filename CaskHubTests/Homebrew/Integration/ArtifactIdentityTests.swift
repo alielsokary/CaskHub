@@ -154,7 +154,7 @@ extension ArtifactIdentityTests {
     func test_conditional_package_candidates_require_receipt_path_and_bundle_agreement() async throws {
         for mode in [
             "valid", "relative-location", "bundle-location", "missing-receipt", "wrong-component", "missing-files",
-            "wrong-path", "wrong-id", "same-name-wrong-id", "store", "duplicate", "bad-receipt", "wrong-volume"
+            "wrong-path", "wrong-id", "same-name-wrong-id", "store", "duplicate", "bad-receipt", "wrong-volume", "auxiliary-app"
         ] {
             try await checkConditionalPackage(mode: mode)
         }
@@ -193,7 +193,7 @@ extension ArtifactIdentityTests {
         """#.utf8)
         categories.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: data))
         let api = MockBrewAPIClient()
-        api.casks = [makeCask("optional", name: mode == "same-name-wrong-id" ? "Optional" : "Catalog Product",
+        api.casks = [makeCask("optional", name: mode == "auxiliary-app" ? "Catalog Product" : "Optional",
                               packageIdentifiers: ["org.example.*"])]
         let viewModel = makeViewModel(api: api, categories: categories, localHomebrew: local)
         await viewModel.fetchCasks()
