@@ -24,13 +24,13 @@ struct CaskIconView: View {
             if let loadedImage {
                 wellShape
                     .fill(Color.chSurfaceField)
-                    .overlay(wellShape.strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+                    .overlay(wellShape.strokeBorder(Color.chHairline, lineWidth: 0.5))
                     .frame(width: size, height: size)
                 Image(nsImage: loadedImage)
                     .resizable()
                     .interpolation(.high)
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: size * 0.8, height: size * 0.8)
+                    .frame(width: size * 0.9, height: size * 0.9)
                     .clipShape(RoundedRectangle(cornerRadius: size * 0.18, style: .continuous))
                     .transition(.opacity)
             } else if cask.isCLI {
@@ -38,7 +38,7 @@ struct CaskIconView: View {
             } else {
                 wellShape
                     .fill(Color.chSurfaceField)
-                    .overlay(wellShape.strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+                    .overlay(wellShape.strokeBorder(Color.chHairline, lineWidth: 0.5))
                     .frame(width: size, height: size)
                 if didResolve {
                     Image(systemName: "macwindow")
@@ -63,7 +63,7 @@ struct CaskIconView: View {
     private var cliTile: some View {
         wellShape
             .fill(Color.chInk)
-            .overlay(wellShape.strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+            .overlay(wellShape.strokeBorder(Color.chHairline, lineWidth: 0.5))
             .overlay(
                 Text(">_")
                     .font(Font.custom(CHType.monoFamily, size: size * 0.34).weight(.bold))
