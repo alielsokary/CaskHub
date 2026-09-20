@@ -125,6 +125,27 @@ final class BrewProcessRunnerTests: XCTestCase {
     }
 
     @MainActor
+    func test_system_runner_preserves_handled_interrupt_exit_status() async throws {
+        var process: Process?
+        var interrupted = false
+        let result = try await SystemBrewProcessRunner().run(
+            executableURL: URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "trap 'exit 130' INT; printf 'ready\\n'; sleep 5; exit 124"],
+            environment: ProcessInfo.processInfo.environment,
+            onStart: { process = $0 },
+            onChunk: { chunk in
+                guard !interrupted, chunk.contains("ready") else { return }
+                interrupted = true
+                process?.interrupt()
+            }
+        )
+
+        XCTAssertTrue(interrupted)
+        XCTAssertEqual(result.exitCode, 130)
+        XCTAssertFalse(result.wasTerminatedBySignal)
+    }
+
+    @MainActor
     func test_system_runner_promotes_dumb_terminal_for_progress_output() async throws {
         var environment = ProcessInfo.processInfo.environment
         environment["TERM"] = "dumb"
