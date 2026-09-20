@@ -962,6 +962,7 @@
 				en,
 				Base,
 				"zh-Hans",
+				"zh-Hant",
 				uk,
 			);
 			mainGroup = 41EBDCD82F37FD8B00BEABB8;
