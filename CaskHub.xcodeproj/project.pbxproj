@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D24400000000000000000002 /* AppConflictRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24400000000000000000001 /* AppConflictRecoveryTests.swift */; };
+		B23300000000000000000002 /* HomebrewAppVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23300000000000000000001 /* HomebrewAppVersionTests.swift */; };
 		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
 		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
 		41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10132F68B00400BEABB8 /* CrashReporter.swift */; };
@@ -171,6 +173,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D24400000000000000000001 /* AppConflictRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConflictRecoveryTests.swift; sourceTree = "<group>"; };
+		B23300000000000000000001 /* HomebrewAppVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewAppVersionTests.swift; sourceTree = "<group>"; };
 		41AD10042F68A00400BEABB8 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
 		41AD10132F68B00400BEABB8 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
 		41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
@@ -881,6 +885,8 @@
 		F3200000000000000000002C /* Integration */ = {
 			isa = PBXGroup;
 			children = (
+				D24400000000000000000001 /* AppConflictRecoveryTests.swift */,
+				B23300000000000000000001 /* HomebrewAppVersionTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
 			);
 			path = Integration;
@@ -1166,6 +1172,8 @@
 				B0F000000000000000000004 /* HomebrewCommandFailureTests.swift in Sources */,
 				F29000000000000000000007 /* CaskOperationStoreTests.swift in Sources */,
 				F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */,
+				D24400000000000000000002 /* AppConflictRecoveryTests.swift in Sources */,
+				B23300000000000000000002 /* HomebrewAppVersionTests.swift in Sources */,
 				F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */,
 				A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */,
 				A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */,

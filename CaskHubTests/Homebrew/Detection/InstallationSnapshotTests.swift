@@ -248,7 +248,7 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
                 XCTAssertFalse(state.canOpen)
                 XCTAssertNil(state.adoptionPlan)
                 await service.requestReplacementAdoption(cask)
-                XCTAssertNil(service.operationStore.state(for: cask.token))
+                XCTAssertEqual(service.operationStore.state(for: cask.token)?.failure?.kind, .adoptionPreflight)
             }
             for cask in [mail, verified] {
                 let state = service.localState(for: cask)
@@ -297,7 +297,7 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
             XCTAssertEqual(state.adoptionPlan != nil, expectedPresent)
             if !expectedPresent {
                 await service.requestReplacementAdoption(matrix)
-                XCTAssertNil(service.operationStore.state(for: matrix.token))
+                XCTAssertEqual(service.operationStore.state(for: matrix.token)?.failure?.kind, .adoptionPreflight)
             }
         }
     }

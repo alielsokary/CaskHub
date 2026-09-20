@@ -9,14 +9,20 @@ import Foundation
 
 extension LocalHomebrewService {
     func requestAdoption(_ cask: Cask) async {
-        guard let request = currentAdoptionRequest(for: cask, intent: .planned) else {
-            return
-        }
-        await requestAdoption(request)
+        await requestAdoption(cask, intent: .planned)
     }
 
     func requestReplacementAdoption(_ cask: Cask) async {
-        guard let request = currentAdoptionRequest(for: cask, intent: .replacement) else {
+        await requestAdoption(cask, intent: .replacement)
+    }
+
+    private func requestAdoption(_ cask: Cask, intent: CaskAdoptionIntent) async {
+        guard operationStore.canBeginOperation(.adopting, for: cask.token) else { return }
+        if currentAdoptionRequest(for: cask, intent: intent) == nil {
+            await refresh()
+        }
+        guard let request = currentAdoptionRequest(for: cask, intent: intent) else {
+            reportUnverifiedAdoption(cask)
             return
         }
         await requestAdoption(request)
@@ -28,7 +34,7 @@ extension LocalHomebrewService {
             for: request.cask,
             intent: request.intent
         ) else {
-            operationStore.send(.clear, for: request.cask.token)
+            reportUnverifiedAdoption(request.cask)
             return
         }
         guard current == request else {
@@ -105,7 +111,7 @@ extension LocalHomebrewService {
                 for: request.cask,
                 intent: request.intent
             ) else {
-                operationStore.send(.clear, for: token)
+                reportUnverifiedAdoption(request.cask)
                 continue
             }
             let assessment = await permissionAssessment(for: current)
@@ -122,6 +128,11 @@ extension LocalHomebrewService {
     }
 
     private func preflightAdoption(_ request: CaskAdoptionRequest) -> Bool {
+        // Helper receipts do not authorize replacing another same-named app.
+        if request.cask.hasPackageArtifact, hasUnverifiedAppDestination(for: request.cask) {
+            reportUnverifiedAdoption(request.cask)
+            return false
+        }
         if let conflict = request.cask.conflictsWith?.caskTokens
             .filter({ installedCasks[$0] != nil })
             .sorted()
@@ -167,6 +178,17 @@ extension LocalHomebrewService {
         return false
     }
 
+    private func reportUnverifiedAdoption(_ cask: Cask) {
+        operationStore.send(.fail(CaskOperationFailure(
+            kind: .adoptionPreflight,
+            message: String(localized: """
+            CaskHub couldn't verify an installed app for \(cask.displayName). \
+            Refresh the catalog and try again. If this persists, move the existing app \
+            out of the installation folder before installing with Homebrew.
+            """)
+        )), for: cask.token)
+    }
+
     private func requireAdoptionPermission(
         for request: CaskAdoptionRequest,
         allowUnverified: Bool = false
@@ -197,8 +219,8 @@ extension LocalHomebrewService {
     ) async -> AppManagementPermission.Assessment {
         let probe = permissionProbe
         let bundle = installationSnapshot
-            .externalPackageApplicationOwners[request.cask.token]?.url
-            ?? installationSnapshot.externalApplicationOwners[request.cask.token]?.url
+            .externalApplicationOwners[request.cask.token]?.url
+            ?? installationSnapshot.externalPackageApplicationOwners[request.cask.token]?.url
             ?? existingBundleURL(named:
                 request.cask.packageAppNameCandidates + request.cask.appArtifactNames
             )

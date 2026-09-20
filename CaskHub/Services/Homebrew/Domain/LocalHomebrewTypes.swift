@@ -10,6 +10,7 @@ import Foundation
 nonisolated struct ApplicationBundleMetadata {
     let bundleIdentifier: String?
     let version: String?
+    let shortVersion: String?
 }
 
 nonisolated struct DetectedApplication: Hashable, Sendable {
@@ -17,6 +18,8 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
     let bundleName: String
     let bundleIdentifier: String?
     let version: String?
+    /// Release version only; a CFBundleVersion build number is not comparable to it.
+    let shortVersion: String?
     let isMacAppStore: Bool
     let isDirectlyInApplicationDirectory: Bool
     let installedAt: Date?
@@ -27,6 +30,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         bundleName: String,
         bundleIdentifier: String?,
         version: String?,
+        shortVersion: String?,
         isMacAppStore: Bool,
         isDirectlyInApplicationDirectory: Bool,
         installedAt: Date? = nil,
@@ -36,6 +40,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         self.bundleName = bundleName
         self.bundleIdentifier = bundleIdentifier
         self.version = version
+        self.shortVersion = shortVersion
         self.isMacAppStore = isMacAppStore
         self.isDirectlyInApplicationDirectory = isDirectlyInApplicationDirectory
         self.installedAt = installedAt
@@ -91,6 +96,7 @@ nonisolated struct CaskApplicationSignature: Sendable {
     let token: String
     let currentBundleNames: Set<String>
     let launchableBundleNames: Set<String>
+    let bundleIdentifiers: Set<String>
 }
 
 nonisolated struct CaskInstallationCatalog: Sendable {
@@ -120,6 +126,7 @@ nonisolated struct CaskInstallationIndex: Sendable {
     let catalogTokens: Set<String>
     let macAppStoreApplications: [String: DetectedApplication]
     let externalCLIPaths: [String: URL]
+    let homebrewApplications: [String: DetectedApplication]
     let launchableHomebrewTokens: Set<String>
     let verifiedZombieTokens: Set<String>
 
@@ -127,18 +134,20 @@ nonisolated struct CaskInstallationIndex: Sendable {
         catalogTokens: Set<String>,
         macAppStoreApplications: [String: DetectedApplication],
         externalCLIPaths: [String: URL],
+        homebrewApplications: [String: DetectedApplication],
         launchableHomebrewTokens: Set<String> = [],
         verifiedZombieTokens: Set<String> = []
     ) {
         self.catalogTokens = catalogTokens
         self.macAppStoreApplications = macAppStoreApplications
         self.externalCLIPaths = externalCLIPaths
+        self.homebrewApplications = homebrewApplications
         self.launchableHomebrewTokens = launchableHomebrewTokens
         self.verifiedZombieTokens = verifiedZombieTokens
     }
 
     static let empty = CaskInstallationIndex(
-        catalogTokens: [], macAppStoreApplications: [:], externalCLIPaths: [:]
+        catalogTokens: [], macAppStoreApplications: [:], externalCLIPaths: [:], homebrewApplications: [:]
     )
 }
 
@@ -194,10 +203,12 @@ nonisolated enum CaskUninstallAvailability: Equatable, Sendable {
 nonisolated struct CaskLocalState: Equatable, Sendable {
     let installationSource: CaskInstallationSource?
     let externalVersion: String?
+    let homebrewAppVersion: String?
     let adoptionPlan: CaskAdoptionPlan?
     let externalCLIPath: URL?
     let uninstallAvailability: CaskUninstallAvailability
     let hasAvailableUpdate: Bool
+    let isOutdated: Bool
     let isZombie: Bool
     let canOpen: Bool
 

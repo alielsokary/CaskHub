@@ -25,23 +25,28 @@ nonisolated struct CaskOperationFailure: Equatable, Sendable {
         case adoptionPreflight
         case brewCommand
         case applicationUnavailable
+        case applicationConflict
     }
 
     let kind: Kind
     let message: String
     let title: String?
     let recoveries: Set<CaskRecoveryAction>
+    /// Local diagnostic context only; never an authorization to replace this path.
+    let conflictingApplication: URL?
 
     init(
         kind: Kind,
         message: String,
         title: String? = nil,
-        recoveries: Set<CaskRecoveryAction> = []
+        recoveries: Set<CaskRecoveryAction> = [],
+        conflictingApplication: URL? = nil
     ) {
         self.kind = kind
         self.message = message
         self.title = title
         self.recoveries = recoveries
+        self.conflictingApplication = conflictingApplication
     }
 }
 

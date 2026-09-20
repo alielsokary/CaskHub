@@ -96,6 +96,43 @@ final class MutationRecoveryTests: XCTestCase {
         }
     }
 
+    func test_failed_repair_refreshes_removed_receipt_and_keeps_conflict_visible() async throws {
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [
+            BrewProcessResult(exitCode: 0, output: "fetched"),
+            BrewProcessResult(exitCode: 0, output: "uninstalled"),
+            BrewProcessResult(exitCode: 1, output: "Error: It seems there is already an App at '/Applications/Zed.app'.")
+        ]
+        let app = try makeApplicationBundle(in: root.appendingPathComponent("Applications"),
+                                            named: "Zed.app", bundleIdentifier: "dev.zed.Zed")
+        let detected = makeDetectedApplication("Zed.app", id: "dev.zed.Zed", url: app)
+        let scanner = FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
+            applications: ApplicationInstallationSnapshot(
+                externalApplicationOwners: ["zed": detected], externalPackageApplicationOwners: [:],
+                detectedApplications: [detected]
+            )
+        ))
+        let service = makeService(runner: runner, scanner: scanner)
+        updateInstalledCask(LocalCaskInstallation(token: "zed", installedVersion: "1.0", installedAt: nil,
+                                                appBundleNames: ["Zed.app"]), in: service)
+        runner.onRequest = { [root, fileManager] request in
+            if request.arguments.first == "uninstall" {
+                try fileManager.removeItem(at: root!.appendingPathComponent("Caskroom/zed"))
+            }
+        }
+        do {
+            try await service.repairReinstalling(token: "zed")
+            XCTFail("expected the surviving-app conflict")
+        } catch {
+            XCTAssertNil(service.installedCasks["zed"])
+            XCTAssertEqual(service.installationSnapshot.externalApplicationOwners["zed"]?.url, app)
+            XCTAssertNotNil(service.operationStore.state(for: "zed")?.failure)
+            XCTAssertTrue(fileManager.fileExists(atPath: app.path))
+            XCTAssertEqual(runner.requests.last?.arguments, ["install", "--cask", "zed"])
+            XCTAssertEqual(runner.requests.count, 3)
+        }
+    }
+
     func test_package_replacement_stops_when_forced_uninstall_leaves_external_app() async throws {
         let runner = StubBrewProcessRunner()
         runner.queuedResults = [
@@ -522,5 +559,38 @@ extension MutationRecoveryTests {
             XCTAssertNotNil(service.actionAlert(for: "zed"))
             XCTAssertEqual(runner.requests.first?.arguments, ["uninstall", "--cask", "zed", "--zap"])
         }
+    }
+}
+
+extension MutationRecoveryTests {
+    func test_upgrade_license_failure_stays_visible_and_reported_without_automatic_recovery() async {
+        let crashSpy = SpyCrashReporterProvider()
+        let originalProvider = CrashReporter.provider
+        let originalDefaults = CrashReporter.defaults
+        let originalTestState = CrashReporter.isRunningTests
+        CrashReporter.provider = crashSpy
+        CrashReporter.defaults = makeScratchDefaults("license-reporting")
+        CrashReporter.isRunningTests = false
+        defer {
+            CrashReporter.provider = originalProvider
+            CrashReporter.defaults = originalDefaults
+            CrashReporter.isRunningTests = originalTestState
+        }
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [BrewProcessResult(exitCode: 1, output:
+            "Error: You have not agreed to the Xcode license. Please resolve this by running:\n"
+                + "  sudo xcodebuild -license accept"
+        )]
+        let service = makeService(runner: runner, scanner: EmptyInstalledSoftwareScanner())
+        try? await service.upgrade(token: "gimp")
+        let reported = crashSpy.capturedErrors.first as? LocalHomebrewError
+        XCTAssertEqual(reported?.commandFailure?.kind, .xcodeLicenseNotAccepted)
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+        XCTAssertEqual(crashSpy.capturedErrorTags.last?["brew.action"], "updating")
+        XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
+        XCTAssertEqual(runner.requests.map(\.arguments), [["upgrade", "--cask", "gimp"]])
+        let failure = service.operationStore.state(for: "gimp")?.failure
+        XCTAssertTrue(failure?.message.contains("review and accept") == true)
+        XCTAssertEqual(failure?.recoveries, [])
     }
 }

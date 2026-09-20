@@ -327,7 +327,7 @@ extension CaskAdoptionWorkflowTests {
 
         try await service.confirmAdoption(request)
 
-        XCTAssertNil(service.operationStore.state(for: cask.token))
+        XCTAssertEqual(service.operationStore.state(for: cask.token)?.failure?.kind, .adoptionPreflight)
         XCTAssertTrue(runner.requests.isEmpty)
     }
 
@@ -379,7 +379,7 @@ extension CaskAdoptionWorkflowTests {
         try await service.confirmAdoption(request)
 
         XCTAssertTrue(runner.requests.isEmpty)
-        XCTAssertNil(service.operationStore.state(for: cask.token))
+        XCTAssertEqual(service.operationStore.state(for: cask.token)?.failure?.kind, .adoptionPreflight)
     }
 
 }

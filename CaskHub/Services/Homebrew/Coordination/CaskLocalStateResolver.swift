@@ -80,8 +80,8 @@ struct CaskLocalStateResolver {
     func installationSource(for cask: Cask) -> CaskInstallationSource? {
         if isInstalled(token: cask.token) { return .homebrew }
         if isMacAppStoreInstalled(cask) { return .macAppStore }
-        if isExternalPackageInstalled(cask) { return .packageInstaller }
         if isAdoptableApplication(cask) { return .externalApplication }
+        if isExternalPackageInstalled(cask) { return .packageInstaller }
         if externalCLIPath(cask) != nil { return .externalExecutable }
         return nil
     }
@@ -113,9 +113,12 @@ struct CaskLocalStateResolver {
     func localState(for cask: Cask) -> CaskLocalState {
         let source = installationSource(for: cask)
         let externalVersion = externalApplication(for: cask)?.version
+        let outdated = isOutdated(token: cask.token, remoteVersion: cask.version, autoUpdates: cask.autoUpdates)
         return CaskLocalState(
             installationSource: source,
             externalVersion: externalVersion,
+            homebrewAppVersion: snapshot.installationIndex.homebrewApplications[cask.token]?.shortVersion
+                .flatMap { $0.isEmpty ? nil : $0 },
             adoptionPlan: CaskAdoptionPlan.make(
                 installationSource: source,
                 installedVersion: externalVersion,
@@ -127,31 +130,28 @@ struct CaskLocalStateResolver {
                 ? externalCLIPath(cask)
                 : nil,
             uninstallAvailability: uninstallAvailability(for: cask),
-            hasAvailableUpdate: hasAvailableUpdate(
-                token: cask.token,
-                remoteVersion: cask.version,
-                autoUpdates: cask.autoUpdates
-            ),
+            hasAvailableUpdate: (greedyUpdates || cask.autoUpdates != true) && outdated,
+            isOutdated: outdated,
             isZombie: isZombie(cask),
             canOpen: canOpen(cask)
         )
     }
 
-    func isOutdated(token: String, remoteVersion: String) -> Bool {
+    func isOutdated(token: String, remoteVersion: String, autoUpdates: Bool?) -> Bool {
         guard let installation = snapshot.installedCasks[token],
               !installation.isZombie
         else { return false }
+        // Self-updaters can advance the app without updating Homebrew's receipt.
+        // Composite cask versions and build-only metadata keep the receipt policy.
+        if autoUpdates == true,
+           let version = snapshot.installationIndex.homebrewApplications[token]?.shortVersion,
+           version.allSatisfy({ $0.isNumber || $0 == "." }),
+           remoteVersion.allSatisfy({ $0.isNumber || $0 == "." }),
+           let comparison = NumericVersionComparison.compare(version, remoteVersion) {
+            return comparison == .orderedAscending
+        }
         return Self.comparableVersion(installation.installedVersion)
             != Self.comparableVersion(remoteVersion)
-    }
-
-    func hasAvailableUpdate(
-        token: String,
-        remoteVersion: String,
-        autoUpdates: Bool?
-    ) -> Bool {
-        (greedyUpdates || autoUpdates != true)
-            && isOutdated(token: token, remoteVersion: remoteVersion)
     }
 
     func isZombie(_ cask: Cask) -> Bool {

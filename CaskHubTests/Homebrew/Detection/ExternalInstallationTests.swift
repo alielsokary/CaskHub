@@ -274,7 +274,8 @@ final class ExternalInstallationTests: XCTestCase {
                         isMacAppStore: true
                     )
                 ],
-                externalCLIPaths: [:]
+                externalCLIPaths: [:],
+                homebrewApplications: [:]
             )
         }
 
