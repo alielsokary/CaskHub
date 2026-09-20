@@ -54,6 +54,7 @@ nonisolated struct ApplicationDiscovery: Sendable {
                     bundleIdentifier: metadata.bundleIdentifier,
                     version: metadata.version,
                     shortVersion: metadata.shortVersion,
+                    buildVersion: metadata.buildVersion,
                     isMacAppStore: fileManager.fileExists(atPath: masReceipt.path),
                     isDirectlyInApplicationDirectory:
                         entry.deletingLastPathComponent().standardizedFileURL
@@ -90,7 +91,8 @@ nonisolated struct ApplicationDiscovery: Sendable {
             bundleIdentifier: info["CFBundleIdentifier"] as? String,
             version: info["CFBundleShortVersionString"] as? String
                 ?? info["CFBundleVersion"] as? String,
-            shortVersion: info["CFBundleShortVersionString"] as? String
+            shortVersion: info["CFBundleShortVersionString"] as? String,
+            buildVersion: info["CFBundleVersion"] as? String
         )
     }
 
