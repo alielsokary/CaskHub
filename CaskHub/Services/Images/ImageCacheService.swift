@@ -92,6 +92,11 @@ final class ImageCacheService {
             return diskImage
         }
 
+        return await loadUncachedImage(for: cask, generation: generation)
+    }
+
+    private func loadUncachedImage(for cask: Cask, generation: UInt64) async -> NSImage? {
+        let token = cask.token
         let inManifest = iconHashes.map { $0[token] != nil } ?? knownIconTokens()?.contains(token) ?? true
         if cask.isCLI, !inManifest {
             return nil
@@ -143,7 +148,6 @@ final class ImageCacheService {
     }
 
     // MARK: - Private
-
     private func fetchImage(
         for cask: Cask,
         inManifest: Bool,
@@ -230,7 +234,6 @@ final class ImageCacheService {
     }
 
     // MARK: - CLI cutover purge
-
     private static let cliIconCutover = Date(timeIntervalSince1970: 1_783_598_400)
 
     private func purgeStaleCLIIcon(token: String) async {
@@ -414,9 +417,7 @@ extension ImageCacheService {
         let version: Int
         let hashes: [String: String]
     }
-}
 
-extension ImageCacheService {
     nonisolated static func normalizedIcon(_ image: NSImage) -> NSImage {
         guard let source = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return image }
         let width = source.width, height = source.height
