@@ -10,6 +10,16 @@ import Foundation
 nonisolated struct PackageReceiptResolver: Sendable {
     typealias Query = @Sendable ([String]) -> String?
 
+    struct ReceiptLocation: Sendable {
+        let volume: URL
+        let installLocation: String
+    }
+
+    struct Receipt: Sendable {
+        let files: String?
+        let location: ReceiptLocation?
+    }
+
     private let query: Query
 
     init(query: @escaping Query = Self.pkgutilOutput) {
@@ -38,14 +48,18 @@ nonisolated struct PackageReceiptResolver: Sendable {
                 }
             }
         }
-        var fileLists: [String: String] = [:]
+        var receipts: [String: Receipt] = [:]
+        let conditionalReceipts = Set(signatures.flatMap(\.receiptCandidates).map(\.packageIdentifier))
         for receipt in relevantReceipts {
-            fileLists[receipt] = query(["--files", receipt])
+            let location = conditionalReceipts.contains(receipt)
+                ? query(["--pkg-info-plist", receipt]).flatMap {
+                    Self.receiptLocation($0, identifier: receipt)
+                } : nil
+            receipts[receipt] = Receipt(files: query(["--files", receipt]), location: location)
         }
         return resolve(
             signatures: signatures,
-            installedReceipts: installedReceipts,
-            packageFileLists: fileLists,
+            receipts: receipts,
             availableAppNames: availableAppNames,
             applications: applications,
             homebrewInstalledTokens: homebrewInstalledTokens
@@ -55,8 +69,7 @@ nonisolated struct PackageReceiptResolver: Sendable {
     /// Resolves ambiguous package metadata to one cask per physical app.
     func resolve(
         signatures: [PackageCaskSignature],
-        installedReceipts: Set<String>,
-        packageFileLists: [String: String],
+        receipts: [String: Receipt],
         availableAppNames: Set<String>,
         applications: [DetectedApplication],
         homebrewInstalledTokens: Set<String> = []
@@ -64,6 +77,10 @@ nonisolated struct PackageReceiptResolver: Sendable {
         let applicationsByName = Dictionary(
             grouping: applications.filter { !$0.isMacAppStore && $0.isDirectlyInApplicationDirectory },
             by: \.bundleName
+        )
+        let verifiedCandidates = verifiedReceiptCandidates(
+            signatures: signatures, receipts: receipts,
+            applicationsByName: applicationsByName, homebrewInstalledTokens: homebrewInstalledTokens
         )
         var candidates = signatures.compactMap { signature -> PackageInstallationCandidate? in
             let rejectedNames = signature.verifiedBundleIdentifiersByName.keys.filter { name in
@@ -73,11 +90,12 @@ nonisolated struct PackageReceiptResolver: Sendable {
                     identifier, matchesAny: signature.verifiedBundleIdentifiersByName[name] ?? []
                 )
             }
+            let conditionalNames = Set(signature.receiptCandidates.map(\.bundleName))
             return candidate(
                 for: signature,
-                installedReceipts: installedReceipts,
-                packageFileLists: packageFileLists,
-                availableAppNames: availableAppNames.subtracting(rejectedNames),
+                receipts: receipts,
+                availableAppNames: availableAppNames.subtracting(rejectedNames).subtracting(conditionalNames),
+                receiptVerifiedApps: verifiedCandidates[signature.token] ?? [],
                 isHomebrewInstalled: homebrewInstalledTokens.contains(signature.token)
             )
         }
@@ -107,12 +125,12 @@ nonisolated struct PackageReceiptResolver: Sendable {
 
     private func candidate(
         for signature: PackageCaskSignature,
-        installedReceipts: Set<String>,
-        packageFileLists: [String: String],
+        receipts: [String: Receipt],
         availableAppNames: Set<String>,
+        receiptVerifiedApps: Set<String>,
         isHomebrewInstalled: Bool
     ) -> PackageInstallationCandidate? {
-        let matchingReceipts = Set(installedReceipts.filter { receipt in
+        let matchingReceipts = Set(receipts.keys.filter { receipt in
             signature.receiptPatterns.contains {
                 Self.identifier(receipt, matches: $0)
             }
@@ -122,7 +140,7 @@ nonisolated struct PackageReceiptResolver: Sendable {
         let declaredApps = Set(signature.appNameCandidates)
             .intersection(availableAppNames)
         let payloadApps = Set(matchingReceipts.flatMap { receipt in
-            packageFileLists[receipt].map(
+            receipts[receipt]?.files.map(
                 Self.appBundleNames(inPackageFileList:)
             ) ?? []
         })
@@ -134,7 +152,7 @@ nonisolated struct PackageReceiptResolver: Sendable {
                 allowingVariantDifference: isHomebrewInstalled
             )
         }
-        let existingApps = declaredApps.union(payloadApps)
+        let existingApps = declaredApps.union(payloadApps).union(receiptVerifiedApps)
         guard !existingApps.isEmpty else { return nil }
 
         let score = existingApps.map { appName in
@@ -216,5 +234,67 @@ nonisolated struct PackageReceiptResolver: Sendable {
             arguments: arguments
         ), result.status == 0 else { return nil }
         return result.output
+    }
+}
+
+extension PackageReceiptResolver {
+    private static func receiptLocation(_ output: String, identifier: String) -> ReceiptLocation? {
+        guard let plist = try? PropertyListSerialization.propertyList(from: Data(output.utf8), format: nil),
+              let values = plist as? [String: Any], values["pkgid"] as? String == identifier,
+              let volume = values["volume"] as? String, volume.hasPrefix("/"),
+              let location = values["install-location"] as? String,
+              !location.split(separator: "/").contains("..")
+        else { return nil }
+        return ReceiptLocation(volume: URL(fileURLWithPath: volume), installLocation: location)
+    }
+
+    private func verifiedReceiptCandidates(
+        signatures: [PackageCaskSignature], receipts: [String: Receipt],
+        applicationsByName: [String: [DetectedApplication]], homebrewInstalledTokens: Set<String>
+    ) -> [String: Set<String>] {
+        var claims: [String: Set<String>] = [:]
+        for signature in signatures {
+            for identity in signature.receiptCandidates where
+                signature.receiptPatterns.contains(where: { Self.identifier(identity.packageIdentifier, matches: $0) })
+                    && receipts[identity.packageIdentifier] != nil {
+                // A component can contain auxiliary apps (for example, Google Drive's Docs shortcut).
+                // Receipt ownership alone must not identify those as the parent product.
+                guard Self.payloadAppName(identity.bundleName, matches: signature.appNameCandidates),
+                      let applications = applicationsByName[identity.bundleName], applications.count == 1,
+                      let application = applications.first,
+                      let location = receipts[identity.packageIdentifier]?.location,
+                      let files = receipts[identity.packageIdentifier]?.files,
+                      Self.verifies(identity, application: application, location: location, files: files)
+                else { continue }
+                claims[identity.bundleName, default: []].insert(signature.token)
+            }
+        }
+        var result: [String: Set<String>] = [:]
+        for (name, tokens) in claims {
+            let installed = tokens.intersection(homebrewInstalledTokens)
+            let owners = installed.isEmpty ? tokens : installed
+            guard owners.count == 1, let owner = owners.first else { continue }
+            result[owner, default: []].insert(name)
+        }
+        return result
+    }
+
+    private static func verifies(
+        _ identity: PackageApplicationIdentity, application: DetectedApplication,
+        location: ReceiptLocation, files: String
+    ) -> Bool {
+        guard identity.bundleName.hasSuffix(".app"), !identity.bundleName.contains("/"),
+              identity.installedPath == "/Applications/\(identity.bundleName)",
+              let identifier = application.bundleIdentifier,
+              ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: [identity.bundleIdentifier]),
+              application.url.standardizedFileURL == location.volume
+                .appendingPathComponent(String(identity.installedPath.dropFirst())).standardizedFileURL
+        else { return false }
+        let installRoot = URL(fileURLWithPath: "/").appendingPathComponent(location.installLocation)
+        let expectedPlist = identity.installedPath + "/Contents/Info.plist"
+        return files.split(whereSeparator: \.isNewline).contains { line in
+            guard !line.hasPrefix("/"), !line.split(separator: "/").contains("..") else { return false }
+            return installRoot.appendingPathComponent(String(line)).standardizedFileURL.path == expectedPlist
+        }
     }
 }

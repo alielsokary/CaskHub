@@ -251,8 +251,8 @@ final class AppConflictRecoveryTests: XCTestCase {
     private func addHelperReceipt(to service: LocalHomebrewService, for cask: Cask) {
         let registration = InstallationCatalogBuilder().build([cask])
         let packages = PackageReceiptResolver().resolve(
-            signatures: registration.packageSignatures, installedReceipts: ["org.example.helper"],
-            packageFileLists: ["org.example.helper": "Applications/Hybrid.app"],
+            signatures: registration.packageSignatures,
+            receipts: ["org.example.helper": .init(files: "Applications/Hybrid.app", location: nil)],
             availableAppNames: ["Hybrid.app"], applications: [], homebrewInstalledTokens: []
         )
         updateInstallationSnapshot(of: service) {

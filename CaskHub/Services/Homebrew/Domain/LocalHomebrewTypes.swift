@@ -155,12 +155,22 @@ nonisolated struct CaskInstallationIndex: Sendable {
     )
 }
 
+/// A payload identity whose installation depends on package choices. It cannot
+/// establish ownership until the matching installed receipt and file path agree.
+nonisolated struct PackageApplicationIdentity: Decodable, Hashable, Sendable {
+    let bundleName: String
+    let bundleIdentifier: String
+    let packageIdentifier: String
+    let installedPath: String
+}
+
 nonisolated struct PackageCaskSignature: Sendable {
     let token: String
     let displayName: String
     let receiptPatterns: [String]
     let appNameCandidates: [String]
     let verifiedBundleIdentifiersByName: [String: [String]]
+    let receiptCandidates: [PackageApplicationIdentity]
 }
 
 nonisolated struct PackageInstallationCandidate {
