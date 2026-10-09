@@ -5,6 +5,12 @@ release body, and the five most recent entries become the Sparkle update dialog
 notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.9.2 — 2026-10-09
+
+### Bug Fixes
+
+- Fixed an issue where CaskHub could quit unexpectedly when the Uninstall confirmation or an error alert opened on macOS 26 and later
+
 ## 0.9.1 — 2026-10-06
 
 ### Bug Fixes

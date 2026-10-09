@@ -212,6 +212,72 @@ final class AdoptionViewRenderTests: XCTestCase {
     }
 
     @MainActor
+    func test_alert_sheet_presentation_waits_for_the_current_update_to_finish() async {
+        var presented = false
+        CaskActionAlertFactory.presentAfterUpdate { presented = true }
+
+        XCTAssertFalse(presented)
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async { continuation.resume() }
+        }
+        XCTAssertTrue(presented)
+    }
+
+    @MainActor
+    func test_uninstall_sheet_runs_uninstall_only_when_confirmed() async throws {
+        let runner = StubBrewProcessRunner()
+        let uninstallRequested = expectation(description: "brew uninstall requested")
+        uninstallRequested.assertForOverFulfill = false
+        runner.onRequest = { if $0.arguments.contains("uninstall") { uninstallRequested.fulfill() } }
+        let service = makeMutationService(runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty))
+        let cask = makeCask("zed")
+        let window = makeSheetHost()
+        var dismissals = 0
+
+        CaskActionAlertFactory.presentUninstallConfirmation(for: cask, service: service, in: nil) { dismissals += 1 }
+        XCTAssertEqual(dismissals, 1)
+
+        CaskActionAlertFactory.presentUninstallConfirmation(for: cask, service: service, in: window) { dismissals += 1 }
+        try window.endSheet(XCTUnwrap(window.attachedSheet), returnCode: .alertSecondButtonReturn)
+        XCTAssertEqual(dismissals, 2)
+        XCTAssertTrue(runner.requests.isEmpty)
+
+        CaskActionAlertFactory.presentUninstallConfirmation(for: cask, service: service, in: window) { dismissals += 1 }
+        try window.endSheet(XCTUnwrap(window.attachedSheet), returnCode: .alertFirstButtonReturn)
+        XCTAssertEqual(dismissals, 3)
+        await fulfillment(of: [uninstallRequested], timeout: 5)
+    }
+
+    @MainActor
+    func test_error_sheet_dismisses_the_failure_when_closed() throws {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("error-sheet"))
+        let cask = makeCask("tabby")
+        let failure = CaskOperationFailure(kind: .brewCommand, message: "Install failed")
+        service.operationStore.send(.fail(failure), for: cask.token)
+        let window = makeSheetHost()
+
+        CaskActionAlertFactory.presentError(failure, for: cask, service: service, in: nil)
+        XCTAssertNotNil(service.actionAlert(for: cask.token))
+
+        CaskActionAlertFactory.presentError(failure, for: cask, service: service, in: window)
+        try window.endSheet(XCTUnwrap(window.attachedSheet), returnCode: .alertFirstButtonReturn)
+        XCTAssertNil(service.actionAlert(for: cask.token))
+    }
+
+    @MainActor
+    private func makeSheetHost() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
+            styleMask: .titled,
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        addTeardownBlock { @MainActor in window.close() }
+        return window
+    }
+
+    @MainActor
     func test_uninstall_alert_shows_copyable_command_with_destructive_button() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("uninstall-alert"))
         let alert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina", name: "IINA"), service: service)

@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-10-05",
-  "totalCasks": 4001,
+  "generatedDate": "2026-10-08",
+  "totalCasks": 4012,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -1173,6 +1173,12 @@
         "ai"
       ]
     },
+    "auto-tune-central": {
+      "primary": "audioMusic",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "autodesk-fusion": {
       "primary": "designGraphics",
       "secondary": []
@@ -1266,6 +1272,12 @@
     "azookey": {
       "primary": "utilities",
       "secondary": []
+    },
+    "azure-cli": {
+      "primary": "developerTools",
+      "secondary": [
+        "cloudStorage"
+      ]
     },
     "ba-connected": {
       "primary": "utilities",
@@ -1978,6 +1990,12 @@
       "primary": "utilities",
       "secondary": [
         "productivity"
+      ]
+    },
+    "buildin": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
       ]
     },
     "buildsettingextractor": {
@@ -5033,6 +5051,10 @@
         "ai"
       ]
     },
+    "fl-studio": {
+      "primary": "audioMusic",
+      "secondary": []
+    },
     "flacon": {
       "primary": "audioMusic",
       "secondary": []
@@ -5143,6 +5165,10 @@
     },
     "flux-app": {
       "primary": "utilities",
+      "secondary": []
+    },
+    "fluxer": {
+      "primary": "communication",
       "secondary": []
     },
     "flycut": {
@@ -7125,10 +7151,6 @@
       "primary": "developerTools",
       "secondary": []
     },
-    "jetbrains-space": {
-      "primary": "developerTools",
-      "secondary": []
-    },
     "jetbrains-toolbox": {
       "primary": "developerTools",
       "secondary": []
@@ -8810,6 +8832,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "mcplinker": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "mcreator": {
       "primary": "developerTools",
       "secondary": []
@@ -10105,6 +10133,12 @@
       "primary": "designGraphics",
       "secondary": []
     },
+    "nodeterm": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "nomachine": {
       "primary": "utilities",
       "secondary": []
@@ -11357,6 +11391,10 @@
       "secondary": [
         "videoMedia"
       ]
+    },
+    "photocraft": {
+      "primary": "designGraphics",
+      "secondary": []
     },
     "photoninja": {
       "primary": "designGraphics",
@@ -14034,6 +14072,12 @@
       "primary": "developerTools",
       "secondary": []
     },
+    "solidtime": {
+      "primary": "productivity",
+      "secondary": [
+        "financeCrypto"
+      ]
+    },
     "solvespace": {
       "primary": "designGraphics",
       "secondary": []
@@ -14410,6 +14454,12 @@
     "stash": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "stashcat": {
+      "primary": "communication",
+      "secondary": [
+        "securityPrivacy"
+      ]
     },
     "stashpad": {
       "primary": "productivity",
@@ -15323,6 +15373,12 @@
       "primary": "productivity",
       "secondary": [
         "ai"
+      ]
+    },
+    "threat-dragon": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "developerTools"
       ]
     },
     "threema": {
@@ -17423,6 +17479,12 @@
         "ai"
       ]
     },
+    "zed-delta": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
+    },
     "zedis": {
       "primary": "developerTools",
       "secondary": []
@@ -18737,6 +18799,12 @@
         "bundleIdentifier": "com.autoclaude.ui"
       }
     ],
+    "auto-tune-central": [
+      {
+        "bundleName": "Auto-Tune Central.app",
+        "bundleIdentifier": "com.Antares.AutoTuneCentral"
+      }
+    ],
     "autodmg": [
       {
         "bundleName": "AutoDMG.app",
@@ -19623,6 +19691,12 @@
       {
         "bundleName": "BuhoLaunchpad.app",
         "bundleIdentifier": "com.drbuho.BuhoLaunchpad.Launcher"
+      }
+    ],
+    "buildin": [
+      {
+        "bundleName": "Buildin.app",
+        "bundleIdentifier": "com.coasis.buildin.ai"
       }
     ],
     "buildsettingextractor": [
@@ -22975,6 +23049,12 @@
       {
         "bundleName": "Flux.app",
         "bundleIdentifier": "org.herf.Flux"
+      }
+    ],
+    "fluxer": [
+      {
+        "bundleName": "Fluxer.app",
+        "bundleIdentifier": "app.fluxer"
       }
     ],
     "flycut": [
@@ -27045,6 +27125,12 @@
         "bundleIdentifier": "Lifeisgoodlabs.MCP-Bundler"
       }
     ],
+    "mcplinker": [
+      {
+        "bundleName": "MCPLinker.app",
+        "bundleIdentifier": "dev.milisp.mcplinker"
+      }
+    ],
     "mcreator": [
       {
         "bundleName": "MCreator.app",
@@ -28467,6 +28553,12 @@
         "bundleIdentifier": "be.emrg.nodebox"
       }
     ],
+    "nodeterm": [
+      {
+        "bundleName": "nodeterm.app",
+        "bundleIdentifier": "com.nodeterm.app"
+      }
+    ],
     "nook": [
       {
         "bundleName": "Nook.app",
@@ -29743,6 +29835,12 @@
       {
         "bundleName": "Phosphene.app",
         "bundleIdentifier": "glass.kagerou.phosphene"
+      }
+    ],
+    "photocraft": [
+      {
+        "bundleName": "PhotoCraft.app",
+        "bundleIdentifier": "ai.storyteller.photocraft"
       }
     ],
     "photosrevive": [
@@ -32735,6 +32833,12 @@
         "bundleIdentifier": "com.ospfranco.sol"
       }
     ],
+    "solidtime": [
+      {
+        "bundleName": "solidtime.app",
+        "bundleIdentifier": "io.solidtime.desktop"
+      }
+    ],
     "solvespace": [
       {
         "bundleName": "SolveSpace.app",
@@ -33155,6 +33259,12 @@
       {
         "bundleName": "Stash.app",
         "bundleIdentifier": "ws.stash.app.mac"
+      }
+    ],
+    "stashcat": [
+      {
+        "bundleName": "Stashcat.app",
+        "bundleIdentifier": "de.heinekingmedia.stashcatdesktopmessenger"
       }
     ],
     "stashpad": [
@@ -34133,6 +34243,12 @@
       {
         "bundleName": "ThoughtDAG.app",
         "bundleIdentifier": "io.github.chenxiachan.thoughtdag"
+      }
+    ],
+    "threat-dragon": [
+      {
+        "bundleName": "Threat-Dragon-ng.app",
+        "bundleIdentifier": "org.owasp.threatdragon"
       }
     ],
     "ths": [
@@ -36365,6 +36481,12 @@
         "bundleIdentifier": "dev.zed.Zed"
       }
     ],
+    "zed-delta": [
+      {
+        "bundleName": "Delta.app",
+        "bundleIdentifier": "com.zed-industries.delta"
+      }
+    ],
     "zedis": [
       {
         "bundleName": "Zedis.app",
@@ -36498,8 +36620,8 @@
       }
     ]
   },
-  "metadataUpdatedAt": "2026-10-06T15:49:19.549304+00:00",
-  "releaseTag": "caskflow-v2026.10.06",
+  "metadataUpdatedAt": "2026-10-08T15:57:36.691098+00:00",
+  "releaseTag": "caskflow-v2026.10.08",
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -36732,6 +36854,7 @@
     "ausweisapp",
     "auto-claude",
     "auto-subs",
+    "auto-tune-central",
     "autodesk-fusion",
     "autodmg",
     "autogram",
@@ -36916,6 +37039,7 @@
     "bugdom",
     "bugdom2",
     "buholaunchpad",
+    "buildin",
     "buildsettingextractor",
     "bunch",
     "burn",
@@ -37546,6 +37670,7 @@
     "fission",
     "fitbit-os-simulator",
     "fixkey",
+    "fl-studio",
     "flacon",
     "flashspace",
     "fldigi",
@@ -37570,6 +37695,7 @@
     "flutter",
     "flutterflow",
     "flux-app",
+    "fluxer",
     "flycut",
     "flyenv",
     "flying-carpet",
@@ -38363,6 +38489,7 @@
     "mbed-studio",
     "mcloud",
     "mcpbundler",
+    "mcplinker",
     "mcreator",
     "mdb-accdb-viewer",
     "mdhero",
@@ -38656,6 +38783,7 @@
     "nitro-pdf-pro",
     "nkoda",
     "nodebox",
+    "nodeterm",
     "nomachine",
     "nomachine-enterprise-client",
     "nook",
@@ -38920,6 +39048,7 @@
     "phoenix-code",
     "phoenix-slides",
     "phosphene",
+    "photocraft",
     "photoninja",
     "photosrevive",
     "photostickies",
@@ -39503,6 +39632,7 @@
     "sokim",
     "sol",
     "solar2d",
+    "solidtime",
     "solvespace",
     "songkong",
     "sonic-pi",
@@ -39577,6 +39707,7 @@
     "startupfolder",
     "staruml",
     "stash",
+    "stashcat",
     "stashpad",
     "stationtv-link",
     "stats",
@@ -39771,6 +39902,7 @@
     "thor",
     "thorium",
     "thoughtdag",
+    "threat-dragon",
     "threema",
     "threema-work",
     "threema@beta",
@@ -40222,6 +40354,7 @@
     "zappy",
     "zcode",
     "zed",
+    "zed-delta",
     "zed@preview",
     "zedis",
     "zeitgeist",

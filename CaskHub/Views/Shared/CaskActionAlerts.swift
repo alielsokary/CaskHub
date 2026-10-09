@@ -132,16 +132,10 @@ private extension View {
     ) -> some View {
         onChange(of: isPresented.wrappedValue) { _, show in
             guard show else { return }
-            guard let window = NSApp.keyWindow else {
-                isPresented.wrappedValue = false
-                return
-            }
-            let alert = CaskActionAlertFactory.uninstallAlert(for: cask, service: service)
-            alert.beginSheetModal(for: window) { response in
-                if response == .alertFirstButtonReturn {
-                    service.send(.uninstall(token: cask.token))
+            CaskActionAlertFactory.presentAfterUpdate {
+                CaskActionAlertFactory.presentUninstallConfirmation(for: cask, service: service, in: NSApp.keyWindow) {
+                    isPresented.wrappedValue = false
                 }
-                isPresented.wrappedValue = false
             }
         }
     }
@@ -163,14 +157,10 @@ private extension View {
     ) -> some View {
         onChange(of: failure(for: cask, service: service)) { _, failure in
             guard let failure else { return }
-            guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return }
-            let (alert, actions) = CaskActionAlertFactory.errorAlert(
-                for: cask, failure: failure, service: service
-            )
-            alert.beginSheetModal(for: window) { response in
-                let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
-                service.send(.dismissFailure(token: cask.token))
-                if actions.indices.contains(index) { actions[index]() }
+            CaskActionAlertFactory.presentAfterUpdate {
+                CaskActionAlertFactory.presentError(
+                    failure, for: cask, service: service, in: NSApp.keyWindow ?? NSApp.mainWindow
+                )
             }
         }
     }
@@ -195,6 +185,41 @@ private extension View {
 
 @MainActor
 enum CaskActionAlertFactory {
+    // A sheet begun inside a SwiftUI update re-enters the AppKit update cycle and can crash on macOS 26+.
+    static func presentAfterUpdate(_ present: @escaping @MainActor () -> Void) {
+        DispatchQueue.main.async { present() }
+    }
+
+    static func presentUninstallConfirmation(
+        for cask: Cask,
+        service: LocalHomebrewService,
+        in window: NSWindow?,
+        onDismiss: @escaping @MainActor () -> Void
+    ) {
+        guard let window else { return onDismiss() }
+        uninstallAlert(for: cask, service: service).beginSheetModal(for: window) { response in
+            if response == .alertFirstButtonReturn {
+                service.send(.uninstall(token: cask.token))
+            }
+            onDismiss()
+        }
+    }
+
+    static func presentError(
+        _ failure: CaskOperationFailure,
+        for cask: Cask,
+        service: LocalHomebrewService,
+        in window: NSWindow?
+    ) {
+        guard let window else { return }
+        let (alert, actions) = errorAlert(for: cask, failure: failure, service: service)
+        alert.beginSheetModal(for: window) { response in
+            let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+            service.send(.dismissFailure(token: cask.token))
+            if actions.indices.contains(index) { actions[index]() }
+        }
+    }
+
     static func uninstallAlert(for cask: Cask, service: LocalHomebrewService) -> NSAlert {
         let alert = NSAlert()
         alert.messageText = "Uninstall \(cask.displayName)?"
