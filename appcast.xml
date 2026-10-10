@@ -3,12 +3,17 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.9.1</title>
-            <pubDate>Tue, 06 Oct 2026 15:34:36 +0000</pubDate>
-            <sparkle:version>825</sparkle:version>
-            <sparkle:shortVersionString>0.9.1</sparkle:shortVersionString>
+            <title>0.9.2</title>
+            <pubDate>Fri, 09 Oct 2026 11:27:05 +0000</pubDate>
+            <sparkle:version>838</sparkle:version>
+            <sparkle:shortVersionString>0.9.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[
+            <description sparkle:format="markdown"><![CDATA[## 0.9.2
+
+### Bug Fixes
+
+- Fixed an issue where CaskHub could quit unexpectedly when the Uninstall confirmation or an error alert opened on macOS 26 and later
+
 ## 0.9.1
 
 ### Bug Fixes
@@ -77,14 +82,8 @@
 - Fixed the window being forced off-screen on scaled displays by lowering the minimum window size
 - Fixed apps that share a name, such as Element or Motion, being offered for the wrong cask by matching a verified bundle identity
 
-## 0.8.1
-
-### What's New
-
-- Added Ukrainian localization, translated by @Disconnecter
-
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.9.1/CaskHub-0.9.1.zip" length="7871041" type="application/octet-stream" sparkle:edSignature="gGpkIKtjFeckSkNsgj/ugUOT6xwnzX7+AF9zvT7A/wAZ81Tc2FphMEbOyryubna2fump4Crk6gwnuqsHYolUBw=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.9.2/CaskHub-0.9.2.zip" length="7873550" type="application/octet-stream" sparkle:edSignature="rJKayx3pu13q9j4iV2EgFAZUwWLTrvYGGjgPAC30hRnmajkWEJCA2hrthT5WlytduJ2CZEi4kVWI0alVFNvhBQ=="/>
         </item>
     </channel>
 </rss>
