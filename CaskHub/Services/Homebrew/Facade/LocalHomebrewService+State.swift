@@ -16,6 +16,12 @@ extension LocalHomebrewService {
         makeLocalStateResolver().isInstalled(token: token)
     }
 
+    var tapCasks: [Cask] {
+        installationSnapshot.installedCasks.values
+            .compactMap(Cask.installedFromTap)
+            .sorted { $0.token < $1.token }
+    }
+
     func localState(for cask: Cask) -> CaskLocalState {
         makeLocalStateResolver().localState(for: cask)
     }

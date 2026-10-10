@@ -312,7 +312,82 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
         var parts: [String] = []
         if let downloads { parts.append("↓ \(downloads)") }
         parts.append("v\(displayVersion)")
+        if let thirdPartyTap { parts.append(thirdPartyTap) }
         return parts.joined(separator: " · ")
+    }
+
+    static let officialTap = "homebrew/cask"
+
+    static func isThirdPartyTap(_ tap: String?) -> Bool {
+        guard let tap, !tap.isEmpty else { return false }
+        return tap != officialTap
+    }
+
+    var thirdPartyTap: String? {
+        Self.isThirdPartyTap(tap) ? tap : nil
+    }
+
+    var iconKey: String {
+        thirdPartyTap == nil ? token : brewToken.replacingOccurrences(of: "/", with: "--")
+    }
+
+    var brewToken: String {
+        guard let thirdPartyTap else { return token }
+        return fullToken ?? "\(thirdPartyTap)/\(token)"
+    }
+
+    static func installedFromTap(_ installation: LocalCaskInstallation) -> Cask? {
+        guard installation.isThirdPartyTap, let tap = installation.tap else { return nil }
+        if let definition = installation.definition {
+            return definition.attributing(to: tap, installation: installation)
+        }
+        let appNames = installation.appBundleNames
+        return Cask(
+            token: installation.token,
+            fullToken: "\(tap)/\(installation.token)",
+            tap: tap,
+            name: [appNames.first.map { ($0 as NSString).deletingPathExtension } ?? installation.token],
+            desc: nil,
+            homepage: "",
+            url: nil,
+            sha256: nil,
+            version: installation.installedVersion,
+            bundleVersion: nil,
+            bundleShortVersion: nil,
+            outdated: false,
+            deprecated: false,
+            disabled: false,
+            autoUpdates: nil,
+            variations: nil,
+            supportedPlatforms: nil,
+            conflictsWith: nil,
+            artifacts: appNames.isEmpty ? nil : [ArtifactStanza(keys: ["app"], appNames: appNames)]
+        )
+    }
+
+    private func attributing(to tap: String, installation: LocalCaskInstallation) -> Cask {
+        var cask = Cask(
+            token: installation.token,
+            fullToken: fullToken ?? "\(tap)/\(installation.token)",
+            tap: tap,
+            name: name.isEmpty ? [installation.token] : name,
+            desc: desc,
+            homepage: homepage,
+            url: url,
+            sha256: sha256,
+            version: installation.installedVersion,
+            bundleVersion: bundleVersion,
+            bundleShortVersion: bundleShortVersion,
+            outdated: false,
+            deprecated: false,
+            disabled: false,
+            autoUpdates: autoUpdates,
+            variations: variations,
+            supportedPlatforms: supportedPlatforms,
+            conflictsWith: conflictsWith
+        )
+        cask.artifacts = artifacts
+        return cask
     }
 }
 

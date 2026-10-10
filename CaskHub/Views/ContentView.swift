@@ -51,7 +51,8 @@ struct ContentView: View {
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount(includingExternallyManaged: showExternallyManagedApps),
                 adoptableCount: viewModel.adoptableCasks.count,
-                categoryCounts: viewModel.categoryCounts
+                categoryCounts: viewModel.categoryCounts,
+                taps: localHomebrew.taps
             )
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
         } detail: {
@@ -211,6 +212,8 @@ struct ContentView: View {
         switch selectedSidebar {
         case .shelfSetup:
             return String(localized: .shelfSetupIgnoredCount(viewModel.adoptIgnoredCasks.count))
+        case .taps:
+            return String(localized: "\(localHomebrew.taps.count) taps")
         case .maintenance:
             return maintenance.topBarSummary
         default:
@@ -219,7 +222,7 @@ struct ContentView: View {
     }
 
     private var isUtilityPage: Bool {
-        selectedSidebar == .shelfSetup || selectedSidebar == .maintenance
+        selectedSidebar == .shelfSetup || selectedSidebar == .taps || selectedSidebar == .maintenance
     }
 
     // MARK: - Detail Content
@@ -229,6 +232,8 @@ struct ContentView: View {
         switch selectedSidebar {
         case .shelfSetup:
             ShelfSetupView(viewModel: viewModel)
+        case .taps:
+            TapsView(viewModel: viewModel)
         case .maintenance:
             MaintenanceView(model: maintenance)
         default:
@@ -250,6 +255,8 @@ struct ContentView: View {
         case let .discover(item): return item.rawValue
         case let .library(item): return item.rawValue
         case .shelfSetup: return String(localized: .sidebarShelfSetup)
+        case .taps: return String(localized: "Taps")
+        case let .tap(name): return name
         case .maintenance: return String(localized: .sidebarHealth)
         case let .category(categoryID): return categoryService.displayName(for: categoryID)
         }

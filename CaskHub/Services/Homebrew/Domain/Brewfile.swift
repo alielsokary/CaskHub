@@ -22,6 +22,11 @@ nonisolated enum Brewfile {
     }
 
     static func contents(forCaskTokens tokens: [String]) -> String {
-        tokens.sorted().map { "cask \"\($0)\"\n" }.joined()
+        let taps = Set(tokens.compactMap { token -> String? in
+            let parts = token.split(separator: "/")
+            return parts.count == 3 ? "\(parts[0])/\(parts[1])" : nil
+        })
+        return taps.sorted().map { "tap \"\($0)\"\n" }.joined()
+            + tokens.sorted().map { "cask \"\($0)\"\n" }.joined()
     }
 }

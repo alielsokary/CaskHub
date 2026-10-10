@@ -53,6 +53,7 @@ final class CaskCatalogViewModel {
     private(set) var casks: [Cask] = [] {
         didSet { catalogRevision &+= 1 }
     }
+    @ObservationIgnored private var officialCasks: [Cask] = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:] {
@@ -168,14 +169,60 @@ final class CaskCatalogViewModel {
         async let catalog: Void = fetchCasks()
         async let local: Void = localHomebrew.refresh()
         async let homebrewOutdated: Void = localHomebrew.refreshHomebrewOutdated()
+        async let taps: Void = localHomebrew.refreshTaps()
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
-        _ = await (catalog, local, homebrewOutdated, categories, addedDates)
-        let enriched = categoryService.addingAppIdentities(to: casks)
-        if enriched != casks {
-            casks = enriched
-            await localHomebrew.updatePackageCatalog(casks)
+        _ = await (catalog, local, homebrewOutdated, taps, categories, addedDates)
+        let enriched = categoryService.addingAppIdentities(to: officialCasks)
+        if enriched != officialCasks {
+            officialCasks = enriched
         }
+        await rebuildCatalog()
+    }
+
+    func refreshTaps() async {
+        await localHomebrew.refreshTaps()
+        await rebuildCatalog()
+    }
+
+    func updateTaps() async -> HomebrewTapCommandResult {
+        let result = await localHomebrew.updateTaps()
+        await rebuildCatalog()
+        return result
+    }
+
+    func addTap(_ name: String, remote: String?) async -> HomebrewTapCommandResult {
+        let result = await localHomebrew.addTap(name, remote: remote)
+        if result.succeeded { await rebuildCatalog() }
+        return result
+    }
+
+    func removeTap(_ name: String) async -> HomebrewTapCommandResult {
+        let result = await localHomebrew.removeTap(name)
+        if result.succeeded { await rebuildCatalog() }
+        return result
+    }
+
+    func casks(inTap tap: String) -> [Cask] {
+        casks.filter { $0.thirdPartyTap == tap }
+    }
+
+    private func rebuildCatalog() async {
+        let combined = Self.combining(official: officialCasks, tapCasks: localHomebrew.tapCatalog)
+        guard combined != casks else { return }
+        casks = combined
+        await localHomebrew.updatePackageCatalog(casks)
+    }
+
+    static func combining(official: [Cask], tapCasks: [Cask]) -> [Cask] {
+        var tokens = Set(official.map(\.token))
+        let additions = tapCasks.filter { cask in
+            !cask.deprecated
+                && !cask.disabled
+                && !cask.token.contains("@")
+                && tokens.insert(cask.token).inserted
+        }
+        return official + additions
     }
 
     func refreshIfStale(maxAge: TimeInterval = 3600) async {
@@ -197,12 +244,13 @@ final class CaskCatalogViewModel {
 
             let allCasks = try await caskRequest
             await categoryService.loadBundledCategoriesAsync()
-            casks = categoryService.addingAppIdentities(to: allCasks.filter { cask in
+            officialCasks = categoryService.addingAppIdentities(to: allCasks.filter { cask in
                 !cask.deprecated
                     && !cask.disabled
                     && !cask.token.contains("@")
                     && !cask.token.hasPrefix("font-")
             })
+            casks = Self.combining(official: officialCasks, tapCasks: localHomebrew.tapCatalog)
             await localHomebrew.updatePackageCatalog(casks)
 
             if let analytics = try? await analyticsRequest {

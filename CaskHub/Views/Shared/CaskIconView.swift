@@ -13,6 +13,7 @@ struct CaskIconView: View {
     var alignment: Alignment = .top
 
     @Environment(ImageCacheService.self) private var imageCache
+    @Environment(LocalHomebrewService.self) private var localHomebrew: LocalHomebrewService?
     @State private var loadedImage: NSImage?
     @State private var didResolve = false
 
@@ -24,7 +25,7 @@ struct CaskIconView: View {
 
     var body: some View {
         ZStack {
-            if let image = imageCache.cachedImage(for: cask.token) ?? loadedImage {
+            if let image = imageCache.cachedImage(for: cask.iconKey) ?? loadedImage {
                 Image(nsImage: image)
                     .resizable()
                     .interpolation(.high)
@@ -47,13 +48,23 @@ struct CaskIconView: View {
             }
         }
         .animation(.easeIn(duration: 0.2), value: loadedImage != nil)
-        .task(id: [cask.token, imageCache.iconHash(for: cask.token) ?? "", String(imageCache.iconRefreshRevision)]) {
+        .task(id: [cask.iconKey, imageCache.iconHash(for: cask.token) ?? "", String(imageCache.iconRefreshRevision), String(localHomebrew?.catalogStateRevision ?? 0)]) {
             didResolve = false
-            let image = await imageCache.image(for: cask)
+            var image = await imageCache.image(for: cask)
+            if image == nil { image = installedAppIcon }
             guard !Task.isCancelled else { return }
             loadedImage = image
             didResolve = true
         }
+    }
+
+    private var installedAppIcon: NSImage? {
+        guard cask.thirdPartyTap != nil,
+              let url = localHomebrew?.existingBundleURL(named: cask.appArtifactNames)
+        else { return nil }
+        let icon = NSWorkspace.shared.icon(forFile: url.path)
+        icon.size = NSSize(width: 512, height: 512)
+        return IconBitmap.shadowed(IconBitmap.normalized(icon))
     }
 
     private var cliTile: some View {

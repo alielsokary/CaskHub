@@ -92,13 +92,22 @@ extension CaskCatalogViewModel {
 
     private var librarySnapshot: CatalogLibrarySnapshot {
         libraryCache.value(for: libraryCacheKey) { [casks, categoryService, localHomebrew] in
+            let libraryCasks = Self.merging(tapCasks: localHomebrew.tapCasks, into: casks)
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
-                casks: casks,
-                localStates: localHomebrew.localStates(for: casks),
+                casks: libraryCasks,
+                localStates: localHomebrew.localStates(for: libraryCasks),
                 categoryMappings: categoryService.tokenMappings,
                 adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))
         }
+    }
+
+    private static func merging(tapCasks: [Cask], into casks: [Cask]) -> [Cask] {
+        guard !tapCasks.isEmpty else { return casks }
+        let catalogTaps = Dictionary(casks.map { ($0.token, $0.thirdPartyTap) }) { first, _ in first }
+        let installed = tapCasks.filter { catalogTaps[$0.token] != .some($0.thirdPartyTap) }
+        let installedTokens = Set(installed.map(\.token))
+        return casks.filter { !installedTokens.contains($0.token) } + installed
     }
 
     // MARK: - Browse Sections

@@ -298,28 +298,32 @@ extension HomebrewInstallationScanner {
             forKeys: [.creationDateKey]
         ).creationDate) ?? receipt?.lastUpdatedAt ?? versionModifiedAt
 
+        let tap = receipt?.tap
         return LocalCaskInstallation(
             token: entry.lastPathComponent,
             installedVersion: versionDirectory.lastPathComponent,
             installedAt: installedAt,
             lastUpdatedAt: receipt?.lastUpdatedAt ?? versionModifiedAt,
             appBundleNames: receipt?.appBundleNames ?? [],
-            isZombie: isZombie
+            isZombie: isZombie,
+            tap: tap,
+            definition: Cask.isThirdPartyTap(tap)
+                ? installedDefinition(in: entry, fileManager: fileManager)
+                : nil
         )
     }
 
-    /// Brew's installed check: newest timestamp dir must hold `Casks/<token>.rb|json`.
-    private static func timestampedCaskfileExists(
+    private static func newestTimestampDirectory(
         in entry: URL,
         fileManager: FileManager
-    ) -> Bool {
+    ) -> URL? {
         let metadata = entry.appendingPathComponent(".metadata", isDirectory: true)
         guard let versionDirectories = try? fileManager.contentsOfDirectory(
             at: metadata,
             includingPropertiesForKeys: nil,
             options: [.skipsHiddenFiles]
-        ) else { return false }
-        let newestTimestamp = versionDirectories
+        ) else { return nil }
+        return versionDirectories
             .flatMap { versionDirectory in
                 (try? fileManager.contentsOfDirectory(
                     at: versionDirectory,
@@ -328,7 +332,30 @@ extension HomebrewInstallationScanner {
                 )) ?? []
             }
             .max { $0.lastPathComponent < $1.lastPathComponent }
-        guard let newestTimestamp else { return false }
+    }
+
+    private static func installedDefinition(
+        in entry: URL,
+        fileManager: FileManager
+    ) -> Cask? {
+        guard let newestTimestamp = newestTimestampDirectory(in: entry, fileManager: fileManager),
+              let data = try? Data(
+                  contentsOf: newestTimestamp
+                      .appendingPathComponent("Casks/\(entry.lastPathComponent).json")
+              )
+        else { return nil }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try? decoder.decode(Cask.self, from: data)
+    }
+
+    /// Brew's installed check: newest timestamp dir must hold `Casks/<token>.rb|json`.
+    private static func timestampedCaskfileExists(
+        in entry: URL,
+        fileManager: FileManager
+    ) -> Bool {
+        guard let newestTimestamp = newestTimestampDirectory(in: entry, fileManager: fileManager)
+        else { return false }
         let token = entry.lastPathComponent
         return ["rb", "json"].contains { fileExtension in
             fileManager.fileExists(

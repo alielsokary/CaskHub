@@ -29,16 +29,17 @@ extension LocalHomebrewService {
             )
             return
         }
-        try await install(token: cask.token)
+        try await install(token: cask.token, brewToken: cask.brewToken)
     }
 
-    func install(token: String) async throws {
+    func install(token: String, brewToken: String? = nil) async throws {
+        let commandToken = brewToken ?? token
         try await runMutationSequence(
             .installing,
             token: token,
             steps: [
-                .fetch(token: token, cancellation: .untilPerforming),
-                .exclusive(["install", "--cask", token], cancellation: .untilPerforming)
+                .fetch(token: commandToken, cancellation: .untilPerforming),
+                .exclusive(["install", "--cask", commandToken], cancellation: .untilPerforming)
             ],
             origin: .individual
         )

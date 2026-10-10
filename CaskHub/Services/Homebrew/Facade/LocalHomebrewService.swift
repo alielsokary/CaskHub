@@ -47,6 +47,7 @@ final class LocalHomebrewService {
     @ObservationIgnored private let caskPlatformProvider: () async -> CaskPlatform?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
     @ObservationIgnored private let homebrewOutdatedProvider: () async -> HomebrewOutdatedReport?
+    @ObservationIgnored let tapManager: any HomebrewTapManaging
 
     var isUpdatingAll: Bool {
         operationStore.isUpdatingAll
@@ -61,6 +62,14 @@ final class LocalHomebrewService {
     }
 
     private(set) var brewVersion: String?
+
+    private(set) var taps: [HomebrewTap] = [] {
+        didSet { if taps != oldValue { catalogStateRevision &+= 1 } }
+    }
+
+    private(set) var tapCatalog: [Cask] = []
+
+    private(set) var hasLoadedTaps = false
 
     private(set) var customBrewPrefix: String?
 
@@ -129,6 +138,7 @@ final class LocalHomebrewService {
             ?? { await HomebrewPlatformLoader().load(from: brewBinary()) }
         homebrewOutdatedProvider = dependencies.homebrewOutdatedProvider
             ?? { await HomebrewOutdatedLoader().load(from: brewBinary()) }
+        tapManager = dependencies.tapManager ?? HomebrewTapLoader()
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]
@@ -201,6 +211,37 @@ final class LocalHomebrewService {
 
     func refreshHomebrewOutdated() async {
         homebrewOutdated = await homebrewOutdatedProvider()
+    }
+
+    func refreshTaps() async {
+        guard let snapshot = await tapManager.load(from: brewBinaryProvider()) else {
+            hasLoadedTaps = true
+            return
+        }
+        tapCatalog = snapshot.casks
+        taps = snapshot.taps
+        hasLoadedTaps = true
+    }
+
+    func updateTaps() async -> HomebrewTapCommandResult {
+        let result = await tapManager.update(using: brewBinaryProvider())
+        async let taps: Void = refreshTaps()
+        async let outdated: Void = refreshHomebrewOutdated()
+        async let installed: Void = refresh()
+        _ = await (taps, outdated, installed)
+        return result
+    }
+
+    func addTap(_ name: String, remote: String?) async -> HomebrewTapCommandResult {
+        let result = await tapManager.add(name, remote: remote, using: brewBinaryProvider())
+        if result.succeeded { await refreshTaps() }
+        return result
+    }
+
+    func removeTap(_ name: String) async -> HomebrewTapCommandResult {
+        let result = await tapManager.remove(name, using: brewBinaryProvider())
+        if result.succeeded { await refreshTaps() }
+        return result
     }
 
     // MARK: - Detection
