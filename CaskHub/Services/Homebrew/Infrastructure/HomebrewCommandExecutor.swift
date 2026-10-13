@@ -74,6 +74,15 @@ final class SystemHomebrewCommandExecutor: HomebrewCommandExecuting {
         return true
     }
 
+    nonisolated static func interruptChildren(of pid: Int32) {
+        let output = ProcessCapture.capture(
+            URL(fileURLWithPath: "/usr/bin/pgrep"), arguments: ["-P", "\(pid)"]
+        )?.output ?? ""
+        for child in output.split(whereSeparator: \.isNewline).compactMap({ Int32($0) }) {
+            kill(child, SIGINT)
+        }
+    }
+
     private nonisolated static func signalTree(pid: Int32, signal: Int32) {
         let output = ProcessCapture.capture(
             URL(fileURLWithPath: "/usr/bin/pgrep"),
