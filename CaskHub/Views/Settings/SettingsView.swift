@@ -173,6 +173,7 @@ struct AboutSettingsView: View {
 struct GeneralSettingsView: View {
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var settingsModel = GeneralSettingsModel()
+    @State private var fullDiskAccess = FullDiskAccessPermission.Status.unknown
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
     @AppStorage(ContentView.showExternallyManagedAppsKey) private var showExternallyManagedApps = true
 
@@ -216,7 +217,7 @@ struct GeneralSettingsView: View {
             Section("Permissions") {
                 LabeledContent("App Management") {
                     HStack(spacing: 10) {
-                        permissionBadge
+                        permissionBadge(settingsModel.appManagement)
                         if settingsModel.appManagement != .granted {
                             Button("Open System Settings") {
                                 settingsModel.openAppManagementSettings()
@@ -227,22 +228,40 @@ struct GeneralSettingsView: View {
                 Text(.settingsAppManagementDescription)
                 .font(.callout)
                 .foregroundStyle(.secondary)
+                LabeledContent("Full Disk Access") {
+                    HStack(spacing: 10) {
+                        permissionBadge(fullDiskAccess)
+                        if fullDiskAccess != .granted {
+                            Button("Open System Settings") {
+                                FullDiskAccessPermission.openSystemSettings()
+                            }
+                        }
+                    }
+                }
+                Text(.settingsFullDiskAccessDescription)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .padding()
-        .task { await settingsModel.refreshAppManagement() }
+        .task { await refreshPermissions() }
         .onReceive(
             NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
         ) { _ in
             // Re-probe when the user comes back from System Settings.
-            Task { await settingsModel.refreshAppManagement() }
+            Task { await refreshPermissions() }
         }
     }
 
+    private func refreshPermissions() async {
+        fullDiskAccess = localHomebrew.fullDiskAccessProbe()
+        await settingsModel.refreshAppManagement()
+    }
+
     @ViewBuilder
-    private var permissionBadge: some View {
-        switch settingsModel.appManagement {
+    private func permissionBadge(_ status: AppManagementPermission.Status) -> some View {
+        switch status {
         case .granted:
             badge("Granted", icon: "checkmark.circle.fill", tint: .green)
         case .denied:

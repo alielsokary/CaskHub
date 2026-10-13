@@ -280,7 +280,8 @@ final class AdoptionViewRenderTests: XCTestCase {
     @MainActor
     func test_uninstall_alert_shows_copyable_command_with_destructive_button() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("uninstall-alert"))
-        let alert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina", name: "IINA"), service: service)
+        service.fullDiskAccessProbe = { .granted }
+        let alert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina", name: "IINA"), service: service).alert
 
         XCTAssertEqual(alert.messageText, "Uninstall IINA?")
         XCTAssertEqual(alert.informativeText, "This will run:")
@@ -289,9 +290,37 @@ final class AdoptionViewRenderTests: XCTestCase {
         XCTAssertTrue(alert.buttons[0].hasDestructiveAction)
 
         service.setZapOnUninstall(true)
-        let zapAlert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina"), service: service)
+        let zapAlert = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina"), service: service).alert
         XCTAssertTrue(zapAlert.informativeText.contains("preferences, caches, and support files"))
         XCTAssertNotNil(zapAlert.accessoryView)
+    }
+
+    @MainActor
+    func test_uninstall_alert_offers_keeping_data_when_full_disk_access_is_denied() async {
+        let runner = StubBrewProcessRunner()
+        let uninstallRequested = expectation(description: "brew uninstall requested")
+        runner.onRequest = { _ in uninstallRequested.fulfill() }
+        let service = makeMutationService(runner: runner, scanner: FixedInstalledSoftwareScanner(snapshot: .empty))
+        service.setZapOnUninstall(true)
+        service.fullDiskAccessProbe = { .denied }
+
+        let (alert, actions) = CaskActionAlertFactory.uninstallAlert(for: makeCask("iina", name: "IINA"), service: service)
+
+        XCTAssertEqual(alert.messageText, "Uninstall IINA?")
+        XCTAssertTrue(alert.informativeText.contains("Full Disk Access"))
+        XCTAssertEqual(
+            alert.buttons.map(\.title),
+            ["Uninstall Without Removing Data", "Open System Settings", "Cancel"]
+        )
+        XCTAssertTrue(alert.buttons[0].hasDestructiveAction)
+        XCTAssertEqual(actions.count, 3)
+
+        // The grant may land while the sheet is open; the promise to keep data must still hold.
+        service.fullDiskAccessProbe = { .granted }
+        actions[2]()
+        actions[0]()
+        await fulfillment(of: [uninstallRequested], timeout: 5)
+        XCTAssertEqual(runner.requests.map(\.arguments), [["uninstall", "--cask", "iina"]])
     }
 
     @MainActor
@@ -409,11 +438,12 @@ final class AdoptionViewRenderTests: XCTestCase {
             "Update Homebrew",
             "Force Uninstall",
             "Open System Settings",
+            "Open System Settings",
             "OK"
         ])
-        XCTAssertEqual(actions.count, 7)
+        XCTAssertEqual(actions.count, 8)
 
-        // Every action except Open System Settings (launches the real app) and OK.
+        // Every action except the two Open System Settings (launch the real app) and OK.
         for action in actions[0...4] {
             action()
             try? await Task.sleep(for: .milliseconds(150))

@@ -79,6 +79,21 @@ extension LocalHomebrewService {
         )
     }
 
+    /// An interrupted uninstall leaves the cask's own app inside the Caskroom, which brew then refuses to overwrite.
+    func hasStrandedInstalledApp(token: String) -> Bool {
+        guard let names = installedCasks[token]?.appBundleNames,
+              let caskroom = HomebrewLocator.caskroomURL(
+                  customPrefix: customBrewPrefix,
+                  fileManager: fileManager
+              )
+        else { return false }
+        return !HomebrewInstallationScanner.strandedCopyNames(
+            in: caskroom,
+            token: token,
+            fileManager: fileManager
+        ).isDisjoint(with: names)
+    }
+
     private func mutationPostconditionSatisfied(
         action: CaskAction,
         token: String,

@@ -45,20 +45,34 @@ extension LocalHomebrewService {
     }
 
     func uninstall(token: String) async throws {
+        try await uninstall(token: token, removingData: zapOnUninstall)
+    }
+
+    func uninstallKeepingData(token: String) async throws {
+        try await uninstall(token: token, removingData: false)
+    }
+
+    private func uninstall(token: String, removingData: Bool) async throws {
         try await runMutation(
             .uninstalling,
             token: token,
-            args: uninstallArguments(token: token),
+            args: uninstallArguments(token: token, removingData: removingData),
             origin: .individual
         )
     }
 
-    func uninstallArguments(token: String) -> [String] {
-        // Brew rejects plain uninstall for caskfile-less zombies; --force works.
-        let force = installedCasks[token]?.isZombie == true
+    var zapBlockedByFullDiskAccess: Bool {
+        zapOnUninstall && fullDiskAccessProbe() == .denied
+    }
+
+    func uninstallArguments(token: String, removingData: Bool) -> [String] {
+        // Brew rejects plain uninstall for caskfile-less zombies and stranded apps; --force works.
+        let force = installedCasks[token]?.isZombie == true || hasStrandedInstalledApp(token: token)
+        // Without Full Disk Access brew aborts a zap after the app is already gone.
+        let zap = removingData && fullDiskAccessProbe() != .denied
         return ["uninstall", "--cask", token]
             + (force ? ["--force"] : [])
-            + (zapOnUninstall ? ["--zap"] : [])
+            + (zap ? ["--zap"] : [])
     }
 
     /// Clears a zombie Caskroom entry — the app is already gone, `--force`

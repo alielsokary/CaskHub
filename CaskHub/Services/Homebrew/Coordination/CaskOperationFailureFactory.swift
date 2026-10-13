@@ -40,7 +40,9 @@ enum CaskOperationFailureFactory {
             if failure.kind == .adoptVersionMismatch {
                 recoveries.insert(.replaceWithHomebrew)
             }
-            if failure.kind == .strandedCaskroomApp
+            if failure.kind == .strandedCaskroomApp && arguments.first == "uninstall" {
+                recoveries.insert(.forceUninstall)
+            } else if failure.kind == .strandedCaskroomApp
                 || (arguments.first == "upgrade" && strandedCopyExists && failure.kind != .xcodeLicenseNotAccepted) {
                 recoveries.insert(.repairAndReinstall)
             }
@@ -69,9 +71,7 @@ enum CaskOperationFailureFactory {
         stderr: String
     ) -> Set<CaskRecoveryAction> {
         switch failureKind {
-        case .packageNewerInstalled, .packageAlreadyInstalled, .packageUpgradeFailed:
-            return [.replaceWithHomebrew]
-        case .binaryConflict:
+        case .packageNewerInstalled, .packageAlreadyInstalled, .packageUpgradeFailed, .binaryConflict:
             return [.replaceWithHomebrew]
         case .appConflict:
             // No adopt retry after a failed --adopt.
@@ -90,6 +90,8 @@ enum CaskOperationFailureFactory {
             return [.repairAndReinstall]
         case .homebrewRuntimeIncompatible:
             return [.updateHomebrew]
+        case .fullDiskAccessRequired:
+            return [.forceUninstall, .openFullDiskAccessSettings]
         default:
             return []
         }

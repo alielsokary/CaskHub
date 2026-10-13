@@ -15,6 +15,7 @@ nonisolated enum CaskRecoveryAction: CaseIterable, Hashable, Sendable {
     case updateHomebrew
     case forceUninstall
     case openAppManagementSettings
+    case openFullDiskAccessSettings
 }
 
 nonisolated struct CaskOperationFailure: Equatable, Sendable {

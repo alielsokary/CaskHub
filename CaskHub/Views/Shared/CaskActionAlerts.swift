@@ -190,21 +190,6 @@ enum CaskActionAlertFactory {
         DispatchQueue.main.async { present() }
     }
 
-    static func presentUninstallConfirmation(
-        for cask: Cask,
-        service: LocalHomebrewService,
-        in window: NSWindow?,
-        onDismiss: @escaping @MainActor () -> Void
-    ) {
-        guard let window else { return onDismiss() }
-        uninstallAlert(for: cask, service: service).beginSheetModal(for: window) { response in
-            if response == .alertFirstButtonReturn {
-                service.send(.uninstall(token: cask.token))
-            }
-            onDismiss()
-        }
-    }
-
     static func presentError(
         _ failure: CaskOperationFailure,
         for cask: Cask,
@@ -218,24 +203,6 @@ enum CaskActionAlertFactory {
             service.send(.dismissFailure(token: cask.token))
             if actions.indices.contains(index) { actions[index]() }
         }
-    }
-
-    static func uninstallAlert(for cask: Cask, service: LocalHomebrewService) -> NSAlert {
-        let alert = NSAlert()
-        alert.messageText = "Uninstall \(cask.displayName)?"
-        alert.informativeText = service.zapOnUninstall
-            ? String(localized: .alertUninstallZap)
-            : "This will run:"
-        let command = NSHostingView(
-            rootView: CommandBlock(command: (["brew"] + service.uninstallArguments(token: cask.token)).joined(separator: " "))
-        )
-        command.setFrameSize(command.fittingSize)
-        alert.accessoryView = command
-        let uninstall = alert.addButton(withTitle: "Uninstall")
-        uninstall.hasDestructiveAction = true
-        uninstall.keyEquivalent = ""
-        alert.addButton(withTitle: "Cancel")
-        return alert
     }
 
     static func errorAlert(
@@ -319,7 +286,7 @@ enum CaskActionAlertFactory {
 private extension CaskRecoveryAction {
     func canPerform(cask: Cask, service: LocalHomebrewService) -> Bool {
         switch self {
-        case .openAppManagementSettings:
+        case .openAppManagementSettings, .openFullDiskAccessSettings:
             true
         case .adoptExisting, .replaceWithHomebrew:
             service.operationStore.canBeginOperation(.adopting, for: cask.token)
@@ -339,7 +306,7 @@ private extension CaskRecoveryAction {
         case .repairAndReinstall: "Repair & Reinstall"
         case .updateHomebrew: String(localized: "Update Homebrew")
         case .forceUninstall: "Force Uninstall"
-        case .openAppManagementSettings: "Open System Settings"
+        case .openAppManagementSettings, .openFullDiskAccessSettings: "Open System Settings"
         }
     }
 
@@ -358,6 +325,8 @@ private extension CaskRecoveryAction {
             service.send(.repair(token: cask.token))
         case .openAppManagementSettings:
             AppManagementPermission.openSystemSettings()
+        case .openFullDiskAccessSettings:
+            FullDiskAccessPermission.openSystemSettings()
         }
     }
 }
@@ -408,38 +377,6 @@ extension CaskAdoptionPlan {
         return message + "\n\n" + String(localized:
             "Homebrew will also run this app's helper installers, which may request administrator permission."
         )
-    }
-}
-
-private struct CommandBlock: View {
-    let command: String
-    @State private var copied = false
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Text(verbatim: command)
-                .font(.callout.monospaced())
-                .textSelection(.enabled)
-            Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(command, forType: .string)
-                copied = true
-                Task {
-                    try? await Task.sleep(for: .seconds(1.5))
-                    copied = false
-                }
-            } label: {
-                Image(systemName: copied ? "checkmark.circle.fill" : "document.on.document")
-                    .foregroundStyle(copied ? Color.green : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
-                    .frame(width: 16, height: 16)
-            }
-            .buttonStyle(.borderless)
-            .help("Copy Command")
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
     }
 }
 

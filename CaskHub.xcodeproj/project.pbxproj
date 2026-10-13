@@ -61,6 +61,7 @@
 		41DFD4A730028F7D00608C7A /* CaskCatalogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */; };
 		41DFD4A830028F7D00608C7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47830028F7D00608C7A /* SettingsView.swift */; };
 		41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */; };
+		B0AD00000000000000000008 /* CaskUninstallAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AD00000000000000000007 /* CaskUninstallAlert.swift */; };
 		41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47B30028F7D00608C7A /* CaskCardView.swift */; };
 		41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47C30028F7D00608C7A /* CaskIconView.swift */; };
 		41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */; };
@@ -98,6 +99,7 @@
 		A29100000000000000000004 /* CaskMetadataProjectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000003 /* CaskMetadataProjectorTests.swift */; };
 		A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000006 /* InstallationDateIndexTests.swift */; };
 		A29100000000000000000407 /* AppManagementPermissionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000406 /* AppManagementPermissionTests.swift */; };
+		B0AD00000000000000000004 /* FullDiskAccessPermissionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AD00000000000000000003 /* FullDiskAccessPermissionTests.swift */; };
 		A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */; };
 		C0FE00000000000000000006 /* HomebrewOutdatedLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FE00000000000000000005 /* HomebrewOutdatedLoaderTests.swift */; };
 		C0FE0000000000000000000A /* HomebrewLaneLimiterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FE00000000000000000009 /* HomebrewLaneLimiterTests.swift */; };
@@ -135,6 +137,7 @@
 		C15000000000000000000002 /* InstallationCatalogBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15000000000000000000002 /* InstallationCatalogBuilder.swift */; };
 		C26000000000000000000001 /* ExternalApplicationOwnershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26000000000000000000001 /* ExternalApplicationOwnershipTests.swift */; };
 		D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */; };
+		B0AD00000000000000000006 /* FullDiskAccessPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AD00000000000000000005 /* FullDiskAccessPermission.swift */; };
 		F24000000000000000000001 /* CaskOperationProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000001 /* CaskOperationProgress.swift */; };
 		F24000000000000000000002 /* CaskOperationCapsule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000002 /* CaskOperationCapsule.swift */; };
 		F24000000000000000000003 /* CaskOperationProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24000000000000000000003 /* CaskOperationProgressTests.swift */; };
@@ -180,6 +183,7 @@
 		F34000000000000000000002 /* HomebrewPackageLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34000000000000000000001 /* HomebrewPackageLaunchTests.swift */; };
 		FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */; };
 		C0FE0000000000000000000E /* ConcurrentDownloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */; };
+		B0AD00000000000000000002 /* UninstallZapGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AD00000000000000000001 /* UninstallZapGateTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -244,6 +248,7 @@
 		41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCatalogViewModel.swift; sourceTree = "<group>"; };
 		41DFD47830028F7D00608C7A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionAlerts.swift; sourceTree = "<group>"; };
+		B0AD00000000000000000007 /* CaskUninstallAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskUninstallAlert.swift; sourceTree = "<group>"; };
 		41DFD47B30028F7D00608C7A /* CaskCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskCardView.swift; sourceTree = "<group>"; };
 		41DFD47C30028F7D00608C7A /* CaskIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskIconView.swift; sourceTree = "<group>"; };
 		41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskInfoPopover.swift; sourceTree = "<group>"; };
@@ -258,11 +263,13 @@
 		AA1000000000000000000016 /* TestFactories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFactories.swift; sourceTree = "<group>"; };
 		41DFD4E130028F7D00608C7A /* AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsView.swift; sourceTree = "<group>"; };
 		41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppManagementPermission.swift; sourceTree = "<group>"; };
+		B0AD00000000000000000005 /* FullDiskAccessPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccessPermission.swift; sourceTree = "<group>"; };
 		41EBDCE12F37FD8B00BEABB8 /* CaskHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CaskHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41EBDCEE2F37FD8C00BEABB8 /* CaskHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaskHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5317A6659E48459EB3FFB7EB /* BrewOutputCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewOutputCollector.swift; sourceTree = "<group>"; };
 		8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdoptionTests.swift; sourceTree = "<group>"; };
 		C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentDownloadTests.swift; sourceTree = "<group>"; };
+		B0AD00000000000000000001 /* UninstallZapGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UninstallZapGateTests.swift; sourceTree = "<group>"; };
 		A1C0D0013A00000100000001 /* IconDiskCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconDiskCache.swift; sourceTree = "<group>"; };
 		A1C0D0033A00000100000001 /* IconBitmap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconBitmap.swift; sourceTree = "<group>"; };
 		A26000000000000000000001 /* UpdateSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSettingsView.swift; sourceTree = "<group>"; };
@@ -274,6 +281,7 @@
 		A29100000000000000000003 /* CaskMetadataProjectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskMetadataProjectorTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000006 /* InstallationDateIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationDateIndexTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000406 /* AppManagementPermissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppManagementPermissionTests.swift; sourceTree = "<group>"; };
+		B0AD00000000000000000003 /* FullDiskAccessPermissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccessPermissionTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutputDiagnosticsTests.swift; sourceTree = "<group>"; };
 		C0FE00000000000000000005 /* HomebrewOutdatedLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutdatedLoaderTests.swift; sourceTree = "<group>"; };
 		C0FE00000000000000000009 /* HomebrewLaneLimiterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewLaneLimiterTests.swift; sourceTree = "<group>"; };
@@ -511,6 +519,7 @@
 			isa = PBXGroup;
 			children = (
 				41DFD47A30028F7D00608C7A /* CaskActionAlerts.swift */,
+				B0AD00000000000000000007 /* CaskUninstallAlert.swift */,
 				41DFD47B30028F7D00608C7A /* CaskCardView.swift */,
 				41DFD47C30028F7D00608C7A /* CaskIconView.swift */,
 				41DFD47D30028F7D00608C7A /* CaskInfoPopover.swift */,
@@ -770,6 +779,7 @@
 			isa = PBXGroup;
 			children = (
 				41E09E37CC8344C699ACADDB /* AppManagementPermission.swift */,
+				B0AD00000000000000000005 /* FullDiskAccessPermission.swift */,
 				F30000000000000000000001 /* ApplicationDiscovery.swift */,
 				F31000000000000000000007 /* ApplicationLauncher.swift */,
 				F30000000000000000000009 /* AskpassScriptManager.swift */,
@@ -915,6 +925,7 @@
 			isa = PBXGroup;
 			children = (
 				A29100000000000000000406 /* AppManagementPermissionTests.swift */,
+				B0AD00000000000000000003 /* FullDiskAccessPermissionTests.swift */,
 				E24000000000000000000004 /* BrewProcessRunnerTests.swift */,
 				D0A071D00000000000000001 /* HomebrewAdministratorAuthenticationTests.swift */,
 				E29000000000000000000013 /* HomebrewCommandExecutorTests.swift */,
@@ -942,6 +953,7 @@
 			children = (
 				8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */,
 				C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */,
+				B0AD00000000000000000001 /* UninstallZapGateTests.swift */,
 				B12000000000000000000008 /* CaskAdoptionWorkflowTests.swift */,
 			);
 			path = Workflows;
@@ -1154,6 +1166,7 @@
 				7FFA89946C514C00BF5496DB /* BrewOutputCollector.swift in Sources */,
 				C12000000000000000000001 /* BrewProcessRunner.swift in Sources */,
 				D62ACB1AD2BC42A29578C0DD /* AppManagementPermission.swift in Sources */,
+				B0AD00000000000000000006 /* FullDiskAccessPermission.swift in Sources */,
 				41DFD4A430028F7D00608C7A /* LocalHomebrewService.swift in Sources */,
 				F32000000000000000000002 /* LocalHomebrewService+Workflows.swift in Sources */,
 				C15000000000000000000002 /* InstallationCatalogBuilder.swift in Sources */,
@@ -1206,6 +1219,7 @@
 				A26000000000000000000002 /* UpdateSettingsView.swift in Sources */,
 				C1A000000000000000000006 /* PrivacySettingsView.swift in Sources */,
 				41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */,
+				B0AD00000000000000000008 /* CaskUninstallAlert.swift in Sources */,
 				41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */,
 				41DFD4AB30028F7D00608C7A /* CaskIconView.swift in Sources */,
 				41DFD4AC30028F7D00608C7A /* CaskInfoPopover.swift in Sources */,
@@ -1248,6 +1262,7 @@
 				A26000000000000000000004 /* UpdateSettingsViewTests.swift in Sources */,
 				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
 				C0FE0000000000000000000E /* ConcurrentDownloadTests.swift in Sources */,
+				B0AD00000000000000000002 /* UninstallZapGateTests.swift in Sources */,
 				A12000000000000000000009 /* CaskAdoptionWorkflowTests.swift in Sources */,
 				A12000000000000000000007 /* CaskAdoptionPlanTests.swift in Sources */,
 				AF11E0000000000000000002 /* BrewfileTests.swift in Sources */,
@@ -1266,6 +1281,7 @@
 				C0FE0000000000000000000A /* HomebrewLaneLimiterTests.swift in Sources */,
 				A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */,
 				A29100000000000000000407 /* AppManagementPermissionTests.swift in Sources */,
+				B0AD00000000000000000004 /* FullDiskAccessPermissionTests.swift in Sources */,
 				F29000000000000000000019 /* CaskActionPresentationTests.swift in Sources */,
 				F2900000000000000000001F /* DownloadMetadataProviderTests.swift in Sources */,
 				F24000000000000000000004 /* BrewProcessRunnerTests.swift in Sources */,

@@ -195,13 +195,22 @@ extension HomebrewInstallationScanner {
         token: String,
         fileManager: FileManager
     ) -> Bool {
+        !strandedCopyNames(in: caskroomURL, token: token, fileManager: fileManager).isEmpty
+    }
+
+    static func strandedCopyNames(
+        in caskroomURL: URL,
+        token: String,
+        fileManager: FileManager
+    ) -> Set<String> {
         let entry = caskroomURL.appendingPathComponent(token)
         guard let versionDirectories = try? fileManager.contentsOfDirectory(
             at: entry,
             includingPropertiesForKeys: [.isDirectoryKey],
             options: [.skipsHiddenFiles]
-        ) else { return false }
+        ) else { return [] }
 
+        var names: Set<String> = []
         for versionDirectory in versionDirectories {
             guard let items = try? fileManager.contentsOfDirectory(
                 at: versionDirectory,
@@ -219,11 +228,11 @@ extension HomebrewInstallationScanner {
                        isDirectory: &isDirectory
                    ),
                    isDirectory.boolValue {
-                    return true
+                    names.insert(item.lastPathComponent)
                 }
             }
         }
-        return false
+        return names
     }
 
     /// Executable names in the locations used by Homebrew and common native

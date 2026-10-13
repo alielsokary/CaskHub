@@ -8,6 +8,7 @@
 enum CaskIntent {
     case install(Cask)
     case uninstall(token: String)
+    case uninstallKeepingData(token: String)
     case repair(token: String)
     case repairAndReinstall(token: String)
     case updateHomebrew(token: String)
@@ -57,6 +58,8 @@ extension LocalHomebrewService {
             Task { try? await install(cask) }
         case let .uninstall(token):
             Task { try? await uninstall(token: token) }
+        case let .uninstallKeepingData(token):
+            Task { try? await uninstallKeepingData(token: token) }
         case let .repair(token):
             Task { try? await repair(token: token) }
         case let .repairAndReinstall(token):

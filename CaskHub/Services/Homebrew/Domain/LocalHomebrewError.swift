@@ -175,8 +175,13 @@ extension LocalHomebrewError {
             if failure.kind == .permissionDenied {
                 return String(localized: .errorAppManagementDenied)
             }
+            if failure.kind == .fullDiskAccessRequired {
+                return String(localized: .errorFullDiskAccessRequired)
+            }
             if failure.kind == .strandedCaskroomApp {
-                return String(localized: .errorStaleUpgradeRecord)
+                return args.first == "uninstall"
+                    ? String(localized: .errorStrandedUninstall)
+                    : String(localized: .errorStaleUpgradeRecord)
             }
             if failure.kind == .adoptVersionMismatch {
                 return String(localized: .errorAdoptVersionMismatch)

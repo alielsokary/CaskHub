@@ -1265,6 +1265,78 @@
         }
       }
     },
+    "alert.uninstall.fullDiskAccess" : {
+      "comment" : "Uninstall confirmation when app data cleanup is on but CaskHub lacks Full Disk Access",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removing app data needs Full Disk Access, which CaskHub doesn't have. You can grant it in System Settings, or uninstall now and keep the app's data."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для удаления данных приложения нужен полный доступ к диску, а у CaskHub его нет. Вы можете предоставить его в Системных настройках или удалить приложение сейчас, сохранив его данные."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для видалення даних програми потрібен повний доступ до диска, а CaskHub його не має. Ви можете надати його в Системних параметрах або видалити програму зараз, зберігши її дані."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除应用数据需要完全磁盘访问权限，而 CaskHub 尚未获得该权限。你可以在系统设置中授予权限，或立即卸载并保留该应用的数据。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除 App 資料需要完全取用磁碟的權限，而 CaskHub 尚未取得該權限。你可以在系統設定中授予權限，或立即解除安裝並保留該 App 的資料。"
+          }
+        }
+      }
+    },
+    "alert.uninstall.keepData" : {
+      "comment" : "Button that uninstalls an app while keeping its data",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall Without Removing Data"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить без удаления данных"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити без видалення даних"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载但保留数据"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解除安裝但保留資料"
+          }
+        }
+      }
+    },
     "alert.uninstall.zap" : {
       "comment" : "Uninstall confirmation when app data cleanup is enabled",
       "extractionState" : "manual",
@@ -3861,6 +3933,42 @@
         }
       }
     },
+    "error.fullDiskAccessRequired" : {
+      "comment" : "Error when Homebrew cannot remove app data without Full Disk Access",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew couldn't remove this app's data because CaskHub doesn't have Full Disk Access. The app itself may already be removed. Force Uninstall finishes the uninstall and keeps the data. To remove data next time, enable CaskHub under System Settings → Privacy & Security → Full Disk Access."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew не удалось удалить данные этого приложения, так как у CaskHub нет полного доступа к диску. Само приложение, возможно, уже удалено. «Force Uninstall» завершит удаление и сохранит данные. Чтобы в следующий раз удалять данные, включите CaskHub в Системных настройках → Конфиденциальность и безопасность → Полный доступ к диску."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew не вдалося видалити дані цієї програми, оскільки CaskHub не має повного доступу до диска. Саму програму, можливо, уже видалено. «Force Uninstall» завершить видалення та збереже дані. Щоб наступного разу видаляти дані, увімкніть CaskHub у меню «Системні параметри» → «Конфіденційність і безпека» → «Повний доступ до диска»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "由于 CaskHub 没有完全磁盘访问权限，Homebrew 无法移除该应用的数据。应用本身可能已被移除。「Force Uninstall」会完成卸载并保留数据。若要在下次移除数据，请在「系统设置 → 隐私与安全性 → 完全磁盘访问权限」中启用 CaskHub。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "由於 CaskHub 沒有完全取用磁碟的權限，Homebrew 無法移除該 App 的資料。App 本身可能已被移除。「Force Uninstall」會完成解除安裝並保留資料。若要在下次移除資料，請在「系統設定 → 隱私權與安全性 → 完全取用磁碟」中啟用 CaskHub。"
+          }
+        }
+      }
+    },
     "error.staleUpgradeRecord" : {
       "comment" : "Error when a stranded old app copy blocks every upgrade",
       "extractionState" : "manual",
@@ -3893,6 +4001,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上一次更新在 Homebrew 的記錄中殘留了該 App 的舊副本，在清除之前 Homebrew 會拒絕所有升級。「修復」會移除殘留副本並重新全新安裝——你的設定和資料會被保留。"
+          }
+        }
+      }
+    },
+    "error.strandedUninstall" : {
+      "comment" : "Error when a stranded app copy blocks an uninstall",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An earlier operation stopped partway and left a copy of the app inside Homebrew's records, so Homebrew can't uninstall it. Force Uninstall clears the leftover copy and completes the uninstall."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущая операция прервалась и оставила копию приложения в записях Homebrew, поэтому Homebrew не может его удалить. «Force Uninstall» удалит оставшуюся копию и завершит удаление."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередня операція перервалася й залишила копію програми в записах Homebrew, тому Homebrew не може її видалити. «Force Uninstall» видалить залишкову копію та завершить видалення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "之前的操作中途停止，在 Homebrew 的记录中残留了该应用的副本，因此 Homebrew 无法将其卸载。「Force Uninstall」会清除残留副本并完成卸载。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先前的操作中途停止，在 Homebrew 的記錄中殘留了該 App 的副本，因此 Homebrew 無法將其解除安裝。「Force Uninstall」會清除殘留副本並完成解除安裝。"
           }
         }
       }
@@ -4005,6 +4149,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "formulae.brew.sh 返回 HTTP %lld。"
+          }
+        }
+      }
+    },
+    "Full Disk Access" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Полный доступ к диску"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повний доступ до диска"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全磁盘访问权限"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全取用磁碟"
           }
         }
       }
@@ -10546,6 +10718,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "接管或更新那些會修改 App 套件的 Cask 時需要此權限（否則 macOS 會阻止 CaskHub 修改其他 App）。請在「系統設定 → 隱私權與安全性 → App 管理」中啟用 CaskHub。"
+          }
+        }
+      }
+    },
+    "settings.fullDiskAccess.description" : {
+      "comment" : "Settings footnote explaining the Full Disk Access permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needed only to remove app data on uninstall. Without it, CaskHub uninstalls the app and keeps its data. Enable CaskHub under System Settings → Privacy & Security → Full Disk Access. Full Disk Access also covers App Management."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Требуется только для удаления данных приложений при деинсталляции. Без него CaskHub удаляет приложение, но сохраняет его данные. Включите CaskHub в Системных настройках → Конфиденциальность и безопасность → Полный доступ к диску. Полный доступ к диску также включает управление приложениями."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрібно лише для видалення даних програм під час видалення. Без нього CaskHub видаляє програму, але зберігає її дані. Увімкніть CaskHub у меню «Системні параметри» → «Конфіденційність і безпека» → «Повний доступ до диска». Повний доступ до диска також охоплює керування програмами."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅在卸载时移除应用数据才需要此权限。没有此权限时，CaskHub 会卸载应用并保留其数据。请在「系统设置 → 隐私与安全性 → 完全磁盘访问权限」中启用 CaskHub。完全磁盘访问权限也包含 App 管理权限。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅在解除安裝時移除 App 資料才需要此權限。沒有此權限時，CaskHub 會解除安裝 App 並保留其資料。請在「系統設定 → 隱私權與安全性 → 完全取用磁碟」中啟用 CaskHub。完全取用磁碟也包含 App 管理權限。"
           }
         }
       }

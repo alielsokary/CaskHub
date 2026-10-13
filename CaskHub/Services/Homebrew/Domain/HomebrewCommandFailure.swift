@@ -31,6 +31,7 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case downloadFailed = "download-failed"
     case exitNonzeroAfterSuccess = "exit-nonzero-after-success"
     case filesystemPermissionDenied = "filesystem-permission-denied"
+    case fullDiskAccessRequired = "full-disk-access-required"
     case homebrewNotWritable = "homebrew-not-writable"
     case homebrewRuntimeIncompatible = "homebrew-runtime-incompatible"
     case incompatibleBrewPath = "incompatible-brew-path"
@@ -225,6 +226,7 @@ nonisolated extension HomebrewCommandFailure {
     ) -> HomebrewFailureKind? {
         if isAppManagementDenial(diagnostic) { return .permissionDenied }
         return firstMatch(in: text, [
+            Match(fragments: ["please enable full disk access"], kind: .fullDiskAccessRequired),
             Match(
                 fragments: ["sorry, you are not allowed to preserve the environment"],
                 kind: .sudoPolicyDenied

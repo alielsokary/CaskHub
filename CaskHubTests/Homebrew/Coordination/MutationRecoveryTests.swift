@@ -40,7 +40,7 @@ final class MutationRecoveryTests: XCTestCase {
         },
         brewVersionProvider: @escaping () async -> String? = { "test" }
     ) -> LocalHomebrewService {
-        LocalHomebrewService(defaults: defaults) {
+        let service = LocalHomebrewService(defaults: defaults) {
             $0.fileManager = fileManager
             $0.applicationDirectories = [
                 root.appendingPathComponent("Applications")
@@ -53,6 +53,8 @@ final class MutationRecoveryTests: XCTestCase {
             $0.askpassProvider = askpassProvider
             if let scanner { $0.softwareScanner = scanner }
         }
+        service.fullDiskAccessProbe = { .granted }
+        return service
     }
 
     func test_repair_reinstalls_when_uninstall_returns_nonzero_after_removing_cask() async throws {

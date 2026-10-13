@@ -33,6 +33,9 @@ final class LocalHomebrewService {
         @Sendable (URL?) -> AppManagementPermission.Assessment
         = { AppManagementPermission.assess(target: $0) }
 
+    @ObservationIgnored var fullDiskAccessProbe: @Sendable () -> FullDiskAccessPermission.Status
+        = { FullDiskAccessPermission.probe() }
+
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
     @ObservationIgnored private let notificationCenter: NotificationCenter
 

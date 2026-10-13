@@ -192,6 +192,43 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
     }
 
+    func test_interrupted_uninstall_offers_force_uninstall_instead_of_reinstalling() {
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["uninstall", "--cask", "obsidian"],
+            exitCode: 1,
+            stderr: "Error: It seems there is already an App at '/opt/homebrew/Caskroom/obsidian/1.14.4/Obsidian.app'."
+        )
+
+        let presentation = CaskOperationFailureFactory.make(from: error, strandedCopyExists: true)
+
+        XCTAssertEqual(error.commandFailure?.kind, .strandedCaskroomApp)
+        XCTAssertEqual(presentation.recoveries, [.forceUninstall])
+        XCTAssertTrue(presentation.message.contains("Force Uninstall"))
+        XCTAssertFalse(presentation.message.contains("upgrade"))
+    }
+
+    func test_zap_blocked_by_full_disk_access_is_classified_and_can_finish_without_data_removal() {
+        let error = LocalHomebrewError.brewCommandFailed(
+            args: ["uninstall", "--cask", "obsidian", "--zap"],
+            exitCode: 1,
+            stderr: """
+            ==> Backing up App 'Obsidian.app' to '/opt/homebrew/Caskroom/obsidian/1.14.4/Obsidian.app'
+            ==> Removing App '/Applications/Obsidian.app'
+            ==> Dispatching zap stanza
+            Error: Unable to remove some files. Please enable Full Disk Access for your terminal under \
+            System Settings → Privacy & Security → Full Disk Access.
+            """
+        )
+
+        let presentation = CaskOperationFailureFactory.make(from: error, strandedCopyExists: true)
+
+        XCTAssertEqual(error.commandFailure?.kind.rawValue, "full-disk-access-required")
+        XCTAssertNil(error.commandFailure?.diagnosticBucket)
+        XCTAssertEqual(presentation.recoveries, [.forceUninstall, .openFullDiskAccessSettings])
+        XCTAssertTrue(presentation.message.contains("CaskHub"))
+        XCTAssertFalse(presentation.message.contains("your terminal"))
+    }
+
     func test_xcode_license_failure_has_specific_guidance_without_reinstall_recovery() {
         let diagnostic = "Error: You have not agreed to the Xcode license. Please resolve this by running:\n"
             + "  sudo xcodebuild -license accept"
