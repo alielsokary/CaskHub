@@ -3,12 +3,26 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.9.2</title>
-            <pubDate>Fri, 09 Oct 2026 11:27:05 +0000</pubDate>
-            <sparkle:version>838</sparkle:version>
-            <sparkle:shortVersionString>0.9.2</sparkle:shortVersionString>
+            <title>0.9.3</title>
+            <pubDate>Tue, 13 Oct 2026 08:25:30 +0000</pubDate>
+            <sparkle:version>851</sparkle:version>
+            <sparkle:shortVersionString>0.9.3</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## 0.9.2
+            <description sparkle:format="markdown"><![CDATA[## 0.9.3
+
+### Improvements
+
+- Added a Full Disk Access row to Settings, General, Permissions
+- Improved the Uninstall confirmation to explain when app data cannot be removed without Full Disk Access, with an option to uninstall and keep the data
+- Added the terminal icon for more command-line tools
+
+### Bug Fixes
+
+- Fixed uninstalls leaving apps half-removed when Remove app data on uninstall is on and CaskHub does not have Full Disk Access
+- Fixed half-uninstalled apps offering Repair & Reinstall instead of finishing the uninstall
+- Fixed the welcome screen not letting you pick Light or Dark
+
+## 0.9.2
 
 ### Bug Fixes
 
@@ -66,24 +80,8 @@
 - Fixed an unaccepted Xcode license during upgrade showing as an unknown failure, now explained with next steps
 - Fixed the sidebar logo sitting too close to the top on macOS 27
 
-## 0.8.2
-
-### What's New
-
-- Added a text size slider in Settings → Appearance for Standard, 110%, and 120% text across the catalog and sidebar
-- Added an optional Remove app data on uninstall setting that runs Homebrew's `--zap` to also clear the preferences, caches, and support files a cask lists
-
-### Improvements
-
-- Catalog cards and lists keep readable widths in smaller windows, and toolbar filters wrap onto a second row when space runs out
-
-### Bug Fixes
-
-- Fixed the window being forced off-screen on scaled displays by lowering the minimum window size
-- Fixed apps that share a name, such as Element or Motion, being offered for the wrong cask by matching a verified bundle identity
-
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.9.2/CaskHub-0.9.2.zip" length="7873550" type="application/octet-stream" sparkle:edSignature="rJKayx3pu13q9j4iV2EgFAZUwWLTrvYGGjgPAC30hRnmajkWEJCA2hrthT5WlytduJ2CZEi4kVWI0alVFNvhBQ=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.9.3/CaskHub-0.9.3.zip" length="7896081" type="application/octet-stream" sparkle:edSignature="/dE1hPJPz/qStMVNLK2z0xTPi0d0cjKlrDNOCuinw4N1L0asNr5a5JGfOTl56+geYJvw+mCWn2K9JkWRMZbpCg=="/>
         </item>
     </channel>
 </rss>

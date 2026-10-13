@@ -5,6 +5,20 @@ release body, and the five most recent entries become the Sparkle update dialog
 notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.9.3 — 2026-10-13
+
+### Improvements
+
+- Added a Full Disk Access row to Settings, General, Permissions
+- Improved the Uninstall confirmation to explain when app data cannot be removed without Full Disk Access, with an option to uninstall and keep the data
+- Added the terminal icon for more command-line tools
+
+### Bug Fixes
+
+- Fixed uninstalls leaving apps half-removed when Remove app data on uninstall is on and CaskHub does not have Full Disk Access
+- Fixed half-uninstalled apps offering Repair & Reinstall instead of finishing the uninstall
+- Fixed the welcome screen not letting you pick Light or Dark
+
 ## 0.9.2 — 2026-10-09
 
 ### Bug Fixes

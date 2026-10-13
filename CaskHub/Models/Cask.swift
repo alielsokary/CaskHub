@@ -221,6 +221,8 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     var catalogPackageCandidates: [PackageApplicationIdentity]?
     /// Reviewed product association: nil is unreviewed; empty requires Homebrew registration.
     var catalogPackageProducts: [PackageApplicationIdentity]?
+    /// CaskFlow-curated: a command-line tool that Homebrew ships as an app or package.
+    var catalogIsCLI: Bool?
 
     var storeAppNames: [String] {
         catalogPackageProducts?.map(\.bundleName) ?? (appArtifactNames + packageAppNameCandidates)
@@ -284,9 +286,11 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     }
 
     var isCLI: Bool {
+        if catalogIsCLI == true { return true }
         guard let artifacts, !artifacts.isEmpty else { return false }
+        let cliKeys: Set = ["binary", "stageOnly", "stage_only", "commandWrapper", "command_wrapper"]
         return appArtifactNames.isEmpty
-            && artifacts.contains { !$0.keys.isDisjoint(with: ["binary", "stageOnly", "stage_only"]) }
+            && artifacts.contains { !$0.keys.isDisjoint(with: cliKeys) }
             && !artifacts.contains { !$0.keys.isDisjoint(with: ["app", "suite", "pkg"]) }
     }
 

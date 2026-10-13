@@ -8,6 +8,7 @@
 @testable import CaskHub
 import Foundation
 import Sentry
+import Synchronization
 import XCTest
 
 // MARK: - Mock API
@@ -264,7 +265,55 @@ func makeScratchDefaults(_ name: String = #function) -> UserDefaults {
     let suite = "test.\(name)"
     let defaults = UserDefaults(suiteName: suite)!
     defaults.removePersistentDomain(forName: suite)
+    ScratchDefaults.shared.track(suite)
     return defaults
+}
+
+/// cfprefsd rewrites a suite's plist when the test process exits, so the file can only be
+/// deleted afterwards: each process records the suites it creates and a later run removes them.
+final class ScratchDefaults: Sendable {
+    static let shared = ScratchDefaults()
+
+    let manifest: URL
+    private let handle: Mutex<FileHandle?>
+
+    private init() {
+        let manifests = FileManager.default.temporaryDirectory
+            .appendingPathComponent("caskhub-scratch-defaults")
+        Self.sweep(
+            manifests: manifests,
+            preferences: URL(fileURLWithPath: NSHomeDirectory())
+                .appendingPathComponent("Library/Preferences"),
+            isRunning: { kill($0, 0) == 0 }
+        )
+        try? FileManager.default.createDirectory(at: manifests, withIntermediateDirectories: true)
+        manifest = manifests.appendingPathComponent("\(getpid()).txt")
+        FileManager.default.createFile(atPath: manifest.path, contents: nil)
+        handle = Mutex(try? FileHandle(forWritingTo: manifest))
+    }
+
+    func track(_ suite: String) {
+        handle.withLock { try? $0?.write(contentsOf: Data("\(suite)\n".utf8)) }
+    }
+
+    /// Manifests are named after the process that wrote them; one still running is left alone.
+    static func sweep(manifests: URL, preferences: URL, isRunning: (pid_t) -> Bool) {
+        let files = (try? FileManager.default.contentsOfDirectory(
+            at: manifests, includingPropertiesForKeys: nil
+        )) ?? []
+        for file in files {
+            guard let process = pid_t(file.deletingPathExtension().lastPathComponent),
+                  !isRunning(process),
+                  let suites = try? String(contentsOf: file, encoding: .utf8)
+            else { continue }
+            for suite in suites.split(separator: "\n") {
+                try? FileManager.default.removeItem(
+                    at: preferences.appendingPathComponent("\(suite).plist")
+                )
+            }
+            try? FileManager.default.removeItem(at: file)
+        }
+    }
 }
 
 @MainActor

@@ -97,7 +97,7 @@ final class ImageCacheService {
 
     private func loadUncachedImage(for cask: Cask, generation: UInt64) async -> NSImage? {
         let token = cask.token
-        let inManifest = iconHashes.map { $0[token] != nil } ?? knownIconTokens()?.contains(token) ?? true
+        let inManifest = isInManifest(token)
         if cask.isCLI, !inManifest {
             return nil
         }
@@ -206,10 +206,15 @@ final class ImageCacheService {
 
     private static let cliIconCutover = Date(timeIntervalSince1970: 1_783_598_400)
 
+    private func isInManifest(_ token: String) -> Bool {
+        iconHashes.map { $0[token] != nil } ?? knownIconTokens()?.contains(token) ?? true
+    }
+
     private func purgeStaleCLIIcon(token: String) async {
+        // An icon the manifest no longer lists was unpublished, whatever its age.
         guard await diskCache.purgeStaleCLIIcon(
             token: token,
-            before: Self.cliIconCutover
+            before: isInManifest(token) ? Self.cliIconCutover : .distantFuture
         ) else { return }
         let urlCache = session.configuration.urlCache ?? .shared
         for url in CaskIconURL.caskFlowIconURLs(for: token) {

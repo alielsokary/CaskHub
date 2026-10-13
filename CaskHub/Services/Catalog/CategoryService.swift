@@ -52,6 +52,7 @@ nonisolated struct CaskCategoryData: Decodable {
     /// Manifest of tokens with an icon on the CaskFlow icons branch, stamped
     /// into the release asset. Absent in pre-2026.07 data → nil.
     let iconTokens: [String]?
+    var cliTokens: [String]?
     // Optional for releases predating app identity metadata.
     var appIdentities: [String: [CaskAppIdentity]]?
     var packageAppCandidates: [String: [PackageApplicationIdentity]]?
@@ -68,6 +69,7 @@ final class CategoryService {
     private(set) var generatedDate: String = ""
     private(set) var releaseTag: String?
     private(set) var iconTokens: Set<String>?
+    private(set) var cliTokens: Set<String> = []
     private(set) var appIdentities: [String: [CaskAppIdentity]] = [:]
     private(set) var packageAppCandidates: [String: [PackageApplicationIdentity]] = [:]
     private(set) var packageProductIdentities: [String: [PackageApplicationIdentity]] = [:]
@@ -117,6 +119,7 @@ final class CategoryService {
     func addingAppIdentities(to casks: [Cask]) -> [Cask] {
         casks.map { cask in
             var enriched = cask
+            enriched.catalogIsCLI = cliTokens.contains(cask.token)
             let identities = (appIdentities[cask.token] ?? []).filter {
                 $0.bundleIdentifier.range(
                     of: #"\A[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\z"#, options: .regularExpression
@@ -160,6 +163,7 @@ final class CategoryService {
         generatedDate = catalog.generatedDate
         releaseTag = catalog.releaseTag
         iconTokens = catalog.iconTokens.map(Set.init)
+        cliTokens = Set(catalog.cliTokens ?? [])
         if let identities = catalog.appIdentities { appIdentities = identities }
         // Missing candidate metadata revokes prior conditional evidence.
         packageAppCandidates = catalog.packageAppCandidates ?? [:]

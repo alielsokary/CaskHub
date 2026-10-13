@@ -111,4 +111,53 @@ final class LaunchCardTests: XCTestCase {
             }
         }
     }
+
+    func test_welcome_look_page_offers_the_match_system_toggle_without_scrolling() throws {
+        let style = AppStyle.current
+        defer { AppStyle.current = style }
+        let suite = "welcome-look-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        for style in AppStyle.allCases {
+            for theme in AppTheme.allCases {
+                AppStyle.current = style
+                defaults.set(theme.rawValue, forKey: "appTheme")
+                let host = NSHostingView(rootView: WelcomeCardView(page: .look).defaultAppStorage(defaults))
+                host.frame = NSRect(x: 0, y: 0, width: 600, height: 480)
+                host.layoutSubtreeIfNeeded()
+
+                let switches = host.descendants(of: NSSwitch.self)
+                XCTAssertEqual(switches.count, 3, "two privacy switches plus match system, \(style) \(theme)")
+                XCTAssertTrue(host.descendants(of: NSScrollView.self).isEmpty, "\(style) \(theme)")
+            }
+        }
+    }
+
+    func test_welcome_match_system_toggle_pins_and_releases_the_mode() throws {
+        let suite = "welcome-look-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(AppTheme.light.rawValue, forKey: "appTheme")
+
+        let host = NSHostingView(rootView: WelcomeCardView(page: .look).defaultAppStorage(defaults))
+        host.frame = NSRect(x: 0, y: 0, width: 600, height: 480)
+        host.layoutSubtreeIfNeeded()
+        let off = host.descendants(of: NSSwitch.self).filter { $0.state == .off }
+        let toggle = try XCTUnwrap(off.first)
+        XCTAssertEqual(off.count, 1)
+
+        toggle.performClick(nil)
+        XCTAssertEqual(defaults.string(forKey: "appTheme"), AppTheme.system.rawValue)
+
+        host.layoutSubtreeIfNeeded()
+        toggle.performClick(nil)
+        XCTAssertTrue([AppTheme.light, .dark].map(\.rawValue).contains(defaults.string(forKey: "appTheme")))
+    }
+}
+
+private extension NSView {
+    func descendants<T: NSView>(of type: T.Type) -> [T] {
+        subviews.flatMap { [$0 as? T].compactMap(\.self) + $0.descendants(of: type) }
+    }
 }

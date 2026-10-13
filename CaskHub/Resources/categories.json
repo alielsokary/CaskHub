@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-10-08",
-  "totalCasks": 4012,
+  "generatedDate": "2026-10-13",
+  "totalCasks": 4005,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -506,10 +506,6 @@
       "primary": "developerTools",
       "secondary": []
     },
-    "aladin": {
-      "primary": "scienceEducation",
-      "secondary": []
-    },
     "alcom": {
       "primary": "developerTools",
       "secondary": []
@@ -676,10 +672,6 @@
       "secondary": [
         "ai"
       ]
-    },
-    "ampps": {
-      "primary": "developerTools",
-      "secondary": []
     },
     "anaconda": {
       "primary": "scienceEducation",
@@ -1012,6 +1004,13 @@
     "arq-cloud-backup": {
       "primary": "cloudStorage",
       "secondary": []
+    },
+    "artcraft": {
+      "primary": "videoMedia",
+      "secondary": [
+        "ai",
+        "designGraphics"
+      ]
     },
     "artisan": {
       "primary": "designGraphics",
@@ -1521,6 +1520,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "betteraudio": {
+      "primary": "audioMusic",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "bettercapture": {
       "primary": "videoMedia",
       "secondary": [
@@ -1940,10 +1945,6 @@
       "primary": "designGraphics",
       "secondary": []
     },
-    "brooklyn": {
-      "primary": "screensaverWallpaper",
-      "secondary": []
-    },
     "browser-actions": {
       "primary": "utilities",
       "secondary": []
@@ -2060,6 +2061,12 @@
     "cad-assistant": {
       "primary": "designGraphics",
       "secondary": []
+    },
+    "cadcraft": {
+      "primary": "designGraphics",
+      "secondary": [
+        "developerTools"
+      ]
     },
     "cadran": {
       "primary": "screensaverWallpaper",
@@ -2476,10 +2483,6 @@
       "primary": "other",
       "secondary": []
     },
-    "cinder": {
-      "primary": "developerTools",
-      "secondary": []
-    },
     "cinderella": {
       "primary": "scienceEducation",
       "secondary": []
@@ -2588,6 +2591,13 @@
     "claudebar": {
       "primary": "menuBar",
       "secondary": [
+        "ai"
+      ]
+    },
+    "claudoscope": {
+      "primary": "menuBar",
+      "secondary": [
+        "developerTools",
         "ai"
       ]
     },
@@ -2938,10 +2948,6 @@
       "primary": "other",
       "secondary": []
     },
-    "colorpicker-materialdesign": {
-      "primary": "designGraphics",
-      "secondary": []
-    },
     "colorpicker-propicker": {
       "primary": "designGraphics",
       "secondary": []
@@ -3212,6 +3218,16 @@
     },
     "crescendo": {
       "primary": "developerTools",
+      "secondary": []
+    },
+    "crest": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
+    },
+    "crest-browser": {
+      "primary": "browsers",
       "secondary": []
     },
     "crisp": {
@@ -3562,6 +3578,12 @@
       "primary": "browsers",
       "secondary": []
     },
+    "deckcraft": {
+      "primary": "officeTools",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "deckset": {
       "primary": "productivity",
       "secondary": []
@@ -3637,6 +3659,12 @@
         "ai"
       ]
     },
+    "designcraft": {
+      "primary": "designGraphics",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "deskpad": {
       "primary": "utilities",
       "secondary": []
@@ -3670,10 +3698,6 @@
       "secondary": [
         "utilities"
       ]
-    },
-    "developerexcuses": {
-      "primary": "screensaverWallpaper",
-      "secondary": []
     },
     "deviceshelf": {
       "primary": "securityPrivacy",
@@ -4199,10 +4223,6 @@
       "primary": "games",
       "secondary": []
     },
-    "dwarf-fortress-lmp": {
-      "primary": "games",
-      "secondary": []
-    },
     "dwellclick": {
       "primary": "utilities",
       "secondary": [
@@ -4349,6 +4369,12 @@
       "primary": "designGraphics",
       "secondary": [
         "videoMedia"
+      ]
+    },
+    "effectcraft": {
+      "primary": "videoMedia",
+      "secondary": [
+        "designGraphics"
       ]
     },
     "egnyte": {
@@ -4535,10 +4561,6 @@
       "primary": "audioMusic",
       "secondary": []
     },
-    "enigma-game": {
-      "primary": "games",
-      "secondary": []
-    },
     "enpass": {
       "primary": "securityPrivacy",
       "secondary": []
@@ -4581,10 +4603,6 @@
     },
     "epoccam": {
       "primary": "videoMedia",
-      "secondary": []
-    },
-    "epoch-flip-clock": {
-      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "epson-print-layout": {
@@ -4957,6 +4975,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "filmcraft": {
+      "primary": "videoMedia",
+      "secondary": [
+        "developerTools"
+      ]
+    },
     "filo": {
       "primary": "communication",
       "secondary": [
@@ -5187,10 +5211,6 @@
       "primary": "utilities",
       "secondary": []
     },
-    "fmail": {
-      "primary": "communication",
-      "secondary": []
-    },
     "fmail3": {
       "primary": "communication",
       "secondary": []
@@ -5305,6 +5325,12 @@
       "primary": "audioMusic",
       "secondary": []
     },
+    "forel": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "fork": {
       "primary": "developerTools",
       "secondary": []
@@ -5417,10 +5443,6 @@
     },
     "freeshow": {
       "primary": "productivity",
-      "secondary": []
-    },
-    "freesurfer": {
-      "primary": "scienceEducation",
       "secondary": []
     },
     "freetex": {
@@ -5646,6 +5668,12 @@
     "genesys-cloud": {
       "primary": "communication",
       "secondary": []
+    },
+    "genoffice": {
+      "primary": "officeTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "genymotion": {
       "primary": "developerTools",
@@ -5964,10 +5992,6 @@
       "primary": "utilities",
       "secondary": []
     },
-    "google-trends": {
-      "primary": "screensaverWallpaper",
-      "secondary": []
-    },
     "google-web-designer": {
       "primary": "designGraphics",
       "secondary": [
@@ -6099,9 +6123,11 @@
       "primary": "utilities",
       "secondary": []
     },
-    "grid-clock": {
-      "primary": "screensaverWallpaper",
-      "secondary": []
+    "gridcraft": {
+      "primary": "officeTools",
+      "secondary": [
+        "productivity"
+      ]
     },
     "grids": {
       "primary": "communication",
@@ -6908,10 +6934,6 @@
       "primary": "videoMedia",
       "secondary": []
     },
-    "isabelle": {
-      "primary": "scienceEducation",
-      "secondary": []
-    },
     "ishare": {
       "primary": "utilities",
       "secondary": []
@@ -7027,10 +7049,6 @@
       "primary": "audioMusic",
       "secondary": []
     },
-    "j": {
-      "primary": "scienceEducation",
-      "secondary": []
-    },
     "jabra-direct": {
       "primary": "utilities",
       "secondary": []
@@ -7049,10 +7067,6 @@
     },
     "jalview": {
       "primary": "scienceEducation",
-      "secondary": []
-    },
-    "jameica": {
-      "primary": "developerTools",
       "secondary": []
     },
     "jami": {
@@ -7600,10 +7614,6 @@
         "ai"
       ]
     },
-    "klayout": {
-      "primary": "designGraphics",
-      "secondary": []
-    },
     "klogg": {
       "primary": "utilities",
       "secondary": []
@@ -7984,6 +7994,12 @@
     "lightburn": {
       "primary": "other",
       "secondary": []
+    },
+    "lightcraft": {
+      "primary": "designGraphics",
+      "secondary": [
+        "utilities"
+      ]
     },
     "lightkey": {
       "primary": "audioMusic",
@@ -8592,10 +8608,6 @@
         "ai"
       ]
     },
-    "magicavoxel": {
-      "primary": "designGraphics",
-      "secondary": []
-    },
     "magicplot": {
       "primary": "scienceEducation",
       "secondary": []
@@ -8719,10 +8731,6 @@
       "secondary": [
         "utilities"
       ]
-    },
-    "markdown-service-tools": {
-      "primary": "productivity",
-      "secondary": []
     },
     "marked-app": {
       "primary": "productivity",
@@ -9210,10 +9218,6 @@
     },
     "mimestream": {
       "primary": "communication",
-      "secondary": []
-    },
-    "mindjet-mindmanager": {
-      "primary": "productivity",
       "secondary": []
     },
     "mindmac": {
@@ -10070,6 +10074,12 @@
       "primary": "communication",
       "secondary": []
     },
+    "nextdns-app": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "ngrok": {
       "primary": "developerTools",
       "secondary": []
@@ -10152,7 +10162,7 @@
       "secondary": []
     },
     "nordic-nrf-command-line-tools": {
-      "primary": "designGraphics",
+      "primary": "developerTools",
       "secondary": []
     },
     "nordlayer": {
@@ -10667,12 +10677,6 @@
         "videoMedia"
       ]
     },
-    "openforis-collect": {
-      "primary": "developerTools",
-      "secondary": [
-        "scienceEducation"
-      ]
-    },
     "openframeworks": {
       "primary": "developerTools",
       "secondary": []
@@ -11033,14 +11037,6 @@
       "primary": "utilities",
       "secondary": []
     },
-    "oxygen-xml-developer": {
-      "primary": "developerTools",
-      "secondary": []
-    },
-    "oxygen-xml-editor": {
-      "primary": "developerTools",
-      "secondary": []
-    },
     "p2p-kiwi": {
       "primary": "utilities",
       "secondary": []
@@ -11275,6 +11271,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "pdfcraft": {
+      "primary": "productivity",
+      "secondary": [
+        "securityPrivacy"
+      ]
+    },
     "pdfelement": {
       "primary": "productivity",
       "secondary": []
@@ -11422,6 +11424,10 @@
     },
     "phpstorm": {
       "primary": "developerTools",
+      "secondary": []
+    },
+    "phtv": {
+      "primary": "utilities",
       "secondary": []
     },
     "physics-101": {
@@ -12165,6 +12171,10 @@
       "primary": "securityPrivacy",
       "secondary": []
     },
+    "purge": {
+      "primary": "utilities",
+      "secondary": []
+    },
     "pxplay": {
       "primary": "games",
       "secondary": []
@@ -12305,10 +12315,6 @@
     },
     "quakenotch": {
       "primary": "utilities",
-      "secondary": []
-    },
-    "quakespasm": {
-      "primary": "games",
       "secondary": []
     },
     "quarkclouddrive": {
@@ -12697,10 +12703,6 @@
       "primary": "utilities",
       "secondary": []
     },
-    "renpy": {
-      "primary": "designGraphics",
-      "secondary": []
-    },
     "reolink": {
       "primary": "videoMedia",
       "secondary": [
@@ -12926,10 +12928,6 @@
         "ai"
       ]
     },
-    "rnnoise": {
-      "primary": "utilities",
-      "secondary": []
-    },
     "rnote": {
       "primary": "designGraphics",
       "secondary": []
@@ -13131,6 +13129,12 @@
     "sabnzbd": {
       "primary": "utilities",
       "secondary": []
+    },
+    "sacnview": {
+      "primary": "utilities",
+      "secondary": [
+        "developerTools"
+      ]
     },
     "saega": {
       "primary": "productivity",
@@ -13377,6 +13381,12 @@
     "secretive": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "secure-pipes": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
     },
     "securesafe": {
       "primary": "securityPrivacy",
@@ -13728,10 +13738,6 @@
     },
     "simple-web-server": {
       "primary": "developerTools",
-      "secondary": []
-    },
-    "simpleclock": {
-      "primary": "screensaverWallpaper",
       "secondary": []
     },
     "simpledemviewer": {
@@ -14112,6 +14118,12 @@
       "primary": "audioMusic",
       "secondary": []
     },
+    "sononym": {
+      "primary": "audioMusic",
+      "secondary": [
+        "ai"
+      ]
+    },
     "sonos": {
       "primary": "other",
       "secondary": []
@@ -14158,6 +14170,12 @@
     "soundanchor": {
       "primary": "audioMusic",
       "secondary": []
+    },
+    "soundcraft": {
+      "primary": "audioMusic",
+      "secondary": [
+        "developerTools"
+      ]
     },
     "soundsource": {
       "primary": "audioMusic",
@@ -15065,10 +15083,6 @@
       "primary": "financeCrypto",
       "secondary": []
     },
-    "tau": {
-      "primary": "developerTools",
-      "secondary": []
-    },
     "tauritavern": {
       "primary": "productivity",
       "secondary": [
@@ -15439,10 +15453,6 @@
       "primary": "financeCrypto",
       "secondary": []
     },
-    "tigerjython": {
-      "primary": "scienceEducation",
-      "secondary": []
-    },
     "tigervnc": {
       "primary": "utilities",
       "secondary": []
@@ -15554,6 +15564,12 @@
     "tmpdisk": {
       "primary": "utilities",
       "secondary": []
+    },
+    "tnas-pc": {
+      "primary": "cloudStorage",
+      "secondary": [
+        "utilities"
+      ]
     },
     "tng-digital-mini-program-studio": {
       "primary": "developerTools",
@@ -16267,6 +16283,10 @@
       "primary": "audioMusic",
       "secondary": []
     },
+    "vectorcraft": {
+      "primary": "designGraphics",
+      "secondary": []
+    },
     "veepn": {
       "primary": "securityPrivacy",
       "secondary": []
@@ -16801,10 +16821,6 @@
       "primary": "financeCrypto",
       "secondary": []
     },
-    "webviewscreensaver": {
-      "primary": "screensaverWallpaper",
-      "secondary": []
-    },
     "wechat": {
       "primary": "communication",
       "secondary": []
@@ -17067,6 +17083,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "wordcraft": {
+      "primary": "productivity",
+      "secondary": [
+        "officeTools"
+      ]
+    },
     "wordpresscom": {
       "primary": "productivity",
       "secondary": []
@@ -17182,10 +17204,6 @@
       "primary": "audioMusic",
       "secondary": []
     },
-    "xampp": {
-      "primary": "developerTools",
-      "secondary": []
-    },
     "xattred": {
       "primary": "developerTools",
       "secondary": []
@@ -17272,10 +17290,6 @@
     },
     "xnviewmp": {
       "primary": "designGraphics",
-      "secondary": []
-    },
-    "xonotic": {
-      "primary": "games",
       "secondary": []
     },
     "xppen-pentablet": {
@@ -18637,6 +18651,12 @@
         "bundleIdentifier": "cn.saltpi.app.AriaX"
       }
     ],
+    "artcraft": [
+      {
+        "bundleName": "ArtCraft.app",
+        "bundleIdentifier": "ai.artcraft.app"
+      }
+    ],
     "artisan": [
       {
         "bundleName": "Artisan.app",
@@ -19133,6 +19153,12 @@
       {
         "bundleName": "BetterAndBetter.app",
         "bundleIdentifier": "cn.better365.BetterAndBetter"
+      }
+    ],
+    "betteraudio": [
+      {
+        "bundleName": "BetterAudio.app",
+        "bundleIdentifier": "pro.betteraudio.BetterAudio"
       }
     ],
     "bettercapture": [
@@ -19777,6 +19803,12 @@
         "bundleIdentifier": "org.opencascade.cadassistant"
       }
     ],
+    "cadcraft": [
+      {
+        "bundleName": "CADCraft.app",
+        "bundleIdentifier": "ai.storyteller.cadcraft"
+      }
+    ],
     "cadran": [
       {
         "bundleName": "Cadran.app",
@@ -20303,6 +20335,12 @@
       {
         "bundleName": "ClaudeBar.app",
         "bundleIdentifier": "com.tddworks.claudebar"
+      }
+    ],
+    "claudoscope": [
+      {
+        "bundleName": "Claudoscope.app",
+        "bundleIdentifier": "com.claudoscope.app"
       }
     ],
     "clawd-on-desk": [
@@ -20989,6 +21027,18 @@
         "bundleIdentifier": "com.suprhackersteve.crescendo"
       }
     ],
+    "crest": [
+      {
+        "bundleName": "Crest.app",
+        "bundleIdentifier": "com.zack40x.crest"
+      }
+    ],
+    "crest-browser": [
+      {
+        "bundleName": "Crest.app",
+        "bundleIdentifier": "com.pauldavis.crest"
+      }
+    ],
     "crisp": [
       {
         "bundleName": "Crisp.app",
@@ -21397,6 +21447,12 @@
         "bundleIdentifier": "com.Decentr.Decentr"
       }
     ],
+    "deckcraft": [
+      {
+        "bundleName": "DeckCraft.app",
+        "bundleIdentifier": "ai.storyteller.deckcraft"
+      }
+    ],
     "deckset": [
       {
         "bundleName": "Deckset.app",
@@ -21485,6 +21541,12 @@
       {
         "bundleName": "Descript.app",
         "bundleIdentifier": "com.descript.beachcube"
+      }
+    ],
+    "designcraft": [
+      {
+        "bundleName": "DesignCraft.app",
+        "bundleIdentifier": "ai.storyteller.designcraft"
       }
     ],
     "deskpad": [
@@ -22241,6 +22303,12 @@
         "bundleIdentifier": "com.ies.orion"
       }
     ],
+    "effectcraft": [
+      {
+        "bundleName": "EffectCraft.app",
+        "bundleIdentifier": "ai.storyteller.effectcraft"
+      }
+    ],
     "egnyte": [
       {
         "bundleName": "Egnyte.app",
@@ -22413,6 +22481,16 @@
       {
         "bundleName": "Empoche.app",
         "bundleIdentifier": "com.empoche.app"
+      }
+    ],
+    "endnote": [
+      {
+        "bundleName": "EndNote 2025.app",
+        "bundleIdentifier": "com.ThomsonResearchSoft.EndNote"
+      },
+      {
+        "bundleName": "ENService.app",
+        "bundleIdentifier": "com.ThomsonResearchSoft.EndNote.ENService"
       }
     ],
     "energiza": [
@@ -22797,6 +22875,12 @@
       {
         "bundleName": "Filen.app",
         "bundleIdentifier": "io.filen.desktop"
+      }
+    ],
+    "filmcraft": [
+      {
+        "bundleName": "FilmCraft.app",
+        "bundleIdentifier": "ai.storyteller.filmcraft"
       }
     ],
     "filo": [
@@ -23213,6 +23297,12 @@
         "bundleIdentifier": "fm.overcast.forecast-encoder"
       }
     ],
+    "forel": [
+      {
+        "bundleName": "Forel.app",
+        "bundleIdentifier": "com.lab421.forel"
+      }
+    ],
     "fork": [
       {
         "bundleName": "Fork.app",
@@ -23583,6 +23673,12 @@
       {
         "bundleName": "Genesys Cloud.app",
         "bundleIdentifier": "com.inin.purecloud.directory"
+      }
+    ],
+    "genoffice": [
+      {
+        "bundleName": "GenOffice.app",
+        "bundleIdentifier": "com.genoffice.app"
       }
     ],
     "genymotion": [
@@ -24085,6 +24181,12 @@
       {
         "bundleName": "Grid.app",
         "bundleIdentifier": "app.macgrid.Grid"
+      }
+    ],
+    "gridcraft": [
+      {
+        "bundleName": "GridCraft.app",
+        "bundleIdentifier": "ai.storyteller.gridcraft"
       }
     ],
     "gridtracker2": [
@@ -24687,6 +24789,14 @@
         "bundleIdentifier": "com.colliderli.iina"
       }
     ],
+    "ik-product-manager": [
+      {
+        "bundleName": "IK Product Manager.app",
+        "bundleIdentifier": "com.ikmultimedia.productmanager",
+        "packageIdentifier": "com.ikmultimedia.productmanager",
+        "installedPath": "/Applications/IK Product Manager.app"
+      }
+    ],
     "iloader": [
       {
         "bundleName": "iloader.app",
@@ -24703,6 +24813,14 @@
       {
         "bundleName": "ImageOptim.app",
         "bundleIdentifier": "net.pornel.ImageOptim"
+      }
+    ],
+    "imaging-edge-webcam": [
+      {
+        "bundleName": "Imaging Edge Webcam.app",
+        "bundleIdentifier": "com.sony.imagingedge.iew",
+        "packageIdentifier": "com.sony.Webcam",
+        "installedPath": "/Applications/Imaging Edge Webcam.app"
       }
     ],
     "imazing": [
@@ -26229,6 +26347,12 @@
       {
         "bundleName": "LightBurn.app",
         "bundleIdentifier": "com.LightBurnSoftware.LightBurn"
+      }
+    ],
+    "lightcraft": [
+      {
+        "bundleName": "LightCraft.app",
+        "bundleIdentifier": "ai.storyteller.lightcraft"
       }
     ],
     "lightworks": [
@@ -28487,6 +28611,12 @@
         "bundleIdentifier": "com.nextcloud.talk.mac"
       }
     ],
+    "nextdns-app": [
+      {
+        "bundleName": "NextDNS.app",
+        "bundleIdentifier": "io.nextdns.NextDNSMac"
+      }
+    ],
     "nheko": [
       {
         "bundleName": "nheko.app",
@@ -29699,6 +29829,12 @@
         "bundleIdentifier": "com.witt-software.PDF-Squeezer"
       }
     ],
+    "pdfcraft": [
+      {
+        "bundleName": "PdfCraft.app",
+        "bundleIdentifier": "ai.storyteller.pdfcraft"
+      }
+    ],
     "pdfelement": [
       {
         "bundleName": "PDFelement.app",
@@ -29871,6 +30007,12 @@
       {
         "bundleName": "PhpStorm.app",
         "bundleIdentifier": "com.jetbrains.PhpStorm"
+      }
+    ],
+    "phtv": [
+      {
+        "bundleName": "PHTV.app",
+        "bundleIdentifier": "com.phamhungtien.phtv"
       }
     ],
     "physics-101": [
@@ -30711,6 +30853,12 @@
       {
         "bundleName": "PureMac.app",
         "bundleIdentifier": "com.puremac.app"
+      }
+    ],
+    "purge": [
+      {
+        "bundleName": "Purge.app",
+        "bundleIdentifier": "io.getpurge.app"
       }
     ],
     "pxplay": [
@@ -31797,6 +31945,12 @@
         "bundleIdentifier": "org.sabnzbd.sabnzbd"
       }
     ],
+    "sacnview": [
+      {
+        "bundleName": "sACNView.app",
+        "bundleIdentifier": "net.tomsteer.sacnview"
+      }
+    ],
     "saega": [
       {
         "bundleName": "Saega.app",
@@ -32089,6 +32243,12 @@
       {
         "bundleName": "Secretive.app",
         "bundleIdentifier": "com.maxgoedjen.Secretive.Host"
+      }
+    ],
+    "secure-pipes": [
+      {
+        "bundleName": "Secure Pipes.app",
+        "bundleIdentifier": "net.edgeservices.secure-pipes"
       }
     ],
     "securityspy": [
@@ -32863,6 +33023,12 @@
         "bundleIdentifier": "org.sonicvisualiser.SonicVisualiser"
       }
     ],
+    "sononym": [
+      {
+        "bundleName": "Sononym.app",
+        "bundleIdentifier": "com.sononym.sononym"
+      }
+    ],
     "sonos": [
       {
         "bundleName": "Sonos.app",
@@ -32909,6 +33075,12 @@
       {
         "bundleName": "SoundAnchor.app",
         "bundleIdentifier": "me.kopiro.soundanchor"
+      }
+    ],
+    "soundcraft": [
+      {
+        "bundleName": "SoundCraft.app",
+        "bundleIdentifier": "ai.storyteller.soundcraft"
       }
     ],
     "soundsource": [
@@ -34455,6 +34627,14 @@
         "bundleIdentifier": "com.imothee.TmpDisk"
       }
     ],
+    "tnas-pc": [
+      {
+        "bundleName": "TNAS PC.app",
+        "bundleIdentifier": "com.terramaster.tnaspc5",
+        "packageIdentifier": "com.terramaster.tnaspc6",
+        "installedPath": "/Applications/TNAS PC.app"
+      }
+    ],
     "tng-digital-mini-program-studio": [
       {
         "bundleName": "MiniProgramStudio.app",
@@ -35149,6 +35329,12 @@
       {
         "bundleName": "VCMI.app",
         "bundleIdentifier": "eu.vcmi.vcmi"
+      }
+    ],
+    "vectorcraft": [
+      {
+        "bundleName": "VectorCraft.app",
+        "bundleIdentifier": "ai.storyteller.vectorcraft"
       }
     ],
     "veepn": [
@@ -35997,6 +36183,12 @@
         "bundleIdentifier": "com.wooting.wootility"
       }
     ],
+    "wordcraft": [
+      {
+        "bundleName": "WordCraft.app",
+        "bundleIdentifier": "ai.storyteller.wordcraft"
+      }
+    ],
     "wordpresscom": [
       {
         "bundleName": "WordPress.com.app",
@@ -36620,8 +36812,17 @@
       }
     ]
   },
-  "metadataUpdatedAt": "2026-10-08T15:57:36.691098+00:00",
-  "releaseTag": "caskflow-v2026.10.08",
+  "metadataUpdatedAt": "2026-10-13T08:00:06.693251+00:00",
+  "releaseTag": "caskflow-v2026.10.13",
+  "cliTokens": [
+    "aptible",
+    "cleanmymac-cli",
+    "corelocationcli",
+    "desktoppr",
+    "diskspace",
+    "nordic-nrf-command-line-tools",
+    "segger-jlink"
+  ],
   "iconTokens": [
     "0-ad",
     "010-editor",
@@ -36662,6 +36863,7 @@
     "ace-studio",
     "acorn",
     "acreom",
+    "acronis-true-image",
     "activedock",
     "activitywatch",
     "actual",
@@ -36673,6 +36875,7 @@
     "adlock",
     "adobe-acrobat-pro",
     "adobe-acrobat-reader",
+    "adobe-creative-cloud",
     "adobe-creative-cloud-cleaner-tool",
     "adobe-digital-editions",
     "adobe-dng-converter",
@@ -36717,6 +36920,7 @@
     "airy",
     "akiflow",
     "aks-desktop",
+    "aladin",
     "alcom",
     "alcove",
     "aldente",
@@ -36796,6 +37000,7 @@
     "appcleaner",
     "appexindexer",
     "appflowy",
+    "appgate-sdp-client",
     "appgridmac",
     "applepi-baker",
     "applite",
@@ -36822,10 +37027,12 @@
     "arm-performix",
     "arq",
     "arq-cloud-backup",
+    "artcraft",
     "artisan",
     "arturia-software-center",
     "as-timer",
     "asana",
+    "asciidocfx",
     "aside",
     "asset-catalog-tinkerer",
     "astah-professional",
@@ -36845,6 +37052,7 @@
     "au-lab",
     "audacity",
     "audio-hijack",
+    "audio-modeling-software-center",
     "audiobook-builder",
     "audiocupcake",
     "audiorelay",
@@ -36857,6 +37065,7 @@
     "auto-tune-central",
     "autodesk-fusion",
     "autodmg",
+    "autofirma",
     "autogram",
     "automattic-texts",
     "autopkgr",
@@ -36930,6 +37139,7 @@
     "berrycast",
     "bespoke",
     "betterandbetter",
+    "betteraudio",
     "bettercapture",
     "bettercmdtab",
     "betterdisplay",
@@ -36942,9 +37152,11 @@
     "beyond-compare",
     "beyond-compare@4",
     "bezel",
+    "bias-fx",
     "bibdesk",
     "bifrost",
     "big-mean-folder-machine",
+    "biglybt",
     "bike",
     "bilibili",
     "billings-pro",
@@ -36982,6 +37194,7 @@
     "block-buzz",
     "block-goose",
     "blockbench",
+    "blockblock",
     "blockstream",
     "blocs",
     "blood-on-the-clocktower-online",
@@ -36997,6 +37210,7 @@
     "bluos-controller",
     "blurscreen",
     "bobhelper",
+    "boinc",
     "boltai",
     "bome-network",
     "bonjeff",
@@ -37055,6 +37269,7 @@
     "cables",
     "cacher",
     "cad-assistant",
+    "cadcraft",
     "cadran",
     "cadreader",
     "caffeine",
@@ -37165,6 +37380,7 @@
     "claude-devtools",
     "claude-status-bar",
     "claudebar",
+    "claudoscope",
     "clawd-on-desk",
     "cleanapp",
     "cleanclip",
@@ -37183,6 +37399,7 @@
     "clickup",
     "cline-app",
     "clion",
+    "clip-studio-paint",
     "clipaste",
     "clipbook",
     "clipgrab",
@@ -37212,6 +37429,7 @@
     "cocoarestclient",
     "coconutbattery",
     "coconutid",
+    "code-composer-studio",
     "codebolt",
     "codebuddy",
     "codebuddy-cn",
@@ -37266,7 +37484,6 @@
     "copyclip",
     "coq-platform",
     "core-tunnel",
-    "corelocationcli",
     "cork",
     "cornerstone",
     "corretto",
@@ -37280,10 +37497,13 @@
     "cpuinfo",
     "craft",
     "craft-agents",
+    "crashplan",
     "creality-print",
     "creality-slicer",
     "creative",
     "crescendo",
+    "crest",
+    "crest-browser",
     "crisp",
     "cro-mag-rally",
     "crossover",
@@ -37314,6 +37534,8 @@
     "daisydisk",
     "dana-dex",
     "dangerzone",
+    "dante-controller",
+    "dante-via",
     "darkmodebuddy",
     "daruma",
     "dash",
@@ -37339,6 +37561,7 @@
     "dbeaverultimate",
     "dbgate",
     "dbngin",
+    "dbschema",
     "dbvisualizer",
     "dbvr",
     "dbx",
@@ -37357,6 +37580,7 @@
     "ddpm",
     "deadbolt",
     "decentr",
+    "deckcraft",
     "deckset",
     "decrediton",
     "deepchat",
@@ -37372,11 +37596,11 @@
     "deltachat",
     "deltawalker",
     "descript",
+    "designcraft",
     "deskpad",
     "deskreen",
     "desktime",
     "desktop-composer",
-    "desktoppr",
     "desktoputility",
     "detectx-swift",
     "devcleaner",
@@ -37413,7 +37637,6 @@
     "disk-jockey",
     "diskboard",
     "diskcatalogmaker",
-    "diskspace",
     "displaperture",
     "display-pilot",
     "displaybuddy",
@@ -37455,6 +37678,7 @@
     "dotnet-runtime",
     "dotnet-sdk",
     "doubao",
+    "doubaoime",
     "doughnut",
     "douyin",
     "douyin-chat",
@@ -37523,6 +37747,7 @@
     "edrawmind",
     "eez-studio",
     "effect-house",
+    "effectcraft",
     "egnyte",
     "egovframedev",
     "eigent",
@@ -37560,6 +37785,7 @@
     "emdash",
     "emmetapp",
     "empoche",
+    "endnote",
     "energiza",
     "enfusegui",
     "engine-dj",
@@ -37628,6 +37854,7 @@
     "feedflow",
     "feishu",
     "fellow",
+    "fender-universal-control",
     "ferdium",
     "fetch-app",
     "ff-works",
@@ -37644,6 +37871,7 @@
     "filemonitor",
     "filen",
     "filepane",
+    "filmcraft",
     "filo",
     "final-fantasy-xiv-online",
     "finbar",
@@ -37726,6 +37954,7 @@
     "fontstand",
     "foobar2000",
     "forecast",
+    "forel",
     "fork",
     "forklift",
     "fotokasten",
@@ -37805,6 +38034,7 @@
     "general-software-fresh",
     "genesis-plus",
     "genesys-cloud",
+    "genoffice",
     "genymotion",
     "geoda",
     "geolibre",
@@ -37907,6 +38137,7 @@
     "greensignal",
     "gretl",
     "grid",
+    "gridcraft",
     "grids",
     "gridtracker2",
     "grok-bot",
@@ -37921,6 +38152,7 @@
     "ha-menu",
     "hackolade",
     "hagimimonitordirect",
+    "halion-sonic",
     "halloy",
     "hammerspoon",
     "hamrs-pro",
@@ -38027,9 +38259,12 @@
     "iexplorer",
     "igv-desktop",
     "iina",
+    "ik-product-manager",
     "iloader",
     "image2icon",
     "imageoptim",
+    "imaging-edge",
+    "imaging-edge-webcam",
     "imazing",
     "imazing-converter",
     "imazing-profile-editor",
@@ -38099,11 +38334,13 @@
     "itsycal",
     "itsypad",
     "itsytv",
+    "itunes-producer",
     "ivacy",
     "ivideonserver",
     "ivolume",
     "ivpn",
     "izip",
+    "izotope-product-portal",
     "j",
     "jabra-direct",
     "jabref",
@@ -38123,6 +38360,7 @@
     "jbrowse",
     "jclasslib-bytecode-viewer",
     "jdk-mission-control",
+    "jdownloader",
     "jedit-omega",
     "jellybeansoup-netflix",
     "jellyfin",
@@ -38206,6 +38444,7 @@
     "keycue",
     "keyecho",
     "keyguard",
+    "keyman",
     "keymanager",
     "keymapp",
     "keypad-layout",
@@ -38299,6 +38538,7 @@
     "libation",
     "libndi",
     "libreoffice",
+    "libreoffice-language-pack",
     "libreoffice-still",
     "librepcb",
     "librewolf",
@@ -38308,6 +38548,7 @@
     "lidanglesensor",
     "lifesize",
     "lightburn",
+    "lightcraft",
     "lightkey",
     "lightworks",
     "linear",
@@ -38486,6 +38727,7 @@
     "mathcha-notebook",
     "mathpix-snipping-tool",
     "mattermost",
+    "maxon",
     "mbed-studio",
     "mcloud",
     "mcpbundler",
@@ -38669,6 +38911,7 @@
     "mp3gain-express",
     "mp3tag",
     "mp4tools",
+    "mplabx-ide",
     "mpluginmanager",
     "mps",
     "mqttfx",
@@ -38769,6 +39012,7 @@
     "nexonplug",
     "nextcloud",
     "nextcloud-talk",
+    "nextdns-app",
     "nheko",
     "nifty",
     "nifty-file-lists",
@@ -38787,7 +39031,6 @@
     "nomachine",
     "nomachine-enterprise-client",
     "nook",
-    "nordic-nrf-command-line-tools",
     "nordlayer",
     "nordlocker",
     "nordpass",
@@ -38824,6 +39067,7 @@
     "nugget",
     "numi",
     "nuphyio",
+    "nutstore",
     "nvidia-geforce-now",
     "nvidia-nsight-compute",
     "nvidia-nsight-systems",
@@ -38916,7 +39160,9 @@
     "opensuperwhisper",
     "openttd",
     "openusage",
+    "openvanilla",
     "openvpn-connect",
+    "openwebstart",
     "openwhispr",
     "openwork",
     "openzfs",
@@ -38944,6 +39190,7 @@
     "osaurus",
     "oscar",
     "oscilloscope",
+    "osp-tracker",
     "osquery",
     "ossapp",
     "ossia-score",
@@ -38957,6 +39204,7 @@
     "outset",
     "overflow",
     "overlayed",
+    "oversight",
     "overt",
     "overtone-analyzer",
     "overview",
@@ -39023,6 +39271,7 @@
     "pdf-pals",
     "pdf-reader-pro",
     "pdf-squeezer",
+    "pdfcraft",
     "pdfelement",
     "pdfelement-express",
     "pdfextractor",
@@ -39055,6 +39304,7 @@
     "photosweeper-x",
     "photosync",
     "phpstorm",
+    "phtv",
     "physics-101",
     "pia",
     "pibar",
@@ -39172,6 +39422,7 @@
     "pritunl",
     "privacynotes",
     "privadovpn",
+    "private-internet-access",
     "privileges",
     "prizmo",
     "processing",
@@ -39186,6 +39437,7 @@
     "pronotes",
     "propresenter",
     "proscoreboard",
+    "prosys-opc-ua-browser",
     "protoio-overflow",
     "protokol",
     "proton-drive",
@@ -39215,6 +39467,7 @@
     "purei-play",
     "puremac",
     "purevpn",
+    "purge",
     "pxplay",
     "pycharm",
     "pycharm-oss",
@@ -39244,6 +39497,7 @@
     "qqnews",
     "qr-journal",
     "qspace-pro",
+    "qsync-client",
     "qt-creator",
     "quakenotch",
     "quakespasm",
@@ -39275,6 +39529,7 @@
     "rambox",
     "rancher",
     "random-mouse-clicker",
+    "ransomwhere",
     "rapidapi",
     "rapidweaver",
     "raspberry-pi-imager",
@@ -39314,6 +39569,7 @@
     "reflect",
     "reflector",
     "reflex-app",
+    "reikey",
     "rekordbox",
     "relay",
     "remanager",
@@ -39424,6 +39680,7 @@
     "rwts-pdfwriter",
     "sabaki",
     "sabnzbd",
+    "sacnview",
     "saega",
     "safari-technology-preview",
     "safe-exam-browser",
@@ -39482,10 +39739,10 @@
     "seamly2d",
     "second-life-viewer",
     "secretive",
+    "secure-pipes",
     "securityspy",
     "seekfast",
     "segger-embedded-studio",
-    "segger-jlink",
     "segger-ozone",
     "sejda-pdf",
     "selfcontrol",
@@ -39620,6 +39877,7 @@
     "snipaste",
     "snippety",
     "snowflake-snowsql",
+    "soapui",
     "socialstream",
     "sococo",
     "sodamusic",
@@ -39638,6 +39896,7 @@
     "sonic-pi",
     "sonic-visualiser",
     "sonobus",
+    "sononym",
     "sonos",
     "sonos-s1-controller",
     "sony-ps-remote-play",
@@ -39647,6 +39906,7 @@
     "sound-control",
     "sound-siphon",
     "soundanchor",
+    "soundcraft",
     "soundsource",
     "soundtoys",
     "sourcegit",
@@ -39673,6 +39933,9 @@
     "spike",
     "spires",
     "spitfire-audio",
+    "splashtop-business",
+    "splashtop-personal",
+    "splashtop-streamer",
     "splayer",
     "splice",
     "spline",
@@ -39897,6 +40160,7 @@
     "there",
     "thetimemachinemechanic",
     "thingsmacsandboxhelper",
+    "thinkorswim",
     "thinlinc-client",
     "thonny",
     "thor",
@@ -39945,6 +40209,7 @@
     "tldraw",
     "tm-error-logger",
     "tmpdisk",
+    "tnas-pc",
     "tng-digital-mini-program-studio",
     "to-audio-converter",
     "todoist-app",
@@ -39974,6 +40239,7 @@
     "tower",
     "tpvirtual",
     "tqsl",
+    "trader-workstation",
     "tradingview",
     "trae",
     "trae-cn",
@@ -40012,6 +40278,7 @@
     "tuple",
     "turbo-boost-switcher",
     "turbotax-2024",
+    "turbovnc-viewer",
     "tuta-mail",
     "tuxera-ntfs",
     "twake",
@@ -40083,11 +40350,13 @@
     "vamiga",
     "vanilla",
     "vapor-app",
+    "vb-cable",
     "vbrokers",
     "vcam",
     "vcamapp",
     "vcmi",
     "vcv-rack",
+    "vectorcraft",
     "veepn",
     "vellum",
     "veracrypt",
@@ -40174,6 +40443,7 @@
     "vsdx-annotator",
     "vsee",
     "vuescan",
+    "vuze",
     "vv",
     "vyprvpn",
     "vysor",
@@ -40197,6 +40467,7 @@
     "waveforms",
     "waves-central",
     "wch-ch34x-usb-serial-driver",
+    "wd-security",
     "wealthfolio",
     "weasis",
     "webcatalog",
@@ -40263,6 +40534,7 @@
     "wondershare-uniconverter",
     "wooshy",
     "wootility",
+    "wordcraft",
     "wordpresscom",
     "wordpresscom-studio",
     "wordservice",
@@ -40289,11 +40561,13 @@
     "x-air-edit",
     "x-swiftformat",
     "x32-edit",
+    "xampp",
     "xattred",
     "xbar",
     "xca",
     "xcodepilot",
     "xcodes-app",
+    "xctu",
     "xdeck",
     "xee",
     "xemu",
@@ -40468,12 +40742,72 @@
     "soundtoys": []
   },
   "packageAppCandidates": {
+    "acronis-true-image": [
+      {
+        "bundleName": "Acronis True Image.app",
+        "bundleIdentifier": "com.acronis.CyberProtectHomeOffice",
+        "packageIdentifier": "com.acronis.CyberProtectHomeOffice",
+        "installedPath": "/Applications/Acronis True Image.app"
+      }
+    ],
+    "appgate-sdp-client": [
+      {
+        "bundleName": "AppGate SDP.app",
+        "bundleIdentifier": "com.appgate.sdp",
+        "packageIdentifier": "com.appgate.pkg.appgatetun.component",
+        "installedPath": "/Applications/AppGate SDP.app"
+      }
+    ],
     "arq": [
       {
         "bundleName": "Arq.app",
         "bundleIdentifier": "com.haystacksoftware.Arq",
         "packageIdentifier": "com.haystacksoftware.Arq",
         "installedPath": "/Applications/Arq.app"
+      }
+    ],
+    "bias-fx": [
+      {
+        "bundleName": "BIAS FX 2.app",
+        "bundleIdentifier": "com.positivegrid.BiasFx2Standalone",
+        "packageIdentifier": "com.positivegrid.pkg.BIASFX2App",
+        "installedPath": "/Applications/BIAS FX 2.app"
+      }
+    ],
+    "crashplan": [
+      {
+        "bundleName": "CrashPlan.app",
+        "bundleIdentifier": "com.crashplan.desktop",
+        "packageIdentifier": "com.crashplan.app.pkg",
+        "installedPath": "/Applications/CrashPlan.app"
+      }
+    ],
+    "dante-controller": [
+      {
+        "bundleName": "Dante Controller.app",
+        "bundleIdentifier": "com.audinate.dante.DanteController",
+        "packageIdentifier": "com.audinate.dante.pkg.DanteController",
+        "installedPath": "/Applications/Dante Controller.app"
+      },
+      {
+        "bundleName": "Dante Updater.app",
+        "bundleIdentifier": "com.audinate.dante.DanteUpdater",
+        "packageIdentifier": "com.audinate.dante.pkg.DanteUpdater",
+        "installedPath": "/Applications/Dante Updater.app"
+      },
+      {
+        "bundleName": "Dante Activator.app",
+        "bundleIdentifier": "com.audinate.dante.DanteActivator",
+        "packageIdentifier": "com.audinate.dante.pkg.DanteActivator",
+        "installedPath": "/Applications/Dante Activator.app"
+      }
+    ],
+    "dante-via": [
+      {
+        "bundleName": "Dante Via.app",
+        "bundleIdentifier": "com.audinate.DanteViaApp",
+        "packageIdentifier": "com.audinate.dante.pkg.DanteVia",
+        "installedPath": "/Applications/Dante Via.app"
       }
     ],
     "displaylink": [
@@ -40490,6 +40824,22 @@
         "bundleIdentifier": "com.elgato.CameraHub",
         "packageIdentifier": "com.elgato.CameraHub.Installer",
         "installedPath": "/Applications/Camera Hub.app"
+      }
+    ],
+    "excire-foto": [
+      {
+        "bundleName": "Excire Foto.app",
+        "bundleIdentifier": "prc.excire.foto",
+        "packageIdentifier": "prc.excire.foto",
+        "installedPath": "/Applications/Excire Foto.app"
+      }
+    ],
+    "excire-search": [
+      {
+        "bundleName": "excire-search.app",
+        "bundleIdentifier": "de.excire.search",
+        "packageIdentifier": "de.excire.search",
+        "installedPath": "/Applications/Excire Search/excire-search.app"
       }
     ],
     "google-drive": [
@@ -40510,6 +40860,30 @@
         "bundleIdentifier": "com.google.drivefs.shortcuts.slides",
         "packageIdentifier": "com.google.drivefs.shortcuts",
         "installedPath": "/Applications/Google Slides.app"
+      }
+    ],
+    "halion-sonic": [
+      {
+        "bundleName": "HALion Sonic.app",
+        "bundleIdentifier": "com.steinberg.vst3.HALionSonicStandalone",
+        "packageIdentifier": "com.steinberg.vst3.HALionSonicStandalone.halionsonic",
+        "installedPath": "/Applications/HALion Sonic.app"
+      }
+    ],
+    "ilok-license-manager": [
+      {
+        "bundleName": "iLok License Manager.app",
+        "bundleIdentifier": "com.paceap.eden.iLokLicenseManager",
+        "packageIdentifier": "com.paceap.pkg.eden.iLokLicenseManager",
+        "installedPath": "/Applications/iLok License Manager.app"
+      }
+    ],
+    "imaging-edge": [
+      {
+        "bundleName": "Imaging Edge Desktop.app",
+        "bundleIdentifier": "com.sony.ImagingEdgeDesktop",
+        "packageIdentifier": "com.sony.ImagingEdgeDesktop.pkg",
+        "installedPath": "/Applications/Imaging Edge Desktop.app"
       }
     ],
     "intune-company-portal": [
@@ -40544,6 +40918,30 @@
         "installedPath": "/Applications/Pritunl.app"
       }
     ],
+    "splashtop-business": [
+      {
+        "bundleName": "Splashtop Business.app",
+        "bundleIdentifier": "com.splashtop.stb.macosx",
+        "packageIdentifier": "com.splashtop.stb.macosx",
+        "installedPath": "/Applications/Splashtop Business.app"
+      }
+    ],
+    "splashtop-personal": [
+      {
+        "bundleName": "Splashtop Personal.app",
+        "bundleIdentifier": "com.splashtop.stp.macosx",
+        "packageIdentifier": "com.splashtop.stp.macosx",
+        "installedPath": "/Applications/Splashtop Personal.app"
+      }
+    ],
+    "splashtop-streamer": [
+      {
+        "bundleName": "Splashtop Streamer.app",
+        "bundleIdentifier": "com.splashtop.Splashtop-Streamer",
+        "packageIdentifier": "com.splashtop.Splashtop-Streamer",
+        "installedPath": "/Applications/Splashtop Streamer.app"
+      }
+    ],
     "teamviewer": [
       {
         "bundleName": "TeamViewer.app",
@@ -40564,6 +40962,14 @@
         "bundleIdentifier": "com.codicesoftware.plasticscm.server",
         "packageIdentifier": "com.codicesoftware.plasticscm.server",
         "installedPath": "/Applications/PlasticSCMServer.app"
+      }
+    ],
+    "vb-cable": [
+      {
+        "bundleName": "VB-Cable Control Panel.app",
+        "bundleIdentifier": "com.vbaudio.vbcablecontrolpanel",
+        "packageIdentifier": "com.vbaudio.vbcable",
+        "installedPath": "/Applications/VB-Audio/VB-Cable Control Panel.app"
       }
     ],
     "virtualbox": [

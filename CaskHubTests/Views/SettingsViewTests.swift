@@ -289,9 +289,7 @@ final class SettingsViewTests: XCTestCase {
 
     @MainActor
     func test_style_resolution_keeps_upgraders_classic_and_starts_new_installs_native() throws {
-        let suite = "style-resolution-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
+        let defaults = makeScratchDefaults()
 
         XCTAssertEqual(AppStyle.resolveStored(in: defaults) { true }, .classic)
         XCTAssertEqual(defaults.string(forKey: AppStyle.storageKey), "classic")

@@ -19,15 +19,11 @@ struct AppearanceSettingsView: View {
     var body: some View {
         Form {
             Section {
-                AppStylePicker()
+                AppStylePicker(scale: 0.8)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
 
-                Toggle(isOn: matchesSystem) {
-                    Text("Match system appearance")
-                    Text("Switch between the light and dark halves with macOS")
-                }
-                .toggleStyle(.switch)
+                MatchSystemToggle(showsDetail: true)
             } header: {
                 HStack {
                     Text("Theme")
@@ -88,13 +84,6 @@ struct AppearanceSettingsView: View {
             : theme.title
     }
 
-    private var matchesSystem: Binding<Bool> {
-        Binding(
-            get: { theme == .system },
-            set: { selectedTheme = ($0 ? AppTheme.system : currentMode).rawValue }
-        )
-    }
-
     private let textSizeLabels: [LocalizedStringKey] = ["Standard", "Larger (110%)", "Largest (120%)"]
 
     private var textSizeStep: Binding<Double> {
@@ -105,9 +94,37 @@ struct AppearanceSettingsView: View {
     }
 }
 
+// MARK: - Match system toggle
+
+struct MatchSystemToggle: View {
+    let showsDetail: Bool
+
+    @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Toggle(isOn: matchesSystem) {
+            Text("Match system appearance")
+            if showsDetail {
+                Text("Switch between the light and dark halves with macOS")
+            }
+        }
+        .toggleStyle(.switch)
+    }
+
+    private var matchesSystem: Binding<Bool> {
+        Binding(
+            get: { selectedTheme == AppTheme.system.rawValue },
+            set: { selectedTheme = ($0 ? AppTheme.system : colorScheme == .dark ? .dark : .light).rawValue }
+        )
+    }
+}
+
 // MARK: - Style picker
 
 struct AppStylePicker: View {
+    let scale: CGFloat
+
     @AppStorage("appTheme") private var selectedTheme: String = AppTheme.system.rawValue
     @AppStorage(AppStyle.storageKey) private var selectedStyle: AppStyle = .classic
 
@@ -117,7 +134,8 @@ struct AppStylePicker: View {
                 ThemeSplitCard(
                     style: style,
                     isSelected: style == selectedStyle,
-                    theme: theme
+                    theme: theme,
+                    scale: scale
                 ) { mode in
                     selectedStyle = style
                     selectedTheme = AppearanceSettingsView.theme(afterPicking: mode, current: theme).rawValue
@@ -143,10 +161,10 @@ private struct ThemeSplitCard: View {
     let style: AppStyle
     let isSelected: Bool
     let theme: AppTheme
+    let scale: CGFloat
     let onPick: (AppTheme) -> Void
 
     private static let accent = Color(hex: 0xC8674A)
-    private static let scale: CGFloat = 0.8
 
     var body: some View {
         VStack(spacing: 8) {
@@ -170,7 +188,7 @@ private struct ThemeSplitCard: View {
                 .font(.system(size: 13, weight: isSelected ? .bold : .regular))
                 .foregroundStyle(isSelected ? .primary : .secondary)
         }
-        .frame(width: ThemeMiniWindow.size.width * Self.scale)
+        .frame(width: ThemeMiniWindow.size.width * scale)
     }
 
     private var preview: some View {
@@ -181,8 +199,8 @@ private struct ThemeSplitCard: View {
                     Rectangle().frame(width: ThemeMiniWindow.size.width / 2)
                 }
         }
-        .scaleEffect(Self.scale)
-        .frame(width: ThemeMiniWindow.size.width * Self.scale, height: ThemeMiniWindow.size.height * Self.scale)
+        .scaleEffect(scale)
+        .frame(width: ThemeMiniWindow.size.width * scale, height: ThemeMiniWindow.size.height * scale)
     }
 
     @ViewBuilder

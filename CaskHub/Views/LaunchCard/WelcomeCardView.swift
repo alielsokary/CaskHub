@@ -215,7 +215,13 @@ private struct WelcomePageView: View {
     @ViewBuilder private var accessory: some View {
         switch page {
         case .look:
-            AppStylePicker()
+            VStack(spacing: 10) {
+                AppStylePicker(scale: 0.68)
+                MatchSystemToggle(showsDetail: false)
+                    .font(CHType.body)
+                    .foregroundStyle(Color.chTextTitle)
+                    .tint(Color.chAccent)
+            }
         case .privacy:
             WelcomePrivacyToggles()
         case .ready:
