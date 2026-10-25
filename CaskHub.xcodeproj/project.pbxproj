@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		CA2150000000000000000002 /* CaskUpdateTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000001 /* CaskUpdateTarget.swift */; };
+		CA2510000000000000000002 /* CaskRetirement.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2510000000000000000001 /* CaskRetirement.swift */; };
 		CA2150000000000000000006 /* HomebrewPlatformLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000005 /* HomebrewPlatformLoader.swift */; };
 		CA2150000000000000000004 /* CaskPlatformUpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000003 /* CaskPlatformUpdateTests.swift */; };
 		A51000000000000000000002 /* ExternallyManagedCasksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A51000000000000000000001 /* ExternallyManagedCasksTests.swift */; };
@@ -199,6 +200,7 @@
 
 /* Begin PBXFileReference section */
 		CA2150000000000000000001 /* CaskUpdateTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskUpdateTarget.swift; sourceTree = "<group>"; };
+		CA2510000000000000000001 /* CaskRetirement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskRetirement.swift; sourceTree = "<group>"; };
 		CA2150000000000000000005 /* HomebrewPlatformLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewPlatformLoader.swift; sourceTree = "<group>"; };
 		CA2150000000000000000003 /* CaskPlatformUpdateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskPlatformUpdateTests.swift; sourceTree = "<group>"; };
 		A51000000000000000000001 /* ExternallyManagedCasksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternallyManagedCasksTests.swift; sourceTree = "<group>"; };
@@ -750,6 +752,7 @@
 				B0E000000000000000000001 /* LocalHomebrewError.swift */,
 				B12000000000000000000001 /* LocalHomebrewTypes.swift */,
 				CA2150000000000000000001 /* CaskUpdateTarget.swift */,
+				CA2510000000000000000001 /* CaskRetirement.swift */,
 				AA1000000000000000000001 /* MaintenanceReport.swift */,
 			);
 			path = Domain;
@@ -1175,6 +1178,7 @@
 				C15000000000000000000002 /* InstallationCatalogBuilder.swift in Sources */,
 				A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */,
 				CA2150000000000000000002 /* CaskUpdateTarget.swift in Sources */,
+				CA2510000000000000000002 /* CaskRetirement.swift in Sources */,
 				A12000000000000000000005 /* CaskAdoptionPlan.swift in Sources */,
 				AF11E0000000000000000001 /* Brewfile.swift in Sources */,
 				AF11E0000000000000000003 /* BrewfileImportSheet.swift in Sources */,

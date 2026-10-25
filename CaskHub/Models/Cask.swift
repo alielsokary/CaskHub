@@ -212,6 +212,14 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     let variations: [String: CaskUpdateVariation]?
     let supportedPlatforms: Set<String>?
     let conflictsWith: CaskConflicts?
+    let deprecationDate: String?
+    let deprecationReason: String?
+    let deprecationReplacementCask: String?
+    let deprecationReplacementFormula: String?
+    let disableDate: String?
+    let disableReason: String?
+    let disableReplacementCask: String?
+    let disableReplacementFormula: String?
     var artifacts: [ArtifactStanza]?
     /// Verified identities supplied by CaskFlow, scoped to this cask's app artifacts.
     var catalogBundleIdentifiers: [String]?
@@ -354,7 +362,15 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
                 supportedPlatforms: nil,
                 conflictsWith: conflictingCaskTokens.isEmpty
                     ? nil
-                    : CaskConflicts(cask: conflictingCaskTokens)
+                    : CaskConflicts(cask: conflictingCaskTokens),
+                deprecationDate: nil,
+                deprecationReason: nil,
+                deprecationReplacementCask: nil,
+                deprecationReplacementFormula: nil,
+                disableDate: nil,
+                disableReason: nil,
+                disableReplacementCask: nil,
+                disableReplacementFormula: nil
             )
         }
     }
