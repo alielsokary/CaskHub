@@ -300,7 +300,9 @@ private struct HoverHint: ViewModifier {
                             RoundedRectangle(cornerRadius: 8)
                                 .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
                         )
-                        .alignmentGuide(.top) { $0[.bottom] + 8 }
+                        // A zero-height frame lets any bubble height grow upward from the control's top.
+                        .frame(height: 0, alignment: .bottom)
+                        .offset(y: -8)
                         .allowsHitTesting(false)
                 }
             }
