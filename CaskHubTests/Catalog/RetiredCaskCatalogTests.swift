@@ -180,6 +180,79 @@ final class RetiredCaskCatalogTests: XCTestCase {
         XCTAssertTrue(titles.contains("Force Uninstall"))
     }
 
+    func test_discover_search_appends_retired_matches_after_installable_results() async {
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("app-live", name: "Zeta App"),
+                makeCask("other-live", name: "Other App"),
+                Cask.preview(token: "app-dead", name: "Alpha App", disabled: true),
+                Cask.preview(token: "app-old", name: "Beta App", deprecated: true),
+                makeCask("font-app"),
+                makeCask("app@beta")
+            ],
+            analytics: [("app-dead", "9999"), ("app-old", "5000"), ("app-live", "2"), ("other-live", "1")]
+        )
+        let retired: Set = ["app-dead", "app-old"]
+
+        for page in DiscoverItem.allCases {
+            vm.selectedSidebar = .discover(page)
+            for sort in [SortOption.mostPopular, .nameAZ, .nameZA, .newest, .oldest] {
+                vm.sortOption = sort
+                vm.searchText = "app"
+                let tokens = vm.filteredCasks.map(\.token)
+                let context = "\(page) \(sort)"
+                XCTAssertEqual(Set(tokens.suffix(2)), retired, context)
+                XCTAssertTrue(tokens.dropLast(2).allSatisfy { !retired.contains($0) }, context)
+                XCTAssertFalse(tokens.contains("font-app") || tokens.contains("app@beta"), context)
+                vm.searchText = ""
+                XCTAssertTrue(vm.filteredCasks.allSatisfy { !retired.contains($0.token) }, context)
+            }
+        }
+    }
+
+    func test_category_search_appends_only_retired_casks_in_that_category() async {
+        let categories = seededCategories(
+            [
+                "live-player": TokenCategoryMapping(primary: "media", secondary: []),
+                "dead-player": TokenCategoryMapping(primary: "media", secondary: []),
+                "dead-editor": TokenCategoryMapping(primary: "office", secondary: [])
+            ],
+            categories: [
+                "media": CategoryDefinition(displayName: "Media", icon: "play"),
+                "office": CategoryDefinition(displayName: "Office", icon: "doc")
+            ]
+        )
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("live-player"),
+                Cask.preview(token: "dead-player", disabled: true),
+                Cask.preview(token: "dead-editor", disabled: true)
+            ],
+            categories: categories
+        )
+
+        vm.selectedSidebar = .category("media")
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["live-player"])
+        XCTAssertEqual(vm.categoryCounts["media"], 1, "retired casks never count toward categories")
+        vm.searchText = "dead"
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["dead-player"])
+    }
+
+    func test_library_page_search_never_appends_retired_casks() async {
+        let local = await makePlatformResolvedHomebrew(defaults: makeScratchDefaults("retired-library-search"))
+        updateInstalledCask(receiptInstallation("firefox", tap: "homebrew/cask", apps: []), in: local)
+        let (vm, _) = await makeSUT(
+            casks: [makeCask("firefox"), Cask.preview(token: "firefox-dead", disabled: true)],
+            localHomebrew: local
+        )
+
+        for page in LibraryItem.allCases {
+            vm.selectedSidebar = .library(page)
+            vm.searchText = "firefox"
+            XCTAssertFalse(vm.filteredCasks.contains { $0.token == "firefox-dead" }, "\(page)")
+        }
+    }
+
     private func day(_ iso: String) throws -> Date {
         try Date(iso, strategy: Date.ISO8601FormatStyle().year().month().day())
     }

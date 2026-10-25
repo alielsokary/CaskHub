@@ -14,6 +14,7 @@ struct CatalogLibrarySnapshot {
     let adoptableCasks: [Cask]
     let casksByCategory: [String: [Cask]]
     let categoryCounts: [String: Int]
+    let retiredCasksByCategory: [String: [Cask]]
     let localStates: [String: CaskLocalState]
 }
 
