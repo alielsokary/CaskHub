@@ -85,8 +85,14 @@ struct CaskActionsView: View {
             RetirementCapsule(retirement: retirement, isInstalled: false, iconOnly: false, fullWidth: fullWidth)
         } else {
             HStack(spacing: 8) {
-                ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
-                    localHomebrew.send(.install(cask))
+                Group {
+                    if usesIconOnlyOpenAndUpdate && state.retirement != nil {
+                        ActionCapsuleIconButton(action: .install) { localHomebrew.send(.install(cask)) }
+                    } else {
+                        ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
+                            localHomebrew.send(.install(cask))
+                        }
+                    }
                 }
                 .disabledDuringHomebrewUpdate(
                     presentation.isHomebrewMutationBlocked
@@ -94,7 +100,7 @@ struct CaskActionsView: View {
                 if let retirement = state.retirement {
                     RetirementCapsule(
                         retirement: retirement, isInstalled: false,
-                        iconOnly: usesIconOnlyOpenAndUpdate, fullWidth: false
+                        iconOnly: usesIconOnlyOpenAndUpdate, fullWidth: fullWidth
                     )
                 }
             }

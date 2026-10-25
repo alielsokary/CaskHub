@@ -279,8 +279,10 @@ final class CaskListActionTests: XCTestCase {
             for cask in [installedDead, legacy, removed, notInstalledDisabled] {
                 let state = service.localState(for: cask)
                 XCTAssertNotNil(state.retirement, cask.token)
+                // Intrinsic width: a compressed layout would fit the slot by truncating its labels.
                 let actions = CaskActionsView(cask: cask, localState: state, usesIconOnlyOpenAndUpdate: true)
                     .environment(service)
+                    .fixedSize()
                 let slot = CGSize(width: CHSize.listActionWidth, height: 100)
                 XCTAssertLessThanOrEqual(
                     NSHostingController(rootView: actions).sizeThatFits(in: slot).width, slot.width, "\(style) \(cask.token)"
