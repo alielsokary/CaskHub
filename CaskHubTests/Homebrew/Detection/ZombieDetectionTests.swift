@@ -81,6 +81,22 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertEqual(scan()["chrome"]?.isZombie, false)
     }
 
+    func test_renamed_cask_symlink_is_not_scanned_as_a_second_install() throws {
+        try makeEntry("chatgpt", receiptApps: ["ChatGPT.app"])
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        )
+        try fm.createSymbolicLink(
+            atPath: caskroom.appendingPathComponent("codex-app").path,
+            withDestinationPath: "chatgpt"
+        )
+
+        let installations = scan()
+
+        XCTAssertEqual(Set(installations.keys), ["chatgpt"])
+        XCTAssertEqual(installations["chatgpt"]?.isZombie, false)
+    }
+
     func test_real_app_parked_inside_caskroom_is_not_zombie() throws {
         let versionDir = try makeEntry("tabby", receiptApps: ["Tabby.app"])
         try fm.createDirectory(
