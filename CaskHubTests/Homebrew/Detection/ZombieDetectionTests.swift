@@ -388,7 +388,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
-            appBundleNames: ["Codex.app"], isZombie: true
+            appBundleNames: ["Codex.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         let cask = makeCask("chatgpt", appNames: ["ChatGPT.app"])
         await service.updatePackageCatalog([cask])
@@ -404,7 +405,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mole.app"], isZombie: true
+            appBundleNames: ["Mole.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         let cask = makeCask("mole-app", appNames: ["Mole.app"])
         await service.updatePackageCatalog([cask])
@@ -420,7 +422,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "mystery", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mystery.app"], isZombie: true
+            appBundleNames: ["Mystery.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         XCTAssertFalse(
             service.localState(for: makeCask("mystery")).isZombie,
@@ -442,7 +445,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
-            appBundleNames: ["Codex.app"], isZombie: true
+            appBundleNames: ["Codex.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
         XCTAssertNil(
@@ -465,7 +469,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mole.app"], isZombie: true
+            appBundleNames: ["Mole.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         try? await service.uninstall(token: "mole-app")
         XCTAssertEqual(
@@ -475,7 +480,8 @@ final class ZombieDetectionTests: XCTestCase {
 
         updateInstalledCask(LocalCaskInstallation(
             token: "chrome", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Chrome.app"], isZombie: false
+            appBundleNames: ["Chrome.app"], isZombie: false,
+            tap: "homebrew/cask"
         ), in: service)
         try? await service.uninstall(token: "chrome")
         XCTAssertEqual(
@@ -489,7 +495,8 @@ final class ZombieDetectionTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("zombie-updates"))
         updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mole.app"], isZombie: true
+            appBundleNames: ["Mole.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         XCTAssertFalse(
             service.localState(for: makeCask(

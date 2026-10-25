@@ -98,7 +98,7 @@ func analyticsResponse(_ counts: [(String, String)]) -> CaskAnalyticsResponse {
 
 @MainActor
 func installation(_ token: String, version: String) -> LocalCaskInstallation {
-    LocalCaskInstallation(token: token, installedVersion: version, installedAt: nil, appBundleNames: [])
+    LocalCaskInstallation(token: token, installedVersion: version, installedAt: nil, appBundleNames: [], tap: "homebrew/cask")
 }
 
 @MainActor

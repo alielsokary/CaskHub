@@ -216,7 +216,8 @@ final class CaskListActionTests: XCTestCase {
             token: managed.token,
             installedVersion: "1.0",
             installedAt: nil,
-            appBundleNames: ["Managed.app"]
+            appBundleNames: ["Managed.app"],
+            tap: "homebrew/cask"
         ), in: service)
 
         render(row(managed, service: service), width: 760, height: 64)
@@ -240,7 +241,8 @@ final class CaskListActionTests: XCTestCase {
             installedVersion: "1.0",
             installedAt: nil,
             appBundleNames: ["Missing.app"],
-            isZombie: true
+            isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         render(row(zombie, service: service), width: 760, height: 64)
     }

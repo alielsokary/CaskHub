@@ -33,7 +33,8 @@ final class InstallationDateIndexTests: XCTestCase {
                     token: "managed",
                     installedVersion: "1.0",
                     installedAt: homebrewInstalledAt,
-                    appBundleNames: []
+                    appBundleNames: [],
+                    tap: "homebrew/cask"
                 )
             ],
             externalApplicationOwners: [:],

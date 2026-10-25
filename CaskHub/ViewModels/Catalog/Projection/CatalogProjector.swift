@@ -7,8 +7,23 @@
 
 import Foundation
 
+/// Every API cask, split once per fetch so Discover pages keep reading only browsable ones.
+nonisolated struct CatalogPartition: Equatable {
+    let all: [Cask]
+    let browsable: [Cask]
+    let byToken: [String: Cask]
+
+    init(_ all: [Cask]) {
+        self.all = all
+        browsable = all.filter(\.isBrowsable)
+        byToken = Dictionary(all.map { ($0.token, $0) }) { first, _ in first }
+    }
+}
+
 nonisolated struct CatalogLibraryProjectionInput {
     let casks: [Cask]
+    /// Installed casks Discover pages never list: retired, font, `@` variants, and receipt-built rows.
+    let installedOnlyCasks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
     let adoptIgnoredTokens: Set<String>
@@ -37,27 +52,29 @@ nonisolated struct CatalogFilteredProjectionInput {
     let nameRanks: [String: Int]
 }
 
+private nonisolated struct LibraryMembership {
+    var updatable: [Cask] = []
+    var installed: [Cask] = []
+    var homebrewInstalled: [Cask] = []
+
+    mutating func add(_ cask: Cask, _ state: CaskLocalState) {
+        if state.hasAvailableUpdate { updatable.append(cask) }
+        if state.isPresent { installed.append(cask) }
+        if state.isHomebrewInstalled { homebrewInstalled.append(cask) }
+    }
+}
+
 nonisolated enum CatalogProjector {
     static func makeLibrary(
         from input: CatalogLibraryProjectionInput
     ) -> CatalogLibrarySnapshot {
-        var updatableCasks: [Cask] = []
-        var installedCasks: [Cask] = []
-        var homebrewInstalledCasks: [Cask] = []
+        var library = LibraryMembership()
         var adoptableCasks: [Cask] = []
         var casksByCategory: [String: [Cask]] = [:]
 
         for cask in input.casks {
             guard let localState = input.localStates[cask.token] else { continue }
-            if localState.hasAvailableUpdate {
-                updatableCasks.append(cask)
-            }
-            if localState.isPresent {
-                installedCasks.append(cask)
-            }
-            if localState.isHomebrewInstalled {
-                homebrewInstalledCasks.append(cask)
-            }
+            library.add(cask, localState)
             if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
@@ -68,15 +85,34 @@ nonisolated enum CatalogProjector {
             }
         }
 
+        for cask in input.installedOnlyCasks {
+            guard let localState = input.localStates[cask.token] else { continue }
+            library.add(cask, localState)
+        }
+
         return CatalogLibrarySnapshot(
-            updatableCasks: updatableCasks,
-            installedCasks: installedCasks,
-            homebrewInstalledCasks: homebrewInstalledCasks,
+            updatableCasks: library.updatable,
+            installedCasks: library.installed,
+            homebrewInstalledCasks: library.homebrewInstalled,
             adoptableCasks: adoptableCasks,
             casksByCategory: casksByCategory,
             categoryCounts: casksByCategory.mapValues(\.count),
             localStates: input.localStates
         )
+    }
+
+    /// Without the API catalog every installed token would look removed from Homebrew.
+    static func installedOnlyCasks(
+        installations: [String: LocalCaskInstallation],
+        partition: CatalogPartition
+    ) -> [Cask] {
+        guard !partition.all.isEmpty else { return [] }
+        return installations.keys.sorted().compactMap { token in
+            guard let cask = partition.byToken[token] else {
+                return installations[token].map(Cask.init(installation:))
+            }
+            return cask.isBrowsable ? nil : cask
+        }
     }
 
     static func makeBrowseSections(

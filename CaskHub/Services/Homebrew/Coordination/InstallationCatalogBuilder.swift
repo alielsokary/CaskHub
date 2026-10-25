@@ -15,21 +15,24 @@ nonisolated struct InstallationCatalogRegistration: Sendable {
 }
 
 nonisolated struct InstallationCatalogBuilder: Sendable {
+    /// Every API cask verifies its own Homebrew install. Only browsable casks claim
+    /// external apps: a retired token sharing a bundle ID would make ownership ambiguous.
     @MainActor
     func build(_ casks: [Cask]) -> InstallationCatalogRegistration {
-        InstallationCatalogRegistration(
+        let browsable = casks.filter(\.isBrowsable)
+        return InstallationCatalogRegistration(
             displayNames: casks.reduce(into: [:]) { names, cask in
                 names[cask.token] = cask.displayName
             },
-            applicationSignatures: makeExternalApplicationSignatures(casks),
+            applicationSignatures: makeExternalApplicationSignatures(browsable),
             installationCatalog: CaskInstallationCatalog(
                 tokens: Set(casks.map(\.token)),
-                macAppStoreSignatures: makeStoreSignatures(casks),
-                binarySignatures: makeBinarySignatures(casks),
+                macAppStoreSignatures: makeStoreSignatures(browsable),
+                binarySignatures: makeBinarySignatures(browsable),
                 applicationSignatures: InstallationIndexBuilder()
                     .makeApplicationSignatures(casks)
             ),
-            packageSignatures: makePackageSignatures(casks)
+            packageSignatures: makePackageSignatures(browsable)
         )
     }
 

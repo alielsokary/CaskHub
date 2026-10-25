@@ -57,7 +57,8 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             token: "raycast-glaze",
             installedVersion: "0.11.1",
             installedAt: nil,
-            appBundleNames: ["Glaze.app"]
+            appBundleNames: ["Glaze.app"],
+            tap: "homebrew/cask"
         )
 
         let owners = ApplicationOwnershipResolver().resolve(
@@ -166,7 +167,8 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             token: "store-app",
             installedVersion: "1.0",
             installedAt: nil,
-            appBundleNames: ["Store.app"]
+            appBundleNames: ["Store.app"],
+            tap: "homebrew/cask"
         )
         let storeApplication = makeDetectedApplication(
             "Store.app",
@@ -218,11 +220,13 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         let installed = [
             "live": LocalCaskInstallation(
                 token: "live", installedVersion: "1.0", installedAt: nil,
-                appBundleNames: ["Live.app"], isZombie: false
+                appBundleNames: ["Live.app"], isZombie: false,
+                tap: "homebrew/cask"
             ),
             "gone": LocalCaskInstallation(
                 token: "gone", installedVersion: "1.0", installedAt: nil,
-                appBundleNames: ["Gone.app"], isZombie: true
+                appBundleNames: ["Gone.app"], isZombie: true,
+                tap: "homebrew/cask"
             )
         ]
 
@@ -249,7 +253,8 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                     installedVersion: "1.0",
                     installedAt: nil,
                     appBundleNames: ["Gone.app"],
-                    isZombie: true
+                    isZombie: true,
+                    tap: "homebrew/cask"
                 )
             ]
             $0.installationIndex = CaskInstallationIndex(

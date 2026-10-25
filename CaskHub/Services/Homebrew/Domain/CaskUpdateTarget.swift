@@ -96,7 +96,7 @@ nonisolated struct CaskUpdateVariation: Decodable, Hashable, Sendable {
 extension Cask {
     func updateTarget(for platform: CaskPlatform?) -> CaskUpdateTarget? {
         // A failed platform query cannot establish which version is compatible.
-        guard let tag = platform?.tag else { return nil }
+        guard provenance == .homebrewAPI, let tag = platform?.tag else { return nil }
         if let supportedPlatforms, !supportedPlatforms.contains(tag) { return nil }
         if let variation = variations?[tag] { return variation.target(inheriting: self) }
         // Homebrew uses the base fields when a known platform has no override.

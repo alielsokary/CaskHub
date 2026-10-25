@@ -92,6 +92,9 @@ extension Cask {
     }
 
     func retirement(for platform: CaskPlatform?) -> CaskRetirement? {
+        if provenance == .installedReceipt {
+            return tap == "homebrew/cask" ? .removedFromHomebrew : nil
+        }
         if let tag = platform?.tag, let variation = variations?[tag] {
             return variation.retirementFields(inheriting: retirementFields).retirement
         }

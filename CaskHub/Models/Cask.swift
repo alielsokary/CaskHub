@@ -193,6 +193,12 @@ nonisolated struct CaskConflicts: Decodable, Hashable, Sendable {
     }
 }
 
+nonisolated enum CaskProvenance: Hashable, Sendable {
+    case homebrewAPI
+    /// Built from an install receipt: the API no longer lists the token, or another tap installed it.
+    case installedReceipt
+}
+
 nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     let token: String
     let fullToken: String?
@@ -231,6 +237,20 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     var catalogPackageProducts: [PackageApplicationIdentity]?
     /// CaskFlow-curated: a command-line tool that Homebrew ships as an app or package.
     var catalogIsCLI: Bool?
+    var provenance: CaskProvenance = .homebrewAPI
+
+    private enum CodingKeys: String, CodingKey {
+        case token, fullToken, tap, name, desc, homepage, url, sha256, version
+        case bundleVersion, bundleShortVersion, outdated, deprecated, disabled, autoUpdates
+        case variations, supportedPlatforms, conflictsWith, artifacts
+        case deprecationDate, deprecationReason, deprecationReplacementCask, deprecationReplacementFormula
+        case disableDate, disableReason, disableReplacementCask, disableReplacementFormula
+    }
+
+    /// Discover pages list only current, non-variant, non-font casks.
+    var isBrowsable: Bool {
+        !deprecated && !disabled && !token.contains("@") && !token.hasPrefix("font-")
+    }
 
     var storeAppNames: [String] {
         catalogPackageProducts?.map(\.bundleName) ?? (appArtifactNames + packageAppNameCandidates)
@@ -325,6 +345,43 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
         if let downloads { parts.append("↓ \(downloads)") }
         parts.append("v\(displayVersion)")
         return parts.joined(separator: " · ")
+    }
+}
+
+extension Cask {
+    init(installation: LocalCaskInstallation) {
+        let appName = installation.appBundleNames.first.map {
+            $0.hasSuffix(".app") ? String($0.dropLast(4)) : $0
+        }
+        self.init(
+            token: installation.token,
+            fullToken: nil,
+            tap: installation.tap,
+            name: [appName ?? installation.token],
+            desc: nil,
+            homepage: "",
+            url: nil,
+            sha256: nil,
+            version: installation.installedVersion,
+            bundleVersion: nil,
+            bundleShortVersion: nil,
+            outdated: false,
+            deprecated: false,
+            disabled: false,
+            autoUpdates: nil,
+            variations: nil,
+            supportedPlatforms: nil,
+            conflictsWith: nil,
+            deprecationDate: nil,
+            deprecationReason: nil,
+            deprecationReplacementCask: nil,
+            deprecationReplacementFormula: nil,
+            disableDate: nil,
+            disableReason: nil,
+            disableReplacementCask: nil,
+            disableReplacementFormula: nil
+        )
+        provenance = .installedReceipt
     }
 }
 
