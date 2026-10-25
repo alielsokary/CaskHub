@@ -116,7 +116,7 @@ final class MutationRecoveryTests: XCTestCase {
         ))
         let service = makeService(runner: runner, scanner: scanner)
         updateInstalledCask(LocalCaskInstallation(token: "zed", installedVersion: "1.0", installedAt: nil,
-                                                appBundleNames: ["Zed.app"]), in: service)
+                                                appBundleNames: ["Zed.app"], tap: "homebrew/cask"), in: service)
         runner.onRequest = { [root, fileManager] request in
             if request.arguments.first == "uninstall" {
                 try fileManager.removeItem(at: root!.appendingPathComponent("Caskroom/zed"))
@@ -407,14 +407,16 @@ final class MutationRecoveryTests: XCTestCase {
             installedVersion: "1.0",
             installedAt: nil,
             lastUpdatedAt: Date(timeIntervalSince1970: 1),
-            appBundleNames: []
+            appBundleNames: [],
+            tap: "homebrew/cask"
         )
         let refreshed = LocalCaskInstallation(
             token: "zed",
             installedVersion: "1.0",
             installedAt: nil,
             lastUpdatedAt: Date(timeIntervalSince1970: 2),
-            appBundleNames: []
+            appBundleNames: [],
+            tap: "homebrew/cask"
         )
         let scanner = FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
             installedCasks: ["zed": refreshed]
@@ -463,7 +465,7 @@ final class MutationRecoveryTests: XCTestCase {
             installedVersion: "2.0",
             installedAt: nil,
             appBundleNames: ["Zed.app"],
-            isZombie: true
+            isZombie: true, tap: "homebrew/cask"
         )
         let scanner = FixedInstalledSoftwareScanner(snapshot: InstallationSnapshot(
             installedCasks: ["zed": zombie]
@@ -517,7 +519,7 @@ extension MutationRecoveryTests {
 
         updateInstalledCask(LocalCaskInstallation(
             token: "zed", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Zed.app"], isZombie: true
+            appBundleNames: ["Zed.app"], isZombie: true, tap: "homebrew/cask"
         ), in: restored)
         try await restored.uninstall(token: "zed")
 

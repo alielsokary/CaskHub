@@ -16,7 +16,8 @@ final class InstallationSnapshotTests: XCTestCase {
             token: "firefox",
             installedVersion: "1",
             installedAt: nil,
-            appBundleNames: ["Firefox.app"]
+            appBundleNames: ["Firefox.app"],
+            tap: "homebrew/cask"
         )
         let application = makeDetectedApplication("Firefox.app", id: "org.mozilla.firefox")
         let snapshot = InstallationSnapshot(
@@ -60,7 +61,8 @@ final class InstallationSnapshotTests: XCTestCase {
                     token: "firefox",
                     installedVersion: "2",
                     installedAt: nil,
-                    appBundleNames: ["Firefox.app"]
+                    appBundleNames: ["Firefox.app"],
+                    tap: "homebrew/cask"
                 )
             ],
             scannedAt: Date(timeIntervalSince1970: 200)

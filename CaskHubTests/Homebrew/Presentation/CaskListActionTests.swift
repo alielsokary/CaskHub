@@ -216,7 +216,8 @@ final class CaskListActionTests: XCTestCase {
             token: managed.token,
             installedVersion: "1.0",
             installedAt: nil,
-            appBundleNames: ["Managed.app"]
+            appBundleNames: ["Managed.app"],
+            tap: "homebrew/cask"
         ), in: service)
 
         render(row(managed, service: service), width: 760, height: 64)
@@ -240,9 +241,59 @@ final class CaskListActionTests: XCTestCase {
             installedVersion: "1.0",
             installedAt: nil,
             appBundleNames: ["Missing.app"],
-            isZombie: true
+            isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         render(row(zombie, service: service), width: 760, height: 64)
+    }
+
+    func test_retirement_pairs_render_and_fit_the_list_action_slot() async throws {
+        defer { AppStyle.current = .classic }
+        let applications = FileManager.default.temporaryDirectory
+            .appendingPathComponent("retired-apps-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: applications, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: applications) }
+        try makeApplicationBundle(in: applications, named: "Dead.app", bundleIdentifier: "test.dead")
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("retired-slot")) {
+            $0.applicationDirectories = [applications]
+            $0.caskPlatformProvider = { CaskPlatform(tag: "arm64_sequoia") }
+        }
+        await service.refresh()
+        let dead = Cask.preview(token: "dead-app", disabled: true, disableReason: "fails_gatekeeper_check")
+        var installedDead = dead
+        installedDead.artifacts = makeCask("dead-app", appNames: ["Dead.app"]).artifacts
+        updateInstalledCask(LocalCaskInstallation(
+            token: dead.token, installedVersion: "1.0", installedAt: nil,
+            appBundleNames: ["Dead.app"], tap: "homebrew/cask"
+        ), in: service)
+        let legacy = Cask.preview(token: "legacy-app", deprecated: true, deprecationReplacementCask: "new-app")
+        let removed = Cask(installation: LocalCaskInstallation(
+            token: "gone-app", installedVersion: "1.0", installedAt: nil, appBundleNames: [], tap: "homebrew/cask"
+        ))
+        updateInstalledCask(installation(removed.token, version: "1.0"), in: service)
+        let notInstalledDisabled = Cask.preview(token: "other-dead", disabled: true)
+        XCTAssertTrue(service.localState(for: installedDead).canOpen)
+
+        for style in AppStyle.allCases {
+            AppStyle.current = style
+            for cask in [installedDead, legacy, removed, notInstalledDisabled] {
+                let state = service.localState(for: cask)
+                XCTAssertNotNil(state.retirement, cask.token)
+                // Intrinsic width: a compressed layout would fit the slot by truncating its labels.
+                let actions = CaskActionsView(cask: cask, localState: state, usesIconOnlyOpenAndUpdate: true)
+                    .environment(service)
+                    .fixedSize()
+                let slot = CGSize(width: CHSize.listActionWidth, height: 100)
+                XCTAssertLessThanOrEqual(
+                    NSHostingController(rootView: actions).sizeThatFits(in: slot).width, slot.width, "\(style) \(cask.token)"
+                )
+                render(row(cask, service: service), width: 760, height: 64)
+                render(
+                    CaskCardView(cask: cask, downloads: "1.2M").environment(service).environment(makeImageCache()),
+                    width: 280, height: CHSize.cardHeight
+                )
+            }
+        }
     }
 
     func test_icon_only_open_and_update_controls_render() {

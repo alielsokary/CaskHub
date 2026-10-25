@@ -42,7 +42,8 @@ final class CaskCatalogSortTests: XCTestCase {
             hasAvailableUpdate: hasAvailableUpdate,
             isOutdated: hasAvailableUpdate,
             isZombie: false,
-            canOpen: true
+            canOpen: true,
+            retirement: nil
         )
     }
 
@@ -52,6 +53,7 @@ final class CaskCatalogSortTests: XCTestCase {
         let adoptable = makeCask("adoptable")
         let input = CatalogLibraryProjectionInput(
             casks: [installed, adoptable],
+            installedOnlyCasks: [],
             localStates: [
                 installed.token: localState(
                     source: .homebrew,
@@ -160,13 +162,15 @@ final class CaskCatalogSortTests: XCTestCase {
                     token: "alpha",
                     installedVersion: "1.0",
                     installedAt: now.addingTimeInterval(-86_400),
-                    appBundleNames: []
+                    appBundleNames: [],
+                    tap: "homebrew/cask"
                 ),
                 "zulu": LocalCaskInstallation(
                     token: "zulu",
                     installedVersion: "1.0",
                     installedAt: now,
-                    appBundleNames: []
+                    appBundleNames: [],
+                    tap: "homebrew/cask"
                 )
             ]
         }

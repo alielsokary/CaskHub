@@ -313,7 +313,8 @@ extension HomebrewInstallationScanner {
             installedAt: installedAt,
             lastUpdatedAt: receipt?.lastUpdatedAt ?? versionModifiedAt,
             appBundleNames: receipt?.appBundleNames ?? [],
-            isZombie: isZombie
+            isZombie: isZombie,
+            tap: receipt?.tap
         )
     }
 
