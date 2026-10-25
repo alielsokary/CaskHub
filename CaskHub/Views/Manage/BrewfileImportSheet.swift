@@ -27,8 +27,10 @@ nonisolated struct BrewfileImportPlan: Identifiable {
     let fileName: String
     let skippedEntries: [Entry]
     let newEntries: [Entry]
+    /// Homebrew refuses to install these: disabled, or removed for this platform.
+    let unavailableEntries: [Entry]
 
-    var listedCount: Int { skippedEntries.count + newEntries.count }
+    var listedCount: Int { skippedEntries.count + newEntries.count + unavailableEntries.count }
 }
 
 nonisolated enum BrewfileImportPhase: Equatable {
@@ -100,6 +102,15 @@ struct BrewfileImportSheet: View {
                 LazyVStack(spacing: 0) {
                     ForEach(plan.newEntries) { entry in
                         BrewfileEntryRow(entry: entry, isSelected: selectionBinding(entry))
+                    }
+                    if !plan.unavailableEntries.isEmpty {
+                        unavailableHeader
+                        ForEach(plan.unavailableEntries) { entry in
+                            BrewfileEntryRow(entry: entry)
+                                .help(entry.cask.flatMap {
+                                    localHomebrew.localState(for: $0).retirement?.summary(isInstalled: false)
+                                } ?? "")
+                        }
                     }
                     if !plan.skippedEntries.isEmpty {
                         skippedHeader
@@ -178,6 +189,20 @@ struct BrewfileImportSheet: View {
             )))
             .font(CHType.bodySm)
             .foregroundStyle(Color.chTextBody)
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
+    }
+
+    private var unavailableHeader: some View {
+        HStack(spacing: 8) {
+            Image(systemName: CaskActionStyle.disabled.icon)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color.chTextMuted)
+                .frame(width: 16, height: 16)
+            Text(String(localized: .shelfSetupBrewfileSheetUnavailable(plan.unavailableEntries.count)))
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextBody)
         }
         .padding(.vertical, 8)
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }

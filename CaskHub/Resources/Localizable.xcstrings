@@ -12728,6 +12728,42 @@
         }
       }
     },
+    "shelfSetup.brewfile.sheet.unavailable" : {
+      "comment" : "Import sheet section header; count of Brewfile casks Homebrew disabled, so they can't be installed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld disabled by Homebrew, can't be installed"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отключено Homebrew, установка невозможна: %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимкнено Homebrew, встановлення неможливе: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个已被 Homebrew 停用，无法安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 個已被 Homebrew 停用，無法安裝"
+          }
+        }
+      }
+    },
     "shelfSetup.brewfile.title" : {
       "comment" : "Section title of the Brewfile card on Shelf Setup",
       "extractionState" : "manual",
