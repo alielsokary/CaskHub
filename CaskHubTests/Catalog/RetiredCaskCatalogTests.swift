@@ -134,6 +134,56 @@ final class RetiredCaskCatalogTests: XCTestCase {
         XCTAssertEqual(vm.casks.map(\.token), ["new-shared"])
     }
 
+    func test_disabled_and_removed_casks_explain_themselves_and_drop_reinstall_recoveries() async throws {
+        let local = await makePlatformResolvedHomebrew(defaults: makeScratchDefaults("retired-explain"))
+        for token in ["dead-app", "gone-app", "firefox"] {
+            updateInstalledCask(receiptInstallation(token, tap: "homebrew/cask", apps: []), in: local)
+        }
+        let (vm, _) = await makeSUT(
+            casks: [
+                Cask.preview(
+                    token: "dead-app", disabled: true,
+                    disableDate: "2026-09-01", disableReason: "fails_gatekeeper_check"
+                ),
+                makeCask("firefox")
+            ],
+            localHomebrew: local
+        )
+        vm.selectedSidebar = .library(.installed)
+        let rows = Dictionary(uniqueKeysWithValues: vm.filteredCasks.map { ($0.token, $0) })
+        let dead = try XCTUnwrap(rows["dead-app"])
+
+        let info = Dictionary(uniqueKeysWithValues: CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
+            cask: dead, category: nil, downloadSize: .unknown,
+            actionPresentation: local.actionPresentation(for: dead, localState: vm.localState(for: dead)),
+            externalVersion: nil, installationDates: nil
+        )).map { ($0.property, $0.value) })
+        XCTAssertEqual(info["Disabled"], "Yes")
+        XCTAssertEqual(info["Reason"], "It fails the macOS Gatekeeper check.")
+        XCTAssertEqual(info["Disabled On"], try day("2026-09-01").formatted(
+            Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: .gmt)
+        ))
+
+        let warning = "Homebrew can't reinstall this app later."
+        for token in ["dead-app", "gone-app"] {
+            let alert = CaskActionAlertFactory.uninstallAlert(for: try XCTUnwrap(rows[token]), service: local).alert
+            XCTAssertTrue(alert.informativeText.contains(warning), token)
+        }
+        let firefoxAlert = CaskActionAlertFactory.uninstallAlert(for: try XCTUnwrap(rows["firefox"]), service: local)
+        XCTAssertFalse(firefoxAlert.alert.informativeText.contains(warning))
+
+        let failure = CaskOperationFailure(kind: .brewCommand, message: "short", recoveries: Set(CaskRecoveryAction.allCases))
+        let titles = CaskActionAlertFactory.errorAlert(for: dead, failure: failure, service: local).alert.buttons.map(\.title)
+        XCTAssertFalse(titles.contains("Adopt Existing App"))
+        XCTAssertFalse(titles.contains("Replace with Homebrew Version"))
+        XCTAssertFalse(titles.contains("Repair & Reinstall"))
+        XCTAssertTrue(titles.contains("Force Uninstall"))
+    }
+
+    private func day(_ iso: String) throws -> Date {
+        try Date(iso, strategy: Date.ISO8601FormatStyle().year().month().day())
+    }
+
     private func receiptInstallation(_ token: String, tap: String, apps: [String]) -> LocalCaskInstallation {
         LocalCaskInstallation(
             token: token, installedVersion: "1.0", installedAt: nil, appBundleNames: apps, tap: tap

@@ -396,6 +396,11 @@ extension Cask {
             sha256: String? = nil,
             deprecated: Bool = false,
             disabled: Bool = false,
+            deprecationDate: String? = nil,
+            deprecationReason: String? = nil,
+            deprecationReplacementCask: String? = nil,
+            disableDate: String? = nil,
+            disableReason: String? = nil,
             autoUpdates: Bool? = nil,
             conflictingCaskTokens: [String] = []
         ) -> Cask {
@@ -420,12 +425,12 @@ extension Cask {
                 conflictsWith: conflictingCaskTokens.isEmpty
                     ? nil
                     : CaskConflicts(cask: conflictingCaskTokens),
-                deprecationDate: nil,
-                deprecationReason: nil,
-                deprecationReplacementCask: nil,
+                deprecationDate: deprecationDate,
+                deprecationReason: deprecationReason,
+                deprecationReplacementCask: deprecationReplacementCask,
                 deprecationReplacementFormula: nil,
-                disableDate: nil,
-                disableReason: nil,
+                disableDate: disableDate,
+                disableReason: disableReason,
                 disableReplacementCask: nil,
                 disableReplacementFormula: nil
             )

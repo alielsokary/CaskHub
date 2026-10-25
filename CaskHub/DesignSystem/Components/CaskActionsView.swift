@@ -81,13 +81,23 @@ struct CaskActionsView: View {
                     state.uninstallAvailability.unavailableReason
                         ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
+        } else if let retirement = state.retirement, retirement.blocksInstall {
+            RetirementCapsule(retirement: retirement, isInstalled: false, iconOnly: false, fullWidth: fullWidth)
         } else {
-            ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
-                localHomebrew.send(.install(cask))
+            HStack(spacing: 8) {
+                ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
+                    localHomebrew.send(.install(cask))
+                }
+                .disabledDuringHomebrewUpdate(
+                    presentation.isHomebrewMutationBlocked
+                )
+                if let retirement = state.retirement {
+                    RetirementCapsule(
+                        retirement: retirement, isInstalled: false,
+                        iconOnly: usesIconOnlyOpenAndUpdate, fullWidth: false
+                    )
+                }
             }
-            .disabledDuringHomebrewUpdate(
-                presentation.isHomebrewMutationBlocked
-            )
         }
     }
 
@@ -112,11 +122,12 @@ struct CaskActionsView: View {
         _ state: CaskLocalState,
         mutationBlocked: Bool
     ) -> some View {
+        let isPaired = state.hasAvailableUpdate || state.retirement != nil
         HStack(spacing: 8) {
             if state.canOpen {
                 openButton(
-                    fullWidth: fullWidth && !state.hasAvailableUpdate,
-                    isPairedWithUpdate: state.hasAvailableUpdate
+                    fullWidth: fullWidth && !isPaired,
+                    isPaired: isPaired
                 ) {
                     localHomebrew.send(.open(cask))
                 }
@@ -128,8 +139,12 @@ struct CaskActionsView: View {
                 ) {
                     localHomebrew.send(.update(token: cask.token))
                 }
-            }
-            if !state.canOpen && !state.hasAvailableUpdate {
+            } else if let retirement = state.retirement {
+                RetirementCapsule(
+                    retirement: retirement, isInstalled: true,
+                    iconOnly: usesIconOnlyOpenAndUpdate && state.canOpen, fullWidth: fullWidth
+                )
+            } else if !state.canOpen {
                 ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
             }
             if let onUninstall {
@@ -152,10 +167,10 @@ struct CaskActionsView: View {
     @ViewBuilder
     private func openButton(
         fullWidth: Bool,
-        isPairedWithUpdate: Bool = false,
+        isPaired: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
-        if usesIconOnlyOpenAndUpdate && isPairedWithUpdate {
+        if usesIconOnlyOpenAndUpdate && isPaired {
             ActionCapsuleIconButton(action: .open, onTap: action)
         } else {
             ActionCapsuleButton(action: .open, fullWidth: fullWidth, onTap: action)
@@ -207,13 +222,8 @@ private extension View {
     }
 }
 
-/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
-/// pointer remains over the view. This hint follows hover state directly, so it
-/// stays visible until the pointer actually leaves the disabled control.
 private struct DisabledUninstallControl: View {
     let message: String
-
-    @State private var isHovering = false
 
     var body: some View {
         Image(systemName: "trash")
@@ -223,6 +233,53 @@ private struct DisabledUninstallControl: View {
             .background(Circle().fill(Color.chSurfaceField.opacity(0.5)))
             .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
             .contentShape(Circle())
+            .modifier(HoverHint(message: message))
+            .accessibilityLabel("Uninstall")
+            .accessibilityHint(message)
+    }
+}
+
+/// An inert status beside Install or Open; hovering explains what Homebrew decided.
+private struct RetirementCapsule: View {
+    let retirement: CaskRetirement
+    let isInstalled: Bool
+    let iconOnly: Bool
+    let fullWidth: Bool
+
+    var body: some View {
+        let style: CaskActionStyle = retirement.blocksInstall ? .disabled : .deprecated
+        let message = retirement.summary(isInstalled: isInstalled)
+        Group {
+            if iconOnly {
+                Image(systemName: style.icon)
+                    .font(.system(size: style.iconSize, weight: .bold))
+                    .foregroundStyle(style.foreground)
+                    .frame(minWidth: 44, maxWidth: .infinity)
+                    .frame(height: CHSize.actionCapsuleHeight)
+                    .background(Capsule().fill(style.background))
+                    .overlay(Capsule().strokeBorder(style.border, lineWidth: 1))
+            } else {
+                ActionCapsuleLabel(action: style, fullWidth: fullWidth)
+            }
+        }
+        .contentShape(Capsule())
+        .modifier(HoverHint(message: message))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(style.title)
+        .accessibilityHint(message)
+    }
+}
+
+/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
+/// pointer remains over the view. This hint follows hover state directly, so it
+/// stays visible until the pointer actually leaves the control.
+private struct HoverHint: ViewModifier {
+    let message: String
+
+    @State private var isHovering = false
+
+    func body(content: Content) -> some View {
+        content
             .onHover { isHovering = $0 }
             .overlay(alignment: .topTrailing) {
                 if isHovering {
@@ -243,12 +300,10 @@ private struct DisabledUninstallControl: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
                         )
-                        .offset(y: -48)
+                        .alignmentGuide(.top) { $0[.bottom] + 8 }
                         .allowsHitTesting(false)
                 }
             }
             .zIndex(isHovering ? 10 : 0)
-            .accessibilityLabel("Uninstall")
-            .accessibilityHint(message)
     }
 }

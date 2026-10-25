@@ -39,6 +39,9 @@ extension CaskActionAlertFactory {
         } else {
             alert.informativeText = "This will run:"
         }
+        if service.localState(for: cask).retirement?.blocksInstall == true {
+            alert.informativeText = String(localized: .alertUninstallNotReinstallable) + "\n\n" + alert.informativeText
+        }
         let arguments = service.uninstallArguments(token: cask.token, removingData: removingData)
         let command = NSHostingView(
             rootView: CommandBlock(command: (["brew"] + arguments).joined(separator: " "))
@@ -60,6 +63,22 @@ extension CaskActionAlertFactory {
         alert.addButton(withTitle: "Cancel")
         actions.append {}
         return (alert, actions)
+    }
+}
+
+extension CaskActionAlertFactory {
+    /// Homebrew refuses to install a disabled or removed cask, so recoveries that reinstall it would only fail.
+    static func withoutReinstallRecoveries(
+        _ failure: CaskOperationFailure, cask: Cask, service: LocalHomebrewService
+    ) -> CaskOperationFailure {
+        guard service.localState(for: cask).retirement?.blocksInstall == true else { return failure }
+        return CaskOperationFailure(
+            kind: failure.kind,
+            message: failure.message,
+            title: failure.title,
+            recoveries: failure.recoveries.subtracting([.adoptExisting, .replaceWithHomebrew, .repairAndReinstall]),
+            conflictingApplication: failure.conflictingApplication
+        )
     }
 }
 

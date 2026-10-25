@@ -210,7 +210,9 @@ enum CaskActionAlertFactory {
         failure: CaskOperationFailure,
         service: LocalHomebrewService
     ) -> (alert: NSAlert, actions: [() -> Void]) {
-        let failure = failureForPresentation(failure, cask: cask, service: service)
+        let failure = withoutReinstallRecoveries(
+            failureForPresentation(failure, cask: cask, service: service), cask: cask, service: service
+        )
         let alert = NSAlert()
         alert.messageText = failure.kind == .installationPreflight
             ? String(localized: .alertInstallConflictTitle(cask.displayName))
