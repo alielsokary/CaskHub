@@ -62,6 +62,7 @@ final class ImageCacheService {
     }
 
     func image(for cask: Cask) async -> NSImage? {
+        if cask.thirdPartyTap != nil { return await tapImage(for: cask) }
         let token = cask.token
         if let hash = iconHash(for: token) { return await hashedImage(for: cask, hash: hash) }
         if let cached = memoryCache.object(forKey: token as NSString) { return cached }
@@ -74,6 +75,46 @@ final class ImageCacheService {
         let image = await task.value
         inFlightTasks.removeValue(forKey: token)
         return image
+    }
+
+    private func tapImage(for cask: Cask) async -> NSImage? {
+        let key = cask.iconKey
+        if let cached = memoryCache.object(forKey: key as NSString) { return cached }
+        if let existing = inFlightTasks[key] { return await existing.value }
+        let task = Task {
+            let generation = await diskCache.currentGeneration()
+            return await loadTapImage(for: cask, generation: generation)
+        }
+        inFlightTasks[key] = task
+        let image = await task.value
+        inFlightTasks.removeValue(forKey: key)
+        return image
+    }
+
+    private func loadTapImage(for cask: Cask, generation: UInt64) async -> NSImage? {
+        let key = cask.iconKey
+        if let data = await diskCache.loadData(token: key),
+           let image = await Self.preparedImage(from: data) {
+            guard !Task.isCancelled, await diskCache.isCurrent(generation) else { return nil }
+            remember(image, token: key)
+            return image
+        }
+        if await diskCache.hasRecentMiss(token: key, retryInterval: Self.missRetryInterval) {
+            return nil
+        }
+        var sawHTTPResponse = false
+        for url in CaskIconURL.tapIconURLs(for: cask) {
+            let (data, responded) = await downloadImage(from: url)
+            sawHTTPResponse = sawHTTPResponse || responded
+            if let data,
+               let image = await cache(data: data, token: key, generation: generation) {
+                return image
+            }
+        }
+        if sawHTTPResponse {
+            try? await diskCache.recordMiss(token: key, generation: generation)
+        }
+        return nil
     }
 
     private func loadImage(for cask: Cask, generation: UInt64) async -> NSImage? {
@@ -128,6 +169,7 @@ final class ImageCacheService {
         // A task already returning to the main actor may have populated memory
         // while the disk actor was clearing. The generation check rejects its write.
         memoryCache.removeAllObjects()
+        iconRefreshRevision &+= 1
     }
 
     // MARK: - Private

@@ -12,6 +12,7 @@ enum SettingsSection: Hashable {
     case general
     case appearance
     case homebrew
+    case taps
     case privacy
     case updates
     case about
@@ -37,6 +38,11 @@ struct SettingsView: View {
                     Label("Homebrew", systemImage: "shippingbox")
                 }
                 .tag(SettingsSection.homebrew)
+            TapsSettingsView()
+                .tabItem {
+                    Label("Taps", systemImage: "externaldrive.connected.to.line.below")
+                }
+                .tag(SettingsSection.taps)
             PrivacySettingsView()
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")

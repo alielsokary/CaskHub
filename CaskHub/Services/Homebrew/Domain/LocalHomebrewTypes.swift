@@ -262,6 +262,8 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
     let installedAt: Date?
     let lastUpdatedAt: Date?
     let appBundleNames: [String]
+    let tap: String?
+    let definition: Cask?
 
     /// Brew still lists this cask, but its app was removed outside Homebrew
     /// (or its install receipt is gone) — opens and upgrades are doomed.
@@ -273,7 +275,9 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
         installedAt: Date?,
         lastUpdatedAt: Date? = nil,
         appBundleNames: [String],
-        isZombie: Bool = false
+        isZombie: Bool = false,
+        tap: String? = nil,
+        definition: Cask? = nil
     ) {
         self.token = token
         self.installedVersion = installedVersion
@@ -281,10 +285,16 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
         self.lastUpdatedAt = lastUpdatedAt
         self.appBundleNames = appBundleNames
         self.isZombie = isZombie
+        self.tap = tap
+        self.definition = definition
     }
 
     var id: String {
         token
+    }
+
+    var isThirdPartyTap: Bool {
+        Cask.isThirdPartyTap(tap)
     }
 }
 

@@ -162,6 +162,10 @@ extension Analytics {
             return ["page": item.rawValue.lowercased()]
         case .shelfSetup:
             return ["page": "shelfSetup"]
+        case .taps:
+            return ["page": "taps"]
+        case .tap:
+            return ["page": "tap"]
         case .maintenance:
             return ["page": "maintenance"]
         case let .category(categoryID):

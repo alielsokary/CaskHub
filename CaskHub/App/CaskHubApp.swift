@@ -52,6 +52,7 @@ struct CaskHubApp: App {
     init() {
         // Tooltip delay in ms; registered (not set) so it never persists to prefs.
         UserDefaults.standard.register(defaults: ["NSInitialToolTipDelay": 500])
+        if CrashReporter.detectsTestRun { SilentTestRun.install() }
         // Must run before anything persists prefs or caches, or a new install reads as an upgrade.
         let hadPriorInstall = AppStyle.hasPriorInstall()
         AppStyle.current = AppStyle.resolveStored(in: .standard) { hadPriorInstall }
@@ -153,6 +154,8 @@ struct CaskHubApp: App {
                 SettingsView(selection: $settingsSection)
                     .environment(updaterService)
                     .environment(localHomebrew)
+                    .environment(catalog)
+                    .environment(imageCache)
             }
         }
         .commands {
@@ -269,6 +272,23 @@ struct WindowCloseButtonConfigurator: NSViewRepresentable {
         @objc
         private func windowDidBecomeKey() {
             onBecomeKey()
+        }
+    }
+}
+
+@MainActor
+enum SilentTestRun {
+    private static var observer: (any NSObjectProtocol)?
+
+    static func install() {
+        guard observer == nil else { return }
+        NSApplication.shared.setActivationPolicy(.accessory)
+        observer = NotificationCenter.default.addObserver(
+            forName: NSWindow.didUpdateNotification, object: nil, queue: .main
+        ) { notification in
+            MainActor.assumeIsolated {
+                (notification.object as? NSWindow)?.alphaValue = 0
+            }
         }
     }
 }

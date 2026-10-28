@@ -10,6 +10,7 @@ import Foundation
 nonisolated struct InstallReceipt {
     let appBundleNames: [String]
     let lastUpdatedAt: Date?
+    let tap: String?
 
     init(jsonData: Data) throws {
         guard let root = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
@@ -19,6 +20,8 @@ nonisolated struct InstallReceipt {
         lastUpdatedAt = (root["time"] as? NSNumber).map {
             Date(timeIntervalSince1970: $0.doubleValue)
         }
+
+        tap = (root["source"] as? [String: Any])?["tap"] as? String
 
         var apps: [String] = []
         if let artifacts = root["uninstall_artifacts"] as? [[String: Any]] {

@@ -74,11 +74,13 @@ nonisolated enum CaskInfoProjector {
         if let tap = cask.tap {
             rows.append(CaskInfoRow(property: "Tap", value: tap))
         }
-        rows.append(CaskInfoRow(
-            property: String(localized: "Homepage"),
-            value: cask.homepage,
-            link: URL(string: cask.homepage)
-        ))
+        if !cask.homepage.isEmpty {
+            rows.append(CaskInfoRow(
+                property: String(localized: "Homepage"),
+                value: cask.homepage,
+                link: URL(string: cask.homepage)
+            ))
+        }
         return rows
     }
 

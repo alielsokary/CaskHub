@@ -17,6 +17,7 @@ struct SidebarView: View {
     var installedCount: Int = 0
     var adoptableCount: Int = 0
     var categoryCounts: [String: Int] = [:]
+    var taps: [HomebrewTap] = []
 
     @Environment(\.catalogTextScale) private var textScale
 
@@ -52,6 +53,20 @@ struct SidebarView: View {
 
                     sectionHeader("MANAGE")
                     row(.shelfSetup, title: String(localized: .sidebarShelfSetup), icon: "books.vertical")
+
+                    row(.taps, title: String(localized: "Taps"), icon: "shippingbox")
+
+                    if !taps.isEmpty {
+                        sectionHeader("TAPS")
+                        ForEach(taps) { tap in
+                            row(
+                                .tap(tap.name),
+                                title: tap.name,
+                                icon: "shippingbox",
+                                count: tap.caskTokens.count
+                            )
+                        }
+                    }
 
                     sectionHeader("MAINTENANCE")
                     row(.maintenance, title: String(localized: .sidebarHealth), icon: "stethoscope")

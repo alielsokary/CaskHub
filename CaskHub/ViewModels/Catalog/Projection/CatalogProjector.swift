@@ -61,7 +61,7 @@ nonisolated enum CatalogProjector {
             if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
-            if let mapping = input.categoryMappings[cask.token] {
+            if cask.thirdPartyTap == nil, let mapping = input.categoryMappings[cask.token] {
                 forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }
@@ -166,8 +166,10 @@ nonisolated enum CatalogProjector {
             return input.library.updatableCasks
         case .library(.adopt):
             return input.library.adoptableCasks
-        case .shelfSetup, .maintenance:
+        case .shelfSetup, .taps, .maintenance:
             return []
+        case let .tap(name):
+            return input.casks.filter { $0.thirdPartyTap == name }
         case let .category(categoryID):
             return input.library.casksByCategory[categoryID] ?? []
         }

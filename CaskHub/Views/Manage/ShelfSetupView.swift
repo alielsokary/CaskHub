@@ -114,7 +114,7 @@ struct ShelfSetupView: View {
         panel.showsHiddenFiles = true
         let response = CrashReporter.withHangTrackingPaused { panel.runModal() }
         guard response == .OK, let url = panel.url else { return }
-        let tokens = viewModel.installedCasks.map(\.token)
+        let tokens = viewModel.installedCasks.map(\.brewToken)
         do {
             try Brewfile.contents(forCaskTokens: tokens)
                 .write(to: url, atomically: true, encoding: .utf8)

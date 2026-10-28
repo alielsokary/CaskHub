@@ -57,21 +57,21 @@ extension LocalHomebrewService {
             try await runMutation(
                 .adopting,
                 token: request.cask.token,
-                args: ["install", "--cask", request.cask.token, "--adopt"],
+                args: ["install", "--cask", request.cask.brewToken, "--adopt"],
                 context: context
             )
         case .replaceApplication:
             try await runMutation(
                 .adopting,
                 token: request.cask.token,
-                args: ["install", "--cask", request.cask.token, "--force"],
+                args: ["install", "--cask", request.cask.brewToken, "--force"],
                 context: context
             )
         case .installPackage:
             try await runMutation(
                 .adopting,
                 token: request.cask.token,
-                args: ["install", "--cask", request.cask.token],
+                args: ["install", "--cask", request.cask.brewToken],
                 context: context
             )
         case .replacePackage:
