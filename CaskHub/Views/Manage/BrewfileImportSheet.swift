@@ -196,9 +196,9 @@ struct BrewfileImportSheet: View {
 
     private var unavailableHeader: some View {
         HStack(spacing: 8) {
-            Image(systemName: CaskActionStyle.disabled.icon)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Color.chTextMuted)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.red)
                 .frame(width: 16, height: 16)
             Text(String(localized: .shelfSetupBrewfileSheetUnavailable(plan.unavailableEntries.count)))
                 .font(CHType.bodySm)

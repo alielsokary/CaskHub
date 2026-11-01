@@ -81,29 +81,17 @@ struct CaskActionsView: View {
                     state.uninstallAvailability.unavailableReason
                         ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
-        } else if let retirement = state.retirement, retirement.blocksInstall {
-            RetirementCapsule(retirement: retirement, isInstalled: false, iconOnly: false, fullWidth: fullWidth)
         } else {
-            HStack(spacing: 8) {
-                Group {
-                    if usesIconOnlyOpenAndUpdate && state.retirement != nil {
-                        ActionCapsuleIconButton(action: .install) { localHomebrew.send(.install(cask)) }
-                    } else {
-                        ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
-                            localHomebrew.send(.install(cask))
-                        }
-                    }
-                }
-                .disabledDuringHomebrewUpdate(
-                    presentation.isHomebrewMutationBlocked
-                )
-                if let retirement = state.retirement {
-                    RetirementCapsule(
-                        retirement: retirement, isInstalled: false,
-                        iconOnly: usesIconOnlyOpenAndUpdate, fullWidth: fullWidth
-                    )
-                }
+            // Homebrew refuses to install a disabled cask; the retirement badge explains why.
+            let installBlocked = state.retirement?.blocksInstall == true
+            ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
+                localHomebrew.send(.install(cask))
             }
+            .disabledDuringHomebrewUpdate(
+                presentation.isHomebrewMutationBlocked
+            )
+            .disabled(installBlocked)
+            .opacity(installBlocked ? 0.45 : 1)
         }
     }
 
@@ -128,12 +116,11 @@ struct CaskActionsView: View {
         _ state: CaskLocalState,
         mutationBlocked: Bool
     ) -> some View {
-        let isPaired = state.hasAvailableUpdate || state.retirement != nil
         HStack(spacing: 8) {
             if state.canOpen {
                 openButton(
-                    fullWidth: fullWidth && !isPaired,
-                    isPaired: isPaired
+                    fullWidth: fullWidth && !state.hasAvailableUpdate,
+                    isPaired: state.hasAvailableUpdate
                 ) {
                     localHomebrew.send(.open(cask))
                 }
@@ -145,11 +132,6 @@ struct CaskActionsView: View {
                 ) {
                     localHomebrew.send(.update(token: cask.token))
                 }
-            } else if let retirement = state.retirement {
-                RetirementCapsule(
-                    retirement: retirement, isInstalled: true,
-                    iconOnly: usesIconOnlyOpenAndUpdate && state.canOpen, fullWidth: fullWidth
-                )
             } else if !state.canOpen {
                 ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
             }
@@ -242,37 +224,6 @@ private struct DisabledUninstallControl: View {
             .modifier(HoverHint(message: message))
             .accessibilityLabel("Uninstall")
             .accessibilityHint(message)
-    }
-}
-
-/// An inert status beside Install or Open; hovering explains what Homebrew decided.
-private struct RetirementCapsule: View {
-    let retirement: CaskRetirement
-    let isInstalled: Bool
-    let iconOnly: Bool
-    let fullWidth: Bool
-
-    var body: some View {
-        let style: CaskActionStyle = retirement.blocksInstall ? .disabled : .deprecated
-        let message = retirement.summary(isInstalled: isInstalled)
-        Group {
-            if iconOnly {
-                Image(systemName: style.icon)
-                    .font(.system(size: style.iconSize, weight: .bold))
-                    .foregroundStyle(style.foreground)
-                    .frame(minWidth: 44, maxWidth: .infinity)
-                    .frame(height: CHSize.actionCapsuleHeight)
-                    .background(Capsule().fill(style.background))
-                    .overlay(Capsule().strokeBorder(style.border, lineWidth: 1))
-            } else {
-                ActionCapsuleLabel(action: style, fullWidth: fullWidth)
-            }
-        }
-        .contentShape(Capsule())
-        .modifier(HoverHint(message: message))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(style.title)
-        .accessibilityHint(message)
     }
 }
 

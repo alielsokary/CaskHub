@@ -134,35 +134,43 @@ final class RetiredCaskCatalogTests: XCTestCase {
         XCTAssertEqual(vm.casks.map(\.token), ["new-shared"])
     }
 
-    func test_disabled_and_removed_casks_explain_themselves_and_drop_reinstall_recoveries() async throws {
-        let local = await makePlatformResolvedHomebrew(defaults: makeScratchDefaults("retired-explain"))
-        for token in ["dead-app", "gone-app", "firefox"] {
-            updateInstalledCask(receiptInstallation(token, tap: "homebrew/cask", apps: []), in: local)
+    func test_info_status_rows_combine_reason_date_and_replacement() async throws {
+        let fixture = await makeRetiredInstalledFixture()
+        let (local, vm, rows) = (fixture.local, fixture.vm, fixture.rows)
+        func info(_ cask: Cask) -> [String: String] {
+            Dictionary(uniqueKeysWithValues: CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
+                cask: cask, category: nil, downloadSize: .unknown,
+                actionPresentation: local.actionPresentation(for: cask, localState: vm.localState(for: cask)),
+                externalVersion: nil, installationDates: nil
+            )).map { ($0.property, $0.value) })
         }
-        let (vm, _) = await makeSUT(
-            casks: [
-                Cask.preview(
-                    token: "dead-app", disabled: true,
-                    disableDate: "2026-09-01", disableReason: "fails_gatekeeper_check"
-                ),
-                makeCask("firefox")
-            ],
-            localHomebrew: local
-        )
-        vm.selectedSidebar = .library(.installed)
-        let rows = Dictionary(uniqueKeysWithValues: vm.filteredCasks.map { ($0.token, $0) })
-        let dead = try XCTUnwrap(rows["dead-app"])
+        func dayText(_ iso: String) throws -> String {
+            try day(iso).formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: .gmt))
+        }
 
-        let info = Dictionary(uniqueKeysWithValues: CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
-            cask: dead, category: nil, downloadSize: .unknown,
-            actionPresentation: local.actionPresentation(for: dead, localState: vm.localState(for: dead)),
-            externalVersion: nil, installationDates: nil
-        )).map { ($0.property, $0.value) })
-        XCTAssertEqual(info["Disabled"], "Yes")
-        XCTAssertEqual(info["Reason"], "It fails the macOS Gatekeeper check.")
-        XCTAssertEqual(info["Disabled On"], try day("2026-09-01").formatted(
-            Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: .gmt)
+        let deadInfo = info(try XCTUnwrap(rows["dead-app"]))
+        XCTAssertEqual(
+            deadInfo["Disabled"],
+            "Yes, reason: It fails the macOS Gatekeeper check. Disabled date: \(try dayText("2026-09-01"))"
+        )
+        XCTAssertEqual(deadInfo["Deprecated"], "No")
+        XCTAssertNil(deadInfo["Reason"], "status details live in the Disabled row")
+        XCTAssertEqual(info(try XCTUnwrap(rows["gone-app"]))["Disabled"], "Yes, reason: Homebrew no longer lists this app")
+        let legacyInfo = info(Cask.preview(
+            token: "legacy-app", deprecated: true, deprecationDate: "2026-07-12",
+            deprecationReason: "discontinued", deprecationReplacementCask: "chatgpt"
         ))
+        XCTAssertEqual(legacyInfo["Deprecated"], """
+        Yes, reason: It is discontinued upstream. Deprecated date: \(try dayText("2026-07-12")). \
+        Planned disable date: \(try dayText("2027-07-12")). Replacement: chatgpt
+        """)
+        XCTAssertEqual(legacyInfo["Disabled"], "No")
+    }
+
+    func test_disabled_and_removed_casks_warn_on_uninstall_and_drop_reinstall_recoveries() async throws {
+        let fixture = await makeRetiredInstalledFixture()
+        let (local, rows) = (fixture.local, fixture.rows)
+        let dead = try XCTUnwrap(rows["dead-app"])
 
         let warning = "Homebrew can't reinstall this app later."
         for token in ["dead-app", "gone-app"] {
@@ -251,6 +259,31 @@ final class RetiredCaskCatalogTests: XCTestCase {
             vm.searchText = "firefox"
             XCTAssertFalse(vm.filteredCasks.contains { $0.token == "firefox-dead" }, "\(page)")
         }
+    }
+
+    private struct RetiredFixture {
+        let local: LocalHomebrewService
+        let vm: CaskCatalogViewModel
+        let rows: [String: Cask]
+    }
+
+    private func makeRetiredInstalledFixture() async -> RetiredFixture {
+        let local = await makePlatformResolvedHomebrew(defaults: makeScratchDefaults("retired-explain"))
+        for token in ["dead-app", "gone-app", "firefox"] {
+            updateInstalledCask(receiptInstallation(token, tap: "homebrew/cask", apps: []), in: local)
+        }
+        let (vm, _) = await makeSUT(
+            casks: [
+                Cask.preview(
+                    token: "dead-app", disabled: true,
+                    disableDate: "2026-09-01", disableReason: "fails_gatekeeper_check"
+                ),
+                makeCask("firefox")
+            ],
+            localHomebrew: local
+        )
+        vm.selectedSidebar = .library(.installed)
+        return RetiredFixture(local: local, vm: vm, rows: Dictionary(uniqueKeysWithValues: vm.filteredCasks.map { ($0.token, $0) }))
     }
 
     private func day(_ iso: String) throws -> Date {

@@ -180,39 +180,39 @@ nonisolated enum CaskInfoProjector {
     }
 
     private static func statusRows(isOutdated: Bool, retirement: CaskRetirement?) -> [CaskInfoRow] {
-        var isDeprecated = false
-        if case .deprecated = retirement { isDeprecated = true }
-        return [
-            CaskInfoRow(property: String(localized: "Outdated"), value: yesNo(isOutdated)),
-            CaskInfoRow(property: String(localized: "Deprecated"), value: yesNo(isDeprecated)),
-            CaskInfoRow(property: String(localized: "Disabled"), value: yesNo(retirement?.blocksInstall == true))
-        ] + retirementRows(retirement)
-    }
-
-    private static func retirementRows(_ retirement: CaskRetirement?) -> [CaskInfoRow] {
-        func row(_ property: String, _ value: String?) -> CaskInfoRow? {
-            value.map { CaskInfoRow(property: property, value: $0) }
-        }
-        let reason = String(localized: .caskInfoReason)
+        var deprecated = yesNo(false)
+        var disabled = yesNo(false)
         switch retirement {
         case nil:
-            return []
-        case let .deprecated(reasonCode, deprecatedOn, plannedDisableDate, replacement):
-            return [
-                row(reason, reasonCode.map(CaskRetirement.reasonText)),
-                row(String(localized: .caskInfoDeprecatedOn), deprecatedOn.map(CaskRetirement.dayText)),
-                row(String(localized: .caskInfoPlannedDisable), plannedDisableDate.map(CaskRetirement.dayText)),
-                row(String(localized: .caskInfoReplacement), replacement.map(replacementToken))
-            ].compactMap { $0 }
-        case let .disabled(reasonCode, disabledOn, replacement):
-            return [
-                row(reason, reasonCode.map(CaskRetirement.reasonText)),
-                row(String(localized: .caskInfoDisabledOn), disabledOn.map(CaskRetirement.dayText)),
-                row(String(localized: .caskInfoReplacement), replacement.map(replacementToken))
-            ].compactMap { $0 }
+            break
+        case let .deprecated(reason, deprecatedOn, plannedDisableDate, replacement):
+            deprecated = statusDetail(reason: reason.map(CaskRetirement.reasonText), details: [
+                deprecatedOn.map { String(localized: .caskInfoStatusDeprecatedDate(CaskRetirement.dayText($0))) },
+                plannedDisableDate.map { String(localized: .caskInfoStatusPlannedDisableDate(CaskRetirement.dayText($0))) },
+                replacement.map { String(localized: .caskInfoStatusReplacement(replacementToken($0))) }
+            ])
+        case let .disabled(reason, disabledOn, replacement):
+            disabled = statusDetail(reason: reason.map(CaskRetirement.reasonText), details: [
+                disabledOn.map { String(localized: .caskInfoStatusDisabledDate(CaskRetirement.dayText($0))) },
+                replacement.map { String(localized: .caskInfoStatusReplacement(replacementToken($0))) }
+            ])
         case .removedFromHomebrew:
-            return [CaskInfoRow(property: reason, value: String(localized: .caskRetirementRemovedHeadline))]
+            disabled = statusDetail(reason: String(localized: .caskRetirementRemovedHeadline), details: [])
         }
+        return [
+            CaskInfoRow(property: String(localized: "Outdated"), value: yesNo(isOutdated)),
+            CaskInfoRow(property: String(localized: "Deprecated"), value: deprecated),
+            CaskInfoRow(property: String(localized: "Disabled"), value: disabled)
+        ]
+    }
+
+    /// One value such as "Yes, reason: It fails the macOS Gatekeeper check. Disabled date: 1 Sep 2026".
+    private static func statusDetail(reason: String?, details: [String?]) -> String {
+        let head = reason.map { reason in
+            let clause = String(reason.reversed().drop { ".。".contains($0) }.reversed())
+            return String(localized: .caskInfoStatusYesReason(clause))
+        } ?? yesNo(true)
+        return ([head] + details.compactMap { $0 }).joined(separator: String(localized: .caskInfoStatusSeparator))
     }
 
     private static func replacementToken(_ replacement: CaskReplacement) -> String {

@@ -247,7 +247,7 @@ final class CaskListActionTests: XCTestCase {
         render(row(zombie, service: service), width: 760, height: 64)
     }
 
-    func test_retirement_pairs_render_and_fit_the_list_action_slot() async throws {
+    func test_retired_casks_render_and_fit_the_list_action_slot() async throws {
         defer { AppStyle.current = .classic }
         let applications = FileManager.default.temporaryDirectory
             .appendingPathComponent("retired-apps-\(UUID().uuidString)")
