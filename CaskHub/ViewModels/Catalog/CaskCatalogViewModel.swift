@@ -56,6 +56,13 @@ final class CaskCatalogViewModel {
     var casks: [Cask] {
         catalog.browsable
     }
+    var retiredCasks: [Cask] {
+        catalog.retired
+    }
+
+    func catalogCask(for token: String) -> Cask? {
+        catalog.byToken[token]
+    }
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:] {

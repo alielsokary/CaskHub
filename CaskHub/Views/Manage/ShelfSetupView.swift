@@ -162,16 +162,20 @@ struct ShelfSetupView: View {
         fileName: String,
         tokens: [String]
     ) -> BrewfileImportPlan {
-        let byToken = Dictionary(viewModel.casks.map { ($0.token, $0) }) { first, _ in first }
+        let installed = viewModel.localHomebrew.installationSnapshot.installedCasks
         var skippedEntries: [BrewfileImportPlan.Entry] = []
         var newEntries: [BrewfileImportPlan.Entry] = []
+        var unavailableEntries: [BrewfileImportPlan.Entry] = []
         for token in tokens {
             // Brewfiles may tap-qualify tokens; the catalog keys bare ones.
             let bare = token.split(separator: "/").last.map(String.init) ?? token
-            let cask = byToken[bare]
+            let cask = viewModel.catalogCask(for: bare)
             let entry = BrewfileImportPlan.Entry(token: token, cask: cask)
-            if let cask, viewModel.localState(for: cask).isPresent {
+            let state = cask.map(viewModel.localState(for:))
+            if state?.isPresent == true || installed[bare] != nil {
                 skippedEntries.append(entry)
+            } else if state?.retirement?.blocksInstall == true {
+                unavailableEntries.append(entry)
             } else {
                 newEntries.append(entry)
             }
@@ -179,7 +183,8 @@ struct ShelfSetupView: View {
         return BrewfileImportPlan(
             fileName: fileName,
             skippedEntries: skippedEntries,
-            newEntries: newEntries
+            newEntries: newEntries,
+            unavailableEntries: unavailableEntries
         )
     }
 

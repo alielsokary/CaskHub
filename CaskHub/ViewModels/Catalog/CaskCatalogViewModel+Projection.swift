@@ -61,7 +61,7 @@ extension CaskCatalogViewModel {
             catalogRevision: catalogRevision,
             categoryRevision: categoryService.catalogStateRevision
         )
-        return categoryPresentationCache.value(for: key) { [casks, categoryService] in
+        return categoryPresentationCache.value(for: key) { [casks = casks + retiredCasks, categoryService] in
             var result = [String: CaskCategoryPresentation](minimumCapacity: casks.count)
             for cask in casks {
                 result[cask.token] = CaskCategoryProjector.make(
@@ -99,7 +99,8 @@ extension CaskCatalogViewModel {
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
                 casks: catalog.browsable,
                 installedOnlyCasks: installedOnly,
-                localStates: localHomebrew.localStates(for: catalog.browsable + installedOnly),
+                retiredCasks: catalog.retired,
+                localStates: localHomebrew.localStates(for: catalog.browsable + installedOnly + catalog.retired),
                 categoryMappings: categoryService.tokenMappings,
                 adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))
@@ -139,14 +140,14 @@ extension CaskCatalogViewModel {
     // MARK: - Filtered Casks
 
     private var searchKeys: [String: String] {
-        searchKeysCache.value(for: catalogRevision) { [casks] in
+        searchKeysCache.value(for: catalogRevision) { [casks = casks + retiredCasks] in
             Dictionary(casks.map { ($0.token, $0.searchKey) }) { first, _ in first }
         }
     }
 
     /// Collation-equal names share a rank so descending sorts keep ties stable.
     private var nameRanks: [String: Int] {
-        nameRankCache.value(for: catalogRevision) { [casks] in
+        nameRankCache.value(for: catalogRevision) { [casks = casks + retiredCasks] in
             let sorted = casks.sorted {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
                     == .orderedAscending
@@ -212,6 +213,7 @@ extension CaskCatalogViewModel {
     private var filteredProjectionInput: CatalogFilteredProjectionInput {
         CatalogFilteredProjectionInput(
             casks: casks,
+            retiredCasks: retiredCasks,
             library: librarySnapshot,
             selectedSidebar: selectedSidebar,
             searchText: appliedSearchText,

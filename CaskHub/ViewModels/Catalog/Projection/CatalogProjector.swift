@@ -11,11 +11,14 @@ import Foundation
 nonisolated struct CatalogPartition: Equatable {
     let all: [Cask]
     let browsable: [Cask]
+    /// Deprecated or disabled main casks: found by search, never listed.
+    let retired: [Cask]
     let byToken: [String: Cask]
 
     init(_ all: [Cask]) {
         self.all = all
         browsable = all.filter(\.isBrowsable)
+        retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") && !$0.token.hasPrefix("font-") }
         byToken = Dictionary(all.map { ($0.token, $0) }) { first, _ in first }
     }
 }
@@ -24,6 +27,7 @@ nonisolated struct CatalogLibraryProjectionInput {
     let casks: [Cask]
     /// Installed casks Discover pages never list: retired, font, `@` variants, and receipt-built rows.
     let installedOnlyCasks: [Cask]
+    let retiredCasks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
     let adoptIgnoredTokens: Set<String>
@@ -40,6 +44,7 @@ nonisolated struct CatalogBrowseProjectionInput {
 
 nonisolated struct CatalogFilteredProjectionInput {
     let casks: [Cask]
+    let retiredCasks: [Cask]
     let library: CatalogLibrarySnapshot
     let selectedSidebar: SidebarSelection
     let searchText: String
@@ -89,6 +94,13 @@ nonisolated enum CatalogProjector {
             guard let localState = input.localStates[cask.token] else { continue }
             library.add(cask, localState)
         }
+        var retiredCasksByCategory: [String: [Cask]] = [:]
+        for cask in input.retiredCasks {
+            guard let mapping = input.categoryMappings[cask.token] else { continue }
+            forEachUniqueCategory(in: mapping) { categoryID in
+                retiredCasksByCategory[categoryID, default: []].append(cask)
+            }
+        }
 
         return CatalogLibrarySnapshot(
             updatableCasks: library.updatable,
@@ -97,6 +109,7 @@ nonisolated enum CatalogProjector {
             adoptableCasks: adoptableCasks,
             casksByCategory: casksByCategory,
             categoryCounts: casksByCategory.mapValues(\.count),
+            retiredCasksByCategory: retiredCasksByCategory,
             localStates: input.localStates
         )
     }
@@ -165,7 +178,19 @@ nonisolated enum CatalogProjector {
     ) -> [Cask] {
         let filtered = applySidebarFilter(input)
         let searched = applySearch(input.searchText, to: filtered, keys: input.searchKeys)
-        return applySort(input.sortOption, to: searched, input: input)
+        let installable = applySort(input.sortOption, to: searched, input: input)
+        guard !input.searchText.isEmpty else { return installable }
+        // Retired matches always follow installable ones, whatever the sort.
+        let retired = applySearch(input.searchText, to: retiredSearchPool(input), keys: input.searchKeys)
+        return installable + applySort(input.sortOption, to: retired, input: input)
+    }
+
+    private static func retiredSearchPool(_ input: CatalogFilteredProjectionInput) -> [Cask] {
+        switch input.selectedSidebar {
+        case .discover: input.retiredCasks
+        case let .category(categoryID): input.library.retiredCasksByCategory[categoryID] ?? []
+        case .library, .shelfSetup, .maintenance: []
+        }
     }
 
     static func makeExternallyManaged(

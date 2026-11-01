@@ -54,6 +54,7 @@ final class CaskCatalogSortTests: XCTestCase {
         let input = CatalogLibraryProjectionInput(
             casks: [installed, adoptable],
             installedOnlyCasks: [],
+            retiredCasks: [],
             localStates: [
                 installed.token: localState(
                     source: .homebrew,
@@ -78,6 +79,7 @@ final class CaskCatalogSortTests: XCTestCase {
         let library = CatalogProjector.makeLibrary(from: input)
         let filtered = CatalogProjector.makeFiltered(from: CatalogFilteredProjectionInput(
             casks: input.casks,
+            retiredCasks: [],
             library: library,
             selectedSidebar: .library(.updates),
             searchText: "",

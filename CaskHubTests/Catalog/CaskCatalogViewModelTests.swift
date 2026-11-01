@@ -12,7 +12,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
     // MARK: Fetching
 
     @MainActor
-    func test_fetch_casks_excludes_deprecated_disabled_versioned_and_font_casks() async {
+    func test_fetch_casks_keeps_retired_versioned_and_font_casks_off_discover_listings() async {
         let (vm, _) = await makeSUT(casks: [
             makeCask("firefox"),
             Cask.preview(token: "legacy-app", deprecated: true),
@@ -22,6 +22,8 @@ final class CaskCatalogViewModelTests: XCTestCase {
         ])
 
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
+        vm.searchText = "a"
+        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["legacy-app", "dead-app"])
         XCTAssertNil(vm.errorMessage)
         XCTAssertFalse(vm.isLoading)
     }
