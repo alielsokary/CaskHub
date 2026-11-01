@@ -63,7 +63,10 @@ nonisolated enum CaskInfoProjector {
                 dates: input.installationDates
             )
             + metadataRows(for: input.cask, category: input.category)
-            + statusRows(for: input.cask, isOutdated: input.actionPresentation.localState.isOutdated)
+            + statusRows(
+                isOutdated: input.actionPresentation.localState.isOutdated,
+                retirement: input.actionPresentation.localState.retirement
+            )
     }
 
     private static func identityRows(for cask: Cask) -> [CaskInfoRow] {
@@ -74,11 +77,13 @@ nonisolated enum CaskInfoProjector {
         if let tap = cask.tap {
             rows.append(CaskInfoRow(property: "Tap", value: tap))
         }
-        rows.append(CaskInfoRow(
-            property: String(localized: "Homepage"),
-            value: cask.homepage,
-            link: URL(string: cask.homepage)
-        ))
+        if !cask.homepage.isEmpty {
+            rows.append(CaskInfoRow(
+                property: String(localized: "Homepage"),
+                value: cask.homepage,
+                link: URL(string: cask.homepage)
+            ))
+        }
         return rows
     }
 
@@ -174,12 +179,46 @@ nonisolated enum CaskInfoProjector {
         return rows
     }
 
-    private static func statusRows(for cask: Cask, isOutdated: Bool) -> [CaskInfoRow] {
-        [
+    private static func statusRows(isOutdated: Bool, retirement: CaskRetirement?) -> [CaskInfoRow] {
+        var deprecated = yesNo(false)
+        var disabled = yesNo(false)
+        switch retirement {
+        case nil:
+            break
+        case let .deprecated(reason, deprecatedOn, plannedDisableDate, replacement):
+            deprecated = statusDetail(reason: reason.map(CaskRetirement.reasonText), details: [
+                deprecatedOn.map { String(localized: .caskInfoStatusDeprecatedDate(CaskRetirement.dayText($0))) },
+                plannedDisableDate.map { String(localized: .caskInfoStatusPlannedDisableDate(CaskRetirement.dayText($0))) },
+                replacement.map { String(localized: .caskInfoStatusReplacement(replacementToken($0))) }
+            ])
+        case let .disabled(reason, disabledOn, replacement):
+            disabled = statusDetail(reason: reason.map(CaskRetirement.reasonText), details: [
+                disabledOn.map { String(localized: .caskInfoStatusDisabledDate(CaskRetirement.dayText($0))) },
+                replacement.map { String(localized: .caskInfoStatusReplacement(replacementToken($0))) }
+            ])
+        case .removedFromHomebrew:
+            disabled = statusDetail(reason: String(localized: .caskRetirementRemovedHeadline), details: [])
+        }
+        return [
             CaskInfoRow(property: String(localized: "Outdated"), value: yesNo(isOutdated)),
-            CaskInfoRow(property: String(localized: "Deprecated"), value: yesNo(cask.deprecated)),
-            CaskInfoRow(property: String(localized: "Disabled"), value: yesNo(cask.disabled))
+            CaskInfoRow(property: String(localized: "Deprecated"), value: deprecated),
+            CaskInfoRow(property: String(localized: "Disabled"), value: disabled)
         ]
+    }
+
+    /// One value such as "Yes, reason: It fails the macOS Gatekeeper check. Disabled date: 1 Sep 2026".
+    private static func statusDetail(reason: String?, details: [String?]) -> String {
+        let head = reason.map { reason in
+            let clause = String(reason.reversed().drop { ".。".contains($0) }.reversed())
+            return String(localized: .caskInfoStatusYesReason(clause))
+        } ?? yesNo(true)
+        return ([head] + details.compactMap { $0 }).joined(separator: String(localized: .caskInfoStatusSeparator))
+    }
+
+    private static func replacementToken(_ replacement: CaskReplacement) -> String {
+        switch replacement {
+        case let .cask(token), let .formula(token): token
+        }
     }
 
     private static func yesNo(_ value: Bool) -> String {

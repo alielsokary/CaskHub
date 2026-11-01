@@ -86,7 +86,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
             Scenario(variant: ["auto_updates": false], off: true, greedy: true),
             Scenario(variant: ["version": NSNull(), "auto_updates": false], off: false, greedy: false),
             Scenario(variant: ["version": "4.8.5", "disabled": true], off: false, greedy: false),
-            Scenario(variant: ["version": "4.8.5", "deprecated": true], off: false, greedy: false)
+            Scenario(variant: ["version": "4.8.5", "deprecated": true], off: false, greedy: true)
         ]
         for scenario in scenarios {
             let context = try await makeContext(
@@ -284,6 +284,75 @@ extension CaskPlatformUpdateTests {
         await context.service.refresh()
         assertUpdates(context, off: true, greedy: true)
         XCTAssertEqual(queries, 5)
+    }
+
+    func test_retirement_resolves_reason_date_and_replacement_per_platform() async throws {
+        let casks = try await decodeCatalog([
+            ["token": "tomatobar", "disabled": true, "disable_date": "2026-09-01",
+             "disable_reason": "fails_gatekeeper_check"],
+            ["token": "codex-app", "deprecated": true, "deprecation_date": "2026-07-12",
+             "deprecation_reason": "discontinued", "deprecation_replacement_cask": "chatgpt"],
+            ["token": "active-trader-pro", "deprecated": true, "deprecation_date": "2025-12-17",
+             "deprecation_reason": "discontinued", "disable_date": "2026-12-17", "disable_reason": NSNull()],
+            ["token": "both-flags", "deprecated": true, "deprecation_date": "2025-06-11",
+             "deprecation_reason": "unmaintained", "disabled": true, "disable_date": "2026-06-11",
+             "disable_reason": "unmaintained", "disable_replacement_formula": "op"],
+            ["token": "adrive", "variations": ["golden_gate": [
+                "disabled": true, "disable_date": "2026-09-01", "disable_reason": "fails_gatekeeper_check"
+            ]]],
+            ["token": "explicit-null", "deprecated": true, "deprecation_date": "2026-01-02",
+             "deprecation_replacement_cask": "chatgpt",
+             "variations": ["arm64_tahoe": ["deprecation_replacement_cask": NSNull()]]],
+            ["token": "live"]
+        ])
+        let arm = CaskPlatform(tag: "arm64_golden_gate")
+
+        XCTAssertEqual(casks["tomatobar"]?.retirement(for: arm), .disabled(
+            reason: "fails_gatekeeper_check", disabledOn: try day("2026-09-01"), replacement: nil
+        ))
+        XCTAssertEqual(casks["codex-app"]?.retirement(for: nil), .deprecated(
+            reason: "discontinued", deprecatedOn: try day("2026-07-12"),
+            plannedDisableDate: try day("2027-07-12"), replacement: .cask("chatgpt")
+        ))
+        XCTAssertEqual(casks["active-trader-pro"]?.retirement(for: arm), .deprecated(
+            reason: "discontinued", deprecatedOn: try day("2025-12-17"),
+            plannedDisableDate: try day("2026-12-17"), replacement: nil
+        ))
+        XCTAssertEqual(casks["both-flags"]?.retirement(for: arm), .disabled(
+            reason: "unmaintained", disabledOn: try day("2026-06-11"), replacement: .formula("op")
+        ))
+        XCTAssertEqual(casks["adrive"]?.retirement(for: CaskPlatform(tag: "golden_gate")), .disabled(
+            reason: "fails_gatekeeper_check", disabledOn: try day("2026-09-01"), replacement: nil
+        ))
+        XCTAssertNil(casks["adrive"]?.retirement(for: arm))
+        XCTAssertEqual(casks["explicit-null"]?.retirement(for: CaskPlatform(tag: "arm64_tahoe")), .deprecated(
+            reason: nil, deprecatedOn: try day("2026-01-02"), plannedDisableDate: try day("2027-01-02"), replacement: nil
+        ))
+        XCTAssertNil(casks["live"]?.retirement(for: arm))
+        XCTAssertEqual(casks["tomatobar"]?.retirement(for: arm)?.blocksInstall, true)
+        XCTAssertEqual(casks["codex-app"]?.retirement(for: arm)?.blocksInstall, false)
+    }
+
+    private func day(_ iso: String) throws -> Date {
+        try Date(iso, strategy: Date.ISO8601FormatStyle().year().month().day())
+    }
+
+    private func decodeCatalog(_ overrides: [[String: Any]]) async throws -> [String: Cask] {
+        let payloads = overrides.map { override in
+            var payload: [String: Any] = [
+                "name": ["App"], "homepage": "https://example.com", "version": "1.0",
+                "outdated": false, "deprecated": false, "disabled": false
+            ]
+            payload.merge(override) { _, replacement in replacement }
+            return payload
+        }
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [PlatformCatalogProtocol.self]
+        config.httpAdditionalHeaders = ["X-Test-Catalog": try JSONSerialization.data(withJSONObject: payloads).base64EncodedString()]
+        let session = URLSession(configuration: config)
+        defer { session.invalidateAndCancel() }
+        let casks = try await BrewAPIClient(session: session).fetchAllCasks()
+        return Dictionary(uniqueKeysWithValues: casks.map { ($0.token, $0) })
     }
 
     private func makePlatformBrew(in root: URL, output: String, status: Int = 0) throws -> URL {

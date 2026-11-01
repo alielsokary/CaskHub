@@ -146,6 +146,36 @@ final class ShelfSetupViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_make_import_plan_skips_installed_tokens_and_lists_disabled_as_unavailable() async {
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("brewfile-retired"), externalApps: [:])
+        let (vm, _) = await makeSUT(
+            casks: [
+                makeCask("raycast"),
+                Cask.preview(token: "qbittorrent", disabled: true),
+                Cask.preview(token: "chromium", disabled: true, disableReason: "fails_gatekeeper_check"),
+                Cask.preview(token: "legacy-app", deprecated: true)
+            ],
+            localHomebrew: homebrew
+        )
+        for token in ["qbittorrent", "gone-app"] {
+            updateInstalledCask(installation(token, version: "1.0"), in: homebrew)
+        }
+
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+            fileName: "~/Brewfile",
+            tokens: ["qbittorrent", "gone-app", "chromium", "legacy-app", "raycast"]
+        )
+
+        XCTAssertEqual(plan.skippedEntries.map(\.token), ["qbittorrent", "gone-app"])
+        XCTAssertEqual(plan.unavailableEntries.map(\.token), ["chromium"])
+        XCTAssertEqual(plan.newEntries.map(\.token), ["legacy-app", "raycast"])
+        XCTAssertEqual(plan.listedCount, 5)
+        render(BrewfileImportSheet(plan: plan)
+            .environment(homebrew)
+            .environment(ImageCacheService()), width: 1100, height: 600)
+    }
+
+    @MainActor
     func test_brewfile_import_sheet_renders_every_phase() {
         let homebrew = makeHomebrew(
             defaults: makeScratchDefaults("brewfile-render"),
@@ -157,7 +187,8 @@ final class ShelfSetupViewTests: XCTestCase {
             newEntries: [
                 .init(token: "raycast", cask: makeCask("raycast")),
                 .init(token: "mystery-app", cask: nil)
-            ]
+            ],
+            unavailableEntries: []
         )
         let phases: [BrewfileImportPhase] = [
             .preview, .running(completedCount: 1), .done(failedCount: 0), .done(failedCount: 1)
@@ -170,7 +201,8 @@ final class ShelfSetupViewTests: XCTestCase {
         let nothingNew = BrewfileImportPlan(
             fileName: "~/Brewfile",
             skippedEntries: plan.skippedEntries,
-            newEntries: []
+            newEntries: [],
+            unavailableEntries: []
         )
         render(BrewfileImportSheet(plan: nothingNew)
             .environment(homebrew)

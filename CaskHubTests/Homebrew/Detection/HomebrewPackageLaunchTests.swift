@@ -47,7 +47,8 @@ final class HomebrewPackageLaunchTests: XCTestCase {
             token: cask.token,
             installedVersion: "2.0",
             installedAt: nil,
-            appBundleNames: []
+            appBundleNames: [],
+            tap: "homebrew/cask"
         )
         let packages = packageInstallations(
             registration: registration,

@@ -41,10 +41,13 @@ struct CaskInfoPopover: View {
                             .foregroundStyle(Color.chTextBrand)
                             .gridColumnAlignment(.leading)
                     } else {
+                        // Long status details wrap instead of widening the popover.
                         Text(row.value)
                             .font(CHType.statusMono)
                             .foregroundStyle(Color.chTextTitle)
                             .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(width: 440, alignment: .leading)
                             .gridColumnAlignment(.leading)
                     }
                 }
@@ -102,7 +105,15 @@ struct CaskInfoPopover: View {
             autoUpdates: true,
             variations: nil,
             supportedPlatforms: nil,
-            conflictsWith: nil
+            conflictsWith: nil,
+            deprecationDate: nil,
+            deprecationReason: nil,
+            deprecationReplacementCask: nil,
+            deprecationReplacementFormula: nil,
+            disableDate: nil,
+            disableReason: nil,
+            disableReplacementCask: nil,
+            disableReplacementFormula: nil
         ),
         category: CaskCategoryPresentation(
             mainID: "securityPrivacy",

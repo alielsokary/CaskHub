@@ -14,7 +14,8 @@ final class HomebrewCommandExecutorTests: XCTestCase {
         let old = installation("zed", version: "1.0")
         let fresh = installation("zed", version: "2.0")
         let zombie = LocalCaskInstallation(token: "zed", installedVersion: "2.0", installedAt: nil,
-                                          appBundleNames: ["Zed.app"], isZombie: true)
+                                          appBundleNames: ["Zed.app"], isZombie: true,
+                                          tap: "homebrew/cask")
         // swiftlint:disable:next large_tuple
         let cases: [(previous: LocalCaskInstallation?, refreshed: LocalCaskInstallation?, marker: String,
                      failure: HomebrewFailureKind?)] = [

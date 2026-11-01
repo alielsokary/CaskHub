@@ -96,6 +96,18 @@ struct CaskRowView: View {
     // MARK: - Metadata
 
     private var metadata: some View {
+        HStack(spacing: 6) {
+            if let retirement = actionPresentation.localState.retirement {
+                RetirementBadge(
+                    retirement: retirement,
+                    isInstalled: actionPresentation.localState.isHomebrewInstalled
+                )
+            }
+            metaText
+        }
+    }
+
+    private var metaText: some View {
         Text(cask.metaLine(downloads: downloads))
             .font(typography.status)
             .foregroundStyle(Color.chTextMuted)

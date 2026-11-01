@@ -341,7 +341,8 @@ final class ExternalInstallationTests: XCTestCase {
             token: cask.token,
             installedVersion: "8.0",
             installedAt: nil,
-            appBundleNames: []
+            appBundleNames: [],
+            tap: "homebrew/cask"
         ), in: service)
 
         let state = service.localState(for: cask)

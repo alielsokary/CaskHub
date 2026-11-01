@@ -82,12 +82,16 @@ struct CaskActionsView: View {
                         ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
         } else {
+            // Homebrew refuses to install a disabled cask; the retirement badge explains why.
+            let installBlocked = state.retirement?.blocksInstall == true
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
                 localHomebrew.send(.install(cask))
             }
             .disabledDuringHomebrewUpdate(
                 presentation.isHomebrewMutationBlocked
             )
+            .disabled(installBlocked)
+            .opacity(installBlocked ? 0.45 : 1)
         }
     }
 
@@ -116,7 +120,7 @@ struct CaskActionsView: View {
             if state.canOpen {
                 openButton(
                     fullWidth: fullWidth && !state.hasAvailableUpdate,
-                    isPairedWithUpdate: state.hasAvailableUpdate
+                    isPaired: state.hasAvailableUpdate
                 ) {
                     localHomebrew.send(.open(cask))
                 }
@@ -128,8 +132,7 @@ struct CaskActionsView: View {
                 ) {
                     localHomebrew.send(.update(token: cask.token))
                 }
-            }
-            if !state.canOpen && !state.hasAvailableUpdate {
+            } else if !state.canOpen {
                 ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
             }
             if let onUninstall {
@@ -152,10 +155,10 @@ struct CaskActionsView: View {
     @ViewBuilder
     private func openButton(
         fullWidth: Bool,
-        isPairedWithUpdate: Bool = false,
+        isPaired: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
-        if usesIconOnlyOpenAndUpdate && isPairedWithUpdate {
+        if usesIconOnlyOpenAndUpdate && isPaired {
             ActionCapsuleIconButton(action: .open, onTap: action)
         } else {
             ActionCapsuleButton(action: .open, fullWidth: fullWidth, onTap: action)
@@ -207,13 +210,8 @@ private extension View {
     }
 }
 
-/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
-/// pointer remains over the view. This hint follows hover state directly, so it
-/// stays visible until the pointer actually leaves the disabled control.
 private struct DisabledUninstallControl: View {
     let message: String
-
-    @State private var isHovering = false
 
     var body: some View {
         Image(systemName: "trash")
@@ -223,6 +221,22 @@ private struct DisabledUninstallControl: View {
             .background(Circle().fill(Color.chSurfaceField.opacity(0.5)))
             .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
             .contentShape(Circle())
+            .modifier(HoverHint(message: message))
+            .accessibilityLabel("Uninstall")
+            .accessibilityHint(message)
+    }
+}
+
+/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
+/// pointer remains over the view. This hint follows hover state directly, so it
+/// stays visible until the pointer actually leaves the control.
+private struct HoverHint: ViewModifier {
+    let message: String
+
+    @State private var isHovering = false
+
+    func body(content: Content) -> some View {
+        content
             .onHover { isHovering = $0 }
             .overlay(alignment: .topTrailing) {
                 if isHovering {
@@ -243,12 +257,12 @@ private struct DisabledUninstallControl: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
                         )
-                        .offset(y: -48)
+                        // A zero-height frame lets any bubble height grow upward from the control's top.
+                        .frame(height: 0, alignment: .bottom)
+                        .offset(y: -8)
                         .allowsHitTesting(false)
                 }
             }
             .zIndex(isHovering ? 10 : 0)
-            .accessibilityLabel("Uninstall")
-            .accessibilityHint(message)
     }
 }

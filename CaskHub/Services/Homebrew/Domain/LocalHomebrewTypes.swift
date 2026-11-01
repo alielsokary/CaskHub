@@ -237,6 +237,7 @@ nonisolated struct CaskLocalState: Equatable, Sendable {
     let isOutdated: Bool
     let isZombie: Bool
     let canOpen: Bool
+    let retirement: CaskRetirement?
 
     var isPresent: Bool {
         installationSource != nil
@@ -266,6 +267,8 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
     /// Brew still lists this cask, but its app was removed outside Homebrew
     /// (or its install receipt is gone) — opens and upgrades are doomed.
     let isZombie: Bool
+    /// The receipt's source tap; nil for receipts that predate it.
+    let tap: String?
 
     nonisolated init(
         token: String,
@@ -273,7 +276,8 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
         installedAt: Date?,
         lastUpdatedAt: Date? = nil,
         appBundleNames: [String],
-        isZombie: Bool = false
+        isZombie: Bool = false,
+        tap: String?
     ) {
         self.token = token
         self.installedVersion = installedVersion
@@ -281,6 +285,7 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
         self.lastUpdatedAt = lastUpdatedAt
         self.appBundleNames = appBundleNames
         self.isZombie = isZombie
+        self.tap = tap
     }
 
     var id: String {

@@ -20,6 +20,7 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case brewBusy = "brew-busy"
     case brewLockCleanupRace = "brew-lock-cleanup-race"
     case caskConflict = "cask-conflict"
+    case caskDisabled = "cask-disabled"
     case caskDependency = "cask-dependency"
     case checksumMismatch = "checksum-mismatch"
     case dmgMountBusy = "dmg-mount-busy"
@@ -309,7 +310,8 @@ nonisolated extension HomebrewCommandFailure {
             ),
             Match(fragments: ["reports different checksum"], kind: .checksumMismatch),
             Match(fragments: ["sha256 mismatch"], kind: .checksumMismatch),
-            Match(fragments: ["was not quarantined properly"], kind: .quarantineInvalid)
+            Match(fragments: ["was not quarantined properly"], kind: .quarantineInvalid),
+            Match(fragments: ["has been disabled"], kind: .caskDisabled)
         ])
     }
 
