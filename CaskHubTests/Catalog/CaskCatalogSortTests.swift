@@ -164,15 +164,13 @@ final class CaskCatalogSortTests: XCTestCase {
                     token: "alpha",
                     installedVersion: "1.0",
                     installedAt: now.addingTimeInterval(-86_400),
-                    appBundleNames: [],
-                    tap: "homebrew/cask"
+                    appBundleNames: [], tap: "homebrew/cask"
                 ),
                 "zulu": LocalCaskInstallation(
                     token: "zulu",
                     installedVersion: "1.0",
                     installedAt: now,
-                    appBundleNames: [],
-                    tap: "homebrew/cask"
+                    appBundleNames: [], tap: "homebrew/cask"
                 )
             ]
         }

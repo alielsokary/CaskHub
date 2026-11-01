@@ -267,7 +267,7 @@ final class CaskListActionTests: XCTestCase {
             appBundleNames: ["Dead.app"], tap: "homebrew/cask"
         ), in: service)
         let legacy = Cask.preview(token: "legacy-app", deprecated: true, deprecationReplacementCask: "new-app")
-        let removed = Cask(installation: LocalCaskInstallation(
+        let removed = Cask.receiptRow(for: LocalCaskInstallation(
             token: "gone-app", installedVersion: "1.0", installedAt: nil, appBundleNames: [], tap: "homebrew/cask"
         ))
         updateInstalledCask(installation(removed.token, version: "1.0"), in: service)

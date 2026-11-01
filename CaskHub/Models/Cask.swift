@@ -349,11 +349,11 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
 }
 
 extension Cask {
-    init(installation: LocalCaskInstallation) {
+    static func receiptRow(for installation: LocalCaskInstallation) -> Cask {
         let appName = installation.appBundleNames.first.map {
             $0.hasSuffix(".app") ? String($0.dropLast(4)) : $0
         }
-        self.init(
+        var cask = Cask(
             token: installation.token,
             fullToken: nil,
             tap: installation.tap,
@@ -381,7 +381,8 @@ extension Cask {
             disableReplacementCask: nil,
             disableReplacementFormula: nil
         )
-        provenance = .installedReceipt
+        cask.provenance = .installedReceipt
+        return cask
     }
 }
 

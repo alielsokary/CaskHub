@@ -122,7 +122,7 @@ nonisolated enum CatalogProjector {
         guard !partition.all.isEmpty else { return [] }
         return installations.keys.sorted().compactMap { token in
             guard let cask = partition.byToken[token] else {
-                return installations[token].map(Cask.init(installation:))
+                return installations[token].map(Cask.receiptRow(for:))
             }
             return cask.isBrowsable ? nil : cask
         }
