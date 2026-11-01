@@ -2153,182 +2153,218 @@
         }
       }
     },
-    "cask.info.deprecatedOn" : {
-      "comment" : "Info popover row label",
+    "cask.info.status.deprecatedDate" : {
+      "comment" : "Info popover Deprecated value detail; %@ is a date",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deprecated On"
+            "value" : "Deprecated date: %@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Устарело с"
+            "value" : "Дата устаревания: %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Застаріле з"
+            "value" : "Дата застарівання: %@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "弃用日期"
+            "value" : "弃用日期：%@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "棄用日期"
+            "value" : "棄用日期：%@"
           }
         }
       }
     },
-    "cask.info.disabledOn" : {
-      "comment" : "Info popover row label",
+    "cask.info.status.disabledDate" : {
+      "comment" : "Info popover Disabled value detail; %@ is a date",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Disabled On"
+            "value" : "Disabled date: %@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отключено"
+            "value" : "Дата отключения: %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вимкнено"
+            "value" : "Дата вимкнення: %@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "停用日期"
+            "value" : "停用日期：%@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "停用日期"
+            "value" : "停用日期：%@"
           }
         }
       }
     },
-    "cask.info.plannedDisable" : {
-      "comment" : "Info popover row label",
+    "cask.info.status.plannedDisableDate" : {
+      "comment" : "Info popover Deprecated value detail; %@ is a date",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planned Disable Date"
+            "value" : "Planned disable date: %@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Плановое отключение"
+            "value" : "Плановая дата отключения: %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заплановане вимкнення"
+            "value" : "Запланована дата вимкнення: %@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "计划停用日期"
+            "value" : "计划停用日期：%@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "計畫停用日期"
+            "value" : "計畫停用日期：%@"
           }
         }
       }
     },
-    "cask.info.reason" : {
-      "comment" : "Info popover row label for why Homebrew deprecated or disabled a cask",
+    "cask.info.status.replacement" : {
+      "comment" : "Info popover status detail; %@ is the cask or formula Homebrew suggests instead",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reason"
+            "value" : "Replacement: %@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Причина"
+            "value" : "Замена: %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Причина"
+            "value" : "Заміна: %@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "原因"
+            "value" : "替代项：%@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "原因"
+            "value" : "替代項目：%@"
           }
         }
       }
     },
-    "cask.info.replacement" : {
-      "comment" : "Info popover row label for the cask Homebrew suggests instead",
+    "cask.info.status.separator" : {
+      "comment" : "Joins the parts of an info popover Deprecated or Disabled value",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Replacement"
+            "value" : ". "
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Замена"
+            "value" : ". "
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заміна"
+            "value" : ". "
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "替代项"
+            "value" : "。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "替代項目"
+            "value" : "。"
+          }
+        }
+      }
+    },
+    "cask.info.status.yesReason" : {
+      "comment" : "Start of the info popover Deprecated or Disabled value; %@ is the reason without its final period",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes, reason: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Да, причина: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Так, причина: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是，原因：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是，原因：%@"
           }
         }
       }
