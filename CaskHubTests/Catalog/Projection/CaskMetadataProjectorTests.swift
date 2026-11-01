@@ -154,7 +154,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
                     hasAvailableUpdate: false,
                     isOutdated: false,
                     isZombie: false,
-                    canOpen: false
+                    canOpen: false,
+                    retirement: nil
                 ),
                 homebrewInstallation: nil,
                 operationState: nil,
@@ -176,7 +177,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
                 installedVersion: "3.1",
                 installedAt: dates.installedAt,
                 lastUpdatedAt: dates.lastUpdatedAt,
-                appBundleNames: []
+                appBundleNames: [],
+                tap: "homebrew/cask"
             )
             : nil
         let externalVersion = source == .homebrew ? nil : "3.1"
@@ -198,7 +200,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
             hasAvailableUpdate: false,
             isOutdated: false,
             isZombie: false,
-            canOpen: true
+            canOpen: true,
+            retirement: nil
         )
         return CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
             cask: cask,

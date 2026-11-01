@@ -50,8 +50,11 @@ enum SortOption: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CaskCatalogViewModel {
-    private(set) var casks: [Cask] = [] {
+    private(set) var catalog = CatalogPartition([]) {
         didSet { catalogRevision &+= 1 }
+    }
+    var casks: [Cask] {
+        catalog.browsable
     }
     private(set) var isLoading = false
     private(set) var errorMessage: String?
@@ -165,16 +168,16 @@ final class CaskCatalogViewModel {
     func load() async {
         // Stamped up front so activations during a load don't start another.
         lastLoadedAt = .now
-        async let catalog: Void = fetchCasks()
+        async let catalogFetch: Void = fetchCasks()
         async let local: Void = localHomebrew.refresh()
         async let homebrewOutdated: Void = localHomebrew.refreshHomebrewOutdated()
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
-        _ = await (catalog, local, homebrewOutdated, categories, addedDates)
-        let enriched = categoryService.addingAppIdentities(to: casks)
-        if enriched != casks {
-            casks = enriched
-            await localHomebrew.updatePackageCatalog(casks)
+        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates)
+        let enriched = categoryService.addingAppIdentities(to: catalog.all)
+        if enriched != catalog.all {
+            catalog = CatalogPartition(enriched)
+            await localHomebrew.updatePackageCatalog(catalog.all)
         }
     }
 
@@ -197,13 +200,8 @@ final class CaskCatalogViewModel {
 
             let allCasks = try await caskRequest
             await categoryService.loadBundledCategoriesAsync()
-            casks = categoryService.addingAppIdentities(to: allCasks.filter { cask in
-                !cask.deprecated
-                    && !cask.disabled
-                    && !cask.token.contains("@")
-                    && !cask.token.hasPrefix("font-")
-            })
-            await localHomebrew.updatePackageCatalog(casks)
+            catalog = CatalogPartition(categoryService.addingAppIdentities(to: allCasks))
+            await localHomebrew.updatePackageCatalog(catalog.all)
 
             if let analytics = try? await analyticsRequest {
                 analyticsByPeriod[.days365] = Self.countsByToken(from: analytics)

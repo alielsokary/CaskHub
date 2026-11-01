@@ -102,7 +102,15 @@ struct CaskInfoPopover: View {
             autoUpdates: true,
             variations: nil,
             supportedPlatforms: nil,
-            conflictsWith: nil
+            conflictsWith: nil,
+            deprecationDate: nil,
+            deprecationReason: nil,
+            deprecationReplacementCask: nil,
+            deprecationReplacementFormula: nil,
+            disableDate: nil,
+            disableReason: nil,
+            disableReplacementCask: nil,
+            disableReplacementFormula: nil
         ),
         category: CaskCategoryPresentation(
             mainID: "securityPrivacy",

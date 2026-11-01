@@ -63,7 +63,10 @@ nonisolated enum CaskInfoProjector {
                 dates: input.installationDates
             )
             + metadataRows(for: input.cask, category: input.category)
-            + statusRows(for: input.cask, isOutdated: input.actionPresentation.localState.isOutdated)
+            + statusRows(
+                isOutdated: input.actionPresentation.localState.isOutdated,
+                retirement: input.actionPresentation.localState.retirement
+            )
     }
 
     private static func identityRows(for cask: Cask) -> [CaskInfoRow] {
@@ -74,11 +77,13 @@ nonisolated enum CaskInfoProjector {
         if let tap = cask.tap {
             rows.append(CaskInfoRow(property: "Tap", value: tap))
         }
-        rows.append(CaskInfoRow(
-            property: String(localized: "Homepage"),
-            value: cask.homepage,
-            link: URL(string: cask.homepage)
-        ))
+        if !cask.homepage.isEmpty {
+            rows.append(CaskInfoRow(
+                property: String(localized: "Homepage"),
+                value: cask.homepage,
+                link: URL(string: cask.homepage)
+            ))
+        }
         return rows
     }
 
@@ -174,12 +179,46 @@ nonisolated enum CaskInfoProjector {
         return rows
     }
 
-    private static func statusRows(for cask: Cask, isOutdated: Bool) -> [CaskInfoRow] {
-        [
+    private static func statusRows(isOutdated: Bool, retirement: CaskRetirement?) -> [CaskInfoRow] {
+        var isDeprecated = false
+        if case .deprecated = retirement { isDeprecated = true }
+        return [
             CaskInfoRow(property: String(localized: "Outdated"), value: yesNo(isOutdated)),
-            CaskInfoRow(property: String(localized: "Deprecated"), value: yesNo(cask.deprecated)),
-            CaskInfoRow(property: String(localized: "Disabled"), value: yesNo(cask.disabled))
-        ]
+            CaskInfoRow(property: String(localized: "Deprecated"), value: yesNo(isDeprecated)),
+            CaskInfoRow(property: String(localized: "Disabled"), value: yesNo(retirement?.blocksInstall == true))
+        ] + retirementRows(retirement)
+    }
+
+    private static func retirementRows(_ retirement: CaskRetirement?) -> [CaskInfoRow] {
+        func row(_ property: String, _ value: String?) -> CaskInfoRow? {
+            value.map { CaskInfoRow(property: property, value: $0) }
+        }
+        let reason = String(localized: .caskInfoReason)
+        switch retirement {
+        case nil:
+            return []
+        case let .deprecated(reasonCode, deprecatedOn, plannedDisableDate, replacement):
+            return [
+                row(reason, reasonCode.map(CaskRetirement.reasonText)),
+                row(String(localized: .caskInfoDeprecatedOn), deprecatedOn.map(CaskRetirement.dayText)),
+                row(String(localized: .caskInfoPlannedDisable), plannedDisableDate.map(CaskRetirement.dayText)),
+                row(String(localized: .caskInfoReplacement), replacement.map(replacementToken))
+            ].compactMap { $0 }
+        case let .disabled(reasonCode, disabledOn, replacement):
+            return [
+                row(reason, reasonCode.map(CaskRetirement.reasonText)),
+                row(String(localized: .caskInfoDisabledOn), disabledOn.map(CaskRetirement.dayText)),
+                row(String(localized: .caskInfoReplacement), replacement.map(replacementToken))
+            ].compactMap { $0 }
+        case .removedFromHomebrew:
+            return [CaskInfoRow(property: reason, value: String(localized: .caskRetirementRemovedHeadline))]
+        }
+    }
+
+    private static func replacementToken(_ replacement: CaskReplacement) -> String {
+        switch replacement {
+        case let .cask(token), let .formula(token): token
+        }
     }
 
     private static func yesNo(_ value: Bool) -> String {

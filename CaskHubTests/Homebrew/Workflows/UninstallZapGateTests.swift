@@ -47,7 +47,8 @@ final class UninstallZapGateTests: XCTestCase {
         service.fullDiskAccessProbe = { .granted }
         updateInstalledCask(LocalCaskInstallation(
             token: "zed", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Zed.app"]
+            appBundleNames: ["Zed.app"],
+            tap: "homebrew/cask"
         ), in: service)
         return service
     }

@@ -154,6 +154,18 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
     }
 
+    func test_disabled_cask_refusal_has_its_own_reportable_kind() {
+        let failure = HomebrewCommandFailure(
+            arguments: ["install", "--cask", "tomatobar"],
+            exitCode: 1,
+            diagnostic: "Error: tomatobar has been disabled because it does not pass the macOS Gatekeeper check! "
+                + "It was disabled on 2026-09-01."
+        )
+
+        XCTAssertEqual(failure.kind, .caskDisabled)
+        XCTAssertFalse(failure.kind.isNormallyExternal, "CaskHub should never have offered this install")
+    }
+
     func test_only_proven_user_decision_is_explicit() {
         XCTAssertTrue(HomebrewFailureKind.sudoDeclined.isExplicitUserDecision)
         XCTAssertFalse(HomebrewFailureKind.sudoWrongPassword.isExplicitUserDecision)

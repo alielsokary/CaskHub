@@ -91,10 +91,15 @@ extension CaskCatalogViewModel {
     }
 
     private var librarySnapshot: CatalogLibrarySnapshot {
-        libraryCache.value(for: libraryCacheKey) { [casks, categoryService, localHomebrew] in
+        libraryCache.value(for: libraryCacheKey) { [catalog, categoryService, localHomebrew] in
+            let installedOnly = CatalogProjector.installedOnlyCasks(
+                installations: localHomebrew.installationSnapshot.installedCasks,
+                partition: catalog
+            )
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
-                casks: casks,
-                localStates: localHomebrew.localStates(for: casks),
+                casks: catalog.browsable,
+                installedOnlyCasks: installedOnly,
+                localStates: localHomebrew.localStates(for: catalog.browsable + installedOnly),
                 categoryMappings: categoryService.tokenMappings,
                 adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))

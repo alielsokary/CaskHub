@@ -127,16 +127,15 @@ struct CaskLocalStateResolver {
                 installedCaskTokens: Set(snapshot.installedCasks.keys),
                 conflictingCaskTokens: cask.conflictsWith?.caskTokens ?? []
             ),
-            externalCLIPath: source == .externalExecutable
-                ? externalCLIPath(cask)
-                : nil,
+            externalCLIPath: source == .externalExecutable ? externalCLIPath(cask) : nil,
             uninstallAvailability: uninstallAvailability(for: cask),
             hasAvailableUpdate: outdated
                 && homebrewOutdated?.pinned.contains(cask.token) != true
                 && (greedyUpdates || target?.autoUpdates != true || isListedByHomebrew(cask.token)),
             isOutdated: outdated,
             isZombie: isZombie(cask),
-            canOpen: canOpen(cask)
+            canOpen: canOpen(cask),
+            retirement: cask.retirement(for: platform)
         )
     }
 

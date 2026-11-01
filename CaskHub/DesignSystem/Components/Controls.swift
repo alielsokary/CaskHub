@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum CaskActionStyle {
-    case install, adopt, update, open, installed, cleanup
+    case install, adopt, update, open, installed, cleanup, disabled, deprecated
 
     var title: String {
         switch self {
@@ -18,6 +18,8 @@ enum CaskActionStyle {
         case .open: return String(localized: "Open")
         case .installed: return String(localized: .caskActionInstalled)
         case .cleanup: return String(localized: "Clean Up")
+        case .disabled: return String(localized: .caskCapsuleDisabled)
+        case .deprecated: return String(localized: .caskCapsuleDeprecated)
         }
     }
 
@@ -29,6 +31,8 @@ enum CaskActionStyle {
         case .open: return "play.fill"
         case .installed: return "circle.fill"
         case .cleanup: return "trash"
+        case .disabled: return "nosign"
+        case .deprecated: return "exclamationmark.triangle"
         }
     }
 
@@ -36,7 +40,7 @@ enum CaskActionStyle {
         switch self {
         case .installed: return 6.5
         case .open: return 9
-        case .install, .adopt, .update, .cleanup: return 10.5
+        case .install, .adopt, .update, .cleanup, .disabled, .deprecated: return 10.5
         }
     }
 
@@ -44,8 +48,9 @@ enum CaskActionStyle {
         switch self {
         case .install, .adopt:
             return .chActionInstallBg
-        case .update, .cleanup: return .chActionUpdateBg
+        case .update, .cleanup, .deprecated: return .chActionUpdateBg
         case .open, .installed: return .chActionDoneBg
+        case .disabled: return .chSurfaceField
         }
     }
 
@@ -53,8 +58,9 @@ enum CaskActionStyle {
         switch self {
         case .install, .adopt:
             return .chActionInstallBorder
-        case .update, .cleanup: return .chActionUpdateBorder
+        case .update, .cleanup, .deprecated: return .chActionUpdateBorder
         case .open, .installed: return .chActionDoneBorder
+        case .disabled: return .chHairlineStrong
         }
     }
 
@@ -62,8 +68,9 @@ enum CaskActionStyle {
         switch self {
         case .install, .adopt:
             return .chActionInstallFg
-        case .update, .cleanup: return .chActionUpdateFg
+        case .update, .cleanup, .deprecated: return .chActionUpdateFg
         case .open, .installed: return .chActionDoneFg
+        case .disabled: return .chTextMuted
         }
     }
 }
