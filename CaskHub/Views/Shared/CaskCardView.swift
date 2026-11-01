@@ -42,6 +42,10 @@ struct CaskCardView: View {
         .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }
 
+    private var cardState: CaskLocalState {
+        localState ?? localHomebrew.localState(for: cask)
+    }
+
     private var canUninstall: Bool {
         localState?.isHomebrewInstalled
             ?? localHomebrew.isInstalled(token: cask.token)
@@ -75,7 +79,12 @@ struct CaskCardView: View {
 
             Spacer(minLength: 4)
 
-            infoButton
+            VStack(spacing: 8) {
+                infoButton
+                if let retirement = cardState.retirement {
+                    RetirementBadge(retirement: retirement, isInstalled: cardState.isHomebrewInstalled)
+                }
+            }
         }
         .frame(height: 48 * textScale, alignment: .top)
     }
