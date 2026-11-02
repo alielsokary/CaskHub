@@ -98,7 +98,8 @@ final class ImageCacheService {
     private func loadUncachedImage(for cask: Cask, generation: UInt64) async -> NSImage? {
         let token = cask.token
         let inManifest = isInManifest(token)
-        if cask.isCLI, !inManifest {
+        // Neither CLI tools nor fonts ship an app icon, so only CaskFlow's manifest can supply one.
+        if cask.isCLI || cask.isFont, !inManifest {
             return nil
         }
 

@@ -59,6 +59,9 @@ final class CaskCatalogViewModel {
     var retiredCasks: [Cask] {
         catalog.retired
     }
+    var fontCount: Int {
+        catalog.fontCount
+    }
 
     func catalogCask(for token: String) -> Cask? {
         catalog.byToken[token]

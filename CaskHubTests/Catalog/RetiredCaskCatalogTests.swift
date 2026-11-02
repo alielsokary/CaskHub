@@ -53,8 +53,8 @@ final class RetiredCaskCatalogTests: XCTestCase {
         XCTAssertTrue(rows.values.allSatisfy { vm.localState(for: $0).isHomebrewInstalled })
 
         vm.selectedSidebar = .discover(.browse)
-        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["firefox", "iterm2"])
-        XCTAssertEqual(Set(vm.casks.map(\.token)), ["firefox", "iterm2"])
+        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["firefox", "iterm2", "font-x"])
+        XCTAssertEqual(Set(vm.casks.map(\.token)), ["firefox", "iterm2", "font-x"])
     }
 
     func test_installed_rows_wait_for_the_api_catalog() async {
@@ -211,7 +211,10 @@ final class RetiredCaskCatalogTests: XCTestCase {
                 let context = "\(page) \(sort)"
                 XCTAssertEqual(Set(tokens.suffix(2)), retired, context)
                 XCTAssertTrue(tokens.dropLast(2).allSatisfy { !retired.contains($0) }, context)
-                XCTAssertFalse(tokens.contains("font-app") || tokens.contains("app@beta"), context)
+                XCTAssertFalse(tokens.contains("app@beta"), context)
+                if page != .featured, page != .recentlyAdded {
+                    XCTAssertTrue(tokens.dropLast(2).contains("font-app"), "fonts list like apps: \(context)")
+                }
                 vm.searchText = ""
                 XCTAssertTrue(vm.filteredCasks.allSatisfy { !retired.contains($0.token) }, context)
             }

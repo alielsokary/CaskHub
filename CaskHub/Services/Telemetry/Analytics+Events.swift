@@ -164,6 +164,8 @@ extension Analytics {
             return ["page": "shelfSetup"]
         case .maintenance:
             return ["page": "maintenance"]
+        case .fonts:
+            return ["page": "fonts"]
         case let .category(categoryID):
             return ["page": "category", "category": categoryID]
         }

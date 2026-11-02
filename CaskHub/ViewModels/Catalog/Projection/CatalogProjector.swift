@@ -14,11 +14,13 @@ nonisolated struct CatalogPartition: Equatable {
     /// Deprecated or disabled main casks: found by search, never listed.
     let retired: [Cask]
     let byToken: [String: Cask]
+    let fontCount: Int
 
     init(_ all: [Cask]) {
         self.all = all
         browsable = all.filter(\.isBrowsable)
-        retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") && !$0.token.hasPrefix("font-") }
+        retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") }
+        fontCount = browsable.count { $0.isFont }
         byToken = Dictionary(all.map { ($0.token, $0) }) { first, _ in first }
     }
 }
@@ -188,6 +190,7 @@ nonisolated enum CatalogProjector {
     private static func retiredSearchPool(_ input: CatalogFilteredProjectionInput) -> [Cask] {
         switch input.selectedSidebar {
         case .discover: input.retiredCasks
+        case .fonts: input.retiredCasks.filter(\.isFont)
         case let .category(categoryID): input.library.retiredCasksByCategory[categoryID] ?? []
         case .library, .shelfSetup, .maintenance: []
         }
@@ -227,6 +230,8 @@ nonisolated enum CatalogProjector {
             return input.library.updatableCasks
         case .library(.adopt):
             return input.library.adoptableCasks
+        case .fonts:
+            return input.casks.filter(\.isFont)
         case .shelfSetup, .maintenance:
             return []
         case let .category(categoryID):

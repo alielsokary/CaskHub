@@ -51,6 +51,7 @@ struct ContentView: View {
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount(includingExternallyManaged: showExternallyManagedApps),
                 adoptableCount: viewModel.adoptableCasks.count,
+                fontCount: viewModel.fontCount,
                 categoryCounts: viewModel.categoryCounts
             )
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
@@ -251,6 +252,7 @@ struct ContentView: View {
         case let .library(item): return item.rawValue
         case .shelfSetup: return String(localized: .sidebarShelfSetup)
         case .maintenance: return String(localized: .sidebarHealth)
+        case .fonts: return String(localized: "Fonts")
         case let .category(categoryID): return categoryService.displayName(for: categoryID)
         }
     }

@@ -34,6 +34,8 @@ struct CaskIconView: View {
                     .transition(.opacity)
             } else if cask.isCLI {
                 cliTile
+            } else if cask.isFont {
+                fontTile
             } else {
                 well(.chSurfaceWell)
                 if didResolve {
@@ -62,6 +64,15 @@ struct CaskIconView: View {
                 Text(">_")
                     .font(Font.custom(CHType.monoFamily, size: size * 0.34).weight(.bold))
                     .foregroundStyle(Color.chCream)
+            )
+    }
+
+    private var fontTile: some View {
+        well(.chSurfaceWell)
+            .overlay(
+                Text(verbatim: "Aa")
+                    .font(.system(size: size * 0.4, weight: .semibold, design: .serif))
+                    .foregroundStyle(Color.chTextTitle)
             )
     }
 
