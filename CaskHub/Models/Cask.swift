@@ -247,9 +247,14 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
         case disableDate, disableReason, disableReplacementCask, disableReplacementFormula
     }
 
-    /// Discover pages list only current, non-variant, non-font casks.
+    /// Discover pages list current, non-variant casks, fonts included.
     var isBrowsable: Bool {
-        !deprecated && !disabled && !token.contains("@") && !token.hasPrefix("font-")
+        !deprecated && !disabled && !token.contains("@")
+    }
+
+    /// Homebrew ships every font as a `font-` cask, and no other cask installs fonts.
+    var isFont: Bool {
+        token.hasPrefix("font-")
     }
 
     var storeAppNames: [String] {

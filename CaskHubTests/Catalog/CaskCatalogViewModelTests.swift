@@ -12,7 +12,7 @@ final class CaskCatalogViewModelTests: XCTestCase {
     // MARK: Fetching
 
     @MainActor
-    func test_fetch_casks_keeps_retired_versioned_and_font_casks_off_discover_listings() async {
+    func test_fetch_casks_keeps_retired_and_versioned_casks_off_discover_listings() async {
         let (vm, _) = await makeSUT(casks: [
             makeCask("firefox"),
             Cask.preview(token: "legacy-app", deprecated: true),
@@ -21,9 +21,9 @@ final class CaskCatalogViewModelTests: XCTestCase {
             makeCask("font-fira-code")
         ])
 
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"])
+        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["firefox", "font-fira-code"])
         vm.searchText = "a"
-        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["legacy-app", "dead-app"])
+        XCTAssertEqual(Set(vm.filteredCasks.map(\.token)), ["font-fira-code", "legacy-app", "dead-app"])
         XCTAssertNil(vm.errorMessage)
         XCTAssertFalse(vm.isLoading)
     }

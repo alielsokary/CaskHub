@@ -18,7 +18,7 @@ nonisolated struct CatalogPartition: Equatable {
     init(_ all: [Cask]) {
         self.all = all
         browsable = all.filter(\.isBrowsable)
-        retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") && !$0.token.hasPrefix("font-") }
+        retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") }
         byToken = Dictionary(all.map { ($0.token, $0) }) { first, _ in first }
     }
 }
@@ -157,7 +157,7 @@ nonisolated enum CatalogProjector {
                 destination: .discover(.recentlyAdded),
                 casks: Array(sortedByNewest(
                     input.casks.filter {
-                        isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
+                        !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
                     },
                     addedDates: input.addedDates
                 ).prefix(sectionSize))
@@ -187,6 +187,7 @@ nonisolated enum CatalogProjector {
 
     private static func retiredSearchPool(_ input: CatalogFilteredProjectionInput) -> [Cask] {
         switch input.selectedSidebar {
+        case .discover(.recentlyAdded): input.retiredCasks.filter { !$0.isFont }
         case .discover: input.retiredCasks
         case let .category(categoryID): input.library.retiredCasksByCategory[categoryID] ?? []
         case .library, .shelfSetup, .maintenance: []
@@ -219,7 +220,7 @@ nonisolated enum CatalogProjector {
             return input.casks
         case .discover(.recentlyAdded):
             return input.casks.filter {
-                isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
+                !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
             }
         case .library(.installed):
             return input.library.homebrewInstalledCasks

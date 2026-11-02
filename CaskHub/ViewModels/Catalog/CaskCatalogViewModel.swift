@@ -100,6 +100,8 @@ final class CaskCatalogViewModel {
     @ObservationIgnored let browseCache =
         BoundedMemoizedValues<BrowseCatalogCacheKey, [BrowseSection]>(capacity: 1)
     @ObservationIgnored let searchKeysCache = BoundedMemoizedValues<Int, [String: String]>(capacity: 1)
+    @ObservationIgnored let categoryMappingsCache =
+        BoundedMemoizedValues<CategoryPresentationCacheKey, [String: TokenCategoryMapping]>(capacity: 1)
     @ObservationIgnored let nameRankCache = BoundedMemoizedValues<Int, [String: Int]>(capacity: 1)
     @ObservationIgnored let categoryPresentationCache =
         BoundedMemoizedValues<CategoryPresentationCacheKey, [String: CaskCategoryPresentation]>(capacity: 1)
