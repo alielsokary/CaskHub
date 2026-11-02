@@ -9,22 +9,82 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  # `test` is a required check, so workflow-level paths-ignore would leave docs-only PRs waiting forever.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "$PR" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate \
+            --jq '.[] | .filename, (.previous_filename // empty)')
+          if echo "$files" | grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/|\.github/assets/|LICENSE$|.*\.md$)'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ${{ vars.MACOS_RUNNER || 'xcode-27' }}
     env:
+      XCODE_VERSION: ${{ vars.XCODE_VERSION || '27.0' }}
       DEVELOPER_DIR: /Applications/Xcode_${{ vars.XCODE_VERSION || '27.0' }}.app/Contents/Developer
+      CAS_PATH: ~/Library/Developer/Xcode/DerivedData/CompilationCache.noindex
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('CaskHub.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      # Whole DerivedData is useless after checkout (new mtimes); the CAS is keyed on file contents.
+      - name: Restore compilation cache
+        id: cas
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CAS_PATH }}
+          key: xcode-cas-${{ runner.os }}-${{ env.XCODE_VERSION }}-${{ github.sha }}
+          restore-keys: xcode-cas-${{ runner.os }}-${{ env.XCODE_VERSION }}-
 
       - name: Run unit tests with coverage
         run: |
           xcodebuild -project CaskHub.xcodeproj -scheme CaskHub \
             -destination 'platform=macOS' \
-            CODE_SIGNING_ALLOWED=NO \
+            -clonedSourcePackagesDirPath SourcePackages \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILATION_CACHE_ENABLE_CACHING=YES \
+            COMPILATION_CACHE_LIMIT_SIZE=1G \
             test
+
+      # PRs restore develop's cache but never save, so entries stay few and fresh.
+      - name: Save compilation cache
+        if: ${{ !cancelled() && github.event_name == 'push' }}
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CAS_PATH }}
+          key: ${{ steps.cas.outputs.cache-primary-key }}
 
       - name: Convert coverage to Cobertura
         run: |
@@ -36,3 +96,17 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
+
+  # Required codecov statuses never arrive without an upload, so mark non-code PRs as passing.
+  coverage-skipped:
+    needs: changes
+    if: needs.changes.outputs.code == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          run_command: empty-upload
+          force: true
