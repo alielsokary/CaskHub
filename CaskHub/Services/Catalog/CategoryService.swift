@@ -155,8 +155,13 @@ final class CategoryService {
         }
     }
 
+    /// Fonts are identified by token, so CaskHub supplies this category itself.
+    static let fontsCategoryID: CategoryID = "fonts"
+
     func applyData(_ catalog: CaskCategoryData) {
-        categoryDefinitions = catalog.categories
+        categoryDefinitions = catalog.categories.merging(
+            [Self.fontsCategoryID: CategoryDefinition(displayName: "Fonts", icon: "textformat")]
+        ) { pipeline, _ in pipeline }
         tokenMappings = catalog.tokenToCategory
 
         version = catalog.version

@@ -74,7 +74,6 @@ enum SidebarSelection: Hashable, Identifiable {
     case library(LibraryItem)
     case shelfSetup
     case maintenance
-    case fonts
     case category(String)
 
     var id: String {
@@ -83,7 +82,6 @@ enum SidebarSelection: Hashable, Identifiable {
         case let .library(item): return "library.\(item.rawValue)"
         case .shelfSetup: return "manage.shelfSetup"
         case .maintenance: return "maintenance.health"
-        case .fonts: return "fonts.all"
         case let .category(categoryID): return "category.\(categoryID)"
         }
     }

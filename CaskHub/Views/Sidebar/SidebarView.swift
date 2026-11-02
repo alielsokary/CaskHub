@@ -16,7 +16,6 @@ struct SidebarView: View {
     var updatesCount: Int = 0
     var installedCount: Int = 0
     var adoptableCount: Int = 0
-    var fontCount: Int = 0
     var categoryCounts: [String: Int] = [:]
 
     @Environment(\.catalogTextScale) private var textScale
@@ -56,9 +55,6 @@ struct SidebarView: View {
 
                     sectionHeader("MAINTENANCE")
                     row(.maintenance, title: String(localized: .sidebarHealth), icon: "stethoscope")
-
-                    sectionHeader("FONTS")
-                    row(.fonts, title: String(localized: "All Fonts"), icon: "textformat", count: fontCount)
 
                     sectionHeader("CATEGORIES")
                     ForEach(categoryService.orderedCategories, id: \.id) { entry in

@@ -56,6 +56,21 @@ extension CaskCatalogViewModel {
         librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
     }
 
+    /// CaskFlow's mappings plus the built-in Fonts category for every `font-` cask.
+    var categoryMappings: [String: TokenCategoryMapping] {
+        let key = CategoryPresentationCacheKey(
+            catalogRevision: catalogRevision,
+            categoryRevision: categoryService.catalogStateRevision
+        )
+        return categoryMappingsCache.value(for: key) { [catalog, categoryService] in
+            var mappings = categoryService.tokenMappings
+            for cask in catalog.all where cask.isFont && mappings[cask.token] == nil {
+                mappings[cask.token] = TokenCategoryMapping(primary: CategoryService.fontsCategoryID, secondary: [])
+            }
+            return mappings
+        }
+    }
+
     private var categoryPresentations: [String: CaskCategoryPresentation] {
         let key = CategoryPresentationCacheKey(
             catalogRevision: catalogRevision,
@@ -66,7 +81,7 @@ extension CaskCatalogViewModel {
             for cask in casks {
                 result[cask.token] = CaskCategoryProjector.make(
                     token: cask.token,
-                    mappings: categoryService.tokenMappings,
+                    mappings: categoryMappings,
                     definitions: categoryService.categoryDefinitions
                 )
             }
@@ -77,7 +92,7 @@ extension CaskCatalogViewModel {
     func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
         categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
             token: cask.token,
-            mappings: categoryService.tokenMappings,
+            mappings: categoryMappings,
             definitions: categoryService.categoryDefinitions
         )
     }
@@ -101,7 +116,7 @@ extension CaskCatalogViewModel {
                 installedOnlyCasks: installedOnly,
                 retiredCasks: catalog.retired,
                 localStates: localHomebrew.localStates(for: catalog.browsable + installedOnly + catalog.retired),
-                categoryMappings: categoryService.tokenMappings,
+                categoryMappings: categoryMappings,
                 adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))
         }
@@ -123,7 +138,7 @@ extension CaskCatalogViewModel {
                 from: CatalogBrowseProjectionInput(
                     casks: casks,
                     annualDownloadCounts: analyticsByPeriod[.days365] ?? [:],
-                    categoryMappings: categoryService.tokenMappings,
+                    categoryMappings: categoryMappings,
                     orderedCategories: categoryService.orderedCategories.map {
                         (id: $0.id, displayName: categoryService.displayName(for: $0.id))
                     },
