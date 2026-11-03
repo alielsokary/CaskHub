@@ -204,21 +204,34 @@ final class AnalyticsTests: XCTestCase {
     }
 
     func test_telemetry_provider_keeps_automatic_lifecycle_and_honors_consent() {
-        var config: TelemetryDeck.Config?
-        let provider = TelemetryDeckProvider(
-            appID: { "test-app-id" },
-            initialize: { config = $0 }
-        )
+        var configs: [TelemetryDeck.Config] = []
+        let provider = TelemetryDeckProvider(appID: { "test-app-id" }, initialize: { configs.append($0) })
 
-        provider.start(enabled: false)
+        provider.start(enabled: true)
+        provider.setEnabled(false)
 
-        XCTAssertTrue(config?.analyticsDisabled == true)
-        XCTAssertTrue(config?.sendNewSessionBeganSignal == true)
-        XCTAssertTrue(config?.sessionStatsEnabled == true)
+        XCTAssertEqual(configs.count, 1)
+        XCTAssertTrue(configs[0].analyticsDisabled)
+        XCTAssertTrue(configs[0].sendNewSessionBeganSignal)
+        XCTAssertTrue(configs[0].sessionStatsEnabled)
+    }
 
-        provider.setEnabled(true)
+    func test_opted_out_launch_never_initializes_telemetry_until_opt_in() {
+        var configs: [TelemetryDeck.Config] = []
+        Analytics.provider = TelemetryDeckProvider(appID: { "test-app-id" }, initialize: { configs.append($0) })
+        Analytics.defaults.set(false, forKey: Analytics.enabledKey)
 
-        XCTAssertTrue(config?.analyticsDisabled == false)
+        Analytics.start()
+        Analytics.refresh()
+        XCTAssertTrue(configs.isEmpty)
+
+        Analytics.defaults.set(true, forKey: Analytics.enabledKey)
+        Analytics.refresh()
+        Analytics.defaults.set(false, forKey: Analytics.enabledKey)
+        Analytics.refresh()
+
+        XCTAssertEqual(configs.count, 1)
+        XCTAssertTrue(configs[0].analyticsDisabled)
     }
 
     // MARK: - Navigation events

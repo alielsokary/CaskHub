@@ -74,14 +74,18 @@ final class TelemetryDeckProvider: AnalyticsProvider {
     }
 
     func start(enabled: Bool) {
-        guard let appID = appID() else { return }
-        let config = TelemetryDeck.Config(appID: appID)
-        config.analyticsDisabled = !enabled
-        initialize(config)
-        self.config = config
+        setEnabled(enabled)
     }
 
+    // SDK flushes its disk cache even when disabled, so never initialize it while opted out.
     func setEnabled(_ enabled: Bool) {
-        config?.analyticsDisabled = !enabled
+        if let config {
+            config.analyticsDisabled = !enabled
+            return
+        }
+        guard enabled, let appID = appID() else { return }
+        let config = TelemetryDeck.Config(appID: appID)
+        initialize(config)
+        self.config = config
     }
 }
