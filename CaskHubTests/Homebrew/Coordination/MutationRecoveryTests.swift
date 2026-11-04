@@ -130,7 +130,7 @@ final class MutationRecoveryTests: XCTestCase {
             XCTAssertEqual(service.installationSnapshot.externalApplicationOwners["zed"]?.url, app)
             XCTAssertNotNil(service.operationStore.state(for: "zed")?.failure)
             XCTAssertTrue(fileManager.fileExists(atPath: app.path))
-            XCTAssertEqual(runner.requests.last?.arguments, ["install", "--cask", "zed"])
+            XCTAssertEqual(runner.requests.last?.arguments, ["install", "--cask", "zed", "--appdir=\(root.path)/Applications"])
             XCTAssertEqual(runner.requests.count, 3)
         }
     }

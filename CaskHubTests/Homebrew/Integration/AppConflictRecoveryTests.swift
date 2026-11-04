@@ -62,7 +62,7 @@ final class AppConflictRecoveryTests: XCTestCase {
         let request = try XCTUnwrap(service.operationStore.state(for: original.token)?.adoptionRequest)
         XCTAssertTrue(runner.requests.isEmpty)
         try await service.confirmAdoption(request)
-        XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "known", "--adopt"]])
+        XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", "known", "--adopt", "--appdir=\(root.path)"]])
     }
 
     func test_hybrid_cask_uses_verified_app_plan_and_permission_target() async throws {
@@ -90,7 +90,7 @@ final class AppConflictRecoveryTests: XCTestCase {
             XCTAssertEqual(probed.withLock { $0?.path }, bundle.path)
             XCTAssertTrue(runner.requests.isEmpty)
             try await service.confirmAdoption(request)
-            XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", cask.token, flag]])
+            XCTAssertEqual(runner.requests.map(\.arguments), [["install", "--cask", cask.token, flag, "--appdir=\(root.path)"]])
         }
     }
 

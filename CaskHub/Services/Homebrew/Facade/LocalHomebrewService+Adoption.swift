@@ -52,34 +52,22 @@ extension LocalHomebrewService {
             adoptionPlan: request.plan, permissionEvidence: permission.evidence
         )
 
+        let flags: [String]
         switch request.plan.execution {
-        case .adoptApplication:
-            try await runMutation(
-                .adopting,
-                token: request.cask.token,
-                args: ["install", "--cask", request.cask.token, "--adopt"],
-                context: context
-            )
-        case .replaceApplication:
-            try await runMutation(
-                .adopting,
-                token: request.cask.token,
-                args: ["install", "--cask", request.cask.token, "--force"],
-                context: context
-            )
-        case .installPackage:
-            try await runMutation(
-                .adopting,
-                token: request.cask.token,
-                args: ["install", "--cask", request.cask.token],
-                context: context
-            )
+        case .adoptApplication: flags = ["--adopt"]
+        case .replaceApplication: flags = ["--force"]
+        case .installPackage: flags = []
         case .replacePackage:
-            try await replacePackageForAdoption(
-                token: request.cask.token,
-                context: context
-            )
+            try await replacePackageForAdoption(token: request.cask.token, context: context)
+            return
         }
+        try await runMutation(
+            .adopting,
+            token: request.cask.token,
+            args: ["install", "--cask", request.cask.token] + flags
+                + appdirArguments(keeping: request.cask.appArtifactNames),
+            context: context
+        )
     }
 
     /// A linked artifact missing from the on-disk bundle makes Homebrew fail

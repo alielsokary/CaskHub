@@ -97,6 +97,7 @@
 		A1C0D0043A00000100000001 /* IconBitmap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0D0033A00000100000001 /* IconBitmap.swift */; };
 		A26000000000000000000002 /* UpdateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26000000000000000000001 /* UpdateSettingsView.swift */; };
 		C1A000000000000000000006 /* PrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A000000000000000000005 /* PrivacySettingsView.swift */; };
+		A17200000000000000000002 /* ApplicationDirectorySettingsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17200000000000000000001 /* ApplicationDirectorySettingsRow.swift */; };
 		A26000000000000000000004 /* UpdateSettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26000000000000000000003 /* UpdateSettingsViewTests.swift */; };
 		A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */; };
 		A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */; };
@@ -189,6 +190,7 @@
 		FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */; };
 		C0FE0000000000000000000E /* ConcurrentDownloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */; };
 		B0AD00000000000000000002 /* UninstallZapGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AD00000000000000000001 /* UninstallZapGateTests.swift */; };
+		A17200000000000000000004 /* ApplicationDirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17200000000000000000003 /* ApplicationDirectoryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -280,10 +282,12 @@
 		8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdoptionTests.swift; sourceTree = "<group>"; };
 		C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentDownloadTests.swift; sourceTree = "<group>"; };
 		B0AD00000000000000000001 /* UninstallZapGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UninstallZapGateTests.swift; sourceTree = "<group>"; };
+		A17200000000000000000003 /* ApplicationDirectoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationDirectoryTests.swift; sourceTree = "<group>"; };
 		A1C0D0013A00000100000001 /* IconDiskCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconDiskCache.swift; sourceTree = "<group>"; };
 		A1C0D0033A00000100000001 /* IconBitmap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconBitmap.swift; sourceTree = "<group>"; };
 		A26000000000000000000001 /* UpdateSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSettingsView.swift; sourceTree = "<group>"; };
 		C1A000000000000000000005 /* PrivacySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySettingsView.swift; sourceTree = "<group>"; };
+		A17200000000000000000001 /* ApplicationDirectorySettingsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationDirectorySettingsRow.swift; sourceTree = "<group>"; };
 		A26000000000000000000003 /* UpdateSettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSettingsViewTests.swift; sourceTree = "<group>"; };
 		A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinator.swift; sourceTree = "<group>"; };
 		A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -518,6 +522,7 @@
 		41DFD47930028F7D00608C7A /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				A17200000000000000000001 /* ApplicationDirectorySettingsRow.swift */,
 				41DFD4E130028F7D00608C7A /* AppearanceSettingsView.swift */,
 				41DFD47830028F7D00608C7A /* SettingsView.swift */,
 				C1A000000000000000000005 /* PrivacySettingsView.swift */,
@@ -966,6 +971,7 @@
 		F3200000000000000000002B /* Workflows */ = {
 			isa = PBXGroup;
 			children = (
+				A17200000000000000000003 /* ApplicationDirectoryTests.swift */,
 				8BB79639B5E04DEBBDB54898 /* AdoptionTests.swift */,
 				C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */,
 				B0AD00000000000000000001 /* UninstallZapGateTests.swift */,
@@ -1235,6 +1241,7 @@
 				41DFD4E230028F7D00608C7A /* AppearanceSettingsView.swift in Sources */,
 				A26000000000000000000002 /* UpdateSettingsView.swift in Sources */,
 				C1A000000000000000000006 /* PrivacySettingsView.swift in Sources */,
+				A17200000000000000000002 /* ApplicationDirectorySettingsRow.swift in Sources */,
 				41DFD4A930028F7D00608C7A /* CaskActionAlerts.swift in Sources */,
 				B0AD00000000000000000008 /* CaskUninstallAlert.swift in Sources */,
 				41DFD4AA30028F7D00608C7A /* CaskCardView.swift in Sources */,
@@ -1283,6 +1290,7 @@
 				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
 				C0FE0000000000000000000E /* ConcurrentDownloadTests.swift in Sources */,
 				B0AD00000000000000000002 /* UninstallZapGateTests.swift in Sources */,
+				A17200000000000000000004 /* ApplicationDirectoryTests.swift in Sources */,
 				A12000000000000000000009 /* CaskAdoptionWorkflowTests.swift in Sources */,
 				A12000000000000000000007 /* CaskAdoptionPlanTests.swift in Sources */,
 				AF11E0000000000000000002 /* BrewfileTests.swift in Sources */,

@@ -38,7 +38,10 @@ extension LocalHomebrewService {
             token: token,
             steps: [
                 .fetch(token: token, cancellation: .untilPerforming),
-                .exclusive(["install", "--cask", token], cancellation: .untilPerforming)
+                .exclusive(
+                    ["install", "--cask", token] + appdirArguments(keeping: []),
+                    cancellation: .untilPerforming
+                )
             ],
             origin: .individual
         )
@@ -169,11 +172,24 @@ extension LocalHomebrewService {
                     },
                     recoveryBehavior: .continueSequence
                 ),
-                .exclusive(["install", "--cask", token], cancellation: .never)
+                .exclusive(
+                    ["install", "--cask", token] + appdirArguments(keeping: appBundleNames),
+                    cancellation: .never
+                )
             ],
             origin: origin,
             context: context
         )
+    }
+
+    /// Existing bundles keep their folder, so adopt finds them and reinstall never moves them.
+    func appdirArguments(keeping bundleNames: [String]) -> [String] {
+        let existingPath = existingBundleURL(named: bundleNames)?
+            .deletingLastPathComponent().standardizedFileURL.path
+        let path = existingPath.flatMap { applicationDirectories.map(\.path).contains($0) ? $0 : nil }
+            ?? applicationDirectoryOverride?.path
+        guard let path, path != Self.defaultApplicationDirectoryPath else { return [] }
+        return ["--appdir=\(path)"]
     }
 
     func upgrade(

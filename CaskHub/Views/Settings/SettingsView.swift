@@ -372,6 +372,7 @@ private struct HomebrewSettingsContent: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                ApplicationDirectorySettingsRow(localHomebrew: localHomebrew)
             }
             Section("Library") {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
@@ -384,6 +385,8 @@ private struct HomebrewSettingsContent: View {
         }
         .formStyle(.grouped)
         .padding()
+        .contentShape(Rectangle())
+        .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
         .onAppear { locationModel.synchronize() }
         .onChange(of: localHomebrew.customBrewPrefix) {
             locationModel.synchronize()

@@ -118,6 +118,46 @@ final class SettingsViewTests: XCTestCase {
         XCTAssertTrue(settings.appliedPrefixes.isEmpty)
     }
 
+    @MainActor
+    func test_application_directory_model_expands_tilde_rejects_missing_and_resets() async throws {
+        let settings = HomebrewSettingsSpy(customBrewPrefix: nil)
+        let model = ApplicationDirectorySettingsModel(settings: settings)
+        XCTAssertEqual(model.field, "/Applications")
+        XCTAssertFalse(model.isOverridden)
+
+        model.field = "~/CaskHubTestNoSuchFolder-\(UUID().uuidString)"
+        model.validate()
+        XCTAssertTrue(model.isInvalid)
+        await model.applyTypedPath()
+        XCTAssertTrue(settings.appliedDirectories.isEmpty)
+
+        model.field = "Applications"
+        model.validate()
+        XCTAssertTrue(model.isInvalid, "relative paths are rejected")
+
+        model.field = " ~ "
+        await model.applyTypedPath()
+        let home = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL.path
+        XCTAssertEqual(settings.appliedDirectories.last??.path, home)
+        XCTAssertEqual(model.field, home)
+        XCTAssertTrue(model.isOverridden)
+        XCTAssertFalse(model.isInvalid)
+
+        await model.applyTypedPath()
+        XCTAssertEqual(settings.appliedDirectories.count, 1, "an unchanged path is not reapplied")
+
+        model.field = "~/CaskHubTestNoSuchFolder-\(UUID().uuidString)"
+        await model.applyOnFocusLoss()
+        XCTAssertEqual(model.field, home, "a bad path reverts to the saved one")
+        XCTAssertFalse(model.isInvalid)
+        XCTAssertEqual(settings.appliedDirectories.count, 1)
+
+        await model.reset()
+        XCTAssertNil(settings.appliedDirectories.last ?? nil)
+        XCTAssertEqual(model.field, "/Applications")
+        XCTAssertFalse(model.isOverridden)
+    }
+
     func test_homebrew_standard_paths_match_machine_architecture() {
         let appleSiliconBrewURL = URL(fileURLWithPath: "/opt/homebrew/bin/brew")
         let intelBrewURL = URL(fileURLWithPath: "/usr/local/bin/brew")
@@ -502,6 +542,8 @@ private final class AppManagementPermissionProviderSpy:
 private final class HomebrewSettingsSpy: HomebrewSettingsApplying {
     private(set) var customBrewPrefix: String?
     private(set) var appliedPrefixes: [String?] = []
+    private(set) var applicationDirectoryOverride: URL?
+    private(set) var appliedDirectories: [URL?] = []
 
     init(customBrewPrefix: String?) {
         self.customBrewPrefix = customBrewPrefix
@@ -510,6 +552,11 @@ private final class HomebrewSettingsSpy: HomebrewSettingsApplying {
     func setCustomBrewPrefix(_ prefix: String?) async {
         appliedPrefixes.append(prefix)
         customBrewPrefix = prefix
+    }
+
+    func setApplicationDirectory(_ directory: URL?) async {
+        appliedDirectories.append(directory)
+        applicationDirectoryOverride = directory
     }
 }
 

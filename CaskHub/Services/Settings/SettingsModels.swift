@@ -123,9 +123,77 @@ nonisolated enum HomebrewLocationChoice: Hashable, Sendable {
 protocol HomebrewSettingsApplying: AnyObject {
     var customBrewPrefix: String? { get }
     func setCustomBrewPrefix(_ prefix: String?) async
+    var applicationDirectoryOverride: URL? { get }
+    func setApplicationDirectory(_ directory: URL?) async
 }
 
 extension LocalHomebrewService: HomebrewSettingsApplying {}
+
+@MainActor
+@Observable
+final class ApplicationDirectorySettingsModel {
+    var field = ""
+    private(set) var isInvalid = false
+    private(set) var isOverridden = false
+
+    private let settings: any HomebrewSettingsApplying
+    private let fileManager: FileManager
+
+    init(settings: any HomebrewSettingsApplying, fileManager: FileManager = .default) {
+        self.settings = settings
+        self.fileManager = fileManager
+        synchronize()
+    }
+
+    func synchronize() {
+        let override = settings.applicationDirectoryOverride
+        field = override?.path ?? LocalHomebrewService.defaultApplicationDirectoryPath
+        isOverridden = override != nil
+        isInvalid = false
+    }
+
+    func validate() {
+        isInvalid = validatedDirectory() == nil
+    }
+
+    func applyTypedPath() async {
+        guard let directory = validatedDirectory() else {
+            isInvalid = true
+            return
+        }
+        let current = settings.applicationDirectoryOverride?.path ?? LocalHomebrewService.defaultApplicationDirectoryPath
+        if directory.path != current {
+            await settings.setApplicationDirectory(directory)
+        }
+        synchronize()
+    }
+
+    func applyOnFocusLoss() async {
+        guard validatedDirectory() != nil else { return synchronize() }
+        await applyTypedPath()
+    }
+
+    func applySelection(_ directory: URL) async {
+        field = directory.path
+        await applyTypedPath()
+    }
+
+    func reset() async {
+        await settings.setApplicationDirectory(nil)
+        synchronize()
+    }
+
+    private func validatedDirectory() -> URL? {
+        let path = NSString(string: field.trimmingCharacters(in: .whitespacesAndNewlines))
+            .expandingTildeInPath
+        var isDirectory: ObjCBool = false
+        guard path.hasPrefix("/"),
+              fileManager.fileExists(atPath: path, isDirectory: &isDirectory),
+              isDirectory.boolValue
+        else { return nil }
+        return URL(fileURLWithPath: path).standardizedFileURL
+    }
+}
 
 @MainActor
 @Observable
