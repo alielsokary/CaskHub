@@ -52,12 +52,12 @@ struct ApplicationDirectorySettingsRow: View {
                 Label("Folder not found", systemImage: "xmark.circle.fill")
                     .foregroundStyle(.red)
             }
+            Text("New installs land here. Apps already installed stay where they are.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: localHomebrew.applicationDirectoryOverride) { model.synchronize() }
-        Text("New apps install here.")
-            .font(.caption)
-            .foregroundStyle(.secondary)
     }
 
     private func chooseDirectory() {

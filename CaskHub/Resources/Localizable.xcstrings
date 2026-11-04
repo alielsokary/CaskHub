@@ -10643,30 +10643,30 @@
         }
       }
     },
-    "New apps install here." : {
+    "New installs land here. Apps already installed stay where they are." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Новые приложения устанавливаются сюда."
+            "value" : "Новые установки попадают сюда. Уже установленные приложения остаются на месте."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Нові програми встановлюються сюди."
+            "value" : "Нові встановлення потрапляють сюди. Уже встановлені програми залишаються на місці."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新应用将安装到此处。"
+            "value" : "新安装的应用会放在这里。已安装的应用保持原位。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新的 App 會安裝到此處。"
+            "value" : "新安裝的 App 會放在這裡。已安裝的 App 會保留原位。"
           }
         }
       }
