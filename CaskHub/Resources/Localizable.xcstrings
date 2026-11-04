@@ -1649,6 +1649,34 @@
         }
       }
     },
+    "Application Directory" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папка приложений"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тека програм"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用程序目录"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "應用程式目錄"
+          }
+        }
+      }
+    },
     "Architecture" : {
       "localizations" : {
         "ru" : {
@@ -5093,6 +5121,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "精選"
+          }
+        }
+      }
+    },
+    "Folder not found" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папка не найдена"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теку не знайдено"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到資料夾"
           }
         }
       }
@@ -10587,6 +10643,34 @@
         }
       }
     },
+    "New apps install here." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые приложения устанавливаются сюда."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нові програми встановлюються сюди."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新应用将安装到此处。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新的 App 會安裝到此處。"
+          }
+        }
+      }
+    },
     "Newest" : {
       "localizations" : {
         "ru" : {
@@ -11654,6 +11738,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "請選擇 brew 執行檔或 Homebrew 安裝目錄"
+          }
+        }
+      }
+    },
+    "Select the folder where new apps install" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите папку для установки новых приложений"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть теку для встановлення нових програм"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择新应用的安装文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇新 App 的安裝資料夾"
           }
         }
       }
@@ -14531,6 +14643,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用情況分析"
+          }
+        }
+      }
+    },
+    "Use Default" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По умолчанию"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "За замовчуванням"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用默认值"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用預設值"
           }
         }
       }
