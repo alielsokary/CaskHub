@@ -291,6 +291,7 @@ struct HomebrewSettingsView: View {
 private struct HomebrewSettingsContent: View {
     let localHomebrew: LocalHomebrewService
     @State private var locationModel: HomebrewLocationSettingsModel
+    @State private var passwordModel = AdministratorPasswordSettingsModel()
 
     init(localHomebrew: LocalHomebrewService) {
         self.localHomebrew = localHomebrew
@@ -374,6 +375,7 @@ private struct HomebrewSettingsContent: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 ApplicationDirectorySettingsRow(localHomebrew: localHomebrew)
             }
+            AdministratorPasswordSettingsSection(model: passwordModel)
             Section("Library") {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
                 LabeledContent(
@@ -388,6 +390,7 @@ private struct HomebrewSettingsContent: View {
         .contentShape(Rectangle())
         .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
         .onAppear { locationModel.synchronize() }
+        .task { await passwordModel.refresh() }
         .onChange(of: localHomebrew.customBrewPrefix) {
             locationModel.synchronize()
         }

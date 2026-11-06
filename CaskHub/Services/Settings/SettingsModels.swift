@@ -305,3 +305,38 @@ final class HomebrewLocationSettingsModel {
         }
     }
 }
+
+@MainActor
+@Observable
+final class AdministratorPasswordSettingsModel {
+    private(set) var isAvailable = false
+    private(set) var hasSavedPassword = false
+
+    private let store: any AdministratorPasswordStoring
+
+    init(store: any AdministratorPasswordStoring = KeychainAdministratorPasswordStore()) {
+        self.store = store
+    }
+
+    func refresh() async {
+        let state = await Self.state(of: store)
+        isAvailable = state.available
+        hasSavedPassword = state.saved
+    }
+
+    func forget() async {
+        await Self.delete(from: store)
+        await refresh()
+    }
+
+    @concurrent
+    private static func state(of store: any AdministratorPasswordStoring) async -> (available: Bool, saved: Bool) {
+        let available = store.isAvailable
+        return (available, available && store.savedPasswordExists())
+    }
+
+    @concurrent
+    private static func delete(from store: any AdministratorPasswordStoring) async {
+        store.delete()
+    }
+}

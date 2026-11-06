@@ -3176,6 +3176,34 @@
     "CaskHub" : {
       "shouldTranslate" : false
     },
+    "CaskHub asks for Touch ID instead of your password when an installer needs administrator access. Turn it on from the password prompt." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub запрашивает Touch ID вместо пароля, когда установщику нужны права администратора. Включите это в окне запроса пароля."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub запитує Touch ID замість пароля, коли інсталятору потрібні права адміністратора. Увімкніть це у вікні запиту пароля."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当安装程序需要管理员权限时，CaskHub 会使用触控 ID 代替你的密码。请在密码提示中开启此功能。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當安裝程式需要管理者權限時，CaskHub 會使用 Touch ID 代替你的密碼。請在密碼提示中開啟此功能。"
+          }
+        }
+      }
+    },
     "CaskHub couldn't identify which app blocked this installation. Resolve the app conflict in Homebrew before retrying." : {
       "comment" : "Shown when Homebrew reports an app conflict but does not identify the conflicting app.",
       "localizations" : {
@@ -5205,6 +5233,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "找不到資料夾"
+          }
+        }
+      }
+    },
+    "Forget Saved Password" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забыть сохранённый пароль"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забути збережений пароль"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忘记已存储的密码"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忘記已儲存的密碼"
           }
         }
       }
@@ -14311,6 +14367,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "排行榜"
+          }
+        }
+      }
+    },
+    "Touch ID" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控 ID"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID"
           }
         }
       }
