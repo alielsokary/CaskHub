@@ -391,6 +391,9 @@ private struct HomebrewSettingsContent: View {
         .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
         .onAppear { locationModel.synchronize() }
         .task { await passwordModel.refresh() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { await passwordModel.refresh() }
+        }
         .onChange(of: localHomebrew.customBrewPrefix) {
             locationModel.synchronize()
         }

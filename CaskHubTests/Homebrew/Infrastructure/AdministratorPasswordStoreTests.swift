@@ -28,6 +28,13 @@ final class AdministratorPasswordStoreTests: XCTestCase {
         XCTAssertFalse(KeychainAdministratorPasswordStore(hasKeychainEntitlement: { true }, biometryEnrolled: { false }).isAvailable)
     }
 
+    func test_keychain_access_needs_only_the_entitlement() {
+        let noBiometry = KeychainAdministratorPasswordStore(hasKeychainEntitlement: { true }, biometryEnrolled: { false })
+        XCTAssertTrue(noBiometry.hasKeychainAccess)
+        XCTAssertFalse(noBiometry.isAvailable)
+        XCTAssertFalse(KeychainAdministratorPasswordStore(hasKeychainEntitlement: { false }, biometryEnrolled: { true }).hasKeychainAccess)
+    }
+
     func test_unavailable_store_never_touches_the_keychain() {
         let store = KeychainAdministratorPasswordStore(hasKeychainEntitlement: { false }, biometryEnrolled: { true })
         XCTAssertFalse(store.savedPasswordExists())

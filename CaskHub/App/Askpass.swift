@@ -11,6 +11,7 @@ nonisolated struct AskpassDialogRequest: Equatable {
     let token: String?
     let offerRemember: Bool
     let rememberChecked: Bool
+    let previousAttemptRejected: Bool
 }
 
 nonisolated struct AskpassDialogResponse: Equatable {
@@ -28,6 +29,7 @@ nonisolated enum Askpass {
         token: String?,
         attempt: Int?,
         store: any AdministratorPasswordStoring,
+        passwordAccepted: (String) -> Bool,
         presentDialog: (AskpassDialogRequest) -> AskpassDialogResponse?
     ) -> AskpassOutcome {
         let storeAvailable = store.isAvailable
@@ -40,22 +42,36 @@ nonisolated enum Askpass {
                 after: store.read(reason: touchIDReason(token: token)), storeAvailable: storeAvailable
             )
         }
+        if case .emit(let password) = step { return .password(password) }
+        let request = dialogRequest(
+            for: step, token: token, attempt: attempt, storeAvailable: storeAvailable, passwordSaved: passwordSaved
+        )
+        guard let request, let response = presentDialog(request) else { return .cancelled }
+        switch AskpassCredentialFlow.storeAction(
+            remember: response.remember, passwordSaved: passwordSaved, storeAvailable: storeAvailable
+        ) {
+        case .save where passwordAccepted(response.password): try? store.save(response.password)
+        case .delete: store.delete()
+        case .save, .none: break
+        }
+        return .password(response.password)
+    }
+
+    static func dialogRequest(
+        for step: AskpassStep, token: String?, attempt: Int?, storeAvailable: Bool, passwordSaved: Bool
+    ) -> AskpassDialogRequest? {
+        let rejected = (attempt ?? 0) > 1
         switch step {
-        case .emit(let password):
-            return .password(password)
-        case .touchID:
-            return .cancelled
+        case .emit:
+            return nil
         case let .dialog(offerRemember, rememberChecked):
-            let request = AskpassDialogRequest(token: token, offerRemember: offerRemember, rememberChecked: rememberChecked)
-            guard let response = presentDialog(request) else { return .cancelled }
-            switch AskpassCredentialFlow.storeAction(
-                remember: response.remember, passwordSaved: passwordSaved, storeAvailable: storeAvailable
-            ) {
-            case .save: try? store.save(response.password)
-            case .delete: store.delete()
-            case .none: break
-            }
-            return .password(response.password)
+            return AskpassDialogRequest(
+                token: token, offerRemember: offerRemember, rememberChecked: rememberChecked, previousAttemptRejected: rejected
+            )
+        case .touchID:
+            return AskpassDialogRequest(
+                token: token, offerRemember: storeAvailable, rememberChecked: passwordSaved, previousAttemptRejected: rejected
+            )
         }
     }
 
@@ -85,6 +101,7 @@ nonisolated enum Askpass {
             store: KeychainAdministratorPasswordStore(hasKeychainEntitlement: {
                 callerVerified && KeychainAdministratorPasswordStore.processHasKeychainEntitlement()
             }),
+            passwordAccepted: LoginPasswordVerifier.accepts,
             presentDialog: presentDialog
         )
         guard case .password(let password) = outcome else {
@@ -110,6 +127,9 @@ nonisolated enum Askpass {
         alert.informativeText = request.token.map {
             String(localized: "The installer for “\($0)” requires your login password.")
         } ?? String(localized: "This installer requires your login password.")
+        if request.previousAttemptRejected {
+            alert.informativeText = String(localized: "The password was not accepted. Try again.")
+        }
         alert.addButton(withTitle: String(localized: "Allow"))
         alert.addButton(withTitle: String(localized: "Cancel"))
 

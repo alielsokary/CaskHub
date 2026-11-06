@@ -14147,6 +14147,34 @@
         }
       }
     },
+    "The password was not accepted. Try again." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль не принят. Попробуйте ещё раз."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль не прийнято. Спробуйте ще раз."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密码未被接受。请再试一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密碼未被接受。請再試一次。"
+          }
+        }
+      }
+    },
     "Theme" : {
       "localizations" : {
         "ru" : {

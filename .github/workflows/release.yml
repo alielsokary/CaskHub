@@ -10,6 +10,7 @@ name: Release build
 #   SPARKLE_ED_PRIVATE_KEY                         from `generate_keys -x`
 #   TELEMETRYDECK_APP_ID / SENTRY_DSN              analytics (optional values)
 #   SENTRY_AUTH_TOKEN                              org token (org:ci) for dSYM upload
+#   CASKHUB_PROVISIONING_PROFILE_BASE64            base64 "CaskHub" Developer ID profile
 
 on:
   workflow_dispatch:
@@ -68,6 +69,10 @@ jobs:
         env:
           PROVISIONING_PROFILE_BASE64: ${{ secrets.CASKHUB_PROVISIONING_PROFILE_BASE64 }}
         run: |
+          if [ -z "$PROVISIONING_PROFILE_BASE64" ]; then
+            echo "::error::CASKHUB_PROVISIONING_PROFILE_BASE64 secret is missing"
+            exit 1
+          fi
           PROFILE="$RUNNER_TEMP/CaskHub.provisionprofile"
           printf '%s' "$PROVISIONING_PROFILE_BASE64" | base64 -d > "$PROFILE"
           UUID="$(security cms -D -i "$PROFILE" | plutil -extract UUID raw -)"

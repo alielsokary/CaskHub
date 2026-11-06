@@ -39,6 +39,7 @@ nonisolated enum AdministratorPasswordStoreError: Error, Equatable, Sendable {
 
 nonisolated protocol AdministratorPasswordStoring: Sendable {
     var isAvailable: Bool { get }
+    var hasKeychainAccess: Bool { get }
     func savedPasswordExists() -> Bool
     func read(reason: String) -> AdministratorPasswordReadResult
     func save(_ password: String) throws
@@ -63,8 +64,12 @@ nonisolated struct KeychainAdministratorPasswordStore: AdministratorPasswordStor
         hasKeychainEntitlement() && biometryEnrolled()
     }
 
+    var hasKeychainAccess: Bool {
+        hasKeychainEntitlement()
+    }
+
     func savedPasswordExists() -> Bool {
-        guard isAvailable else { return false }
+        guard hasKeychainAccess else { return false }
         let context = LAContext()
         context.interactionNotAllowed = true
         var query = baseQuery
@@ -102,7 +107,7 @@ nonisolated struct KeychainAdministratorPasswordStore: AdministratorPasswordStor
     }
 
     func delete() {
-        guard isAvailable else { return }
+        guard hasKeychainAccess else { return }
         SecItemDelete(baseQuery as CFDictionary)
     }
 

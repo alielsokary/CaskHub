@@ -331,8 +331,8 @@ final class AdministratorPasswordSettingsModel {
 
     @concurrent
     private static func state(of store: any AdministratorPasswordStoring) async -> (available: Bool, saved: Bool) {
-        let available = store.isAvailable
-        return (available, available && store.savedPasswordExists())
+        let access = store.hasKeychainAccess
+        return (access, access && store.savedPasswordExists())
     }
 
     @concurrent

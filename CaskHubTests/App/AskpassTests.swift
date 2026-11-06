@@ -28,7 +28,10 @@ final class AskpassTests: XCTestCase {
         let outcome = resolve(attempt: 1, store: store, dialog: dialog)
 
         XCTAssertEqual(outcome, .password("typed"))
-        XCTAssertEqual(dialog.requests, [AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: true)])
+        XCTAssertEqual(
+            dialog.requests,
+            [AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: true, previousAttemptRejected: false)]
+        )
         XCTAssertEqual(store.writes, [.save("typed")])
     }
 
@@ -40,7 +43,10 @@ final class AskpassTests: XCTestCase {
 
         XCTAssertEqual(outcome, .password("new"))
         XCTAssertTrue(store.readReasons.isEmpty)
-        XCTAssertEqual(dialog.requests, [AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: true)])
+        XCTAssertEqual(
+            dialog.requests,
+            [AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: true, previousAttemptRejected: true)]
+        )
         XCTAssertEqual(store.writes, [.save("new")])
     }
 
@@ -78,8 +84,33 @@ final class AskpassTests: XCTestCase {
         XCTAssertNil(Askpass.nextAttempt(marker: URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)/attempts")))
     }
 
-    private func resolve(attempt: Int?, store: FakePasswordStore, dialog: FakeDialog) -> AskpassOutcome {
-        Askpass.resolve(token: "zoom", attempt: attempt, store: store) { dialog.present($0) }
+    func test_password_rejected_by_login_check_is_not_saved() {
+        let store = FakePasswordStore(saved: false, readResult: .notFound)
+        let dialog = FakeDialog(response: AskpassDialogResponse(password: "typo", remember: true))
+
+        let outcome = resolve(attempt: 1, store: store, dialog: dialog, accepts: false)
+
+        XCTAssertEqual(outcome, .password("typo"))
+        XCTAssertTrue(store.writes.isEmpty)
+    }
+
+    func test_first_prompt_does_not_claim_a_rejected_password() {
+        let store = FakePasswordStore(saved: false, readResult: .notFound)
+        let dialog = FakeDialog(response: nil)
+
+        _ = resolve(attempt: 1, store: store, dialog: dialog)
+        _ = resolve(attempt: nil, store: store, dialog: dialog)
+
+        XCTAssertEqual(dialog.requests.map(\.previousAttemptRejected), [false, false])
+    }
+
+    private func resolve(
+        attempt: Int?, store: FakePasswordStore, dialog: FakeDialog, accepts: Bool = true
+    ) -> AskpassOutcome {
+        Askpass.resolve(
+            token: "zoom", attempt: attempt, store: store,
+            passwordAccepted: { _ in accepts }, presentDialog: { dialog.present($0) }
+        )
     }
 }
 
@@ -104,6 +135,7 @@ private final class FakePasswordStore: AdministratorPasswordStoring, @unchecked 
     }
 
     let isAvailable = true
+    let hasKeychainAccess = true
     private let saved: Bool
     private let readResult: AdministratorPasswordReadResult
     private let saveFails: Bool
@@ -130,5 +162,15 @@ private final class FakePasswordStore: AdministratorPasswordStoring, @unchecked 
 
     func delete() {
         writes.append(.delete)
+    }
+}
+
+final class AskpassUnreachableStepTests: XCTestCase {
+    func test_dialog_request_falls_back_to_dialog_for_any_non_password_step() {
+        XCTAssertEqual(
+            Askpass.dialogRequest(for: .touchID, token: "zoom", attempt: 1, storeAvailable: true, passwordSaved: true),
+            AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: true, previousAttemptRejected: false)
+        )
+        XCTAssertNil(Askpass.dialogRequest(for: .emit("pw"), token: "zoom", attempt: 1, storeAvailable: true, passwordSaved: true))
     }
 }
