@@ -17,7 +17,11 @@ enum CaskHubMain {
             let marker = argument(after: "--askpass-cancel-marker").map {
                 URL(fileURLWithPath: $0)
             }
-            Askpass.runDialog(token: token, cancellationMarker: marker)
+            Askpass.runDialog(
+                token: token,
+                cancellationMarker: marker,
+                attemptMarker: argument(after: "--askpass-attempt-marker").map { URL(fileURLWithPath: $0) }
+            )
         }
         NSWindow.allowsAutomaticWindowTabbing = false
         CaskHubApp.main()

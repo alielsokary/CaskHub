@@ -107,6 +107,7 @@
 		A29100000000000000000004 /* CaskMetadataProjectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000003 /* CaskMetadataProjectorTests.swift */; };
 		A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000006 /* InstallationDateIndexTests.swift */; };
 		A29100000000000000000407 /* AppManagementPermissionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000406 /* AppManagementPermissionTests.swift */; };
+		7D1D00000000000000000019 /* AskpassScriptManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1D00000000000000000018 /* AskpassScriptManagerTests.swift */; };
 		7D1D00000000000000000011 /* AdministratorPasswordStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1D00000000000000000010 /* AdministratorPasswordStoreTests.swift */; };
 		B0AD00000000000000000004 /* FullDiskAccessPermissionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AD00000000000000000003 /* FullDiskAccessPermissionTests.swift */; };
 		A29100000000000000000107 /* HomebrewOutputDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */; };
@@ -121,6 +122,7 @@
 		B08000000000000000000002 /* CaskHubCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08000000000000000000001 /* CaskHubCommands.swift */; };
 		B08000000000000000000004 /* CaskHubHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08000000000000000000003 /* CaskHubHelpView.swift */; };
 		B09000000000000000000002 /* ApplicationMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09000000000000000000001 /* ApplicationMenuTests.swift */; };
+		7D1D0000000000000000001B /* AskpassTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1D0000000000000000001A /* AskpassTests.swift */; };
 		B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09100000000000000000001 /* CaskHubHelpSearch.swift */; };
 		B09200000000000000000002 /* HelpViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09200000000000000000001 /* HelpViewTests.swift */; };
 		B0C000000000000000000002 /* ShelfSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C000000000000000000001 /* ShelfSetupView.swift */; };
@@ -300,6 +302,7 @@
 		A29100000000000000000003 /* CaskMetadataProjectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskMetadataProjectorTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000006 /* InstallationDateIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallationDateIndexTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000406 /* AppManagementPermissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppManagementPermissionTests.swift; sourceTree = "<group>"; };
+		7D1D00000000000000000018 /* AskpassScriptManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskpassScriptManagerTests.swift; sourceTree = "<group>"; };
 		7D1D00000000000000000010 /* AdministratorPasswordStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdministratorPasswordStoreTests.swift; sourceTree = "<group>"; };
 		B0AD00000000000000000003 /* FullDiskAccessPermissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccessPermissionTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000106 /* HomebrewOutputDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutputDiagnosticsTests.swift; sourceTree = "<group>"; };
@@ -314,6 +317,7 @@
 		B08000000000000000000001 /* CaskHubCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubCommands.swift; sourceTree = "<group>"; };
 		B08000000000000000000003 /* CaskHubHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubHelpView.swift; sourceTree = "<group>"; };
 		B09000000000000000000001 /* ApplicationMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMenuTests.swift; sourceTree = "<group>"; };
+		7D1D0000000000000000001A /* AskpassTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskpassTests.swift; sourceTree = "<group>"; };
 		B09100000000000000000001 /* CaskHubHelpSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubHelpSearch.swift; sourceTree = "<group>"; };
 		B09200000000000000000001 /* HelpViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewTests.swift; sourceTree = "<group>"; };
 		B0C000000000000000000001 /* ShelfSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupView.swift; sourceTree = "<group>"; };
@@ -631,6 +635,7 @@
 			isa = PBXGroup;
 			children = (
 				B09000000000000000000001 /* ApplicationMenuTests.swift */,
+				7D1D0000000000000000001A /* AskpassTests.swift */,
 				A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */,
 			);
 			path = App;
@@ -959,6 +964,7 @@
 			isa = PBXGroup;
 			children = (
 				A29100000000000000000406 /* AppManagementPermissionTests.swift */,
+				7D1D00000000000000000018 /* AskpassScriptManagerTests.swift */,
 				7D1D00000000000000000010 /* AdministratorPasswordStoreTests.swift */,
 				B0AD00000000000000000003 /* FullDiskAccessPermissionTests.swift */,
 				E24000000000000000000004 /* BrewProcessRunnerTests.swift */,
@@ -1275,6 +1281,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B09000000000000000000002 /* ApplicationMenuTests.swift in Sources */,
+				7D1D0000000000000000001B /* AskpassTests.swift in Sources */,
 				A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */,
 				41DFD4B330028F9F00608C7A /* AnalyticsTests.swift in Sources */,
 				41EA00023005200100C45A51 /* AppHangReportingTests.swift in Sources */,
@@ -1326,6 +1333,7 @@
 				C0FE0000000000000000000A /* HomebrewLaneLimiterTests.swift in Sources */,
 				A29100000000000000000007 /* InstallationDateIndexTests.swift in Sources */,
 				A29100000000000000000407 /* AppManagementPermissionTests.swift in Sources */,
+				7D1D00000000000000000019 /* AskpassScriptManagerTests.swift in Sources */,
 				7D1D00000000000000000011 /* AdministratorPasswordStoreTests.swift in Sources */,
 				B0AD00000000000000000004 /* FullDiskAccessPermissionTests.swift in Sources */,
 				F29000000000000000000019 /* CaskActionPresentationTests.swift in Sources */,

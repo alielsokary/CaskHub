@@ -1728,6 +1728,62 @@
         }
       }
     },
+    "authorize a Homebrew change" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "подтвердить изменение Homebrew"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "підтвердити зміну Homebrew"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权 Homebrew 更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授權 Homebrew 變更"
+          }
+        }
+      }
+    },
+    "authorize changes for “%@”" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "подтвердить изменения для «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "підтвердити зміни для «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权对“%@”的更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授權「%@」的變更"
+          }
+        }
+      }
+    },
     "Auto Updates" : {
       "localizations" : {
         "ru" : {
@@ -14671,6 +14727,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用預設值"
+          }
+        }
+      }
+    },
+    "Use Touch ID next time" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использовать Touch ID в следующий раз"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовувати Touch ID наступного разу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次使用触控 ID"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次使用 Touch ID"
           }
         }
       }
