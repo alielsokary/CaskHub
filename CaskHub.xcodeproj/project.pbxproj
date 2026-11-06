@@ -83,8 +83,10 @@
 		A12000000000000000000001 /* LocalHomebrewTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000001 /* LocalHomebrewTypes.swift */; };
 		A12000000000000000000005 /* CaskAdoptionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000005 /* CaskAdoptionPlan.swift */; };
 		AF11E0000000000000000001 /* Brewfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF11E0000000000000000001 /* Brewfile.swift */; };
+		7D1D00000000000000000017 /* AskpassCredentialFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1D00000000000000000016 /* AskpassCredentialFlow.swift */; };
 		AF11E0000000000000000003 /* BrewfileImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF11E0000000000000000003 /* BrewfileImportSheet.swift */; };
 		AF11E0000000000000000002 /* BrewfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF11E0000000000000000002 /* BrewfileTests.swift */; };
+		7D1D00000000000000000015 /* AskpassCredentialFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1D00000000000000000014 /* AskpassCredentialFlowTests.swift */; };
 		A12000000000000000000007 /* CaskAdoptionPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000006 /* CaskAdoptionPlanTests.swift */; };
 		A12000000000000000000009 /* CaskAdoptionWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12000000000000000000008 /* CaskAdoptionWorkflowTests.swift */; };
 		B0E000000000000000000002 /* LocalHomebrewError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E000000000000000000001 /* LocalHomebrewError.swift */; };
@@ -330,8 +332,10 @@
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
 		B12000000000000000000005 /* CaskAdoptionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAdoptionPlan.swift; sourceTree = "<group>"; };
 		BF11E0000000000000000001 /* Brewfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brewfile.swift; sourceTree = "<group>"; };
+		7D1D00000000000000000016 /* AskpassCredentialFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskpassCredentialFlow.swift; sourceTree = "<group>"; };
 		BF11E0000000000000000003 /* BrewfileImportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewfileImportSheet.swift; sourceTree = "<group>"; };
 		BF11E0000000000000000002 /* BrewfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewfileTests.swift; sourceTree = "<group>"; };
+		7D1D00000000000000000014 /* AskpassCredentialFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskpassCredentialFlowTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000006 /* CaskAdoptionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAdoptionPlanTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000008 /* CaskAdoptionWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAdoptionWorkflowTests.swift; sourceTree = "<group>"; };
 		B0E000000000000000000001 /* LocalHomebrewError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewError.swift; sourceTree = "<group>"; };
@@ -761,6 +765,7 @@
 			isa = PBXGroup;
 			children = (
 				BF11E0000000000000000001 /* Brewfile.swift */,
+				7D1D00000000000000000016 /* AskpassCredentialFlow.swift */,
 				B12000000000000000000005 /* CaskAdoptionPlan.swift */,
 				E24000000000000000000001 /* CaskOperationProgress.swift */,
 				E29000000000000000000001 /* CaskOperationState.swift */,
@@ -919,6 +924,7 @@
 			isa = PBXGroup;
 			children = (
 				BF11E0000000000000000002 /* BrewfileTests.swift */,
+				7D1D00000000000000000014 /* AskpassCredentialFlowTests.swift */,
 				B12000000000000000000006 /* CaskAdoptionPlanTests.swift */,
 				E24000000000000000000003 /* CaskOperationProgressTests.swift */,
 				E29000000000000000000003 /* CaskOperationStateTests.swift */,
@@ -1205,6 +1211,7 @@
 				CA2510000000000000000002 /* CaskRetirement.swift in Sources */,
 				A12000000000000000000005 /* CaskAdoptionPlan.swift in Sources */,
 				AF11E0000000000000000001 /* Brewfile.swift in Sources */,
+				7D1D00000000000000000017 /* AskpassCredentialFlow.swift in Sources */,
 				AF11E0000000000000000003 /* BrewfileImportSheet.swift in Sources */,
 				B0F000000000000000000002 /* HomebrewCommandFailure.swift in Sources */,
 				B0E000000000000000000002 /* LocalHomebrewError.swift in Sources */,
@@ -1303,6 +1310,7 @@
 				A12000000000000000000009 /* CaskAdoptionWorkflowTests.swift in Sources */,
 				A12000000000000000000007 /* CaskAdoptionPlanTests.swift in Sources */,
 				AF11E0000000000000000002 /* BrewfileTests.swift in Sources */,
+				7D1D00000000000000000015 /* AskpassCredentialFlowTests.swift in Sources */,
 				F26000000000000000000001 /* CaskListActionTests.swift in Sources */,
 				F24000000000000000000003 /* CaskOperationProgressTests.swift in Sources */,
 				F29000000000000000000003 /* CaskOperationStateTests.swift in Sources */,
