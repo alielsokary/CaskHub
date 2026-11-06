@@ -78,10 +78,13 @@ nonisolated enum Askpass {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
 
+        let callerVerified = AskpassCallerVerifier.isLaunchedByCaskHub()
         let outcome = resolve(
             token: token,
             attempt: nextAttempt(marker: attemptMarker),
-            store: KeychainAdministratorPasswordStore(),
+            store: KeychainAdministratorPasswordStore(hasKeychainEntitlement: {
+                callerVerified && KeychainAdministratorPasswordStore.processHasKeychainEntitlement()
+            }),
             presentDialog: presentDialog
         )
         guard case .password(let password) = outcome else {

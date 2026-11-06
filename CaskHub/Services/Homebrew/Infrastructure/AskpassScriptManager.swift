@@ -55,7 +55,7 @@ nonisolated enum AskpassScriptManager {
         guard let executablePath = executableURL?.path else {
             throw AskpassScriptError.executableUnavailable
         }
-        let safeToken = token.filter { $0.isLetter || $0.isNumber || "-_+@.".contains($0) }
+        let safeToken = sanitizedToken(token)
         let fileManager = FileManager.default
         let destinationDirectory: URL
         if let directory {
@@ -109,6 +109,10 @@ nonisolated enum AskpassScriptManager {
         try? FileManager.default.removeItem(at: url)
         try? FileManager.default.removeItem(at: cancellationMarker(for: url))
         try? FileManager.default.removeItem(at: attemptMarker(for: url))
+    }
+
+    static func sanitizedToken(_ token: String) -> String {
+        token.filter { $0.isLetter || $0.isNumber || "-_+@.".contains($0) }
     }
 
     static func cancellationMarker(for scriptURL: URL) -> URL {

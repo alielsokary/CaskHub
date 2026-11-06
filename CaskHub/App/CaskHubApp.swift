@@ -13,7 +13,7 @@ enum CaskHubMain {
     static func main() {
         if let flagIndex = CommandLine.arguments.firstIndex(of: "--askpass") {
             let token = CommandLine.arguments.indices.contains(flagIndex + 1)
-                ? CommandLine.arguments[flagIndex + 1] : nil
+                ? AskpassScriptManager.sanitizedToken(CommandLine.arguments[flagIndex + 1]) : nil
             let marker = argument(after: "--askpass-cancel-marker").map {
                 URL(fileURLWithPath: $0)
             }
