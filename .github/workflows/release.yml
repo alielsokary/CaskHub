@@ -64,6 +64,17 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
           rm "$RUNNER_TEMP/cert.p12"
 
+      - name: Install provisioning profile
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.CASKHUB_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          PROFILE="$RUNNER_TEMP/CaskHub.provisionprofile"
+          printf '%s' "$PROVISIONING_PROFILE_BASE64" | base64 -d > "$PROFILE"
+          UUID="$(security cms -D -i "$PROFILE" | plutil -extract UUID raw -)"
+          DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          mkdir -p "$DIR"
+          mv "$PROFILE" "$DIR/$UUID.provisionprofile"
+
       - name: Write credential files
         env:
           NOTARY_KEY: ${{ secrets.NOTARY_KEY }}

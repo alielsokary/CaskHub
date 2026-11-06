@@ -204,6 +204,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7D1D00000000000000000001 /* CaskHub.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CaskHub.entitlements; sourceTree = "<group>"; };
 		CA2150000000000000000001 /* CaskUpdateTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskUpdateTarget.swift; sourceTree = "<group>"; };
 		CA2510000000000000000001 /* CaskRetirement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskRetirement.swift; sourceTree = "<group>"; };
 		CA2150000000000000000005 /* HomebrewPlatformLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewPlatformLoader.swift; sourceTree = "<group>"; };
@@ -580,6 +581,7 @@
 				41DFD45E30028F7D00608C7A /* DesignSystem */,
 				41DFD46A30028F7D00608C7A /* Resources */,
 				41DFD48430028F7D00608C7A /* Assets.xcassets */,
+				7D1D00000000000000000001 /* CaskHub.entitlements */,
 			);
 			path = CaskHub;
 			sourceTree = "<group>";
@@ -1464,8 +1466,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "$(CASKHUB_DEBUG_ENTITLEMENTS)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "$(CASKHUB_DEBUG_SIGN_IDENTITY:default=Apple Development)";
+				CODE_SIGN_STYLE = "$(CASKHUB_DEBUG_SIGN_STYLE:default=Automatic)";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -1487,6 +1490,7 @@
 				MARKETING_VERSION = 0.9.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "$(CASKHUB_DEBUG_PROFILE)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -1503,6 +1507,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = CaskHub/CaskHub.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1526,6 +1531,7 @@
 				MARKETING_VERSION = 0.9.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mag.caskhub;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "$(CASKHUB_RELEASE_PROFILE)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

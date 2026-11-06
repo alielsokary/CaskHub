@@ -39,6 +39,7 @@ Notes:
 
 - **SwiftLint is required locally** — it runs as an Xcode build phase. The build warns if it is not installed.
 - **`Configs/Secrets.xcconfig` is optional.** The project builds without it; analytics and crash reporting simply stay off. If you want one, copy `Configs/Secrets.xcconfig.template`.
+- **Touch ID for administrator prompts is off in default Debug builds.** It needs the maintainer's signing identity; everything else runs normally.
 
 ## Branch Model
 
