@@ -345,30 +345,142 @@
         }
       }
     },
-    "Use your fingerprint instead of your password when Homebrew needs administrator access. Turning this off removes the saved password." : {
+    "Enter your login password to save it in the Keychain." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Используйте отпечаток пальца вместо пароля, когда Homebrew нужны права администратора. При выключении сохранённый пароль удаляется."
+            "value" : "Введите пароль для входа, чтобы сохранить его в Связке ключей."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Використовуйте відбиток пальця замість пароля, коли Homebrew потрібні права адміністратора. Після вимкнення збережений пароль видаляється."
+            "value" : "Введіть пароль входу, щоб зберегти його у Зв’язці ключів."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当 Homebrew 需要管理员权限时，使用指纹代替密码。关闭此选项会移除已存储的密码。"
+            "value" : "输入你的登录密码以将其存储在钥匙串中。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "當 Homebrew 需要管理者權限時，使用指紋代替密碼。關閉此選項會移除已儲存的密碼。"
+            "value" : "輸入你的登入密碼以將其儲存在鑰匙圈中。"
+          }
+        }
+      }
+    },
+    "Login Password" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль для входа"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль входу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录密码"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入密碼"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存"
+          }
+        }
+      }
+    },
+    "The password could not be saved in the Keychain." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить пароль в Связке ключей."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зберегти пароль у Зв’язці ключів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法将密码存储在钥匙串中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法將密碼儲存在鑰匙圈中。"
+          }
+        }
+      }
+    },
+    "Use your fingerprint instead of your password when Homebrew needs administrator access. Your password is saved in the Keychain and removed when you turn this off." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Используйте отпечаток пальца вместо пароля, когда Homebrew нужны права администратора. Пароль хранится в Связке ключей и удаляется при выключении."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовуйте відбиток пальця замість пароля, коли Homebrew потрібні права адміністратора. Пароль зберігається у Зв’язці ключів і видаляється після вимкнення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当 Homebrew 需要管理员权限时，使用指纹代替密码。密码存储在钥匙串中，关闭此选项后会被移除。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當 Homebrew 需要管理者權限時，使用指紋代替密碼。密碼會儲存在鑰匙圈中，關閉此選項後會被移除。"
           }
         }
       }

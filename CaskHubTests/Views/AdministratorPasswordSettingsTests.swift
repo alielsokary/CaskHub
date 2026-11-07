@@ -27,8 +27,8 @@ final class AdministratorPasswordSettingsTests: XCTestCase {
     private var touchID: TouchIDAuthorizationSetting { TouchIDAuthorizationSetting(defaults: defaults) }
 
     @MainActor
-    private func model(_ store: SettingsPasswordStoreSpy) -> AdministratorPasswordSettingsModel {
-        AdministratorPasswordSettingsModel(store: store)
+    private func model(_ store: SettingsPasswordStoreSpy, accepts: Bool = true) -> AdministratorPasswordSettingsModel {
+        AdministratorPasswordSettingsModel(store: store, passwordAccepted: { _ in accepts })
     }
 
     @MainActor
@@ -61,14 +61,14 @@ final class AdministratorPasswordSettingsTests: XCTestCase {
         XCTAssertTrue(model.isAvailable)
         XCTAssertTrue(model.isEnabled)
 
-        await model.setEnabled(false)
+        await model.disable()
         XCTAssertEqual(store.deleteCount, 1)
         XCTAssertFalse(model.isEnabled)
         XCTAssertFalse(touchID.isEnabled)
     }
 
     @MainActor
-    func test_turning_on_keeps_saved_password() async {
+    func test_turning_on_saves_the_accepted_password() async {
         let store = SettingsPasswordStoreSpy(available: true, keychainAccess: true, saved: false, touchID: touchID)
         let model = model(store)
         await model.refresh()
@@ -76,11 +76,39 @@ final class AdministratorPasswordSettingsTests: XCTestCase {
         XCTAssertFalse(model.isEnabled)
         render(AdministratorPasswordSettingsSection(model: model), width: 460, height: 200)
 
-        await model.setEnabled(true)
+        let result = await model.enable(password: "secret")
 
+        XCTAssertEqual(result, .enabled)
+        XCTAssertEqual(store.savedPassword, "secret")
         XCTAssertTrue(model.isEnabled)
         XCTAssertTrue(touchID.isEnabled)
-        XCTAssertEqual(store.deleteCount, 0)
+    }
+
+    @MainActor
+    func test_wrong_password_keeps_the_switch_off() async {
+        let store = SettingsPasswordStoreSpy(available: true, keychainAccess: true, saved: false, touchID: touchID)
+        let model = model(store, accepts: false)
+
+        let result = await model.enable(password: "typo")
+
+        XCTAssertEqual(result, .rejected)
+        XCTAssertNil(store.savedPassword)
+        XCTAssertFalse(model.isEnabled)
+        XCTAssertFalse(touchID.isEnabled)
+    }
+
+    @MainActor
+    func test_keychain_failure_keeps_the_switch_off() async {
+        let store = SettingsPasswordStoreSpy(
+            available: true, keychainAccess: true, saved: false, touchID: touchID, saveFails: true
+        )
+        let model = model(store)
+
+        let result = await model.enable(password: "secret")
+
+        XCTAssertEqual(result, .failed)
+        XCTAssertFalse(model.isEnabled)
+        XCTAssertFalse(touchID.isEnabled)
     }
 
     @MainActor
@@ -99,16 +127,21 @@ final class AdministratorPasswordSettingsTests: XCTestCase {
 private final class SettingsPasswordStoreSpy: AdministratorPasswordStoring {
     private struct State {
         var saved: Bool
+        var savedPassword: String?
         var deleteCount = 0
     }
 
     let isAvailable: Bool
     let hasKeychainAccess: Bool
     let touchID: TouchIDAuthorizationSetting
+    private let saveFails: Bool
     private let state: Mutex<State>
 
-    init(available: Bool, keychainAccess: Bool, saved: Bool, touchID: TouchIDAuthorizationSetting) {
+    init(
+        available: Bool, keychainAccess: Bool, saved: Bool, touchID: TouchIDAuthorizationSetting, saveFails: Bool = false
+    ) {
         self.touchID = touchID
+        self.saveFails = saveFails
         isAvailable = available
         hasKeychainAccess = keychainAccess
         state = Mutex(State(saved: saved))
@@ -120,7 +153,15 @@ private final class SettingsPasswordStoreSpy: AdministratorPasswordStoring {
 
     func read(reason: String) -> AdministratorPasswordReadResult { .notFound }
 
-    func save(_ password: String) throws { state.withLock { $0.saved = true } }
+    var savedPassword: String? { state.withLock { $0.savedPassword } }
+
+    func save(_ password: String) throws {
+        if saveFails { throw AdministratorPasswordStoreError.keychain(status: -1) }
+        state.withLock {
+            $0.saved = true
+            $0.savedPassword = password
+        }
+    }
 
     func delete() {
         state.withLock {
