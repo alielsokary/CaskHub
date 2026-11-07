@@ -34,8 +34,9 @@ nonisolated enum Askpass {
     ) -> AskpassOutcome {
         let storeAvailable = store.isAvailable
         let passwordSaved = storeAvailable && store.savedPasswordExists()
+        let enabled = storeAvailable && store.touchID.isEnabled
         var step = AskpassCredentialFlow.firstStep(
-            attempt: attempt, storeAvailable: storeAvailable, passwordSaved: passwordSaved
+            attempt: attempt, storeAvailable: storeAvailable, enabled: enabled, passwordSaved: passwordSaved
         )
         if step == .touchID {
             step = AskpassCredentialFlow.step(
@@ -44,9 +45,10 @@ nonisolated enum Askpass {
         }
         if case .emit(let password) = step { return .password(password) }
         let request = dialogRequest(
-            for: step, token: token, attempt: attempt, storeAvailable: storeAvailable, passwordSaved: passwordSaved
+            for: step, token: token, attempt: attempt, storeAvailable: storeAvailable, touchIDEnabled: enabled
         )
         guard let request, let response = presentDialog(request) else { return .cancelled }
+        if storeAvailable { store.touchID.setEnabled(response.remember) }
         switch AskpassCredentialFlow.storeAction(
             remember: response.remember, passwordSaved: passwordSaved, storeAvailable: storeAvailable
         ) {
@@ -58,7 +60,7 @@ nonisolated enum Askpass {
     }
 
     static func dialogRequest(
-        for step: AskpassStep, token: String?, attempt: Int?, storeAvailable: Bool, passwordSaved: Bool
+        for step: AskpassStep, token: String?, attempt: Int?, storeAvailable: Bool, touchIDEnabled: Bool
     ) -> AskpassDialogRequest? {
         let rejected = (attempt ?? 0) > 1
         switch step {
@@ -70,7 +72,7 @@ nonisolated enum Askpass {
             )
         case .touchID:
             return AskpassDialogRequest(
-                token: token, offerRemember: storeAvailable, rememberChecked: passwordSaved, previousAttemptRejected: rejected
+                token: token, offerRemember: storeAvailable, rememberChecked: touchIDEnabled, previousAttemptRejected: rejected
             )
         }
     }

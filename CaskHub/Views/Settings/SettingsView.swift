@@ -174,6 +174,7 @@ struct GeneralSettingsView: View {
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var settingsModel = GeneralSettingsModel()
     @State private var fullDiskAccess = FullDiskAccessPermission.Status.unknown
+    @State private var touchIDModel = AdministratorPasswordSettingsModel()
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
     @AppStorage(ContentView.showExternallyManagedAppsKey) private var showExternallyManagedApps = true
 
@@ -214,6 +215,7 @@ struct GeneralSettingsView: View {
             } header: {
                 Text(.settingsUninstallTitle)
             }
+            AdministratorPasswordSettingsSection(model: touchIDModel)
             Section("Permissions") {
                 LabeledContent("App Management") {
                     HStack(spacing: 10) {
@@ -257,6 +259,7 @@ struct GeneralSettingsView: View {
     private func refreshPermissions() async {
         fullDiskAccess = localHomebrew.fullDiskAccessProbe()
         await settingsModel.refreshAppManagement()
+        await touchIDModel.refresh()
     }
 
     @ViewBuilder
@@ -291,7 +294,6 @@ struct HomebrewSettingsView: View {
 private struct HomebrewSettingsContent: View {
     let localHomebrew: LocalHomebrewService
     @State private var locationModel: HomebrewLocationSettingsModel
-    @State private var passwordModel = AdministratorPasswordSettingsModel()
 
     init(localHomebrew: LocalHomebrewService) {
         self.localHomebrew = localHomebrew
@@ -375,7 +377,6 @@ private struct HomebrewSettingsContent: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 ApplicationDirectorySettingsRow(localHomebrew: localHomebrew)
             }
-            AdministratorPasswordSettingsSection(model: passwordModel)
             Section("Library") {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
                 LabeledContent(
@@ -390,10 +391,6 @@ private struct HomebrewSettingsContent: View {
         .contentShape(Rectangle())
         .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
         .onAppear { locationModel.synchronize() }
-        .task { await passwordModel.refresh() }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            Task { await passwordModel.refresh() }
-        }
         .onChange(of: localHomebrew.customBrewPrefix) {
             locationModel.synchronize()
         }

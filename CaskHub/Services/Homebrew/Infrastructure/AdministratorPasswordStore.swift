@@ -37,9 +37,23 @@ nonisolated enum AdministratorPasswordStoreError: Error, Equatable, Sendable {
     case keychain(status: OSStatus)
 }
 
+nonisolated struct TouchIDAuthorizationSetting: Sendable {
+    private static let key = "authorizeWithTouchID"
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    var isEnabled: Bool { defaults.bool(forKey: Self.key) }
+
+    func setEnabled(_ enabled: Bool) { defaults.set(enabled, forKey: Self.key) }
+}
+
 nonisolated protocol AdministratorPasswordStoring: Sendable {
     var isAvailable: Bool { get }
     var hasKeychainAccess: Bool { get }
+    var touchID: TouchIDAuthorizationSetting { get }
     func savedPasswordExists() -> Bool
     func read(reason: String) -> AdministratorPasswordReadResult
     func save(_ password: String) throws
@@ -49,13 +63,16 @@ nonisolated protocol AdministratorPasswordStoring: Sendable {
 nonisolated struct KeychainAdministratorPasswordStore: AdministratorPasswordStoring {
     private static let service = "com.mag.caskhub.administrator-password"
 
+    let touchID: TouchIDAuthorizationSetting
     private let hasKeychainEntitlement: @Sendable () -> Bool
     private let biometryEnrolled: @Sendable () -> Bool
 
     init(
         hasKeychainEntitlement: @escaping @Sendable () -> Bool = KeychainAdministratorPasswordStore.processHasKeychainEntitlement,
-        biometryEnrolled: @escaping @Sendable () -> Bool = KeychainAdministratorPasswordStore.deviceHasEnrolledBiometry
+        biometryEnrolled: @escaping @Sendable () -> Bool = KeychainAdministratorPasswordStore.deviceHasEnrolledBiometry,
+        touchID: TouchIDAuthorizationSetting = TouchIDAuthorizationSetting()
     ) {
+        self.touchID = touchID
         self.hasKeychainEntitlement = hasKeychainEntitlement
         self.biometryEnrolled = biometryEnrolled
     }

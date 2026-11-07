@@ -310,7 +310,7 @@ final class HomebrewLocationSettingsModel {
 @Observable
 final class AdministratorPasswordSettingsModel {
     private(set) var isAvailable = false
-    private(set) var hasSavedPassword = false
+    private(set) var isEnabled = false
 
     private let store: any AdministratorPasswordStoring
 
@@ -320,19 +320,19 @@ final class AdministratorPasswordSettingsModel {
 
     func refresh() async {
         let state = await Self.state(of: store)
-        isAvailable = state.available
-        hasSavedPassword = state.saved
+        isEnabled = state.access && store.touchID.isEnabled
+        isAvailable = state.touchID || isEnabled
     }
 
-    func forget() async {
-        await Self.delete(from: store)
-        await refresh()
+    func setEnabled(_ enabled: Bool) async {
+        isEnabled = enabled
+        store.touchID.setEnabled(enabled)
+        if !enabled { await Self.delete(from: store) }
     }
 
     @concurrent
-    private static func state(of store: any AdministratorPasswordStoring) async -> (available: Bool, saved: Bool) {
-        let access = store.hasKeychainAccess
-        return (access, access && store.savedPasswordExists())
+    private static func state(of store: any AdministratorPasswordStoring) async -> (access: Bool, touchID: Bool) {
+        (store.hasKeychainAccess, store.isAvailable)
     }
 
     @concurrent

@@ -20,10 +20,10 @@ nonisolated enum AskpassStoreAction: Equatable, Sendable {
 }
 
 nonisolated enum AskpassCredentialFlow {
-    static func firstStep(attempt: Int?, storeAvailable: Bool, passwordSaved: Bool) -> AskpassStep {
+    static func firstStep(attempt: Int?, storeAvailable: Bool, enabled: Bool, passwordSaved: Bool) -> AskpassStep {
         guard storeAvailable else { return .dialog(offerRemember: false, rememberChecked: false) }
-        if attempt == 1, passwordSaved { return .touchID }
-        return .dialog(offerRemember: true, rememberChecked: passwordSaved)
+        if attempt == 1, enabled, passwordSaved { return .touchID }
+        return .dialog(offerRemember: true, rememberChecked: enabled)
     }
 
     static func step(after result: AdministratorPasswordReadResult, storeAvailable: Bool) -> AskpassStep {

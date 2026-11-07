@@ -10,33 +10,47 @@ import XCTest
 
 final class AskpassCredentialFlowTests: XCTestCase {
     func test_first_call_with_saved_password_uses_touch_id() {
-        XCTAssertEqual(AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: true, passwordSaved: true), .touchID)
+        XCTAssertEqual(AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: true, enabled: true, passwordSaved: true), .touchID)
     }
 
-    func test_first_call_without_saved_password_offers_unchecked_remember() {
+    func test_first_call_with_touch_id_off_offers_unchecked_remember() {
         XCTAssertEqual(
-            AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: true, passwordSaved: false),
+            AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: true, enabled: false, passwordSaved: false),
             .dialog(offerRemember: true, rememberChecked: false)
+        )
+    }
+
+    func test_touch_id_off_skips_a_leftover_saved_password() {
+        XCTAssertEqual(
+            AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: true, enabled: false, passwordSaved: true),
+            .dialog(offerRemember: true, rememberChecked: false)
+        )
+    }
+
+    func test_touch_id_on_without_saved_password_pre_ticks_remember() {
+        XCTAssertEqual(
+            AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: true, enabled: true, passwordSaved: false),
+            .dialog(offerRemember: true, rememberChecked: true)
         )
     }
 
     func test_retry_after_wrong_password_skips_keychain_and_keeps_remember_checked() {
         XCTAssertEqual(
-            AskpassCredentialFlow.firstStep(attempt: 2, storeAvailable: true, passwordSaved: true),
+            AskpassCredentialFlow.firstStep(attempt: 2, storeAvailable: true, enabled: true, passwordSaved: true),
             .dialog(offerRemember: true, rememberChecked: true)
         )
     }
 
     func test_missing_attempt_marker_skips_keychain() {
         XCTAssertEqual(
-            AskpassCredentialFlow.firstStep(attempt: nil, storeAvailable: true, passwordSaved: true),
+            AskpassCredentialFlow.firstStep(attempt: nil, storeAvailable: true, enabled: true, passwordSaved: true),
             .dialog(offerRemember: true, rememberChecked: true)
         )
     }
 
     func test_unavailable_store_shows_plain_dialog() {
         XCTAssertEqual(
-            AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: false, passwordSaved: true),
+            AskpassCredentialFlow.firstStep(attempt: 1, storeAvailable: false, enabled: true, passwordSaved: true),
             .dialog(offerRemember: false, rememberChecked: false)
         )
     }

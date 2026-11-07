@@ -10,59 +10,89 @@ import Synchronization
 import XCTest
 
 final class AdministratorPasswordSettingsTests: XCTestCase {
+    private var defaults: UserDefaults!
+    private var suiteName = ""
+
+    override func setUp() {
+        super.setUp()
+        suiteName = "AdministratorPasswordSettingsTests-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)
+    }
+
+    override func tearDown() {
+        defaults.removePersistentDomain(forName: suiteName)
+        super.tearDown()
+    }
+
+    private var touchID: TouchIDAuthorizationSetting { TouchIDAuthorizationSetting(defaults: defaults) }
+
+    @MainActor
+    private func model(_ store: SettingsPasswordStoreSpy) -> AdministratorPasswordSettingsModel {
+        AdministratorPasswordSettingsModel(store: store)
+    }
+
     @MainActor
     func test_touch_id_section_hidden_without_keychain_access() async {
-        let model = AdministratorPasswordSettingsModel(
-            store: SettingsPasswordStoreSpy(available: false, keychainAccess: false, saved: true)
-        )
+        touchID.setEnabled(true)
+        let model = model(SettingsPasswordStoreSpy(available: false, keychainAccess: false, saved: true, touchID: touchID))
 
         await model.refresh()
 
         XCTAssertFalse(model.isAvailable)
-        XCTAssertFalse(model.hasSavedPassword)
         render(AdministratorPasswordSettingsSection(model: model), width: 460, height: 200)
     }
 
     @MainActor
-    func test_saved_password_can_be_forgotten_while_touch_id_is_unavailable() async {
-        let store = SettingsPasswordStoreSpy(available: false, keychainAccess: true, saved: true)
-        let model = AdministratorPasswordSettingsModel(store: store)
+    func test_touch_id_section_hidden_on_a_mac_without_touch_id() async {
+        let model = model(SettingsPasswordStoreSpy(available: false, keychainAccess: true, saved: false, touchID: touchID))
 
         await model.refresh()
-        XCTAssertTrue(model.isAvailable)
-        XCTAssertTrue(model.hasSavedPassword)
 
-        await model.forget()
-        XCTAssertEqual(store.deleteCount, 1)
-        XCTAssertFalse(model.hasSavedPassword)
+        XCTAssertFalse(model.isAvailable)
     }
 
     @MainActor
-    func test_forget_deletes_and_disables_button() async {
-        let store = SettingsPasswordStoreSpy(available: true, keychainAccess: true, saved: true)
-        let model = AdministratorPasswordSettingsModel(store: store)
+    func test_switch_stays_visible_while_on_so_it_can_be_turned_off() async {
+        touchID.setEnabled(true)
+        let store = SettingsPasswordStoreSpy(available: false, keychainAccess: true, saved: true, touchID: touchID)
+        let model = model(store)
+
         await model.refresh()
-        XCTAssertTrue(model.hasSavedPassword)
+        XCTAssertTrue(model.isAvailable)
+        XCTAssertTrue(model.isEnabled)
+
+        await model.setEnabled(false)
+        XCTAssertEqual(store.deleteCount, 1)
+        XCTAssertFalse(model.isEnabled)
+        XCTAssertFalse(touchID.isEnabled)
+    }
+
+    @MainActor
+    func test_turning_on_keeps_saved_password() async {
+        let store = SettingsPasswordStoreSpy(available: true, keychainAccess: true, saved: false, touchID: touchID)
+        let model = model(store)
+        await model.refresh()
+        XCTAssertTrue(model.isAvailable)
+        XCTAssertFalse(model.isEnabled)
         render(AdministratorPasswordSettingsSection(model: model), width: 460, height: 200)
 
-        await model.forget()
+        await model.setEnabled(true)
 
-        XCTAssertEqual(store.deleteCount, 1)
-        XCTAssertFalse(model.hasSavedPassword)
+        XCTAssertTrue(model.isEnabled)
+        XCTAssertTrue(touchID.isEnabled)
+        XCTAssertEqual(store.deleteCount, 0)
     }
 
     @MainActor
-    func test_refresh_reflects_saved_password() async {
-        let store = SettingsPasswordStoreSpy(available: true, keychainAccess: true, saved: false)
-        let model = AdministratorPasswordSettingsModel(store: store)
-
+    func test_refresh_picks_up_a_change_made_in_the_password_prompt() async {
+        let model = model(SettingsPasswordStoreSpy(available: true, keychainAccess: true, saved: false, touchID: touchID))
         await model.refresh()
-        XCTAssertTrue(model.isAvailable)
-        XCTAssertFalse(model.hasSavedPassword)
+        XCTAssertFalse(model.isEnabled)
 
-        store.setSaved(true)
+        touchID.setEnabled(true)
         await model.refresh()
-        XCTAssertTrue(model.hasSavedPassword)
+
+        XCTAssertTrue(model.isEnabled)
     }
 }
 
@@ -74,17 +104,17 @@ private final class SettingsPasswordStoreSpy: AdministratorPasswordStoring {
 
     let isAvailable: Bool
     let hasKeychainAccess: Bool
+    let touchID: TouchIDAuthorizationSetting
     private let state: Mutex<State>
 
-    init(available: Bool, keychainAccess: Bool, saved: Bool) {
+    init(available: Bool, keychainAccess: Bool, saved: Bool, touchID: TouchIDAuthorizationSetting) {
+        self.touchID = touchID
         isAvailable = available
         hasKeychainAccess = keychainAccess
         state = Mutex(State(saved: saved))
     }
 
     var deleteCount: Int { state.withLock { $0.deleteCount } }
-
-    func setSaved(_ saved: Bool) { state.withLock { $0.saved = saved } }
 
     func savedPasswordExists() -> Bool { state.withLock { $0.saved } }
 

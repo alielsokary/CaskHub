@@ -9,8 +9,25 @@
 import XCTest
 
 final class AskpassTests: XCTestCase {
+    private var defaults: UserDefaults!
+    private var suiteName = ""
+
+    override func setUp() {
+        super.setUp()
+        suiteName = "AskpassTests-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)
+        touchID.setEnabled(true)
+    }
+
+    override func tearDown() {
+        defaults.removePersistentDomain(forName: suiteName)
+        super.tearDown()
+    }
+
+    private var touchID: TouchIDAuthorizationSetting { TouchIDAuthorizationSetting(defaults: defaults) }
+
     func test_saved_password_is_returned_after_touch_id_without_a_dialog() {
-        let store = FakePasswordStore(saved: true, readResult: .password("pw"))
+        let store = FakePasswordStore(saved: true, readResult: .password("pw"), touchID: touchID)
         let dialog = FakeDialog(response: nil)
 
         let outcome = resolve(attempt: 1, store: store, dialog: dialog)
@@ -22,7 +39,7 @@ final class AskpassTests: XCTestCase {
     }
 
     func test_touch_id_cancel_falls_back_to_dialog_and_keeps_saved_password() {
-        let store = FakePasswordStore(saved: true, readResult: .cancelled)
+        let store = FakePasswordStore(saved: true, readResult: .cancelled, touchID: touchID)
         let dialog = FakeDialog(response: AskpassDialogResponse(password: "typed", remember: true))
 
         let outcome = resolve(attempt: 1, store: store, dialog: dialog)
@@ -36,7 +53,7 @@ final class AskpassTests: XCTestCase {
     }
 
     func test_retry_overwrites_stale_password() {
-        let store = FakePasswordStore(saved: true, readResult: .password("stale"))
+        let store = FakePasswordStore(saved: true, readResult: .password("stale"), touchID: touchID)
         let dialog = FakeDialog(response: AskpassDialogResponse(password: "new", remember: true))
 
         let outcome = resolve(attempt: 2, store: store, dialog: dialog)
@@ -50,16 +67,42 @@ final class AskpassTests: XCTestCase {
         XCTAssertEqual(store.writes, [.save("new")])
     }
 
-    func test_unticking_remember_forgets_saved_password() {
-        let store = FakePasswordStore(saved: true, readResult: .password("stale"))
+    func test_unticking_remember_forgets_saved_password_and_turns_touch_id_off() {
+        let store = FakePasswordStore(saved: true, readResult: .password("stale"), touchID: touchID)
         let dialog = FakeDialog(response: AskpassDialogResponse(password: "new", remember: false))
 
         XCTAssertEqual(resolve(attempt: 2, store: store, dialog: dialog), .password("new"))
         XCTAssertEqual(store.writes, [.delete])
+        XCTAssertFalse(touchID.isEnabled)
+    }
+
+    func test_ticking_remember_turns_touch_id_on() {
+        touchID.setEnabled(false)
+        let store = FakePasswordStore(saved: false, readResult: .notFound, touchID: touchID)
+        let dialog = FakeDialog(response: AskpassDialogResponse(password: "typed", remember: true))
+
+        XCTAssertEqual(resolve(attempt: 1, store: store, dialog: dialog), .password("typed"))
+        XCTAssertEqual(
+            dialog.requests,
+            [AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: false, previousAttemptRejected: false)]
+        )
+        XCTAssertEqual(store.writes, [.save("typed")])
+        XCTAssertTrue(touchID.isEnabled)
+    }
+
+    func test_touch_id_off_never_reads_the_saved_password() {
+        touchID.setEnabled(false)
+        let store = FakePasswordStore(saved: true, readResult: .password("pw"), touchID: touchID)
+        let dialog = FakeDialog(response: nil)
+
+        XCTAssertEqual(resolve(attempt: 1, store: store, dialog: dialog), .cancelled)
+        XCTAssertTrue(store.readReasons.isEmpty)
+        XCTAssertEqual(dialog.requests.map(\.rememberChecked), [false])
+        XCTAssertFalse(touchID.isEnabled)
     }
 
     func test_dialog_cancel_is_cancelled() {
-        let store = FakePasswordStore(saved: false, readResult: .notFound)
+        let store = FakePasswordStore(saved: false, readResult: .notFound, touchID: touchID)
         let dialog = FakeDialog(response: nil)
 
         XCTAssertEqual(resolve(attempt: 1, store: store, dialog: dialog), .cancelled)
@@ -67,7 +110,7 @@ final class AskpassTests: XCTestCase {
     }
 
     func test_save_failure_still_returns_the_password() {
-        let store = FakePasswordStore(saved: false, readResult: .notFound, saveFails: true)
+        let store = FakePasswordStore(saved: false, readResult: .notFound, saveFails: true, touchID: touchID)
         let dialog = FakeDialog(response: AskpassDialogResponse(password: "typed", remember: true))
 
         XCTAssertEqual(resolve(attempt: 1, store: store, dialog: dialog), .password("typed"))
@@ -85,7 +128,7 @@ final class AskpassTests: XCTestCase {
     }
 
     func test_password_rejected_by_login_check_is_not_saved() {
-        let store = FakePasswordStore(saved: false, readResult: .notFound)
+        let store = FakePasswordStore(saved: false, readResult: .notFound, touchID: touchID)
         let dialog = FakeDialog(response: AskpassDialogResponse(password: "typo", remember: true))
 
         let outcome = resolve(attempt: 1, store: store, dialog: dialog, accepts: false)
@@ -95,7 +138,7 @@ final class AskpassTests: XCTestCase {
     }
 
     func test_first_prompt_does_not_claim_a_rejected_password() {
-        let store = FakePasswordStore(saved: false, readResult: .notFound)
+        let store = FakePasswordStore(saved: false, readResult: .notFound, touchID: touchID)
         let dialog = FakeDialog(response: nil)
 
         _ = resolve(attempt: 1, store: store, dialog: dialog)
@@ -136,13 +179,18 @@ private final class FakePasswordStore: AdministratorPasswordStoring, @unchecked 
 
     let isAvailable = true
     let hasKeychainAccess = true
+    let touchID: TouchIDAuthorizationSetting
     private let saved: Bool
     private let readResult: AdministratorPasswordReadResult
     private let saveFails: Bool
     private(set) var readReasons: [String] = []
     private(set) var writes: [Write] = []
 
-    init(saved: Bool, readResult: AdministratorPasswordReadResult, saveFails: Bool = false) {
+    init(
+        saved: Bool, readResult: AdministratorPasswordReadResult, saveFails: Bool = false,
+        touchID: TouchIDAuthorizationSetting
+    ) {
+        self.touchID = touchID
         self.saved = saved
         self.readResult = readResult
         self.saveFails = saveFails
@@ -168,9 +216,11 @@ private final class FakePasswordStore: AdministratorPasswordStoring, @unchecked 
 final class AskpassUnreachableStepTests: XCTestCase {
     func test_dialog_request_falls_back_to_dialog_for_any_non_password_step() {
         XCTAssertEqual(
-            Askpass.dialogRequest(for: .touchID, token: "zoom", attempt: 1, storeAvailable: true, passwordSaved: true),
+            Askpass.dialogRequest(for: .touchID, token: "zoom", attempt: 1, storeAvailable: true, touchIDEnabled: true),
             AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: true, previousAttemptRejected: false)
         )
-        XCTAssertNil(Askpass.dialogRequest(for: .emit("pw"), token: "zoom", attempt: 1, storeAvailable: true, passwordSaved: true))
+        XCTAssertNil(
+            Askpass.dialogRequest(for: .emit("pw"), token: "zoom", attempt: 1, storeAvailable: true, touchIDEnabled: true)
+        )
     }
 }

@@ -13,16 +13,17 @@ struct AdministratorPasswordSettingsSection: View {
     var body: some View {
         if model.isAvailable {
             Section {
-                Button("Forget Saved Password") {
-                    Task { await model.forget() }
-                }
-                .disabled(!model.hasSavedPassword)
+                Toggle("Authorize with Touch ID", isOn: Binding(
+                    get: { model.isEnabled },
+                    set: { enabled in Task { await model.setEnabled(enabled) } }
+                ))
+                .toggleStyle(.switch)
             } header: {
                 Text("Touch ID")
             } footer: {
                 Text("""
-                    CaskHub asks for Touch ID instead of your password when an installer needs administrator access. \
-                    Turn it on from the password prompt.
+                    Use your fingerprint instead of your password when Homebrew needs administrator access. \
+                    Turning this off removes the saved password.
                     """)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
