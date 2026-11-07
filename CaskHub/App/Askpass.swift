@@ -123,23 +123,30 @@ nonisolated enum Askpass {
 
     @MainActor
     private static func presentDialog(_ request: AskpassDialogRequest) -> AskpassDialogResponse? {
+        let message = request.previousAttemptRejected
+            ? String(localized: "The password was not accepted. Try again.")
+            : request.token.map { String(localized: "The installer for “\($0)” requires your login password.") }
+                ?? String(localized: "This installer requires your login password.")
+        return AdministratorPasswordDialog.present(
+            message: message, offerRemember: request.offerRemember, rememberChecked: request.rememberChecked
+        )
+    }
+}
+
+enum AdministratorPasswordDialog {
+    static func present(message: String, offerRemember: Bool, rememberChecked: Bool) -> AskpassDialogResponse? {
         let app = NSApplication.shared
         let alert = NSAlert()
         alert.messageText = String(localized: "CaskHub needs administrator access")
-        alert.informativeText = request.token.map {
-            String(localized: "The installer for “\($0)” requires your login password.")
-        } ?? String(localized: "This installer requires your login password.")
-        if request.previousAttemptRejected {
-            alert.informativeText = String(localized: "The password was not accepted. Try again.")
-        }
+        alert.informativeText = message
         alert.addButton(withTitle: String(localized: "Allow"))
         alert.addButton(withTitle: String(localized: "Cancel"))
 
         let passwordField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 230, height: 24))
         var rememberBox: NSButton?
-        if request.offerRemember {
+        if offerRemember {
             let box = NSButton(checkboxWithTitle: String(localized: "Use Touch ID next time"), target: nil, action: nil)
-            box.state = request.rememberChecked ? .on : .off
+            box.state = rememberChecked ? .on : .off
             let stack = NSStackView(views: [passwordField, box])
             stack.orientation = .vertical
             stack.alignment = .leading
