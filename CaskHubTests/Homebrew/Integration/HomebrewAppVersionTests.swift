@@ -180,7 +180,7 @@ final class HomebrewAppVersionTests: XCTestCase {
             $0.brewBinaryProvider = { nil }
             $0.brewVersionProvider = { "test" }
             $0.caskPlatformProvider = { CaskPlatform(tag: "arm64_sequoia") }
-            $0.homebrewOutdatedProvider = {
+            $0.homebrewOutdatedProvider = { _ in
                 queries += 1
                 return HomebrewOutdatedReport(upgradable: ["antinote"], pinned: [])
             }
@@ -192,6 +192,44 @@ final class HomebrewAppVersionTests: XCTestCase {
         await service.refreshHomebrewOutdated()
         XCTAssertEqual(queries, 1)
         XCTAssertEqual(service.homebrewOutdated?.upgradable, ["antinote"])
+    }
+
+    func test_third_party_cask_updates_come_from_homebrew_and_survive_a_failed_check() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try makeInstallation(in: root)
+        // The API catalog never lists another tap's cask; only Homebrew knows its current version.
+        var answer = HomebrewOutdatedLoader.report(in: #"""
+        {"formulae":[],"casks":[{"token":"antinote","tap":"acme/tap","name":["Antinote"],
+          "homepage":"https://antinote.example","version":"2.1.3","outdated":true,"pinned":false,
+          "deprecated":false,"disabled":false,"auto_updates":false}]}
+        """#)
+        var requests: [Bool] = []
+        let defaults = makeScratchDefaults("outdated-third-party-\(UUID().uuidString)")
+        defaults.set(root.path, forKey: HomebrewLocator.customPrefixKey)
+        let service = LocalHomebrewService(defaults: defaults) {
+            $0.applicationDirectories = [root.appendingPathComponent("Applications")]
+            $0.brewBinaryProvider = { nil }
+            $0.brewVersionProvider = { "test" }
+            $0.caskPlatformProvider = { CaskPlatform(tag: "arm64_sequoia") }
+            $0.homebrewOutdatedProvider = { userRequested in
+                requests.append(userRequested)
+                return answer
+            }
+        }
+        await service.refresh()
+        let (vm, _) = await makeSUT(casks: [Cask.preview(token: "other")], localHomebrew: service)
+        vm.selectedSidebar = .library(.updates)
+        XCTAssertEqual(vm.installedCasks.map(\.token), ["antinote"])
+        XCTAssertEqual(vm.updatesCount, 0)
+
+        await service.refreshHomebrewOutdated(userRequested: true)
+        XCTAssertEqual(vm.filteredCasks.map(\.token), ["antinote"])
+
+        answer = nil
+        await service.refreshHomebrewOutdated()
+        XCTAssertEqual(requests, [true, false])
+        XCTAssertEqual(vm.updatesCount, 1, "a failed check keeps Homebrew's last answer")
     }
 
     func test_newer_app_evidence_overrides_a_cached_homebrew_listing() async throws {
@@ -327,7 +365,7 @@ final class HomebrewAppVersionTests: XCTestCase {
             $0.brewBinaryProvider = { nil }
             $0.brewVersionProvider = { "test" }
             $0.caskPlatformProvider = { CaskPlatform(tag: "arm64_sequoia") }
-            $0.homebrewOutdatedProvider = {
+            $0.homebrewOutdatedProvider = { _ in
                 homebrewOutdated.map { HomebrewOutdatedReport(upgradable: $0, pinned: pinned) }
             }
         }

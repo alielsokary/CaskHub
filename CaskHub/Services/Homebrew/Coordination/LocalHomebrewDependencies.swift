@@ -101,7 +101,7 @@ struct LocalHomebrewDependencies {
             from: HomebrewLocator.brewBinaryURL()
         )
     }
-    var homebrewOutdatedProvider: (() async -> HomebrewOutdatedReport?)?
+    var homebrewOutdatedProvider: ((_ userRequested: Bool) async -> HomebrewOutdatedReport?)?
     var laneLimiter: HomebrewLaneLimiter?
 
     func resolvedCommandExecutor() -> any HomebrewCommandExecuting {

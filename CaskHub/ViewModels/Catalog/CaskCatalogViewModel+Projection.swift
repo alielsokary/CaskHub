@@ -109,7 +109,8 @@ extension CaskCatalogViewModel {
         libraryCache.value(for: libraryCacheKey) { [catalog, categoryService, localHomebrew] in
             let installedOnly = CatalogProjector.installedOnlyCasks(
                 installations: localHomebrew.installationSnapshot.installedCasks,
-                partition: catalog
+                partition: catalog,
+                homebrewCasks: localHomebrew.homebrewOutdated?.installedCasks ?? []
             )
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
                 casks: catalog.browsable,

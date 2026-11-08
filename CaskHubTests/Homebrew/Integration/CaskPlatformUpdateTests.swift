@@ -162,7 +162,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
             $0.softwareScanner = MutableInstalledSoftwareScanner()
             $0.brewBinaryProvider = { nil }
             $0.brewVersionProvider = { "test" }
-            $0.homebrewOutdatedProvider = { report }
+            $0.homebrewOutdatedProvider = { _ in report }
             configureDependencies(&$0)
         }
         updateInstalledCask(installation("onyx", version: receipt), in: service)

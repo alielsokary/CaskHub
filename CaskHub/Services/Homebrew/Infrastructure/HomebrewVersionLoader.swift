@@ -49,32 +49,57 @@ nonisolated struct HomebrewVersionLoader: Sendable {
 }
 
 nonisolated struct HomebrewOutdatedLoader: Sendable {
-    /// What `brew outdated` lists, or nil when Homebrew cannot answer.
+    /// Homebrew's own answer for every installed cask, or nil when Homebrew cannot answer.
     @concurrent
-    func load(from brewURL: URL?) async -> HomebrewOutdatedReport? {
-        // ponytail: no auto-update, so the list is as fresh as Homebrew's last update. Allow it if staleness shows up.
-        guard let brewURL,
-              let result = ProcessCapture.capture(
-                  brewURL,
-                  arguments: ["outdated", "--cask", "--json=v2"],
-                  environment: ["HOMEBREW_NO_AUTO_UPDATE": "1"]
-              )
-        else { return nil }
+    func load(from brewURL: URL?, userRequested: Bool) async -> HomebrewOutdatedReport? {
+        guard let brewURL else { return nil }
+        // `brew info` never auto-updates, so its answer is only as fresh as Homebrew's last update.
+        // A user's refresh runs `brew update`, as Terminal does; automatic checks run
+        // `brew update-if-needed`, which follows the user's own auto-update settings.
+        // A failed update is not fatal: the read below still answers from the data Homebrew has.
+        _ = ProcessCapture.capture(brewURL, arguments: userRequested ? ["update", "--quiet"] : ["update-if-needed"])
+        guard let result = ProcessCapture.capture(
+            brewURL,
+            arguments: ["info", "--installed", "--cask", "--json=v2"],
+            environment: ["HOMEBREW_NO_AUTO_UPDATE": "1"]
+        ) else { return nil }
         return Self.report(in: result.output ?? "")
     }
 
     static func report(in output: String) -> HomebrewOutdatedReport? {
-        guard let decoded = try? JSONDecoder().decode(OutdatedOutput.self, from: Data(output.utf8)) else { return nil }
-        let pinned = Set(decoded.casks.filter { $0.pinned == true }.map(\.name))
-        return HomebrewOutdatedReport(upgradable: Set(decoded.casks.map(\.name)).subtracting(pinned), pinned: pinned)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        guard let decoded = try? decoder.decode(InstalledInfoOutput.self, from: Data(output.utf8)) else { return nil }
+        let pinned = Set(decoded.casks.filter { $0.pinned == true }.map(\.token))
+        return HomebrewOutdatedReport(
+            upgradable: Set(decoded.casks.filter { $0.outdated == true }.map(\.token)).subtracting(pinned),
+            pinned: pinned,
+            installedCasks: decoded.casks.compactMap(\.cask)
+        )
     }
 }
 
-private nonisolated struct OutdatedOutput: Decodable {
-    struct Cask: Decodable {
-        let name: String
-        let pinned: Bool?
+/// `brew info --installed --cask --json=v2`: the API's cask shape plus Homebrew's local `outdated` and `pinned`.
+private nonisolated struct InstalledInfoOutput: Decodable {
+    let casks: [InstalledCaskInfo]
+}
+
+private nonisolated struct InstalledCaskInfo: Decodable {
+    let token: String
+    let outdated: Bool?
+    let pinned: Bool?
+    /// Nil when a tap describes the cask in a shape the catalog model rejects; its answer still counts.
+    let cask: Cask?
+
+    private enum CodingKeys: String, CodingKey {
+        case token, outdated, pinned
     }
 
-    let casks: [Cask]
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        token = try container.decode(String.self, forKey: .token)
+        outdated = try? container.decode(Bool.self, forKey: .outdated)
+        pinned = try? container.decode(Bool.self, forKey: .pinned)
+        cask = try? Cask(from: decoder)
+    }
 }

@@ -76,7 +76,7 @@ final class RetiredCaskCatalogTests: XCTestCase {
             $0.brewBinaryProvider = { nil }
             $0.brewVersionProvider = { "test" }
             $0.caskPlatformProvider = { CaskPlatform(tag: "arm64_sequoia") }
-            $0.homebrewOutdatedProvider = {
+            $0.homebrewOutdatedProvider = { _ in
                 HomebrewOutdatedReport(upgradable: ["legacy-app", "dead-app", "gone-app", "tapped-app"], pinned: [])
             }
         }

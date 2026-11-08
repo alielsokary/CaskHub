@@ -117,11 +117,17 @@ nonisolated enum CatalogProjector {
     /// Without the API catalog every installed token would look removed from Homebrew.
     static func installedOnlyCasks(
         installations: [String: LocalCaskInstallation],
-        partition: CatalogPartition
+        partition: CatalogPartition,
+        homebrewCasks: [Cask] = []
     ) -> [Cask] {
         guard !partition.all.isEmpty else { return [] }
+        let described = Dictionary(homebrewCasks.map { ($0.token, $0) }) { first, _ in first }
         return installations.keys.sorted().compactMap { token in
             guard let cask = partition.byToken[token] else {
+                // Another tap's cask: Homebrew's own entry carries the version it would upgrade to.
+                if let cask = described[token], cask.tap != "homebrew/cask" {
+                    return cask
+                }
                 return installations[token].map(Cask.receiptRow(for:))
             }
             return cask.isBrowsable ? nil : cask

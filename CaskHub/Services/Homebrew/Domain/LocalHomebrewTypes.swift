@@ -224,6 +224,8 @@ nonisolated enum CaskUninstallAvailability: Equatable, Sendable {
 nonisolated struct HomebrewOutdatedReport: Equatable, Sendable {
     let upgradable: Set<String>
     let pinned: Set<String>
+    /// Homebrew's metadata for each installed cask, including those the catalog hides or lacks.
+    var installedCasks: [Cask] = []
 }
 
 nonisolated struct CaskLocalState: Equatable, Sendable {

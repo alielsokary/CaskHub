@@ -49,7 +49,7 @@ final class LocalHomebrewService {
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let caskPlatformProvider: () async -> CaskPlatform?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
-    @ObservationIgnored private let homebrewOutdatedProvider: () async -> HomebrewOutdatedReport?
+    @ObservationIgnored private let homebrewOutdatedProvider: (_ userRequested: Bool) async -> HomebrewOutdatedReport?
 
     var isUpdatingAll: Bool {
         operationStore.isUpdatingAll
@@ -72,7 +72,7 @@ final class LocalHomebrewService {
         didSet { if caskPlatform != oldValue { catalogStateRevision &+= 1 } }
     }
 
-    /// What `brew outdated` lists; nil until Homebrew answers.
+    /// Homebrew's last answer about the installed casks; nil until Homebrew answers.
     private(set) var homebrewOutdated: HomebrewOutdatedReport? {
         didSet { if homebrewOutdated != oldValue { catalogStateRevision &+= 1 } }
     }
@@ -143,7 +143,7 @@ final class LocalHomebrewService {
         caskPlatformProvider = dependencies.caskPlatformProvider
             ?? { await HomebrewPlatformLoader().load(from: brewBinary()) }
         homebrewOutdatedProvider = dependencies.homebrewOutdatedProvider
-            ?? { await HomebrewOutdatedLoader().load(from: brewBinary()) }
+            ?? { await HomebrewOutdatedLoader().load(from: brewBinary(), userRequested: $0) }
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]
@@ -229,8 +229,10 @@ final class LocalHomebrewService {
         caskPlatform = nil
     }
 
-    func refreshHomebrewOutdated() async {
-        homebrewOutdated = await homebrewOutdatedProvider()
+    /// A failed check keeps the last answer rather than hiding every update until the next one.
+    func refreshHomebrewOutdated(userRequested: Bool = false) async {
+        guard let report = await homebrewOutdatedProvider(userRequested) else { return }
+        homebrewOutdated = report
     }
 
     // MARK: - Detection
