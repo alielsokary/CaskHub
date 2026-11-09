@@ -88,11 +88,11 @@ private nonisolated struct InstalledCaskInfo: Decodable {
     let token: String
     let outdated: Bool?
     let pinned: Bool?
-    /// Nil when a tap describes the cask in a shape the catalog model rejects; its answer still counts.
+    /// Nil only without a version to upgrade to, or when the cask is disabled.
     let cask: Cask?
 
     private enum CodingKeys: String, CodingKey {
-        case token, outdated, pinned
+        case token, outdated, pinned, tap, name, version, autoUpdates, disabled
     }
 
     init(from decoder: Decoder) throws {
@@ -100,6 +100,58 @@ private nonisolated struct InstalledCaskInfo: Decodable {
         token = try container.decode(String.self, forKey: .token)
         outdated = try? container.decode(Bool.self, forKey: .outdated)
         pinned = try? container.decode(Bool.self, forKey: .pinned)
-        cask = try? Cask(from: decoder)
+        if let cask = try? Cask(from: decoder) {
+            self.cask = cask
+            return
+        }
+        // A tap can leave out fields the catalog model requires, such as `homepage`;
+        // Homebrew's version still gives the cask an update target.
+        guard let version = try? container.decode(String.self, forKey: .version), !version.isEmpty,
+              (try? container.decode(Bool.self, forKey: .disabled)) != true
+        else {
+            cask = nil
+            return
+        }
+        cask = Cask.minimal(
+            token: token,
+            tap: try? container.decode(String.self, forKey: .tap),
+            name: (try? container.decode([String].self, forKey: .name))?.first ?? token,
+            version: version,
+            autoUpdates: try? container.decode(Bool.self, forKey: .autoUpdates)
+        )
+    }
+}
+
+extension Cask {
+    /// A cask described by only the fields Homebrew reports for every installed token.
+    static func minimal(token: String, tap: String?, name: String, version: String, autoUpdates: Bool?) -> Cask {
+        Cask(
+            token: token,
+            fullToken: nil,
+            tap: tap,
+            name: [name],
+            desc: nil,
+            homepage: "",
+            url: nil,
+            sha256: nil,
+            version: version,
+            bundleVersion: nil,
+            bundleShortVersion: nil,
+            outdated: false,
+            deprecated: false,
+            disabled: false,
+            autoUpdates: autoUpdates,
+            variations: nil,
+            supportedPlatforms: nil,
+            conflictsWith: nil,
+            deprecationDate: nil,
+            deprecationReason: nil,
+            deprecationReplacementCask: nil,
+            deprecationReplacementFormula: nil,
+            disableDate: nil,
+            disableReason: nil,
+            disableReplacementCask: nil,
+            disableReplacementFormula: nil
+        )
     }
 }

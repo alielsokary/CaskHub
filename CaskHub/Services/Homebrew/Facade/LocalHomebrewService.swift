@@ -50,6 +50,7 @@ final class LocalHomebrewService {
     @ObservationIgnored private let caskPlatformProvider: () async -> CaskPlatform?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
     @ObservationIgnored private let homebrewOutdatedProvider: (_ userRequested: Bool) async -> HomebrewOutdatedReport?
+    @ObservationIgnored private let lanes: HomebrewLaneLimiter
 
     var isUpdatingAll: Bool {
         operationStore.isUpdatingAll
@@ -127,13 +128,14 @@ final class LocalHomebrewService {
         applicationLauncher = dependencies.applicationLauncher
             ?? WorkspaceApplicationLauncher()
         self.operationStore = operationStore
+        lanes = dependencies.laneLimiter ?? .shared
         mutationCoordinator = HomebrewMutationCoordinator(
             operationStore: operationStore,
             commandExecutor: dependencies.resolvedCommandExecutor(),
             brewBinaryProvider: dependencies.brewBinaryProvider,
             askpassProvider: dependencies.askpassProvider,
             fileManager: dependencies.fileManager,
-            lanes: dependencies.laneLimiter ?? .shared
+            lanes: lanes
         )
         softwareScanner = dependencies.softwareScanner
             ?? HomebrewInstallationScanner()
@@ -221,7 +223,10 @@ final class LocalHomebrewService {
             defaults.removeObject(forKey: HomebrewLocator.customPrefixKey)
         }
         invalidateBrewVersion()
+        // The last answer describes another installation's casks.
+        homebrewOutdated = nil
         await refresh()
+        await refreshHomebrewOutdated()
     }
 
     func invalidateBrewVersion() {
@@ -231,7 +236,12 @@ final class LocalHomebrewService {
 
     /// A failed check keeps the last answer rather than hiding every update until the next one.
     func refreshHomebrewOutdated(userRequested: Bool = false) async {
-        guard let report = await homebrewOutdatedProvider(userRequested) else { return }
+        let prefix = customBrewPrefix
+        // `brew update` rewrites tap data, so it waits for running mutations like every other state change.
+        _ = await lanes.acquire(.exclusive, token: nil) {}
+        let report = await homebrewOutdatedProvider(userRequested)
+        lanes.release(.exclusive)
+        guard let report, prefix == customBrewPrefix else { return }
         homebrewOutdated = report
     }
 

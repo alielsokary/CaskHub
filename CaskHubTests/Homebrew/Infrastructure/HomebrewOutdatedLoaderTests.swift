@@ -19,15 +19,21 @@ final class HomebrewOutdatedLoaderTests: XCTestCase {
            "outdated":true,"pinned":true,"deprecated":false,"disabled":false},
           {"token":"current","name":["Current"],"homepage":"https://current.example","version":"1.0",
            "outdated":false,"pinned":false,"deprecated":false,"disabled":false},
-          {"token":"third","name":["Third"],"homepage":null,"version":"4.0",
-           "outdated":true,"deprecated":false,"disabled":false}
+          {"token":"third","tap":"acme/tap","name":["Third"],"homepage":null,"version":"4.0",
+           "outdated":true,"deprecated":false,"disabled":false},
+          {"token":"versionless","homepage":null,"outdated":true}
         ]}
         """#
         let report = try XCTUnwrap(HomebrewOutdatedLoader.report(in: output))
-        XCTAssertEqual(report.upgradable, ["brewy", "third"])
+        XCTAssertEqual(report.upgradable, ["brewy", "third", "versionless"])
         XCTAssertEqual(report.pinned, ["vlc"])
-        XCTAssertEqual(report.installedCasks.map(\.token), ["brewy", "vlc", "current"])
+        XCTAssertEqual(report.installedCasks.map(\.token), ["brewy", "vlc", "current", "third"])
         XCTAssertEqual(report.installedCasks.first?.autoUpdates, true)
+        // The catalog model rejects a null homepage; Homebrew's version still makes an update target.
+        let third = try XCTUnwrap(report.installedCasks.last)
+        XCTAssertEqual(third.version, "4.0")
+        XCTAssertEqual(third.tap, "acme/tap")
+        XCTAssertEqual(third.provenance, .homebrewAPI)
 
         XCTAssertEqual(
             HomebrewOutdatedLoader.report(in: #"{"formulae":[],"casks":[]}"#),

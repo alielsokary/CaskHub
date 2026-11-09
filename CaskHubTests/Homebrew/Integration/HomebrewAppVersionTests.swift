@@ -201,7 +201,7 @@ final class HomebrewAppVersionTests: XCTestCase {
         // The API catalog never lists another tap's cask; only Homebrew knows its current version.
         var answer = HomebrewOutdatedLoader.report(in: #"""
         {"formulae":[],"casks":[{"token":"antinote","tap":"acme/tap","name":["Antinote"],
-          "homepage":"https://antinote.example","version":"2.1.3","outdated":true,"pinned":false,
+          "homepage":null,"version":"2.1.3","outdated":true,"pinned":false,
           "deprecated":false,"disabled":false,"auto_updates":false}]}
         """#)
         var requests: [Bool] = []
@@ -230,6 +230,44 @@ final class HomebrewAppVersionTests: XCTestCase {
         await service.refreshHomebrewOutdated()
         XCTAssertEqual(requests, [true, false])
         XCTAssertEqual(vm.updatesCount, 1, "a failed check keeps Homebrew's last answer")
+    }
+
+    func test_outdated_check_waits_for_mutations_and_forgets_a_replaced_installation() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try makeInstallation(in: root)
+        let lanes = HomebrewLaneLimiter(downloadLimit: 1)
+        var answer: HomebrewOutdatedReport? = HomebrewOutdatedReport(upgradable: ["antinote"], pinned: [])
+        var queries = 0
+        let defaults = makeScratchDefaults("outdated-lane-\(UUID().uuidString)")
+        defaults.set(root.path, forKey: HomebrewLocator.customPrefixKey)
+        let service = LocalHomebrewService(defaults: defaults) {
+            $0.applicationDirectories = [root.appendingPathComponent("Applications")]
+            $0.brewBinaryProvider = { nil }
+            $0.brewVersionProvider = { "test" }
+            $0.caskPlatformProvider = { CaskPlatform(tag: "arm64_sequoia") }
+            $0.laneLimiter = lanes
+            $0.homebrewOutdatedProvider = { _ in
+                queries += 1
+                return answer
+            }
+        }
+
+        // An upgrade holds the exclusive lane; `brew update` must not rewrite taps under it.
+        _ = await lanes.acquire(.exclusive, token: "antinote") {}
+        let check = Task { await service.refreshHomebrewOutdated() }
+        for _ in 0 ..< 10 {
+            await Task.yield()
+        }
+        XCTAssertEqual(queries, 0)
+        lanes.release(.exclusive)
+        await check.value
+        XCTAssertEqual(queries, 1)
+        XCTAssertEqual(service.homebrewOutdated?.upgradable, ["antinote"])
+
+        answer = nil
+        await service.setCustomBrewPrefix(root.appendingPathComponent("other").path)
+        XCTAssertNil(service.homebrewOutdated, "a failed check must not keep another installation's answer")
     }
 
     func test_newer_app_evidence_overrides_a_cached_homebrew_listing() async throws {
