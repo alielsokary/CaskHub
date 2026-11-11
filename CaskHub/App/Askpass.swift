@@ -48,15 +48,24 @@ nonisolated enum Askpass {
             for: step, token: token, attempt: attempt, storeAvailable: storeAvailable, touchIDEnabled: enabled
         )
         guard let request, let response = presentDialog(request) else { return .cancelled }
-        if storeAvailable { store.touchID.setEnabled(response.remember) }
-        switch AskpassCredentialFlow.storeAction(
-            remember: response.remember, passwordSaved: passwordSaved, storeAvailable: storeAvailable
-        ) {
+        if storeAvailable {
+            remember(response, passwordSaved: passwordSaved, store: store, passwordAccepted: passwordAccepted)
+        }
+        return .password(response.password)
+    }
+
+    private static func remember(
+        _ response: AskpassDialogResponse,
+        passwordSaved: Bool,
+        store: any AdministratorPasswordStoring,
+        passwordAccepted: (String) -> Bool
+    ) {
+        store.touchID.setEnabled(response.remember)
+        switch AskpassCredentialFlow.storeAction(remember: response.remember, passwordSaved: passwordSaved, storeAvailable: true) {
         case .save where passwordAccepted(response.password): try? store.save(response.password)
         case .delete: store.delete()
         case .save, .none: break
         }
-        return .password(response.password)
     }
 
     static func dialogRequest(
