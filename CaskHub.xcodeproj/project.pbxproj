@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7AB63CA09AD83AFBF09C14 /* HomebrewTapLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */; };
+		CA7AA6C13CA9A90B2ABDEDEF /* TapIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */; };
+		CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */; };
 		CA7AE48EAD303E07CD68B137 /* TapAddInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AA47B786C4746CE5AD2F1 /* TapAddInput.swift */; };
 		CA7A9BFE5A3B9E41E0F0C1DC /* TapAddInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A58759D682C62D89DB682 /* TapAddInputTests.swift */; };
 		CA7A7AB90BB7A0E3978600C7 /* CaskFileTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */; };
@@ -222,6 +225,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewTapLoader.swift; sourceTree = "<group>"; };
+		CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapIndex.swift; sourceTree = "<group>"; };
+		CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewTapLoaderTests.swift; sourceTree = "<group>"; };
 		CA7AA47B786C4746CE5AD2F1 /* TapAddInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapAddInput.swift; sourceTree = "<group>"; };
 		CA7A58759D682C62D89DB682 /* TapAddInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapAddInputTests.swift; sourceTree = "<group>"; };
 		CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskFileTextParser.swift; sourceTree = "<group>"; };
@@ -810,6 +816,7 @@
 				CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */,
 				CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */,
 				CA7AA47B786C4746CE5AD2F1 /* TapAddInput.swift */,
+				CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -860,6 +867,7 @@
 				F28000000000000000000001 /* InstallationIndexBuilder.swift */,
 				AA1000000000000000000003 /* MaintenanceProbe.swift */,
 				F30000000000000000000003 /* PackageReceiptResolver.swift */,
+				CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */,
 			);
 			path = Infrastructure;
 			sourceTree = "<group>";
@@ -1009,6 +1017,7 @@
 				C0FE00000000000000000009 /* HomebrewLaneLimiterTests.swift */,
 				A29100000000000000000006 /* InstallationDateIndexTests.swift */,
 				AA1000000000000000000012 /* MaintenanceProbeTests.swift */,
+				CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */,
 			);
 			path = Infrastructure;
 			sourceTree = "<group>";
@@ -1315,6 +1324,8 @@
 				CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */,
 				CA7A7AB90BB7A0E3978600C7 /* CaskFileTextParser.swift in Sources */,
 				CA7AE48EAD303E07CD68B137 /* TapAddInput.swift in Sources */,
+				CA7AA6C13CA9A90B2ABDEDEF /* TapIndex.swift in Sources */,
+				CA7AB63CA09AD83AFBF09C14 /* HomebrewTapLoader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1392,6 +1403,7 @@
 				CA7A0A18E21D413F99AAA5BC /* TapCaskIdentityTests.swift in Sources */,
 				CA7A29BFD24A174539F319F9 /* CaskFileTextParserTests.swift in Sources */,
 				CA7A9BFE5A3B9E41E0F0C1DC /* TapAddInputTests.swift in Sources */,
+				CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
