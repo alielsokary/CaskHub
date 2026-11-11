@@ -317,6 +317,118 @@
         }
       }
     },
+    "Authorize with Touch ID" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтверждать с помощью Touch ID"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підтверджувати за допомогою Touch ID"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用触控 ID 授权"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Touch ID 授權"
+          }
+        }
+      }
+    },
+    "Enter your login password to save it in the Keychain." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите пароль для входа, чтобы сохранить его в Связке ключей."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть пароль входу, щоб зберегти його у Зв’язці ключів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入你的登录密码以将其存储在钥匙串中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入你的登入密碼以將其儲存在鑰匙圈中。"
+          }
+        }
+      }
+    },
+    "The password could not be saved in the Keychain." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить пароль в Связке ключей."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зберегти пароль у Зв’язці ключів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法将密码存储在钥匙串中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法將密碼儲存在鑰匙圈中。"
+          }
+        }
+      }
+    },
+    "Use your fingerprint instead of your password when Homebrew needs administrator access. Your password is saved in the Keychain and removed when you turn this off." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Используйте отпечаток пальца вместо пароля, когда Homebrew нужны права администратора. Пароль хранится в Связке ключей и удаляется при выключении."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовуйте відбиток пальця замість пароля, коли Homebrew потрібні права адміністратора. Пароль зберігається у Зв’язці ключів і видаляється після вимкнення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当 Homebrew 需要管理员权限时，使用指纹代替密码。密码存储在钥匙串中，关闭此选项后会被移除。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當 Homebrew 需要管理者權限時，使用指紋代替密碼。密碼會儲存在鑰匙圈中，關閉此選項後會被移除。"
+          }
+        }
+      }
+    },
     "© 2026 Ali Elsokary. All rights reserved." : {
       "shouldTranslate" : false
     },
@@ -1724,6 +1836,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "提出問題或分享想法"
+          }
+        }
+      }
+    },
+    "authorize a Homebrew change" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "подтвердить изменение Homebrew"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "підтвердити зміну Homebrew"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权 Homebrew 更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授權 Homebrew 變更"
+          }
+        }
+      }
+    },
+    "authorize changes for “%@”" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "подтвердить изменения для «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "підтвердити зміни для «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权对“%@”的更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授權「%@」的變更"
           }
         }
       }
@@ -14035,6 +14203,34 @@
         }
       }
     },
+    "The password was not accepted. Try again." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль не принят. Попробуйте ещё раз."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль не прийнято. Спробуйте ще раз."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密码未被接受。请再试一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密碼未被接受。請再試一次。"
+          }
+        }
+      }
+    },
     "Theme" : {
       "localizations" : {
         "ru" : {
@@ -14255,6 +14451,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "排行榜"
+          }
+        }
+      }
+    },
+    "Touch ID" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控 ID"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID"
           }
         }
       }
@@ -14671,6 +14895,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用預設值"
+          }
+        }
+      }
+    },
+    "Use Touch ID next time" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использовать Touch ID в следующий раз"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовувати Touch ID наступного разу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次使用触控 ID"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次使用 Touch ID"
           }
         }
       }

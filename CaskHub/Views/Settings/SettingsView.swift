@@ -174,6 +174,7 @@ struct GeneralSettingsView: View {
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var settingsModel = GeneralSettingsModel()
     @State private var fullDiskAccess = FullDiskAccessPermission.Status.unknown
+    @State private var touchIDModel = AdministratorPasswordSettingsModel()
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
     @AppStorage(ContentView.showExternallyManagedAppsKey) private var showExternallyManagedApps = true
 
@@ -214,6 +215,7 @@ struct GeneralSettingsView: View {
             } header: {
                 Text(.settingsUninstallTitle)
             }
+            AdministratorPasswordSettingsSection(model: touchIDModel)
             Section("Permissions") {
                 LabeledContent("App Management") {
                     HStack(spacing: 10) {
@@ -257,6 +259,7 @@ struct GeneralSettingsView: View {
     private func refreshPermissions() async {
         fullDiskAccess = localHomebrew.fullDiskAccessProbe()
         await settingsModel.refreshAppManagement()
+        await touchIDModel.refresh()
     }
 
     @ViewBuilder

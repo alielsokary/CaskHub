@@ -305,3 +305,66 @@ final class HomebrewLocationSettingsModel {
         }
     }
 }
+
+@MainActor
+@Observable
+final class AdministratorPasswordSettingsModel {
+    enum EnableResult: Equatable {
+        case enabled
+        case rejected
+        case failed
+    }
+
+    private(set) var isAvailable = false
+    private(set) var isEnabled = false
+
+    private let store: any AdministratorPasswordStoring
+    private let passwordAccepted: @Sendable (String) -> Bool
+
+    init(
+        store: any AdministratorPasswordStoring = KeychainAdministratorPasswordStore(),
+        passwordAccepted: @escaping @Sendable (String) -> Bool = LoginPasswordVerifier.accepts
+    ) {
+        self.store = store
+        self.passwordAccepted = passwordAccepted
+    }
+
+    func refresh() async {
+        let state = await Self.state(of: store)
+        isEnabled = state.access && store.touchID.isEnabled
+        isAvailable = state.touchID || isEnabled
+    }
+
+    func enable(password: String) async -> EnableResult {
+        let result = await Self.save(password, to: store, accepted: passwordAccepted)
+        if result == .enabled {
+            store.touchID.setEnabled(true)
+            isEnabled = true
+        }
+        return result
+    }
+
+    func disable() async {
+        isEnabled = false
+        store.touchID.setEnabled(false)
+        await Self.delete(from: store)
+    }
+
+    @concurrent
+    private static func state(of store: any AdministratorPasswordStoring) async -> (access: Bool, touchID: Bool) {
+        (store.hasKeychainAccess, store.isAvailable)
+    }
+
+    @concurrent
+    private static func save(
+        _ password: String, to store: any AdministratorPasswordStoring, accepted: @Sendable (String) -> Bool
+    ) async -> EnableResult {
+        guard accepted(password) else { return .rejected }
+        return (try? store.save(password)) == nil ? .failed : .enabled
+    }
+
+    @concurrent
+    private static func delete(from store: any AdministratorPasswordStoring) async {
+        store.delete()
+    }
+}
