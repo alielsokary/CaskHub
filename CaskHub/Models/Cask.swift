@@ -340,7 +340,8 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     }
 
     var displayVersion: String {
-        let base = version.split(separator: ",", maxSplits: 1).first.map(String.init) ?? version
+        let raw = version.split(separator: ",", maxSplits: 1).first.map(String.init) ?? version
+        let base = raw.first == "v" && raw.dropFirst().first?.isNumber == true ? String(raw.dropFirst()) : raw
 
         let numeric = String(base.prefix(while: { $0.isNumber || $0 == "." }))
             .trimmingCharacters(in: CharacterSet(charactersIn: "."))

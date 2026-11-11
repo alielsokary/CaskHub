@@ -67,6 +67,14 @@ final class CaskFileTextParserTests: XCTestCase {
         XCTAssertNil(CaskFileTextParser.cask(fromSource: source, token: "tool", tap: "u/r").desc)
     }
 
+    func test_v_prefixed_version_is_shown_once() {
+        let source = "cask \"tool\" do\n  version \"v0.27.4\"\nend\n"
+        let cask = CaskFileTextParser.cask(fromSource: source, token: "tool", tap: "u/r")
+
+        XCTAssertEqual(cask.displayVersion, "0.27.4")
+        XCTAssertEqual(cask.metaLine(downloads: nil), "v0.27.4")
+    }
+
     func test_latest_version() {
         let source = """
         cask "tool" do
