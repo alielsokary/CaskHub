@@ -206,7 +206,7 @@ final class CaskCatalogViewModel {
         applyTapIndex()
     }
 
-    private func applyTapIndex() {
+    func applyTapIndex() {
         let tapCasks = localHomebrew.tapIndex.casks
         guard tapCasks != catalog.tapCasks else { return }
         catalog = CatalogPartition(catalog.all, tapCasks: tapCasks)

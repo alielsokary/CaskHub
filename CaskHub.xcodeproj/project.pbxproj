@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */; };
+		CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */; };
+		CA7AAE608EBE151203B74B40 /* TrustInstallPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */; };
+		CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */; };
 		CA7A3B60B96C269271BAAED1 /* ContentView+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AB5D71D34E4EB0C77940D /* ContentView+Taps.swift */; };
 		CA7AD1CF9F056DE3402CCD25 /* TapsEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A760067F0AFD41BAEDA64 /* TapsEmptyStateView.swift */; };
 		CA7AFEF9659FED9683868983 /* TapSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */; };
@@ -235,6 +239,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveTapDialog.swift; sourceTree = "<group>"; };
+		CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTapSheet.swift; sourceTree = "<group>"; };
+		CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustInstallPrompt.swift; sourceTree = "<group>"; };
+		CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTapSheetTests.swift; sourceTree = "<group>"; };
 		CA7AB5D71D34E4EB0C77940D /* ContentView+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Taps.swift"; sourceTree = "<group>"; };
 		CA7A760067F0AFD41BAEDA64 /* TapsEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsEmptyStateView.swift; sourceTree = "<group>"; };
 		CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapSectionHeader.swift; sourceTree = "<group>"; };
@@ -479,6 +487,8 @@
 			children = (
 				CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */,
 				CA7A760067F0AFD41BAEDA64 /* TapsEmptyStateView.swift */,
+				CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */,
+				CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */,
 			);
 			path = Taps;
 			sourceTree = "<group>";
@@ -873,6 +883,7 @@
 			isa = PBXGroup;
 			children = (
 				E29000000000000000000015 /* CaskActionPresentation.swift */,
+				CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -975,6 +986,7 @@
 				B0C000000000000000000004 /* ShelfSetupViewTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
 				CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */,
+				CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1371,6 +1383,9 @@
 				CA7AFEF9659FED9683868983 /* TapSectionHeader.swift in Sources */,
 				CA7AD1CF9F056DE3402CCD25 /* TapsEmptyStateView.swift in Sources */,
 				CA7A3B60B96C269271BAAED1 /* ContentView+Taps.swift in Sources */,
+				CA7AAE608EBE151203B74B40 /* TrustInstallPrompt.swift in Sources */,
+				CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */,
+				CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1452,6 +1467,7 @@
 				CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */,
 				CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */,
 				CA7AAD492A2AA6A009BF06D4 /* TapsViewTests.swift in Sources */,
+				CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

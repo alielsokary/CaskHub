@@ -32,4 +32,18 @@ extension CaskCatalogViewModel {
             .filter { $0.tap == tapName && (query.isEmpty || $0.searchKey.contains(query)) }
             .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
     }
+
+    func addTap(_ request: TapAddRequest) async throws {
+        defer { applyTapIndex() }
+        try await localHomebrew.addTap(request)
+    }
+
+    func removalPreview(for tapName: String) async -> TapRemovalPreview {
+        await localHomebrew.removalPreview(for: tapName)
+    }
+
+    func removeTap(_ preview: TapRemovalPreview) async throws {
+        defer { applyTapIndex() }
+        try await localHomebrew.removeTap(preview)
+    }
 }

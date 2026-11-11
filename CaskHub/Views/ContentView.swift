@@ -96,6 +96,7 @@ struct ContentView: View {
                 }
             ))
         }
+        .modifier(TapPresentation(dialog: $tapDialog, viewModel: viewModel))
         .overlay {
             Button("") { searchFocused = true }
                 .keyboardShortcut("f", modifiers: .command)

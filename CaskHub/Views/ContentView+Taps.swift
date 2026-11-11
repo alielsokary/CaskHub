@@ -79,3 +79,34 @@ extension ContentView {
         }
     }
 }
+
+/// Add/remove tap sheets and the first-install trust alert, for every install entry point in the window.
+struct TapPresentation: ViewModifier {
+    @Binding var dialog: TapDialog?
+    let viewModel: CaskCatalogViewModel
+
+    @Environment(LocalHomebrewService.self) private var localHomebrew
+
+    func body(content: Content) -> some View {
+        let pending = localHomebrew.pendingTrustInstall
+        content
+            .sheet(item: $dialog) { dialog in
+                switch dialog {
+                case .add:
+                    AddTapSheet(viewModel: viewModel, model: AddTapModel())
+                case let .remove(name):
+                    RemoveTapDialog(viewModel: viewModel, tapName: name, preview: nil)
+                }
+            }
+            .alert(
+                Text(verbatim: pending.map { TrustInstallPrompt(cask: $0).title } ?? ""),
+                isPresented: Binding(get: { pending != nil }, set: { _ in }),
+                presenting: pending
+            ) { cask in
+                Button("Cancel", role: .cancel) { localHomebrew.send(.cancelTrustedInstall) }
+                Button("Install") { localHomebrew.send(.confirmTrustedInstall(cask)) }
+            } message: { cask in
+                Text(verbatim: TrustInstallPrompt(cask: cask).message)
+            }
+    }
+}

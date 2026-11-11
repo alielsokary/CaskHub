@@ -423,6 +423,90 @@
         }
       }
     },
+    "%@ comes from %@, not Homebrew. Installing lets it run code on this Mac." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ поставляется из %2$@, а не из Homebrew. Установка позволит ему выполнять код на этом Mac."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ надходить із %2$@, а не з Homebrew. Встановлення дозволить йому виконувати код на цьому Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 来自 %2$@，而非 Homebrew。安装后它可以在这台 Mac 上运行代码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 來自 %2$@，而非 Homebrew。安裝後它可以在這台 Mac 上執行程式碼。"
+          }
+        }
+      }
+    },
+    "%@ isn't in %@." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ нет в %2$@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ немає в %2$@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ 中没有 %1$@。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ 中沒有 %1$@。"
+          }
+        }
+      }
+    },
+    "Add a Tap" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить тап"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати тап"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 Tap"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入 Tap"
+          }
+        }
+      }
+    },
     "Add Tap" : {
       "localizations" : {
         "ru" : {
@@ -447,6 +531,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "加入 Tap"
+          }
+        }
+      }
+    },
+    "Adding %@…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавление %@…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додавання %@…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在添加 %@…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加入 %@…"
+          }
+        }
+      }
+    },
+    "Adding a tap doesn't trust it. Each cask asks before its first install." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавление тапа не делает его доверенным. Каждый cask спросит разрешения перед первой установкой."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додавання тапу не робить його довіреним. Кожен cask запитає дозвіл перед першим встановленням."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加 Tap 不代表信任它。每个 Cask 在首次安装前都会询问。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入 Tap 不代表信任它。每個 Cask 在首次安裝前都會詢問。"
           }
         }
       }
@@ -535,6 +675,146 @@
         }
       }
     },
+    "CaskHub couldn't add %@." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub не удалось добавить %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub не вдалося додати %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 无法添加 %@。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 無法加入 %@。"
+          }
+        }
+      }
+    },
+    "CaskHub stops showing apps from this tap." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub перестанет показывать приложения из этого тапа."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub перестане показувати застосунки з цього тапу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 将不再显示此 Tap 中的应用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CaskHub 將不再顯示此 Tap 中的 App。"
+          }
+        }
+      }
+    },
+    "Cloning the repository. Large taps can take a minute." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Клонирование репозитория. Большие тапы могут занять минуту."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Клонування репозиторію. Великі тапи можуть зайняти хвилину."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在克隆仓库。较大的 Tap 可能需要一分钟。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在複製儲存庫。較大的 Tap 可能需要一分鐘。"
+          }
+        }
+      }
+    },
+    "Enter a tap like user/repo or a GitHub URL." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите тап вида user/repo или URL GitHub."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть тап у форматі user/repo або URL GitHub."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入 user/repo 形式的 Tap 或 GitHub URL。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請輸入 user/repo 形式的 Tap 或 GitHub URL。"
+          }
+        }
+      }
+    },
+    "Enter a tap name, a GitHub repository URL, or a brew install command." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите имя тапа, URL репозитория GitHub или команду brew install."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть назву тапу, URL репозиторію GitHub або команду brew install."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入 Tap 名称、GitHub 仓库 URL 或 brew install 命令。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入 Tap 名稱、GitHub 儲存庫 URL 或 brew install 指令。"
+          }
+        }
+      }
+    },
     "Enter your login password to save it in the Keychain." : {
       "localizations" : {
         "ru" : {
@@ -559,6 +839,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸入你的登入密碼以將其儲存在鑰匙圈中。"
+          }
+        }
+      }
+    },
+    "Examples: hashicorp/tap · github.com/user/homebrew-casks" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Примеры: hashicorp/tap · github.com/user/homebrew-casks"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приклади: hashicorp/tap · github.com/user/homebrew-casks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "示例：hashicorp/tap · github.com/user/homebrew-casks"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "範例：hashicorp/tap · github.com/user/homebrew-casks"
+          }
+        }
+      }
+    },
+    "formula" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "формула"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "формула"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formula"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formula"
           }
         }
       }
@@ -591,6 +927,90 @@
         }
       }
     },
+    "Homebrew's own taps are already included." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Собственные тапы Homebrew уже подключены."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Власні тапи Homebrew уже підключено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 自带的 Tap 已包含在内。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 自帶的 Tap 已包含在內。"
+          }
+        }
+      }
+    },
+    "Install %@ from %@?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить %1$@ из %2$@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановити %1$@ з %2$@?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 %2$@ 安装 %1$@？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從 %2$@ 安裝 %1$@？"
+          }
+        }
+      }
+    },
+    "Install %@?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановити %@?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 %@？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 %@？"
+          }
+        }
+      }
+    },
     "Installed from %@" : {
       "localizations" : {
         "ru" : {
@@ -615,6 +1035,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已從 %@ 安裝"
+          }
+        }
+      }
+    },
+    "Not Now" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не зараз"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以后再说"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以後再說"
           }
         }
       }
@@ -671,6 +1119,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新整理 Tap"
+          }
+        }
+      }
+    },
+    "Remove %@?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити %@?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除 %@？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除 %@？"
+          }
+        }
+      }
+    },
+    "Remove Tap" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить тап"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити тап"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除 Tap"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除 Tap"
           }
         }
       }
@@ -787,6 +1291,34 @@
         }
       }
     },
+    "TAP NAME OR GITHUB URL" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИМЯ ТАПА ИЛИ URL GITHUB"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "НАЗВА ТАПУ АБО URL GITHUB"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TAP 名称或 GITHUB URL"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TAP 名稱或 GITHUB URL"
+          }
+        }
+      }
+    },
     "Taps" : {
       "localizations" : {
         "ru" : {
@@ -839,6 +1371,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法將密碼儲存在鑰匙圈中。"
+          }
+        }
+      }
+    },
+    "This uninstalls everything installed from this tap:" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Будет удалено всё, что установлено из этого тапа:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Буде видалено все, що встановлено з цього тапу:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会卸载从此 Tap 安装的所有内容："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這會解除安裝從此 Tap 安裝的所有內容："
           }
         }
       }
@@ -15720,6 +16280,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "為何需要"
+          }
+        }
+      }
+    },
+    "Will tap %@ from %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Будет добавлен тап %1$@ из %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Буде додано тап %1$@ з %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将从 %2$@ 添加 Tap %1$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將從 %2$@ 加入 Tap %1$@"
           }
         }
       }
