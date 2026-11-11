@@ -70,7 +70,7 @@ nonisolated enum CaskInfoProjector {
             + statusRows(for: input)
     }
 
-    /// Text-read tap casks have no reliable auto-update or retirement data, and taps have no categories.
+    /// Text-read tap casks have no reliable auto-update or retirement data.
     private static func statusRows(for input: CaskInfoProjectionInput) -> [CaskInfoRow] {
         let state = input.actionPresentation.localState
         let rows = statusRows(isOutdated: state.isOutdated, retirement: state.retirement)
@@ -172,17 +172,15 @@ nonisolated enum CaskInfoProjector {
                 value: shortVersion
             ))
         }
-        if cask.thirdPartyTap == nil {
-            rows.append(CaskInfoRow(
-                property: String(localized: "Main Category"),
-                value: category?.mainName ?? String(localized: "Uncategorized")
-            ))
-            rows.append(CaskInfoRow(
-                property: String(localized: "Subcategories"),
-                value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty
-                    ?? String(localized: "None")
-            ))
-        }
+        rows.append(CaskInfoRow(
+            property: String(localized: "Main Category"),
+            value: category?.mainName ?? String(localized: "Uncategorized")
+        ))
+        rows.append(CaskInfoRow(
+            property: String(localized: "Subcategories"),
+            value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty
+                ?? String(localized: "None")
+        ))
         if cask.provenance != .tapSource {
             rows.append(CaskInfoRow(
                 property: String(localized: "Auto Updates"),

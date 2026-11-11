@@ -38,14 +38,14 @@ struct RemoveTapDialog: View {
             } else {
                 ProgressView().controlSize(.small)
             }
-            HStack {
+            HStack(spacing: 8) {
                 Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
+                TapSheetPill.neutral(String(localized: "Cancel")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
                     .disabled(isRemoving)
-                Button(role: .destructive, action: remove) {
-                    Label("Remove Tap", systemImage: "trash")
-                }
-                .disabled(preview == nil || isRemoving)
+                TapSheetPill.primary(String(localized: "Remove Tap"), action: remove)
+                    .disabled(preview == nil || isRemoving)
+                    .opacity(preview == nil || isRemoving ? 0.45 : 1)
             }
             .padding(.top, 6)
         }

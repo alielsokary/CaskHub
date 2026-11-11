@@ -146,13 +146,14 @@ final class CaskMetadataProjectorTests: XCTestCase {
         var cask = CaskFileTextParser.cask(fromSource: "", token: "tool", tap: "user/tap")
         let properties = Set(makeRows(for: cask).map(\.property))
 
-        for hidden in ["Main Category", "Subcategories", "Auto Updates", "Outdated", "Deprecated", "Disabled"] {
+        for hidden in ["Auto Updates", "Outdated", "Deprecated", "Disabled"] {
             XCTAssertFalse(properties.contains(String(localized: String.LocalizationValue(hidden))), hidden)
         }
+        XCTAssertTrue(properties.contains(String(localized: "Main Category")), "taps may be classified later")
 
         cask.provenance = .tapInfo
         let brewProperties = Set(makeRows(for: cask).map(\.property))
-        XCTAssertFalse(brewProperties.contains(String(localized: "Main Category")))
+        XCTAssertTrue(brewProperties.contains(String(localized: "Main Category")))
         XCTAssertTrue(brewProperties.contains(String(localized: "Auto Updates")))
         XCTAssertTrue(brewProperties.contains(String(localized: "Deprecated")))
     }

@@ -899,30 +899,30 @@
         }
       }
     },
-    "Examples: hashicorp/tap · github.com/user/homebrew-casks" : {
+    "Examples: user/repo · github.com/user/homebrew-repo" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Примеры: hashicorp/tap · github.com/user/homebrew-casks"
+            "value" : "Примеры: user/repo · github.com/user/homebrew-repo"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Приклади: hashicorp/tap · github.com/user/homebrew-casks"
+            "value" : "Приклади: user/repo · github.com/user/homebrew-repo"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "示例：hashicorp/tap · github.com/user/homebrew-casks"
+            "value" : "示例：user/repo · github.com/user/homebrew-repo"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "範例：hashicorp/tap · github.com/user/homebrew-casks"
+            "value" : "範例：user/repo · github.com/user/homebrew-repo"
           }
         }
       }

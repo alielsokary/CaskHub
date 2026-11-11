@@ -156,9 +156,13 @@ struct AddTapSheet: View {
             .font(CHType.labelSm)
             .kerning(CHType.trackingLabel)
             .foregroundStyle(Color.chTextMuted)
-        TextField(text: $model.text, prompt: Text(verbatim: "hashicorp/tap")) { EmptyView() }
-            .textFieldStyle(.roundedBorder)
-            .font(CHType.statusMono)
+        TextField(text: $model.text, prompt: Text(verbatim: "user/repo")) { EmptyView() }
+            .textFieldStyle(.plain)
+            .font(CHType.body)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.chSurfaceField))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.chHairlineStrong, lineWidth: 1))
             .onSubmit(submit)
         if let preview = model.previewText {
             Label { Text(verbatim: preview) } icon: { Image(systemName: "checkmark") }
@@ -169,17 +173,19 @@ struct AddTapSheet: View {
                 .font(CHType.bodySm)
                 .foregroundStyle(Color.chTextMuted)
         }
-        Text("Examples: hashicorp/tap · github.com/user/homebrew-casks")
+        Text("Examples: user/repo · github.com/user/homebrew-repo")
             .font(CHType.statusMono)
             .foregroundStyle(Color.chTextMuted)
         Text("Adding a tap doesn't trust it. Each cask asks before its first install.")
             .font(CHType.statusMono)
             .foregroundStyle(Color.chTextMuted)
         buttons {
-            Button("Cancel", role: .cancel) { dismiss() }
-            Button("Add Tap", action: submit)
+            TapSheetPill.neutral(String(localized: "Cancel")) { dismiss() }
+                .keyboardShortcut(.cancelAction)
+            TapSheetPill.primary(String(localized: "Add Tap"), action: submit)
                 .keyboardShortcut(.defaultAction)
                 .disabled(!model.canAdd)
+                .opacity(model.canAdd ? 1 : 0.45)
         }
     }
 
@@ -195,7 +201,7 @@ struct AddTapSheet: View {
             .foregroundStyle(Color.chTextMuted)
             .lineLimit(1)
         buttons {
-            Button("Cancel", role: .cancel) { localHomebrew.cancelAddTap(request.tapName) }
+            TapSheetPill.neutral(String(localized: "Cancel")) { localHomebrew.cancelAddTap(request.tapName) }
         }
     }
 
@@ -205,8 +211,9 @@ struct AddTapSheet: View {
             .font(CHType.bodySm)
             .foregroundStyle(Color.chTextBody)
         buttons {
-            Button("Not Now", role: .cancel) { dismiss() }
-            Button("Install") {
+            TapSheetPill.neutral(String(localized: "Not Now")) { dismiss() }
+                .keyboardShortcut(.cancelAction)
+            TapSheetPill.primary(String(localized: "Install")) {
                 localHomebrew.send(.confirmTrustedInstall(cask))
                 dismiss()
             }
@@ -220,7 +227,7 @@ struct AddTapSheet: View {
             .font(CHType.bodySm)
             .foregroundStyle(Color.chTextBody)
         buttons {
-            Button("Done") { dismiss() }
+            TapSheetPill.primary(String(localized: "Done")) { dismiss() }
                 .keyboardShortcut(.defaultAction)
         }
     }
@@ -232,7 +239,7 @@ struct AddTapSheet: View {
     }
 
     private func buttons(@ViewBuilder _ content: () -> some View) -> some View {
-        HStack {
+        HStack(spacing: 8) {
             Spacer()
             content()
         }
@@ -256,5 +263,19 @@ struct AddTapSheet: View {
         Task {
             if await model.submit(environment) { dismiss() }
         }
+    }
+}
+
+/// Shelf Setup's pill buttons, so tap sheets match the rest of Manage.
+enum TapSheetPill {
+    static func neutral(_ title: String, action: @escaping () -> Void) -> PillButton {
+        PillButton(title: title, background: .chSurfaceField, border: .chHairlineStrong, foreground: .chTextNav, action: action)
+    }
+
+    static func primary(_ title: String, action: @escaping () -> Void) -> PillButton {
+        PillButton(
+            title: title, background: .chActionInstallBg, border: .chActionInstallBorder,
+            foreground: .chActionInstallFg, action: action
+        )
     }
 }
