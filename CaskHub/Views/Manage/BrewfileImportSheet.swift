@@ -20,7 +20,9 @@ nonisolated struct BrewfileImportPlan: Identifiable {
         let cask: Cask?
 
         var id: String { token }
-        var displayName: String { cask?.displayName ?? token }
+        var displayName: String { cask?.displayName ?? CaskReference.bareToken(token) }
+        var reference: String { CaskReference.normalized(token) }
+        var tap: String? { CaskReference.tap(of: reference) }
     }
 
     let id = UUID()
@@ -29,8 +31,23 @@ nonisolated struct BrewfileImportPlan: Identifiable {
     let newEntries: [Entry]
     /// Homebrew refuses to install these: disabled, or removed for this platform.
     let unavailableEntries: [Entry]
+    /// Taps from `tap` lines and tap-qualified casks that this Mac doesn't have yet.
+    let tapsToAdd: [TapAddRequest]
 
     var listedCount: Int { skippedEntries.count + newEntries.count + unavailableEntries.count }
+
+    /// Adds taps first so their casks resolve; confirming the import is the trust consent, so installs never prompt.
+    @MainActor
+    func run(
+        selected: [Entry],
+        addTap: (TapAddRequest) async throws -> Void,
+        installAll: ([String]) async -> Int
+    ) async -> Int {
+        for tap in tapsToAdd {
+            try? await addTap(tap)
+        }
+        return await installAll(selected.map(\.reference))
+    }
 }
 
 nonisolated enum BrewfileImportPhase: Equatable {
@@ -41,13 +58,19 @@ nonisolated enum BrewfileImportPhase: Equatable {
 
 struct BrewfileImportSheet: View {
     let plan: BrewfileImportPlan
+    let addTap: (TapAddRequest) async throws -> Void
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(\.dismiss) private var dismiss
     @State private var phase: BrewfileImportPhase
     @State private var selectedTokens: Set<String>
 
-    init(plan: BrewfileImportPlan, phase: BrewfileImportPhase = .preview) {
+    init(
+        plan: BrewfileImportPlan,
+        phase: BrewfileImportPhase = .preview,
+        addTap: @escaping (TapAddRequest) async throws -> Void
+    ) {
         self.plan = plan
+        self.addTap = addTap
         _phase = State(initialValue: phase)
         _selectedTokens = State(initialValue: Set(plan.newEntries.map(\.token)))
     }
@@ -69,6 +92,7 @@ struct BrewfileImportSheet: View {
 
             switch phase {
             case .preview:
+                tapNotice
                 preview
             case let .running(completedCount):
                 progress(completedCount: completedCount)
@@ -181,6 +205,19 @@ struct BrewfileImportSheet: View {
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 
+    @ViewBuilder private var tapNotice: some View {
+        if !plan.tapsToAdd.isEmpty {
+            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAdd.map(\.tapName).joined(separator: ", "))"))
+                .font(CHType.statusMono)
+                .foregroundStyle(Color.chTextBody)
+        }
+        if selectedEntries.contains(where: { $0.tap != nil }) {
+            Text("Importing installs apps from these taps. They can run code on this Mac.")
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextMuted)
+        }
+    }
+
     private var skippedHeader: some View {
         HStack(spacing: 8) {
             BrewfileDoneMark(size: 16)
@@ -272,8 +309,10 @@ struct BrewfileImportSheet: View {
         guard case .preview = phase, !selectedEntries.isEmpty else { return }
         phase = .running(completedCount: 0)
         Task {
-            let failedCount = await localHomebrew.installAll(tokens: selectedEntries.map(\.token)) {
-                phase = .running(completedCount: $0)
+            let failedCount = await plan.run(selected: selectedEntries, addTap: addTap) { references in
+                await localHomebrew.installAll(tokens: references) {
+                    phase = .running(completedCount: $0)
+                }
             }
             phase = .done(failedCount: failedCount)
         }
@@ -305,6 +344,9 @@ private struct BrewfileEntryRow: View {
                 .font(CHType.cardTitle)
                 .foregroundStyle(Color.chTextTitle)
                 .lineLimit(1)
+            if let tap = entry.tap {
+                TapChip(tap: tap)
+            }
             Spacer(minLength: 10)
             if let cask = entry.cask {
                 Text(verbatim: "v\(cask.displayVersion)")

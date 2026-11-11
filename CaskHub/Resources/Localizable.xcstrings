@@ -955,6 +955,34 @@
         }
       }
     },
+    "Importing installs apps from these taps. They can run code on this Mac." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Импорт установит приложения из этих тапов. Они смогут выполнять код на этом Mac."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпорт встановить застосунки з цих тапів. Вони зможуть виконувати код на цьому Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入会安装来自这些 Tap 的应用。它们可以在这台 Mac 上运行代码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯入會安裝來自這些 Tap 的 App。它們可以在這台 Mac 上執行程式碼。"
+          }
+        }
+      }
+    },
     "Install %@ from %@?" : {
       "localizations" : {
         "ru" : {
@@ -1343,6 +1371,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap"
+          }
+        }
+      }
+    },
+    "Taps to add: %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Будут добавлены тапы: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Буде додано тапи: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将添加的 Tap：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將加入的 Tap：%@"
           }
         }
       }

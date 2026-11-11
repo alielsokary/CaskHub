@@ -33,7 +33,7 @@ struct ShelfSetupView: View {
             AdoptIgnorePickerSheet(viewModel: viewModel)
         }
         .sheet(item: $importPlan) { plan in
-            BrewfileImportSheet(plan: plan)
+            BrewfileImportSheet(plan: plan, addTap: { try await viewModel.addTap($0) })
         }
     }
 
@@ -114,9 +114,9 @@ struct ShelfSetupView: View {
         panel.showsHiddenFiles = true
         let response = CrashReporter.withHangTrackingPaused { panel.runModal() }
         guard response == .OK, let url = panel.url else { return }
-        let tokens = viewModel.installedCasks.map(\.token)
+        let tokens = viewModel.installedCasks.map(\.reference)
         do {
-            try Brewfile.contents(forCaskTokens: tokens)
+            try Brewfile.contents(forCaskReferences: tokens)
                 .write(to: url, atomically: true, encoding: .utf8)
             exportNote = BrewfileNote(
                 message: String(localized: .shelfSetupBrewfileExportSaved(
@@ -154,25 +154,24 @@ struct ShelfSetupView: View {
         importNote = nil
         importPlan = makeImportPlan(
             fileName: (url.path as NSString).abbreviatingWithTildeInPath,
-            tokens: tokens
+            tokens: tokens,
+            taps: Brewfile.taps(in: contents)
         )
     }
 
     func makeImportPlan(
         fileName: String,
-        tokens: [String]
+        tokens: [String],
+        taps: [TapAddRequest]
     ) -> BrewfileImportPlan {
-        let installed = viewModel.localHomebrew.installationSnapshot.installedCasks
+        let snapshot = viewModel.localHomebrew.installationSnapshot
         var skippedEntries: [BrewfileImportPlan.Entry] = []
         var newEntries: [BrewfileImportPlan.Entry] = []
         var unavailableEntries: [BrewfileImportPlan.Entry] = []
         for token in tokens {
-            // Brewfiles may tap-qualify tokens; the catalog keys bare ones.
-            let bare = token.split(separator: "/").last.map(String.init) ?? token
-            let cask = viewModel.catalogCask(for: bare)
-            let entry = BrewfileImportPlan.Entry(token: token, cask: cask)
-            let state = cask.map(viewModel.localState(for:))
-            if state?.isPresent == true || installed[bare] != nil {
+            let entry = BrewfileImportPlan.Entry(token: token, cask: viewModel.catalogCask(for: CaskReference.normalized(token)))
+            let state = entry.cask.map(viewModel.localState(for:))
+            if state?.isPresent == true || snapshot.installation(for: entry.reference) != nil {
                 skippedEntries.append(entry)
             } else if state?.retirement?.blocksInstall == true {
                 unavailableEntries.append(entry)
@@ -180,11 +179,15 @@ struct ShelfSetupView: View {
                 newEntries.append(entry)
             }
         }
+        let impliedTaps = newEntries.compactMap(\.tap).map { TapAddRequest(tapName: $0, remoteURL: nil, caskToken: nil) }
+        let existingTaps = Set(viewModel.localHomebrew.tapIndex.taps.map(\.name))
+        var seen: Set<String> = []
         return BrewfileImportPlan(
             fileName: fileName,
             skippedEntries: skippedEntries,
             newEntries: newEntries,
-            unavailableEntries: unavailableEntries
+            unavailableEntries: unavailableEntries,
+            tapsToAdd: (taps + impliedTaps).filter { !existingTaps.contains($0.tapName) && seen.insert($0.tapName).inserted }
         )
     }
 
