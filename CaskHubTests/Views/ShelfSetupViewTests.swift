@@ -184,11 +184,10 @@ final class ShelfSetupViewTests: XCTestCase {
         homebrew.tapIndex = TapIndex(
             taps: [TapSummary(
                 name: "hashicorp/tap", remote: nil, official: false, trusted: false, customRemote: false,
-                caskTokens: [], formulaNames: [], caskFiles: [], formulaFiles: []
+                caskTokens: [], formulaNames: [], caskFiles: []
             )],
             casks: [],
-            trust: TapTrust(taps: [], casks: []),
-            formulae: []
+            trust: TapTrust(taps: [], casks: [])
         )
 
         let plan = ShelfSetupView(viewModel: vm).makeImportPlan(

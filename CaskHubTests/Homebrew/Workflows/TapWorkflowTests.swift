@@ -256,11 +256,11 @@ final class TapWorkflowTests: XCTestCase {
         let summaries = taps.map {
             TapSummary(
                 name: $0, remote: nil, official: false, trusted: false, customRemote: false,
-                caskTokens: casks.map { token in "\(taps[0])/\(token)" }, formulaNames: [], caskFiles: [], formulaFiles: []
+                caskTokens: casks.map { token in "\(taps[0])/\(token)" }, formulaNames: [], caskFiles: []
             )
         }
         let rows = casks.map { CaskFileTextParser.cask(fromSource: "", token: $0, tap: taps[0]) }
-        return TapIndex(taps: summaries, casks: rows, trust: TapTrust(taps: [], casks: trustedCasks), formulae: [])
+        return TapIndex(taps: summaries, casks: rows, trust: TapTrust(taps: [], casks: trustedCasks))
     }
 
     private func tapInstallation(_ token: String, tap: String) -> LocalCaskInstallation {

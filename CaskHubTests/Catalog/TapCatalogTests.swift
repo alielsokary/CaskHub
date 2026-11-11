@@ -100,29 +100,11 @@ final class TapCatalogTests: XCTestCase {
         XCTAssertTrue(vm.localState(for: officialFoo).isAdoptable)
     }
 
-    func test_sections_fill_with_formulae_after_casks() async throws {
-        let vm = await makeSUT(
-            official: [], taps: ["user/a": (1 ... 6).map { "cask-\($0)" }],
-            formulae: ["user/a": ["alpha-cli", "beta-cli", "gamma-cli"]]
-        )
-
-        let section = try XCTUnwrap(vm.tapSections.first)
-        XCTAssertEqual(section.casks.count, 6)
-        XCTAssertEqual(section.formulae.map(\.name), ["alpha-cli", "beta-cli"])
-        XCTAssertEqual(vm.tapFormulae(in: "user/a").count, 3)
-        XCTAssertTrue(vm.tapHasMore("user/a"))
-
-        vm.searchText = "gamma"
-        XCTAssertEqual(vm.tapSections.first?.formulae.map(\.name), ["gamma-cli"])
-        XCTAssertEqual(vm.tapSections.first?.casks.count, 0)
-    }
-
     // MARK: - Helpers
 
     private func makeSUT(
         official: [Cask],
         taps: [String: [String]],
-        formulae: [String: [String]] = [:],
         installed: [LocalCaskInstallation] = [],
         outdated: Set<String> = []
     ) async -> CaskCatalogViewModel {
@@ -130,7 +112,7 @@ final class TapCatalogTests: XCTestCase {
             taps: taps.keys.sorted().map { name in
                 TapSummary(
                     name: name, remote: nil, official: false, trusted: false, customRemote: false,
-                    caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: [], formulaFiles: []
+                    caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: []
                 )
             },
             casks: taps.keys.sorted().flatMap { name in
@@ -138,10 +120,7 @@ final class TapCatalogTests: XCTestCase {
                     CaskFileTextParser.cask(fromSource: "cask \"\($0)\" do\n  name \"\($0)\"\nend\n", token: $0, tap: name)
                 }
             },
-            trust: TapTrust(taps: [], casks: []),
-            formulae: formulae.keys.sorted().flatMap { name in
-                formulae[name, default: []].map { CaskFileTextParser.formula(fromSource: "", name: $0, tap: name) }
-            }
+            trust: TapTrust(taps: [], casks: [])
         )
         let service = LocalHomebrewService(defaults: makeScratchDefaults("tap-catalog-\(UUID().uuidString)")) {
             $0.softwareScanner = MutableInstalledSoftwareScanner()

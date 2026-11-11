@@ -59,9 +59,6 @@ extension ContentView {
                 }
             } else {
                 caskGrid(viewModel.displayedCasks, showsReveal: true)
-                if case let .tap(name) = selectedSidebar {
-                    tapItems(casks: [], formulae: viewModel.tapFormulae(in: name))
-                }
                 if showsExternallyManagedSection {
                     externallyManagedSection
                 }
@@ -103,9 +100,6 @@ extension ContentView {
                 caskList(viewModel.displayedCasks)
                 if viewModel.hasMoreToReveal {
                     RevealSentinel { viewModel.revealMore() }
-                }
-                if case let .tap(name) = selectedSidebar {
-                    tapItems(casks: [], formulae: viewModel.tapFormulae(in: name))
                 }
                 if showsExternallyManagedSection {
                     externallyManagedSection

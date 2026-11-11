@@ -54,46 +54,25 @@ extension ContentView {
 
     private func tapSectionView(_ section: TapSection) -> some View {
         let name = section.tap.name
-        let hasMore = viewModel.tapHasMore(name)
+        let hasMore = viewModel.tapCasks(in: name).count > CaskCatalogViewModel.tapSectionSize
         return VStack(alignment: .leading, spacing: CHSpace.s3) {
             TapSectionHeader(
                 tap: section.tap,
                 onViewAll: hasMore ? { viewModel.selectedSidebar = .tap(name) } : nil,
                 onRemove: { tapDialog = .remove(name) }
             )
-            tapItems(casks: section.casks, formulae: section.formulae)
+            if !section.casks.isEmpty {
+                switch viewMode {
+                case .grid:
+                    caskGrid(section.casks)
+                case .list:
+                    LazyVStack(spacing: 0) {
+                        caskList(section.casks)
+                    }
+                }
+            }
         }
         .padding(.top, CHSpace.s3)
-    }
-
-    @ViewBuilder
-    func tapItems(casks: [Cask], formulae: [TapFormula]) -> some View {
-        switch viewMode {
-        case .grid:
-            if !casks.isEmpty || !formulae.isEmpty {
-                LazyVGrid(columns: columns, alignment: .leading, spacing: CHSpace.gridGap) {
-                    ForEach(casks) { cask in
-                        CaskCardView(
-                            cask: cask,
-                            downloads: viewModel.formattedDownloads(for: cask.reference),
-                            category: categoryInfo(for: cask),
-                            onSelectCategory: { viewModel.selectedSidebar = .category($0) },
-                            localState: viewModel.localState(for: cask)
-                        )
-                    }
-                    ForEach(formulae) { FormulaCardView(formula: $0) }
-                }
-            }
-        case .list:
-            LazyVStack(spacing: 0) {
-                caskList(casks)
-                ForEach(formulae) { formula in
-                    FormulaRowView(formula: formula)
-                        .padding(.vertical, 6)
-                    Color.chHairline.frame(height: 1)
-                }
-            }
-        }
     }
 
     func refreshTaps() {

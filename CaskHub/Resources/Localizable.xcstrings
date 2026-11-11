@@ -815,34 +815,6 @@
         }
       }
     },
-    "Copied" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скопировано"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скопійовано"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已拷贝"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已拷貝"
-          }
-        }
-      }
-    },
     "Enter a tap like user/repo or a GitHub URL." : {
       "localizations" : {
         "ru" : {
@@ -967,34 +939,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "формула"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formula"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Formula"
-          }
-        }
-      }
-    },
-    "Formula" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Формула"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Формула"
           }
         },
         "zh-Hans" : {
