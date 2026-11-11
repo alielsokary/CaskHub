@@ -77,6 +77,13 @@ final class CaskFileTextParserTests: XCTestCase {
         XCTAssertEqual(CaskFileTextParser.cask(fromSource: source, token: "tool", tap: "u/r").version, "latest")
     }
 
+    func test_non_web_homepage_is_dropped() {
+        for homepage in ["file:///etc/passwd", "javascript:alert(1)", "x-apple.systempreferences:", "https://"] {
+            let source = "cask \"tool\" do\n  homepage \"\(homepage)\"\nend\n"
+            XCTAssertEqual(CaskFileTextParser.cask(fromSource: source, token: "tool", tap: "u/r").homepage, "", homepage)
+        }
+    }
+
     func test_garbage_source() {
         var generator = SystemRandomNumberGenerator()
         let bytes = (0 ..< 200_000).map { _ in UInt8.random(in: 0 ... 255, using: &generator) }

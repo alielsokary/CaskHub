@@ -54,6 +54,10 @@ nonisolated struct CaskInfoProjectionInput {
 }
 
 nonisolated enum CaskInfoProjector {
+    static func webLink(_ text: String) -> URL? {
+        URL.web(text)
+    }
+
     static func makeRows(from input: CaskInfoProjectionInput) -> [CaskInfoRow] {
         identityRows(for: input.cask)
             + downloadRows(for: input.cask, size: input.downloadSize)
@@ -81,7 +85,7 @@ nonisolated enum CaskInfoProjector {
             rows.append(CaskInfoRow(
                 property: String(localized: "Homepage"),
                 value: cask.homepage,
-                link: URL(string: cask.homepage)
+                link: webLink(cask.homepage)
             ))
         }
         return rows
@@ -92,7 +96,7 @@ nonisolated enum CaskInfoProjector {
         size: DownloadSizeResult?
     ) -> [CaskInfoRow] {
         guard let url = cask.url else { return [] }
-        var rows = [CaskInfoRow(property: "URL", value: url, link: URL(string: url))]
+        var rows = [CaskInfoRow(property: "URL", value: url, link: webLink(url))]
         if let sha256 = cask.sha256 {
             rows.append(CaskInfoRow(
                 property: "SHA",

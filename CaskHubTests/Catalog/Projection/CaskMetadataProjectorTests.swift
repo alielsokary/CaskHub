@@ -130,6 +130,14 @@ final class CaskMetadataProjectorTests: XCTestCase {
         )
     }
 
+    func test_only_web_urls_become_links() {
+        XCTAssertEqual(CaskInfoProjector.webLink("https://example.com/a"), URL(string: "https://example.com/a"))
+        XCTAssertEqual(CaskInfoProjector.webLink("HTTP://example.com"), URL(string: "HTTP://example.com"))
+        for text in ["file:///etc/passwd", "javascript:alert(1)", "x-apple.systempreferences:", "https://", "example.com"] {
+            XCTAssertNil(CaskInfoProjector.webLink(text), text)
+        }
+    }
+
     func test_info_projection_omits_sha256_row_when_missing() {
         XCTAssertNil(valuesByProperty(makeDownloadRows(sha256: nil))["SHA"])
     }

@@ -17,7 +17,7 @@ nonisolated enum CaskFileTextParser {
             token: token, fullToken: "\(tap)/\(token)", tap: tap,
             name: [firstLiteral("name", in: text) ?? token],
             desc: firstLiteral("desc", in: text),
-            homepage: firstLiteral("homepage", in: text) ?? "",
+            homepage: firstLiteral("homepage", in: text).flatMap(URL.web)?.absoluteString ?? "",
             url: nil, sha256: nil,
             version: version(in: text) ?? "",
             bundleVersion: nil, bundleShortVersion: nil,
@@ -57,5 +57,16 @@ nonisolated enum CaskFileTextParser {
               let range = Range(match.range(at: 1), in: text)
         else { return nil }
         return (String(text[range]), match.range.location)
+    }
+}
+
+extension URL {
+    /// Tap-authored strings become clickable only as http(s) links with a host.
+    nonisolated static func web(_ text: String) -> URL? {
+        guard let url = URL(string: text),
+              let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme),
+              url.host?.isEmpty == false
+        else { return nil }
+        return url
     }
 }
