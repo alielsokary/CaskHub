@@ -67,10 +67,15 @@ nonisolated enum CaskInfoProjector {
                 dates: input.installationDates
             )
             + metadataRows(for: input.cask, category: input.category)
-            + statusRows(
-                isOutdated: input.actionPresentation.localState.isOutdated,
-                retirement: input.actionPresentation.localState.retirement
-            )
+            + statusRows(for: input)
+    }
+
+    /// Text-read tap casks have no reliable auto-update or retirement data, and taps have no categories.
+    private static func statusRows(for input: CaskInfoProjectionInput) -> [CaskInfoRow] {
+        let state = input.actionPresentation.localState
+        let rows = statusRows(isOutdated: state.isOutdated, retirement: state.retirement)
+        guard input.cask.provenance == .tapSource else { return rows }
+        return state.isHomebrewInstalled ? Array(rows.prefix(1)) : []
     }
 
     private static func identityRows(for cask: Cask) -> [CaskInfoRow] {
@@ -167,19 +172,23 @@ nonisolated enum CaskInfoProjector {
                 value: shortVersion
             ))
         }
-        rows.append(CaskInfoRow(
-            property: String(localized: "Main Category"),
-            value: category?.mainName ?? String(localized: "Uncategorized")
-        ))
-        rows.append(CaskInfoRow(
-            property: String(localized: "Subcategories"),
-            value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty
-                ?? String(localized: "None")
-        ))
-        rows.append(CaskInfoRow(
-            property: String(localized: "Auto Updates"),
-            value: cask.autoUpdates.map(yesNo) ?? String(localized: "Unknown")
-        ))
+        if cask.thirdPartyTap == nil {
+            rows.append(CaskInfoRow(
+                property: String(localized: "Main Category"),
+                value: category?.mainName ?? String(localized: "Uncategorized")
+            ))
+            rows.append(CaskInfoRow(
+                property: String(localized: "Subcategories"),
+                value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty
+                    ?? String(localized: "None")
+            ))
+        }
+        if cask.provenance != .tapSource {
+            rows.append(CaskInfoRow(
+                property: String(localized: "Auto Updates"),
+                value: cask.autoUpdates.map(yesNo) ?? String(localized: "Unknown")
+            ))
+        }
         return rows
     }
 

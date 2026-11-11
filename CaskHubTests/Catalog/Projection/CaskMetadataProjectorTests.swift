@@ -142,13 +142,28 @@ final class CaskMetadataProjectorTests: XCTestCase {
         XCTAssertNil(valuesByProperty(makeDownloadRows(sha256: nil))["SHA"])
     }
 
+    func test_text_read_tap_cask_hides_rows_it_cannot_know() {
+        var cask = CaskFileTextParser.cask(fromSource: "", token: "tool", tap: "user/tap")
+        let properties = Set(makeRows(for: cask).map(\.property))
+
+        for hidden in ["Main Category", "Subcategories", "Auto Updates", "Outdated", "Deprecated", "Disabled"] {
+            XCTAssertFalse(properties.contains(String(localized: String.LocalizationValue(hidden))), hidden)
+        }
+
+        cask.provenance = .tapInfo
+        let brewProperties = Set(makeRows(for: cask).map(\.property))
+        XCTAssertFalse(brewProperties.contains(String(localized: "Main Category")))
+        XCTAssertTrue(brewProperties.contains(String(localized: "Auto Updates")))
+        XCTAssertTrue(brewProperties.contains(String(localized: "Deprecated")))
+    }
+
     private func makeDownloadRows(sha256: String?) -> [CaskInfoRow] {
+        makeRows(for: Cask.preview(token: "studio", url: "https://example.com/studio.dmg", sha256: sha256))
+    }
+
+    private func makeRows(for cask: Cask) -> [CaskInfoRow] {
         CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
-            cask: Cask.preview(
-                token: "studio",
-                url: "https://example.com/studio.dmg",
-                sha256: sha256
-            ),
+            cask: cask,
             category: nil,
             downloadSize: .unknown,
             actionPresentation: CaskActionPresentation(
