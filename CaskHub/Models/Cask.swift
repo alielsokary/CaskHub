@@ -270,7 +270,11 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     }
 
     var id: String {
-        token
+        reference
+    }
+
+    var reference: String {
+        CaskReference.make(token: token, tap: tap)
     }
 
     /// Bundle names this cask installs into /Applications (e.g. "Google Chrome.app").

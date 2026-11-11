@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */; };
+		CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */; };
 		CA2150000000000000000002 /* CaskUpdateTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000001 /* CaskUpdateTarget.swift */; };
 		CA2510000000000000000002 /* CaskRetirement.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2510000000000000000001 /* CaskRetirement.swift */; };
 		CA2150000000000000000006 /* HomebrewPlatformLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000005 /* HomebrewPlatformLoader.swift */; };
@@ -215,6 +217,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReference.swift; sourceTree = "<group>"; };
+		CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReferenceTests.swift; sourceTree = "<group>"; };
 		7D1D00000000000000000001 /* CaskHub.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CaskHub.entitlements; sourceTree = "<group>"; };
 		CA2150000000000000000001 /* CaskUpdateTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskUpdateTarget.swift; sourceTree = "<group>"; };
 		CA2510000000000000000001 /* CaskRetirement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskRetirement.swift; sourceTree = "<group>"; };
@@ -793,6 +797,7 @@
 				CA2150000000000000000001 /* CaskUpdateTarget.swift */,
 				CA2510000000000000000001 /* CaskRetirement.swift */,
 				AA1000000000000000000001 /* MaintenanceReport.swift */,
+				CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -949,6 +954,7 @@
 				E29000000000000000000003 /* CaskOperationStateTests.swift */,
 				B0F000000000000000000003 /* HomebrewCommandFailureTests.swift */,
 				AA100000000000000000000C /* MaintenanceParsingTests.swift */,
+				CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -1291,6 +1297,7 @@
 				41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */,
 				41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */,
 				41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */,
+				CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1364,6 +1371,7 @@
 				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
 				B0AD00000000000000000012 /* ScratchDefaultsTests.swift in Sources */,
 				AA1000000000000000000017 /* TestFactories.swift in Sources */,
+				CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
