@@ -18,7 +18,7 @@ nonisolated struct HomebrewTapLoader: Sendable {
               let taps = Self.taps(in: tapInfo)
         else { return nil }
         let trust = Self.trustOrNone(Self.run(brewURL, ["trust", "--json=v1"]))
-        let provisional = TapIndex(taps: taps, casks: [], trust: trust)
+        let provisional = TapIndex(taps: taps, casks: [], trust: trust, formulae: [])
         let trustedReferences = taps.flatMap(\.caskTokens).filter(provisional.trusts)
         let trustedCasks = trustedReferences.isEmpty ? [] : Self.run(
             brewURL, ["info", "--cask", "--json=v2"] + trustedReferences
@@ -70,7 +70,19 @@ nonisolated struct HomebrewTapLoader: Sendable {
                 return CaskFileTextParser.cask(fromSource: source, token: token, tap: tap.name)
             }
         }
-        return TapIndex(taps: taps, casks: casks.sorted { $0.reference < $1.reference }, trust: trust)
+        let formulae = taps.flatMap { tap in
+            let files = Dictionary(tap.formulaFiles.map { (fileToken($0), $0) }) { first, _ in first }
+            return tap.formulaNames.map { reference in
+                let name = CaskReference.bareToken(reference)
+                return CaskFileTextParser.formula(fromSource: files[name].flatMap(readFile) ?? "", name: name, tap: tap.name)
+            }
+        }
+        return TapIndex(
+            taps: taps,
+            casks: casks.sorted { $0.reference < $1.reference },
+            trust: trust,
+            formulae: formulae.sorted { $0.reference < $1.reference }
+        )
     }
 
     private static let decoder: JSONDecoder = {

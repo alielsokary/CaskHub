@@ -32,6 +32,17 @@ nonisolated enum CaskFileTextParser {
         return cask
     }
 
+    static func formula(fromSource source: String, name: String, tap: String) -> TapFormula {
+        let text = String(source.prefix(maxSourceCharacters))
+        return TapFormula(
+            name: name,
+            tap: tap,
+            desc: firstLiteral("desc", in: text),
+            homepage: firstLiteral("homepage", in: text).flatMap(URL.web)?.absoluteString ?? "",
+            version: version(in: text) ?? ""
+        )
+    }
+
     private static func version(in text: String) -> String? {
         let literal = firstMatch(#"^[ \t]*version[ \t]+"([^"\n]*)""#, in: text)
         let latest = firstMatch(#"^[ \t]*version[ \t]+:(latest)\b"#, in: text)

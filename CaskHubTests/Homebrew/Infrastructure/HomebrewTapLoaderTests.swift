@@ -17,6 +17,7 @@ final class HomebrewTapLoaderTests: XCTestCase {
       "cask_tokens": ["macos-fuse-t/cask/fuse-t-sshfs", "macos-fuse-t/cask/fuse-t"],
       "cask_files": ["/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask/Casks/fuse-t-sshfs.rb",
                      "/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask/Casks/f/fuse-t.rb"],
+      "formula_files": ["/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask/Formula/sshfs-fuse-t.rb"],
       "remote": "https://github.com/macos-fuse-t/homebrew-cask"},
      {"name": "paninihouse/brewer-cmd", "path": "/opt/homebrew/Library/Taps/paninihouse/homebrew-brewer-cmd",
       "official": false, "trusted": true, "formula_names": [], "cask_tokens": [], "cask_files": [],
@@ -67,7 +68,10 @@ final class HomebrewTapLoaderTests: XCTestCase {
         XCTAssertEqual(index.casks.map(\.reference), ["macos-fuse-t/cask/fuse-t", "macos-fuse-t/cask/fuse-t-sshfs"])
         XCTAssertEqual(index.casks.map(\.provenance), [.tapInfo, .tapSource])
         XCTAssertEqual(index.casks[1].displayName, "SSHFS")
-        XCTAssertEqual(readPaths, ["/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask/Casks/fuse-t-sshfs.rb"])
+        XCTAssertEqual(
+            readPaths.filter { $0.contains("/Casks/") },
+            ["/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask/Casks/fuse-t-sshfs.rb"]
+        )
         XCTAssertEqual(index.casks(in: "macos-fuse-t/cask").count, 2)
         XCTAssertTrue(index.casks(in: "paninihouse/brewer-cmd").isEmpty)
     }
@@ -113,6 +117,16 @@ final class HomebrewTapLoaderTests: XCTestCase {
         XCTAssertEqual(HomebrewTapLoader.trustOrNone(nil), TapTrust(taps: [], casks: []))
         XCTAssertEqual(HomebrewTapLoader.trustOrNone("Error: Unknown command: trust"), TapTrust(taps: [], casks: []))
         XCTAssertEqual(HomebrewTapLoader.trustOrNone(trustJSON).casks, ["macos-fuse-t/cask/fuse-t"])
+    }
+
+    func test_index_reads_formulae_as_text() throws {
+        let taps = try XCTUnwrap(HomebrewTapLoader.taps(in: tapInfoJSON))
+        let index = HomebrewTapLoader.makeIndex(taps: taps, trust: TapTrust(taps: [], casks: []), trustedCasks: nil) { path in
+            path.hasSuffix("sshfs-fuse-t.rb") ? "class SshfsFuseT < Formula\n  desc \"SSHFS for FUSE-T\"\nend\n" : ""
+        }
+
+        XCTAssertEqual(index.formulae.map(\.reference), ["macos-fuse-t/cask/sshfs-fuse-t"])
+        XCTAssertEqual(index.formulae.first?.desc, "SSHFS for FUSE-T")
     }
 
     private func tapInfoCask(_ token: String, tap: String, version: String) throws -> Cask {

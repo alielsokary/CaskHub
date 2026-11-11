@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7A876AAE52E2797318C4E0 /* FormulaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AD52CEB6955EEF56F4456 /* FormulaCardView.swift */; };
 		CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */; };
 		CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */; };
 		CA7AAE608EBE151203B74B40 /* TrustInstallPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */; };
@@ -239,6 +240,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7AD52CEB6955EEF56F4456 /* FormulaCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulaCardView.swift; sourceTree = "<group>"; };
 		CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveTapDialog.swift; sourceTree = "<group>"; };
 		CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTapSheet.swift; sourceTree = "<group>"; };
 		CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustInstallPrompt.swift; sourceTree = "<group>"; };
@@ -489,6 +491,7 @@
 				CA7A760067F0AFD41BAEDA64 /* TapsEmptyStateView.swift */,
 				CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */,
 				CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */,
+				CA7AD52CEB6955EEF56F4456 /* FormulaCardView.swift */,
 			);
 			path = Taps;
 			sourceTree = "<group>";
@@ -1386,6 +1389,7 @@
 				CA7AAE608EBE151203B74B40 /* TrustInstallPrompt.swift in Sources */,
 				CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */,
 				CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */,
+				CA7A876AAE52E2797318C4E0 /* FormulaCardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

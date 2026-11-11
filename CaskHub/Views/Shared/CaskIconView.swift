@@ -59,12 +59,7 @@ struct CaskIconView: View {
     }
 
     private var cliTile: some View {
-        well(.chSurfaceTerminal)
-            .overlay(
-                Text(">_")
-                    .font(Font.custom(CHType.monoFamily, size: size * 0.34).weight(.bold))
-                    .foregroundStyle(Color.chCream)
-            )
+        TerminalTile(size: size)
     }
 
     private var fontTile: some View {
@@ -81,6 +76,26 @@ struct CaskIconView: View {
             .fill(fill)
             .overlay(wellShape.strokeBorder(Color.chHairline, lineWidth: 0.5))
             .frame(width: size, height: size)
+    }
+}
+
+/// The `>_` well shared by command-line casks and tap formulae.
+struct TerminalTile: View {
+    let size: CGFloat
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
+            .fill(Color.chSurfaceTerminal)
+            .overlay(
+                RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
+                    .strokeBorder(Color.chHairline, lineWidth: 0.5)
+            )
+            .frame(width: size, height: size)
+            .overlay(
+                Text(">_")
+                    .font(Font.custom(CHType.monoFamily, size: size * 0.34).weight(.bold))
+                    .foregroundStyle(Color.chCream)
+            )
     }
 }
 

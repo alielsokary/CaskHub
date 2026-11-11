@@ -41,7 +41,7 @@ final class TapsViewTests: XCTestCase {
     func test_tap_count_text() {
         let tap = TapSummary(
             name: "user/tap", remote: nil, official: false, trusted: false, customRemote: false,
-            caskTokens: ["user/tap/a"], formulaNames: ["user/tap/f1", "user/tap/f2"], caskFiles: []
+            caskTokens: ["user/tap/a"], formulaNames: ["user/tap/f1", "user/tap/f2"], caskFiles: [], formulaFiles: []
         )
 
         XCTAssertEqual(TapSectionHeader.countText(for: tap), "1 cask · 2 formulae")
@@ -101,13 +101,14 @@ final class TapsViewTests: XCTestCase {
             taps: taps.keys.sorted().map { name in
                 TapSummary(
                     name: name, remote: "https://github.com/\(name)", official: false, trusted: false, customRemote: false,
-                    caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: []
+                    caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: [], formulaFiles: []
                 )
             },
             casks: taps.keys.sorted().flatMap { name in
                 taps[name, default: []].map { CaskFileTextParser.cask(fromSource: "", token: $0, tap: name) }
             },
-            trust: TapTrust(taps: [], casks: [])
+            trust: TapTrust(taps: [], casks: []),
+            formulae: taps.keys.sorted().map { CaskFileTextParser.formula(fromSource: "", name: "tool-cli", tap: $0) }
         )
         let local = LocalHomebrewService(defaults: makeScratchDefaults("taps-view-\(UUID().uuidString)")) {
             $0.softwareScanner = MutableInstalledSoftwareScanner()

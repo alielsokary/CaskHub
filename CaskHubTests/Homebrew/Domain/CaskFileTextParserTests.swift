@@ -92,6 +92,27 @@ final class CaskFileTextParserTests: XCTestCase {
         }
     }
 
+    func test_formula_file_reads_display_fields() {
+        let source = """
+        class Sentry < Formula
+          desc "Sentry command-line tool for error monitoring and debugging"
+          homepage "https://cli.sentry.dev"
+          version "0.49.0"
+          if OS.mac?
+            url "https://github.com/getsentry/toolkit/releases/download/cli@0.49.0/sentry-darwin-arm64.gz"
+          end
+        end
+        """
+
+        let formula = CaskFileTextParser.formula(fromSource: source, name: "sentry", tap: "getsentry/tools")
+
+        XCTAssertEqual(formula.reference, "getsentry/tools/sentry")
+        XCTAssertEqual(formula.desc, "Sentry command-line tool for error monitoring and debugging")
+        XCTAssertEqual(formula.version, "0.49.0")
+        XCTAssertEqual(formula.homepage, "https://cli.sentry.dev")
+        XCTAssertEqual(formula.installCommand, "brew install getsentry/tools/sentry")
+    }
+
     func test_garbage_source() {
         var generator = SystemRandomNumberGenerator()
         let bytes = (0 ..< 200_000).map { _ in UInt8.random(in: 0 ... 255, using: &generator) }
