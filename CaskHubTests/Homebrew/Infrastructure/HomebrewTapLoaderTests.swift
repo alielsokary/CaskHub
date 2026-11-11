@@ -11,7 +11,7 @@ import XCTest
 final class HomebrewTapLoaderTests: XCTestCase {
     private let tapInfoJSON = """
     [{"name": "homebrew/cask", "path": "/opt/homebrew/Library/Taps/homebrew/homebrew-cask", "official": true,
-      "trusted": true, "formula_names": [], "cask_tokens": ["figma"], "cask_files": [], "remote": null},
+      "trusted": true, "formula_names": [], "cask_tokens": ["figma"]},
      {"name": "macos-fuse-t/cask", "path": "/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask",
       "official": false, "trusted": false, "formula_names": ["macos-fuse-t/cask/sshfs-fuse-t"],
       "cask_tokens": ["macos-fuse-t/cask/fuse-t-sshfs", "macos-fuse-t/cask/fuse-t"],
