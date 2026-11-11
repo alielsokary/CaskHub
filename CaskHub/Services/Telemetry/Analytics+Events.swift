@@ -166,6 +166,8 @@ extension Analytics {
             return ["page": "maintenance"]
         case let .category(categoryID):
             return ["page": "category", "category": categoryID]
+        case .tap:
+            return ["page": "tap"]
         }
     }
 }

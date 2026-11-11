@@ -253,7 +253,8 @@ final class SidebarViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: SidebarView(
             selection: Binding(get: { probe.selection }, set: { probe.selection = $0 }),
             categoryService: CategoryService(),
-            adoptableCount: 3
+            adoptableCount: 3,
+            tapsCount: 0
         ))
         window.orderFrontRegardless()
         RunLoop.main.run(until: Date().addingTimeInterval(0.1))

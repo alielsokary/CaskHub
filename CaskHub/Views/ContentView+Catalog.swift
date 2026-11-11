@@ -23,11 +23,15 @@ extension ContentView {
 
     @ViewBuilder
     var catalogContent: some View {
-        switch viewMode {
-        case .grid:
-            gridContent
-        case .list:
-            listContent
+        if selectedSidebar == .library(.taps) {
+            tapsContent
+        } else {
+            switch viewMode {
+            case .grid:
+                gridContent
+            case .list:
+                listContent
+            }
         }
     }
 

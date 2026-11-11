@@ -16,6 +16,7 @@ struct SidebarView: View {
     var updatesCount: Int = 0
     var installedCount: Int = 0
     var adoptableCount: Int = 0
+    let tapsCount: Int
     var categoryCounts: [String: Int] = [:]
 
     @Environment(\.catalogTextScale) private var textScale
@@ -44,14 +45,10 @@ struct SidebarView: View {
                     }
 
                     sectionHeader("LIBRARY")
-                    row(.library(.installed), title: LibraryItem.installed.title, icon: LibraryItem.installed.icon, count: installedCount)
-                    row(.library(.updates), title: LibraryItem.updates.title, icon: LibraryItem.updates.icon, badge: updatesCount)
-                    if showAdoptApps {
-                        row(.library(.adopt), title: LibraryItem.adopt.title, icon: LibraryItem.adopt.icon, count: adoptableCount)
-                    }
+                    ForEach(Self.libraryRows) { libraryRow($0) }
 
                     sectionHeader("MANAGE")
-                    row(.shelfSetup, title: String(localized: .sidebarShelfSetup), icon: "books.vertical")
+                    ForEach(Self.manageRows(showAdopt: showAdoptApps)) { libraryRow($0) }
 
                     sectionHeader("MAINTENANCE")
                     row(.maintenance, title: String(localized: .sidebarHealth), icon: "stethoscope")
@@ -86,6 +83,28 @@ struct SidebarView: View {
     }
 
     // MARK: - Rows
+
+    static let libraryRows: [SidebarSelection] = [.library(.installed), .library(.updates), .library(.taps)]
+
+    static func manageRows(showAdopt: Bool) -> [SidebarSelection] {
+        [.shelfSetup] + (showAdopt ? [.library(.adopt)] : [])
+    }
+
+    @ViewBuilder
+    private func libraryRow(_ selection: SidebarSelection) -> some View {
+        switch selection {
+        case .library(.installed):
+            row(selection, title: LibraryItem.installed.title, icon: LibraryItem.installed.icon, count: installedCount)
+        case .library(.updates):
+            row(selection, title: LibraryItem.updates.title, icon: LibraryItem.updates.icon, badge: updatesCount)
+        case .library(.taps):
+            row(selection, title: LibraryItem.taps.title, icon: LibraryItem.taps.icon, count: tapsCount)
+        case .library(.adopt):
+            row(selection, title: LibraryItem.adopt.title, icon: LibraryItem.adopt.icon, count: adoptableCount)
+        default:
+            row(.shelfSetup, title: String(localized: .sidebarShelfSetup), icon: "books.vertical")
+        }
+    }
 
     private func row(
         _ tag: SidebarSelection,
@@ -161,7 +180,8 @@ struct SidebarView: View {
             return service
         }(),
         updatesCount: 1,
-        installedCount: 42
+        installedCount: 42,
+        tapsCount: 2
     )
     .frame(width: 226, height: 700)
     .background(WindowBackdrop())

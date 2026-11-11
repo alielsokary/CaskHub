@@ -17,7 +17,7 @@ struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(ImageCacheService.self) private var imageCache
     @Environment(CategoryService.self) private var categoryService
-    @Environment(LocalHomebrewService.self) private var localHomebrew
+    @Environment(LocalHomebrewService.self) var localHomebrew
     @Environment(MaintenanceViewModel.self) private var maintenance
     @AppStorage("catalogTextSize") private var catalogTextSize: CatalogTextSize = .standard
     @AppStorage("viewMode") var viewMode: ViewMode = .grid
@@ -28,6 +28,8 @@ struct ContentView: View {
     @State private var searchSignalTask: Task<Void, Never>?
     @State private var isScrolledUnderToolbar = false
     @State private var isRefreshingUpdates = false
+    @State var isRefreshingTaps = false
+    @State var tapDialog: TapDialog?
 
     @State private var detailWidth: CGFloat = CHSize.contentWidth + 2 * CHSize.catalogInset
 
@@ -51,6 +53,7 @@ struct ContentView: View {
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount(includingExternallyManaged: showExternallyManagedApps),
                 adoptableCount: viewModel.adoptableCasks.count,
+                tapsCount: localHomebrew.tapIndex.taps.count,
                 categoryCounts: viewModel.categoryCounts
             )
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
@@ -199,11 +202,16 @@ struct ContentView: View {
                 localHomebrew.setGreedyUpdates(enabled)
             },
             showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections
+                && selectedSidebar != .library(.taps),
+            onRefreshTaps: isTapsPage ? { refreshTaps() } : nil,
+            isRefreshingTaps: isRefreshingTaps,
+            onAddTap: isTapsPage ? { tapDialog = .add } : nil
         )
     }
 
     private var topBarSummary: String? {
         let externalCount = showsExternallyManagedSection ? viewModel.filteredExternallyManagedCasks.count : 0
+        if selectedSidebar == .library(.taps) { return tapsSummary }
         return isUtilityPage ? utilitySummary : String(localized: "\(viewModel.filteredCasks.count + externalCount) casks")
     }
 
@@ -252,6 +260,7 @@ struct ContentView: View {
         case .shelfSetup: return String(localized: .sidebarShelfSetup)
         case .maintenance: return String(localized: .sidebarHealth)
         case let .category(categoryID): return categoryService.displayName(for: categoryID)
+        case let .tap(name): return name
         }
     }
 
@@ -270,7 +279,13 @@ struct ContentView: View {
             && viewModel.appliedSearchText.isEmpty
     }
 
-    private var sortOptions: [SortOption] {
+    func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
+        viewModel.categoryPresentation(for: cask)
+    }
+}
+
+private extension ContentView {
+    var sortOptions: [SortOption] {
         switch selectedSidebar {
         case .library(.installed):
             return SortOption.installed
@@ -281,12 +296,6 @@ struct ContentView: View {
         }
     }
 
-    func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
-        viewModel.categoryPresentation(for: cask)
-    }
-}
-
-private extension ContentView {
     func refreshUpdates() {
         isRefreshingUpdates = true
         Task {

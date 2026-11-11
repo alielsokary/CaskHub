@@ -128,7 +128,7 @@ final class CaskCatalogViewModel {
             switch selectedSidebar {
             case .library(.installed):
                 sortOption = .recentlyInstalled
-            case .library(.updates), .library(.adopt):
+            case .library(.updates), .library(.adopt), .library(.taps), .tap:
                 sortOption = .nameAZ
             case .discover(.recentlyAdded):
                 sortOption = .newest

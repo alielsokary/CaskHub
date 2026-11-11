@@ -74,6 +74,7 @@ final class FontCatalogTests: XCTestCase {
             SidebarView(
                 selection: .constant(.category(CategoryService.fontsCategoryID)),
                 categoryService: categories,
+                tapsCount: 0,
                 categoryCounts: [CategoryService.fontsCategoryID: 2617]
             )
             .environment(LocalHomebrewService(defaults: makeScratchDefaults("font-sidebar"))),

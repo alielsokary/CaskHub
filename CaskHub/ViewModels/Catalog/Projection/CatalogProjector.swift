@@ -196,7 +196,7 @@ nonisolated enum CatalogProjector {
         case .discover(.recentlyAdded): input.retiredCasks.filter { !$0.isFont }
         case .discover: input.retiredCasks
         case let .category(categoryID): input.library.retiredCasksByCategory[categoryID] ?? []
-        case .library, .shelfSetup, .maintenance: []
+        case .library, .shelfSetup, .maintenance, .tap: []
         }
     }
 
@@ -234,8 +234,10 @@ nonisolated enum CatalogProjector {
             return input.library.updatableCasks
         case .library(.adopt):
             return input.library.adoptableCasks
-        case .shelfSetup, .maintenance:
+        case .library(.taps), .shelfSetup, .maintenance:
             return []
+        case let .tap(name):
+            return input.tapCasks.filter { $0.tap == name }
         case let .category(categoryID):
             return input.library.casksByCategory[categoryID] ?? []
         }
