@@ -8,19 +8,28 @@
 import Foundation
 
 /// Consent copy shown before a tap cask's first install, which makes brew trust it.
+/// Built only from the token and tap name: the cask's own `name` is tap-authored text.
 nonisolated struct TrustInstallPrompt: Equatable {
     let cask: Cask
 
     private var source: String {
-        cask.thirdPartyTap ?? cask.tap ?? ""
+        Self.safeLabel(cask.thirdPartyTap ?? cask.tap ?? "")
+    }
+
+    private var token: String {
+        Self.safeLabel(cask.token)
+    }
+
+    static func safeLabel(_ text: String) -> String {
+        String(text.filter { $0.isASCII && ($0.isLetter || $0.isNumber || "._@+-/".contains($0)) }.prefix(80))
     }
 
     var title: String {
-        String(localized: "Install \(cask.displayName) from \(source)?")
+        String(localized: "Install \(token) from \(source)?")
     }
 
     var message: String {
-        Self.message(name: cask.displayName, tap: source)
+        Self.message(name: token, tap: source)
     }
 
     static func message(name: String, tap: String) -> String {

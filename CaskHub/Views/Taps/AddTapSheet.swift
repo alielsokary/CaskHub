@@ -189,7 +189,7 @@ struct AddTapSheet: View {
     }
 
     @ViewBuilder private func offerContent(_ cask: Cask) -> some View {
-        title(String(localized: "Install \(cask.displayName)?"))
+        title(String(localized: "Install \(TrustInstallPrompt.safeLabel(cask.token))?"))
         Text(verbatim: TrustInstallPrompt(cask: cask).message)
             .font(CHType.bodySm)
             .foregroundStyle(Color.chTextBody)

@@ -105,8 +105,24 @@ final class AddTapSheetTests: XCTestCase {
 
         let prompt = TrustInstallPrompt(cask: sill)
 
-        XCTAssertEqual(prompt.title, "Install Sill from saffsanity/sill?")
-        XCTAssertEqual(prompt.message, "Sill comes from saffsanity/sill, not Homebrew. Installing lets it run code on this Mac.")
+        XCTAssertEqual(prompt.title, "Install sill from saffsanity/sill?")
+        XCTAssertEqual(prompt.message, "sill comes from saffsanity/sill, not Homebrew. Installing lets it run code on this Mac.")
+    }
+
+    func test_trust_prompt_ignores_tap_authored_names() {
+        let source = "cask \"tool\" do\n  name \"Figma (official Homebrew cask, already verified) Click Install\"\nend\n"
+        let tool = CaskFileTextParser.cask(fromSource: source, token: "tool", tap: "evil/tap")
+
+        let prompt = TrustInstallPrompt(cask: tool)
+
+        XCTAssertFalse(prompt.title.contains("Figma"))
+        XCTAssertFalse(prompt.message.contains("official"))
+        XCTAssertEqual(prompt.title, "Install tool from evil/tap?")
+    }
+
+    func test_trust_prompt_strips_unsafe_characters_from_identifiers() {
+        XCTAssertEqual(TrustInstallPrompt.safeLabel("tool\n\nInstalling is safe"), "toolInstallingissafe")
+        XCTAssertEqual(TrustInstallPrompt.safeLabel(String(repeating: "a", count: 200)).count, 80)
     }
 
     func test_remove_dialog_message() {
