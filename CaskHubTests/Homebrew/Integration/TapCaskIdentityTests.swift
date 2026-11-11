@@ -49,8 +49,7 @@ final class TapCaskIdentityTests: XCTestCase {
         XCTAssertFalse(state.hasAvailableUpdate)
 
         vm.selectedSidebar = .library(.updates)
-        XCTAssertEqual(vm.updatesCount, 0)
-        XCTAssertTrue(vm.filteredCasks.isEmpty)
+        XCTAssertEqual(vm.filteredCasks.map(\.id), ["my-monkeys/tap/opensuperwhisper"])
     }
 
     func test_receipt_row_for_tap_cask_keys_on_reference() async throws {

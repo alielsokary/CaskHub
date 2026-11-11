@@ -103,6 +103,9 @@ struct CaskRowView: View {
                     isInstalled: actionPresentation.localState.isHomebrewInstalled
                 )
             }
+            if let tap = cask.thirdPartyTap {
+                TapChip(tap: tap)
+            }
             metaText
         }
     }

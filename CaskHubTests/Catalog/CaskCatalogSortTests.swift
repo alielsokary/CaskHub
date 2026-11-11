@@ -80,6 +80,7 @@ final class CaskCatalogSortTests: XCTestCase {
         let library = CatalogProjector.makeLibrary(from: input)
         let filtered = CatalogProjector.makeFiltered(from: CatalogFilteredProjectionInput(
             casks: input.casks,
+            tapCasks: [],
             retiredCasks: [],
             library: library,
             selectedSidebar: .library(.updates),

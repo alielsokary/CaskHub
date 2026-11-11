@@ -73,6 +73,8 @@ struct CaskCardView: View {
                     }
                     .buttonStyle(.plain)
                     .pointerStyle(.link)
+                } else if let tap = cask.thirdPartyTap {
+                    TapChip(tap: tap)
                 }
             }
             .padding(.top, CHSize.titleInsetBelowIcon * textScale)

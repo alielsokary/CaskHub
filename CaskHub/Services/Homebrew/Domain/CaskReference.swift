@@ -43,6 +43,12 @@ nonisolated enum CaskReference {
     }
 }
 
+extension Cask {
+    var thirdPartyTap: String? {
+        CaskReference.tap(of: reference)
+    }
+}
+
 extension InstallationSnapshot {
     func installation(for reference: String) -> LocalCaskInstallation? {
         guard let installation = installedCasks[CaskReference.bareToken(reference)],

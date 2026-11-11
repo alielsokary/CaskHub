@@ -156,8 +156,11 @@ final class LocalHomebrewService {
             ?? { await HomebrewTapLoader().load(from: brewBinary()) }
         installedFormulaeProvider = dependencies.installedFormulaeProvider
             ?? { await HomebrewTapLoader().installedFormulae(in: $0, from: brewBinary()) }
-        tapUpdateProvider = dependencies.tapUpdateProvider
-            ?? { await HomebrewTapLoader().update(from: brewBinary()) }
+        tapUpdateProvider = dependencies.tapUpdateProvider ?? {
+            // The test host app must never pull real taps.
+            guard !CrashReporter.isRunningTests else { return }
+            await HomebrewTapLoader().update(from: brewBinary())
+        }
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]

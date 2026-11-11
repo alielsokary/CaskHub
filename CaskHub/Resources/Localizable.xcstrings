@@ -401,6 +401,34 @@
         }
       }
     },
+    "From the %@ tap" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Из тапа %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З тапу %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自 %@ Tap"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "來自 %@ Tap"
+          }
+        }
+      }
+    },
     "Installed from %@" : {
       "localizations" : {
         "ru" : {

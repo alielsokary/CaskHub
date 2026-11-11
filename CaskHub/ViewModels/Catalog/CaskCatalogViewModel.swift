@@ -50,7 +50,7 @@ enum SortOption: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CaskCatalogViewModel {
-    private(set) var catalog = CatalogPartition([]) {
+    private(set) var catalog = CatalogPartition([], tapCasks: []) {
         didSet { catalogRevision &+= 1 }
     }
     var casks: [Cask] {
@@ -182,12 +182,34 @@ final class CaskCatalogViewModel {
         async let homebrewOutdated: Void = localHomebrew.refreshHomebrewOutdated()
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
-        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates)
+        async let taps: Void = localHomebrew.refreshTaps()
+        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates, taps)
         let enriched = categoryService.addingAppIdentities(to: catalog.all)
         if enriched != catalog.all {
-            catalog = CatalogPartition(enriched)
+            catalog = CatalogPartition(enriched, tapCasks: catalog.tapCasks)
             await localHomebrew.updatePackageCatalog(catalog.all)
         }
+        applyTapIndex()
+        await updateTaps(maxAge: Self.tapUpdateInterval)
+    }
+
+    static let tapUpdateInterval: TimeInterval = 3 * 3600
+
+    func refreshTaps() async {
+        await localHomebrew.refreshTaps()
+        applyTapIndex()
+    }
+
+    /// `maxAge: 0` is the Taps page's Refresh button.
+    func updateTaps(maxAge: TimeInterval) async {
+        await localHomebrew.updateTapsIfStale(now: .now, maxAge: maxAge)
+        applyTapIndex()
+    }
+
+    private func applyTapIndex() {
+        let tapCasks = localHomebrew.tapIndex.casks
+        guard tapCasks != catalog.tapCasks else { return }
+        catalog = CatalogPartition(catalog.all, tapCasks: tapCasks)
     }
 
     func refreshIfStale(maxAge: TimeInterval = 3600) async {
@@ -209,7 +231,7 @@ final class CaskCatalogViewModel {
 
             let allCasks = try await caskRequest
             await categoryService.loadBundledCategoriesAsync()
-            catalog = CatalogPartition(categoryService.addingAppIdentities(to: allCasks))
+            catalog = CatalogPartition(categoryService.addingAppIdentities(to: allCasks), tapCasks: localHomebrew.tapIndex.casks)
             await localHomebrew.updatePackageCatalog(catalog.all)
 
             if let analytics = try? await analyticsRequest {

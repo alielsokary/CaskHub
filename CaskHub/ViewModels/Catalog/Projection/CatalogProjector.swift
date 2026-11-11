@@ -13,13 +13,16 @@ nonisolated struct CatalogPartition: Equatable {
     let browsable: [Cask]
     /// Deprecated or disabled main casks: found by search, never listed.
     let retired: [Cask]
+    /// Third-party tap casks: searchable and manageable, never on Discover pages or in categories.
+    let tapCasks: [Cask]
     let byReference: [String: Cask]
 
-    init(_ all: [Cask]) {
+    init(_ all: [Cask], tapCasks: [Cask]) {
         self.all = all
         browsable = all.filter(\.isBrowsable)
         retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") }
-        byReference = Dictionary(all.map { ($0.reference, $0) }) { first, _ in first }
+        self.tapCasks = tapCasks
+        byReference = Dictionary((all + tapCasks).map { ($0.reference, $0) }) { first, _ in first }
     }
 }
 
@@ -44,6 +47,7 @@ nonisolated struct CatalogBrowseProjectionInput {
 
 nonisolated struct CatalogFilteredProjectionInput {
     let casks: [Cask]
+    let tapCasks: [Cask]
     let retiredCasks: [Cask]
     let library: CatalogLibrarySnapshot
     let selectedSidebar: SidebarSelection
@@ -212,7 +216,7 @@ nonisolated enum CatalogProjector {
     ) -> [Cask] {
         switch input.selectedSidebar {
         case .discover(.browse):
-            return input.casks
+            return input.searchText.isEmpty ? input.casks : input.casks + input.tapCasks
         case .discover(.featured):
             return Array(sortedByDownloads(
                 input.casks,

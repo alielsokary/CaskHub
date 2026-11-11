@@ -114,7 +114,10 @@ struct CaskLocalStateResolver {
         let source = installationSource(for: cask)
         let externalVersion = externalApplication(for: cask)?.version
         let target = cask.updateTarget(for: platform)
-        let outdated = target.map { isOutdated(token: cask.reference, remoteVersion: $0.version, autoUpdates: $0.autoUpdates) } ?? false
+        let outdated = CaskReference.isOfficial(tap: cask.tap)
+            ? target.map { isOutdated(token: cask.reference, remoteVersion: $0.version, autoUpdates: $0.autoUpdates) } ?? false
+            // Tap versions read as text are unreliable; brew outdated is the authority.
+            : isInstalled(token: cask.reference) && isListedByHomebrew(cask.reference)
         let ownsInstallation = source == .homebrew
         return CaskLocalState(
             installationSource: source,
@@ -209,11 +212,6 @@ struct CaskLocalStateResolver {
         return externalApplication(for: cask)?.version
     }
 
-    func installationDates(for cask: Cask) -> CaskInstallationDates? {
-        guard snapshot.foreignInstallationSource(for: cask.reference) == nil else { return nil }
-        return snapshot.installationDatesByToken[cask.token]
-    }
-
     func existingBundleURL(named names: [String]) -> URL? {
         if let detected = names.lazy
             .flatMap({ snapshot.detectedApplicationsByBundleName[$0] ?? [] })
@@ -284,6 +282,13 @@ struct CaskLocalStateResolver {
             identifier,
             matchesPackageIdentifiers: cask.packageIdentifiers
         )
+    }
+}
+
+extension CaskLocalStateResolver {
+    func installationDates(for cask: Cask) -> CaskInstallationDates? {
+        guard snapshot.foreignInstallationSource(for: cask.reference) == nil else { return nil }
+        return snapshot.installationDatesByToken[cask.token]
     }
 }
 

@@ -70,7 +70,7 @@ final class RetiredCaskCatalogTests: XCTestCase {
         XCTAssertEqual(vm.filteredCasks.map(\.token), [], "No row may claim firefox was removed from Homebrew")
     }
 
-    func test_installed_deprecated_cask_offers_updates_but_disabled_and_receipt_rows_do_not() async {
+    func test_installed_deprecated_and_tap_receipt_rows_offer_updates_but_disabled_and_official_receipt_rows_do_not() async {
         let local = LocalHomebrewService(defaults: makeScratchDefaults("retired-updates")) {
             $0.softwareScanner = MutableInstalledSoftwareScanner()
             $0.brewBinaryProvider = { nil }
@@ -97,8 +97,8 @@ final class RetiredCaskCatalogTests: XCTestCase {
         )
 
         vm.selectedSidebar = .library(.updates)
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["legacy-app"])
-        XCTAssertEqual(vm.updatesCount, 1)
+        XCTAssertEqual(vm.filteredCasks.map(\.id), ["legacy-app", "other/tap/tapped-app"])
+        XCTAssertEqual(vm.updatesCount, 2)
     }
 
     func test_receipt_row_uninstall_sends_token_command() async throws {

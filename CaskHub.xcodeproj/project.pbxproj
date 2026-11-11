@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7AB3A9F99766591C19FAC9 /* TapChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */; };
+		CA7A082722C6593FFB7E9750 /* CaskCatalogViewModel+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */; };
+		CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A74921CE28363941C4016 /* TapCatalogTests.swift */; };
 		CA7ADC9358525B7E28FD1AFD /* LocalHomebrewService+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */; };
 		CA7AEFFEF3658BDE98E28FB4 /* TapRemovalPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */; };
 		CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */; };
@@ -228,6 +231,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapChip.swift; sourceTree = "<group>"; };
+		CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CaskCatalogViewModel+Taps.swift"; sourceTree = "<group>"; };
+		CA7A74921CE28363941C4016 /* TapCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCatalogTests.swift; sourceTree = "<group>"; };
 		CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Taps.swift"; sourceTree = "<group>"; };
 		CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapRemovalPreview.swift; sourceTree = "<group>"; };
 		CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapWorkflowTests.swift; sourceTree = "<group>"; };
@@ -484,6 +490,7 @@
 				41DFD45530028F7D00608C7A /* HeroCard.swift */,
 				41DFD45630028F7D00608C7A /* StatusBarView.swift */,
 				41DFD45730028F7D00608C7A /* TopBarView.swift */,
+				CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -886,6 +893,7 @@
 				41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */,
 				F27000000000000000000003 /* CaskCatalogViewModel+Projection.swift */,
 				F3200000000000000000001D /* Projection */,
+				CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */,
 			);
 			path = Catalog;
 			sourceTree = "<group>";
@@ -930,6 +938,7 @@
 				A51000000000000000000001 /* ExternallyManagedCasksTests.swift */,
 				CA2510000000000000000003 /* RetiredCaskCatalogTests.swift */,
 				CB0222000000000000000001 /* FontCatalogTests.swift */,
+				CA7A74921CE28363941C4016 /* TapCatalogTests.swift */,
 			);
 			path = Catalog;
 			sourceTree = "<group>";
@@ -1337,6 +1346,8 @@
 				CA7AB63CA09AD83AFBF09C14 /* HomebrewTapLoader.swift in Sources */,
 				CA7AEFFEF3658BDE98E28FB4 /* TapRemovalPreview.swift in Sources */,
 				CA7ADC9358525B7E28FD1AFD /* LocalHomebrewService+Taps.swift in Sources */,
+				CA7A082722C6593FFB7E9750 /* CaskCatalogViewModel+Taps.swift in Sources */,
+				CA7AB3A9F99766591C19FAC9 /* TapChip.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1416,6 +1427,7 @@
 				CA7A9BFE5A3B9E41E0F0C1DC /* TapAddInputTests.swift in Sources */,
 				CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */,
 				CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */,
+				CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

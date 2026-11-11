@@ -112,11 +112,12 @@ extension CaskCatalogViewModel {
                 installations: localHomebrew.installationSnapshot.installedCasks,
                 partition: catalog
             )
+            let libraryCasks = catalog.browsable + catalog.tapCasks
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
-                casks: catalog.browsable,
+                casks: libraryCasks,
                 installedOnlyCasks: installedOnly,
                 retiredCasks: catalog.retired,
-                localStates: localHomebrew.localStates(for: catalog.browsable + installedOnly + catalog.retired),
+                localStates: localHomebrew.localStates(for: libraryCasks + installedOnly + catalog.retired),
                 categoryMappings: categoryMappings,
                 adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))
@@ -156,14 +157,14 @@ extension CaskCatalogViewModel {
     // MARK: - Filtered Casks
 
     private var searchKeys: [String: String] {
-        searchKeysCache.value(for: catalogRevision) { [casks = casks + retiredCasks] in
+        searchKeysCache.value(for: catalogRevision) { [casks = casks + retiredCasks + catalog.tapCasks] in
             Dictionary(casks.map { ($0.reference, $0.searchKey) }) { first, _ in first }
         }
     }
 
     /// Collation-equal names share a rank so descending sorts keep ties stable.
     private var nameRanks: [String: Int] {
-        nameRankCache.value(for: catalogRevision) { [casks = casks + retiredCasks] in
+        nameRankCache.value(for: catalogRevision) { [casks = casks + retiredCasks + catalog.tapCasks] in
             let sorted = casks.sorted {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
                     == .orderedAscending
@@ -229,6 +230,7 @@ extension CaskCatalogViewModel {
     private var filteredProjectionInput: CatalogFilteredProjectionInput {
         CatalogFilteredProjectionInput(
             casks: casks,
+            tapCasks: catalog.tapCasks,
             retiredCasks: retiredCasks,
             library: librarySnapshot,
             selectedSidebar: selectedSidebar,
