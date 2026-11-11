@@ -155,7 +155,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
                     isOutdated: false,
                     isZombie: false,
                     canOpen: false,
-                    retirement: nil
+                    retirement: nil,
+                    foreignInstallationSource: nil
                 ),
                 homebrewInstallation: nil,
                 operationState: nil,
@@ -201,7 +202,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
             isOutdated: false,
             isZombie: false,
             canOpen: true,
-            retirement: nil
+            retirement: nil, foreignInstallationSource: nil
         )
         return CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
             cask: cask,

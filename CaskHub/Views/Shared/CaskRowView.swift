@@ -142,7 +142,7 @@ struct CaskRowView: View {
                 }
             },
             onUpdate: {
-                localHomebrew.send(.update(token: cask.token))
+                localHomebrew.send(.update(token: cask.reference))
             },
             onUninstall: {
                 showDeleteConfirmation = true

@@ -60,8 +60,8 @@ final class CaskCatalogViewModel {
         catalog.retired
     }
 
-    func catalogCask(for token: String) -> Cask? {
-        catalog.byToken[token]
+    func catalogCask(for reference: String) -> Cask? {
+        catalog.byReference[reference]
     }
     private(set) var isLoading = false
     private(set) var errorMessage: String?
@@ -281,8 +281,8 @@ final class CaskCatalogViewModel {
         .notation(.compactName)
         .locale(Locale(identifier: "en_US"))
 
-    func formattedDownloads(for token: String) -> String? {
-        guard let count = downloadCounts[token], count > 0 else { return nil }
+    func formattedDownloads(for reference: String) -> String? {
+        guard let count = downloadCounts[reference], count > 0 else { return nil }
         return count.formatted(Self.downloadsStyle)
     }
 }

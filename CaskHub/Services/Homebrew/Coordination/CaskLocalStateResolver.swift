@@ -18,8 +18,8 @@ struct CaskLocalStateResolver {
 
     private let applicationDiscovery = ApplicationDiscovery()
 
-    func isInstalled(token: String) -> Bool {
-        snapshot.installedCasks[token] != nil
+    func isInstalled(token reference: String) -> Bool {
+        snapshot.installation(for: reference) != nil
     }
 
     func isAdoptable(_ cask: Cask) -> Bool {
@@ -27,7 +27,7 @@ struct CaskLocalStateResolver {
     }
 
     func isAdoptableApplication(_ cask: Cask) -> Bool {
-        guard !isInstalled(token: cask.token) else { return false }
+        guard detectsExternalInstalls(cask), !isInstalled(token: cask.reference) else { return false }
         if hasRegisteredApplicationCatalog || snapshot.externalApplicationOwners[cask.token] != nil {
             return snapshot.externalApplicationOwners[cask.token] != nil
         }
@@ -44,12 +44,12 @@ struct CaskLocalStateResolver {
     }
 
     func isExternalPackageInstalled(_ cask: Cask) -> Bool {
-        !isInstalled(token: cask.token)
+        detectsExternalInstalls(cask) && !isInstalled(token: cask.reference)
             && snapshot.externalPackageInstallations[cask.token] != nil
     }
 
     func isMacAppStoreInstalled(_ cask: Cask) -> Bool {
-        guard !isInstalled(token: cask.token) else { return false }
+        guard detectsExternalInstalls(cask), !isInstalled(token: cask.reference) else { return false }
         if snapshot.installationIndex.catalogTokens.contains(cask.token) {
             return snapshot.installationIndex.macAppStoreApplications[cask.token] != nil
         }
@@ -67,7 +67,7 @@ struct CaskLocalStateResolver {
     }
 
     func externalCLIPath(_ cask: Cask) -> URL? {
-        guard !isInstalled(token: cask.token) else { return nil }
+        guard detectsExternalInstalls(cask), !isInstalled(token: cask.reference) else { return nil }
         if snapshot.installationIndex.catalogTokens.contains(cask.token) {
             return snapshot.installationIndex.externalCLIPaths[cask.token]
         }
@@ -78,7 +78,7 @@ struct CaskLocalStateResolver {
     }
 
     func installationSource(for cask: Cask) -> CaskInstallationSource? {
-        if isInstalled(token: cask.token) { return .homebrew }
+        if isInstalled(token: cask.reference) { return .homebrew }
         if isMacAppStoreInstalled(cask) { return .macAppStore }
         if isAdoptableApplication(cask) { return .externalApplication }
         if isExternalPackageInstalled(cask) { return .packageInstaller }
@@ -87,7 +87,7 @@ struct CaskLocalStateResolver {
     }
 
     func uninstallAvailability(for cask: Cask) -> CaskUninstallAvailability {
-        if isInstalled(token: cask.token) {
+        if isInstalled(token: cask.reference) {
             return .available
         }
         if isAdoptable(cask) {
@@ -114,12 +114,14 @@ struct CaskLocalStateResolver {
         let source = installationSource(for: cask)
         let externalVersion = externalApplication(for: cask)?.version
         let target = cask.updateTarget(for: platform)
-        let outdated = target.map { isOutdated(token: cask.token, remoteVersion: $0.version, autoUpdates: $0.autoUpdates) } ?? false
+        let outdated = target.map { isOutdated(token: cask.reference, remoteVersion: $0.version, autoUpdates: $0.autoUpdates) } ?? false
+        let ownsInstallation = source == .homebrew
         return CaskLocalState(
             installationSource: source,
             externalVersion: externalVersion,
-            homebrewAppVersion: snapshot.installationIndex.homebrewApplications[cask.token]?.shortVersion
-                .flatMap { $0.isEmpty ? nil : $0 },
+            homebrewAppVersion: ownsInstallation
+                ? snapshot.installationIndex.homebrewApplications[cask.token]?.shortVersion.flatMap { $0.isEmpty ? nil : $0 }
+                : nil,
             adoptionPlan: CaskAdoptionPlan.make(
                 installationSource: source,
                 installedVersion: externalVersion,
@@ -131,16 +133,18 @@ struct CaskLocalStateResolver {
             uninstallAvailability: uninstallAvailability(for: cask),
             hasAvailableUpdate: outdated
                 && homebrewOutdated?.pinned.contains(cask.token) != true
-                && (greedyUpdates || target?.autoUpdates != true || isListedByHomebrew(cask.token)),
+                && (greedyUpdates || target?.autoUpdates != true || isListedByHomebrew(cask.reference)),
             isOutdated: outdated,
             isZombie: isZombie(cask),
             canOpen: canOpen(cask),
-            retirement: cask.retirement(for: platform)
+            retirement: cask.retirement(for: platform),
+            foreignInstallationSource: snapshot.foreignInstallationSource(for: cask.reference)
         )
     }
 
-    func isOutdated(token: String, remoteVersion: String, autoUpdates: Bool?) -> Bool {
-        guard let installation = snapshot.installedCasks[token],
+    func isOutdated(token reference: String, remoteVersion: String, autoUpdates: Bool?) -> Bool {
+        let token = CaskReference.bareToken(reference)
+        guard let installation = snapshot.installation(for: reference),
               // brew upgrade does nothing once the receipt matches the tap.
               installation.installedVersion != remoteVersion
         else { return false }
@@ -160,7 +164,7 @@ struct CaskLocalStateResolver {
     }
 
     func isZombie(_ cask: Cask) -> Bool {
-        guard let installation = snapshot.installedCasks[cask.token],
+        guard let installation = snapshot.installation(for: cask.reference),
               installation.isZombie,
               !cask.appArtifactNames.isEmpty
         else { return false }
@@ -173,7 +177,7 @@ struct CaskLocalStateResolver {
     }
 
     func canOpen(_ cask: Cask) -> Bool {
-        if isInstalled(token: cask.token) {
+        if isInstalled(token: cask.reference) {
             if snapshot.installationIndex.catalogTokens.contains(cask.token) {
                 return snapshot.installationIndex.launchableHomebrewTokens.contains(
                     cask.token
@@ -192,7 +196,7 @@ struct CaskLocalStateResolver {
     }
 
     func launchURL(for cask: Cask) -> URL? {
-        guard isInstalled(token: cask.token) else { return externalLaunchURL(for: cask) }
+        guard isInstalled(token: cask.reference) else { return externalLaunchURL(for: cask) }
         return existingBundleURL(named: launchableBundleNames(for: cask))
     }
 
@@ -201,12 +205,13 @@ struct CaskLocalStateResolver {
     }
 
     func externalAppVersion(for cask: Cask) -> String? {
-        guard !isInstalled(token: cask.token) else { return nil }
+        guard !isInstalled(token: cask.reference) else { return nil }
         return externalApplication(for: cask)?.version
     }
 
     func installationDates(for cask: Cask) -> CaskInstallationDates? {
-        snapshot.installationDatesByToken[cask.token]
+        guard snapshot.foreignInstallationSource(for: cask.reference) == nil else { return nil }
+        return snapshot.installationDatesByToken[cask.token]
     }
 
     func existingBundleURL(named names: [String]) -> URL? {
@@ -229,16 +234,8 @@ struct CaskLocalStateResolver {
         }
     }
 
-    private func isListedByHomebrew(_ token: String) -> Bool {
-        homebrewOutdated?.upgradable.contains(token) == true
-    }
-
-    private static func comparableVersion(_ version: String) -> Substring {
-        version.prefix { $0 != "," && $0 != "_" }
-    }
-
     private func launchableBundleNames(for cask: Cask) -> [String] {
-        let receiptNames = snapshot.installedCasks[cask.token]?.appBundleNames ?? []
+        let receiptNames = snapshot.installation(for: cask.reference)?.appBundleNames ?? []
         return receiptNames + externalBundleNameCandidates(for: cask)
     }
 
@@ -252,7 +249,8 @@ struct CaskLocalStateResolver {
     }
 
     private func externalApplication(for cask: Cask) -> DetectedApplication? {
-        snapshot.externalApplicationOwners[cask.token]
+        guard detectsExternalInstalls(cask) else { return nil }
+        return snapshot.externalApplicationOwners[cask.token]
             ?? snapshot.externalPackageApplicationOwners[cask.token]
             ?? macAppStoreApplication(for: cask)
     }
@@ -290,6 +288,19 @@ struct CaskLocalStateResolver {
 }
 
 private extension CaskLocalStateResolver {
+    /// Tap casks never claim apps installed outside Homebrew.
+    func detectsExternalInstalls(_ cask: Cask) -> Bool {
+        CaskReference.isOfficial(tap: cask.tap)
+    }
+
+    func isListedByHomebrew(_ reference: String) -> Bool {
+        homebrewOutdated?.upgradable.contains(CaskReference.bareToken(reference)) == true
+    }
+
+    static func comparableVersion(_ version: String) -> Substring {
+        version.prefix { $0 != "," && $0 != "_" }
+    }
+
     static func isBundleOutdated(_ application: DetectedApplication, tapVersion: String) -> Bool? {
         let parts = tapVersion.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
         guard let short = application.shortVersion,

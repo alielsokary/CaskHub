@@ -34,17 +34,6 @@ final class CaskReferenceTests: XCTestCase {
         XCTAssertEqual(CaskReference.analyticsName("figma"), "figma")
     }
 
-    func test_redacting_taps_replaces_tap_names() {
-        XCTAssertEqual(
-            CaskReference.redactingTaps("Error: my-monkeys/tap/x failed", taps: ["my-monkeys/tap"]),
-            "Error: third-party/x failed"
-        )
-        XCTAssertEqual(
-            CaskReference.redactingTaps("homebrew/cask/x", taps: ["homebrew/cask"]),
-            "homebrew/cask/x"
-        )
-    }
-
     func test_snapshot_lookup_requires_matching_tap() {
         let snapshot = InstallationSnapshot(installedCasks: [
             "opensuperwhisper": installation("opensuperwhisper", tap: "my-monkeys/tap")

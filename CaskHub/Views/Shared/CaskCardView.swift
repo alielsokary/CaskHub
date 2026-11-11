@@ -48,7 +48,7 @@ struct CaskCardView: View {
 
     private var canUninstall: Bool {
         localState?.isHomebrewInstalled
-            ?? localHomebrew.isInstalled(token: cask.token)
+            ?? localHomebrew.isInstalled(token: cask.reference)
     }
 
     // MARK: - Header (icon well + name + info)

@@ -183,7 +183,7 @@ struct ContentView: View {
             },
             onUpdateAll: selectedSidebar == .library(.updates) && viewModel.updatesCount > 0
                 ? {
-                    let tokens = viewModel.updatableCasks.map(\.token)
+                    let tokens = viewModel.updatableCasks.map(\.reference)
                     Analytics.updateAllTapped(count: tokens.count)
                     localHomebrew.send(.updateAll(tokens: tokens))
                 }

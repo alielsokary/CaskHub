@@ -14,7 +14,7 @@ extension LocalHomebrewService {
         }) {
             Analytics.caskActionFailed(
                 .installing,
-                token: cask.token,
+                token: cask.reference,
                 failureKind: .caskConflict
             )
             operationStore.send(
@@ -25,11 +25,11 @@ extension LocalHomebrewService {
                         installedCask: conflict
                     )
                 )),
-                for: cask.token
+                for: cask.reference
             )
             return
         }
-        try await install(token: cask.token)
+        try await install(token: cask.reference)
     }
 
     func install(token: String) async throws {
@@ -70,7 +70,7 @@ extension LocalHomebrewService {
 
     func uninstallArguments(token: String, removingData: Bool) -> [String] {
         // Brew rejects plain uninstall for caskfile-less zombies and stranded apps; --force works.
-        let force = installedCasks[token]?.isZombie == true || hasStrandedInstalledApp(token: token)
+        let force = installationSnapshot.installation(for: token)?.isZombie == true || hasStrandedInstalledApp(token: token)
         // Without Full Disk Access brew aborts a zap after the app is already gone.
         let zap = removingData && fullDiskAccessProbe() != .denied
         return ["uninstall", "--cask", token]
@@ -149,8 +149,8 @@ extension LocalHomebrewService {
             customPrefix: customBrewPrefix,
             fileManager: fileManager
         )?
-            .appendingPathComponent(token)
-        let appBundleNames = installedCasks[token]?.appBundleNames
+            .appendingPathComponent(CaskReference.bareToken(token))
+        let appBundleNames = installationSnapshot.installation(for: token)?.appBundleNames
             ?? installationSnapshot.externalPackageInstallations[token]?.appBundleNames
             ?? []
         try await runMutationSequence(

@@ -42,7 +42,7 @@ extension CaskActionAlertFactory {
         if service.localState(for: cask).retirement?.blocksInstall == true {
             alert.informativeText = String(localized: .alertUninstallNotReinstallable) + "\n\n" + alert.informativeText
         }
-        let arguments = service.uninstallArguments(token: cask.token, removingData: removingData)
+        let arguments = service.uninstallArguments(token: cask.reference, removingData: removingData)
         let command = NSHostingView(
             rootView: CommandBlock(command: (["brew"] + arguments).joined(separator: " "))
         )
@@ -54,7 +54,7 @@ extension CaskActionAlertFactory {
         uninstall.hasDestructiveAction = true
         uninstall.keyEquivalent = ""
         var actions: [() -> Void] = [{
-            service.send(keepsData ? .uninstallKeepingData(token: cask.token) : .uninstall(token: cask.token))
+            service.send(keepsData ? .uninstallKeepingData(token: cask.reference) : .uninstall(token: cask.reference))
         }]
         if keepsData {
             alert.addButton(withTitle: String(localized: "Open System Settings"))

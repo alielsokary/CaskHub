@@ -43,7 +43,8 @@ final class CaskCatalogSortTests: XCTestCase {
             isOutdated: hasAvailableUpdate,
             isZombie: false,
             canOpen: true,
-            retirement: nil
+            retirement: nil,
+            foreignInstallationSource: nil
         )
     }
 

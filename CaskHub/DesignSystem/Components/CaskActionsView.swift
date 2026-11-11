@@ -81,6 +81,10 @@ struct CaskActionsView: View {
                     state.uninstallAvailability.unavailableReason
                         ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
+        } else if let source = presentation.blockingInstallSource {
+            ActionCapsuleLabel(action: .install, fullWidth: fullWidth)
+                .opacity(0.45)
+                .help(String(localized: "Installed from \(source)"))
         } else {
             // Homebrew refuses to install a disabled cask; the retirement badge explains why.
             let installBlocked = state.retirement?.blocksInstall == true
@@ -102,7 +106,7 @@ struct CaskActionsView: View {
     ) -> some View {
         if state.isZombie {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
-                localHomebrew.send(.repair(token: cask.token))
+                localHomebrew.send(.repair(token: cask.reference))
             }
             .help(String(localized: .actionCleanupZombieHelp(cask.displayName)))
             .disabledDuringHomebrewUpdate(mutationBlocked)
@@ -130,7 +134,7 @@ struct CaskActionsView: View {
                     fullWidth: fullWidth,
                     mutationBlocked: mutationBlocked
                 ) {
-                    localHomebrew.send(.update(token: cask.token))
+                    localHomebrew.send(.update(token: cask.reference))
                 }
             } else if !state.canOpen {
                 ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
@@ -184,7 +188,7 @@ struct CaskActionsView: View {
         for action: CaskAction,
         presentation: CaskActionPresentation
     ) -> some View {
-        let token = cask.token
+        let token = cask.reference
 
         return CaskOperationCapsule(
             action: action,

@@ -62,6 +62,8 @@ final class ImageCacheService {
     }
 
     func image(for cask: Cask) async -> NSImage? {
+        // Icon sources are keyed by official tokens; a tap twin would get the wrong app's icon.
+        guard CaskReference.isOfficial(tap: cask.tap) else { return nil }
         let token = cask.token
         if let hash = iconHash(for: token) { return await hashedImage(for: cask, hash: hash) }
         if let cached = memoryCache.object(forKey: token as NSString) { return cached }

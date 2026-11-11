@@ -12,8 +12,8 @@ extension LocalHomebrewService {
         operationStore.send(.clear, for: token)
     }
 
-    func isInstalled(token: String) -> Bool {
-        makeLocalStateResolver().isInstalled(token: token)
+    func isInstalled(token reference: String) -> Bool {
+        makeLocalStateResolver().isInstalled(token: reference)
     }
 
     func localState(for cask: Cask) -> CaskLocalState {
@@ -23,23 +23,23 @@ extension LocalHomebrewService {
     func localStates(for casks: [Cask]) -> [String: CaskLocalState] {
         let resolver = makeLocalStateResolver()
         return casks.reduce(into: [:]) { result, cask in
-            result[cask.token] = resolver.localState(for: cask)
+            result[cask.reference] = resolver.localState(for: cask)
         }
     }
 
     func open(_ cask: Cask) {
-        clearError(for: cask.token)
+        clearError(for: cask.reference)
         openApplication(
             at: makeLocalStateResolver().launchURL(for: cask),
-            token: cask.token
+            token: cask.reference
         )
     }
 
     func openExternalApp(cask: Cask) {
-        clearError(for: cask.token)
+        clearError(for: cask.reference)
         openApplication(
             at: makeLocalStateResolver().externalLaunchURL(for: cask),
-            token: cask.token
+            token: cask.reference
         )
     }
 
@@ -87,7 +87,7 @@ extension LocalHomebrewService {
             )
             CrashReporter.capture(error, tags: [
                 "brew.action": CaskAction.opening.identifier,
-                "brew.cask": token,
+                "brew.cask": CaskReference.analyticsName(token),
                 "brew.origin": CaskActionOrigin.individual.rawValue
             ])
             return

@@ -41,12 +41,6 @@ nonisolated enum CaskReference {
     static func analyticsName(_ reference: String) -> String {
         reference.contains("/") ? thirdPartyName : reference
     }
-
-    static func redactingTaps(_ text: String, taps: [String]) -> String {
-        taps.filter { !isOfficial(tap: $0) }
-            .sorted { $0.count > $1.count }
-            .reduce(text) { $0.replacingOccurrences(of: $1, with: thirdPartyName) }
-    }
 }
 
 extension InstallationSnapshot {

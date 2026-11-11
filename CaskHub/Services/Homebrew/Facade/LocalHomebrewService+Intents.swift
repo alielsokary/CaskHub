@@ -36,8 +36,8 @@ extension LocalHomebrewService {
     ) -> CaskActionPresentation {
         CaskActionPresentation(
             localState: suppliedState ?? localState(for: cask),
-            homebrewInstallation: installationSnapshot.installedCasks[cask.token],
-            operationState: operationStore.state(for: cask.token),
+            homebrewInstallation: installationSnapshot.installation(for: cask.reference),
+            operationState: operationStore.state(for: cask.reference),
             isHomebrewMutationBlocked: operationStore.isUpdatingHomebrew
         )
     }

@@ -40,7 +40,7 @@ extension LocalHomebrewService {
         displayName: String? = nil,
         context: HomebrewMutationContext = .none
     ) async throws {
-        let previousInstallation = installationSnapshot.installedCasks[token]
+        let previousInstallation = installationSnapshot.installation(for: token)
         try await mutationCoordinator.runSequence(
             HomebrewMutationSequenceRequest(
                 action: action,
@@ -74,14 +74,14 @@ extension LocalHomebrewService {
         ) else { return false }
         return HomebrewInstallationScanner.strandedCopyExists(
             in: caskroom,
-            token: token,
+            token: CaskReference.bareToken(token),
             fileManager: fileManager
         )
     }
 
     /// An interrupted uninstall leaves the cask's own app inside the Caskroom, which brew then refuses to overwrite.
     func hasStrandedInstalledApp(token: String) -> Bool {
-        guard let names = installedCasks[token]?.appBundleNames,
+        guard let names = installationSnapshot.installation(for: token)?.appBundleNames,
               let caskroom = HomebrewLocator.caskroomURL(
                   customPrefix: customBrewPrefix,
                   fileManager: fileManager
@@ -89,7 +89,7 @@ extension LocalHomebrewService {
         else { return false }
         return !HomebrewInstallationScanner.strandedCopyNames(
             in: caskroom,
-            token: token,
+            token: CaskReference.bareToken(token),
             fileManager: fileManager
         ).isDisjoint(with: names)
     }
@@ -99,7 +99,7 @@ extension LocalHomebrewService {
         token: String,
         previousInstallation: LocalCaskInstallation?
     ) -> Bool {
-        let current = installationSnapshot.installedCasks[token]
+        let current = installationSnapshot.installation(for: token)
         switch action {
         case .installing, .adopting, .repairing, .updating:
             return current?.isZombie == false && current != previousInstallation

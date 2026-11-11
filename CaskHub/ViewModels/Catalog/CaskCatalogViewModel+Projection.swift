@@ -53,7 +53,7 @@ extension CaskCatalogViewModel {
     }
 
     func localState(for cask: Cask) -> CaskLocalState {
-        librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
+        librarySnapshot.localStates[cask.reference] ?? localHomebrew.localState(for: cask)
     }
 
     /// CaskFlow's mappings plus the built-in Fonts category for every `font-` cask.
@@ -90,7 +90,8 @@ extension CaskCatalogViewModel {
     }
 
     func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
-        categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
+        guard CaskReference.isOfficial(tap: cask.tap) else { return nil }
+        return categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
             token: cask.token,
             mappings: categoryMappings,
             definitions: categoryService.categoryDefinitions
@@ -156,7 +157,7 @@ extension CaskCatalogViewModel {
 
     private var searchKeys: [String: String] {
         searchKeysCache.value(for: catalogRevision) { [casks = casks + retiredCasks] in
-            Dictionary(casks.map { ($0.token, $0.searchKey) }) { first, _ in first }
+            Dictionary(casks.map { ($0.reference, $0.searchKey) }) { first, _ in first }
         }
     }
 
@@ -177,7 +178,7 @@ extension CaskCatalogViewModel {
                    ) != .orderedSame {
                     rank = index
                 }
-                if ranks[cask.token] == nil { ranks[cask.token] = rank }
+                if ranks[cask.reference] == nil { ranks[cask.reference] = rank }
             }
             return ranks
         }

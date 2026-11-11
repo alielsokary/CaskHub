@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7A0A18E21D413F99AAA5BC /* TapCaskIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */; };
 		CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */; };
 		CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */; };
 		CA2150000000000000000002 /* CaskUpdateTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000001 /* CaskUpdateTarget.swift */; };
@@ -217,6 +218,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCaskIdentityTests.swift; sourceTree = "<group>"; };
 		CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReference.swift; sourceTree = "<group>"; };
 		CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReferenceTests.swift; sourceTree = "<group>"; };
 		7D1D00000000000000000001 /* CaskHub.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CaskHub.entitlements; sourceTree = "<group>"; };
@@ -1030,6 +1032,7 @@
 				B23300000000000000000001 /* HomebrewAppVersionTests.swift */,
 				CA2150000000000000000003 /* CaskPlatformUpdateTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
+				CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */,
 			);
 			path = Integration;
 			sourceTree = "<group>";
@@ -1372,6 +1375,7 @@
 				B0AD00000000000000000012 /* ScratchDefaultsTests.swift in Sources */,
 				AA1000000000000000000017 /* TestFactories.swift in Sources */,
 				CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */,
+				CA7A0A18E21D413F99AAA5BC /* TapCaskIdentityTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

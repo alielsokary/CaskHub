@@ -13,13 +13,13 @@ nonisolated struct CatalogPartition: Equatable {
     let browsable: [Cask]
     /// Deprecated or disabled main casks: found by search, never listed.
     let retired: [Cask]
-    let byToken: [String: Cask]
+    let byReference: [String: Cask]
 
     init(_ all: [Cask]) {
         self.all = all
         browsable = all.filter(\.isBrowsable)
         retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") }
-        byToken = Dictionary(all.map { ($0.token, $0) }) { first, _ in first }
+        byReference = Dictionary(all.map { ($0.reference, $0) }) { first, _ in first }
     }
 }
 
@@ -78,12 +78,12 @@ nonisolated enum CatalogProjector {
         var casksByCategory: [String: [Cask]] = [:]
 
         for cask in input.casks {
-            guard let localState = input.localStates[cask.token] else { continue }
+            guard let localState = input.localStates[cask.reference] else { continue }
             library.add(cask, localState)
             if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
-            if let mapping = input.categoryMappings[cask.token] {
+            if let mapping = input.categoryMappings[cask.reference] {
                 forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }
@@ -91,12 +91,12 @@ nonisolated enum CatalogProjector {
         }
 
         for cask in input.installedOnlyCasks {
-            guard let localState = input.localStates[cask.token] else { continue }
+            guard let localState = input.localStates[cask.reference] else { continue }
             library.add(cask, localState)
         }
         var retiredCasksByCategory: [String: [Cask]] = [:]
         for cask in input.retiredCasks {
-            guard let mapping = input.categoryMappings[cask.token] else { continue }
+            guard let mapping = input.categoryMappings[cask.reference] else { continue }
             forEachUniqueCategory(in: mapping) { categoryID in
                 retiredCasksByCategory[categoryID, default: []].append(cask)
             }
@@ -121,8 +121,10 @@ nonisolated enum CatalogProjector {
     ) -> [Cask] {
         guard !partition.all.isEmpty else { return [] }
         return installations.keys.sorted().compactMap { token in
-            guard let cask = partition.byToken[token] else {
-                return installations[token].map(Cask.receiptRow(for:))
+            guard let installation = installations[token] else { return nil }
+            let reference = CaskReference.make(token: installation.token, tap: installation.tap)
+            guard let cask = partition.byReference[reference] else {
+                return Cask.receiptRow(for: installation)
             }
             return cask.isBrowsable ? nil : cask
         }
@@ -138,7 +140,7 @@ nonisolated enum CatalogProjector {
         )
         var casksByCategory: [String: [Cask]] = [:]
         for cask in popularityOrder {
-            guard let mapping = input.categoryMappings[cask.token] else { continue }
+            guard let mapping = input.categoryMappings[cask.reference] else { continue }
             forEachUniqueCategory(in: mapping) { categoryID in
                 if casksByCategory[categoryID, default: []].count < sectionSize {
                     casksByCategory[categoryID, default: []].append(cask)
@@ -198,7 +200,7 @@ nonisolated enum CatalogProjector {
         from input: CatalogFilteredProjectionInput
     ) -> [Cask] {
         let external = input.library.installedCasks.filter { cask in
-            guard let state = input.library.localStates[cask.token] else { return false }
+            guard let state = input.library.localStates[cask.reference] else { return false }
             return !state.isHomebrewInstalled
         }
         let searched = applySearch(input.searchText, to: external, keys: input.searchKeys)
@@ -243,7 +245,7 @@ nonisolated enum CatalogProjector {
         guard !searchText.isEmpty else { return casks }
         let query = searchText.lowercased()
         return casks.filter { cask in
-            (keys[cask.token] ?? cask.searchKey).contains(query)
+            (keys[cask.reference] ?? cask.searchKey).contains(query)
         }
     }
 
@@ -285,7 +287,7 @@ nonisolated enum CatalogProjector {
         _ rhs: Cask,
         ranks: [String: Int]
     ) -> Bool {
-        if let lhsRank = ranks[lhs.token], let rhsRank = ranks[rhs.token] {
+        if let lhsRank = ranks[lhs.reference], let rhsRank = ranks[rhs.reference] {
             return lhsRank < rhsRank
         }
         return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
@@ -308,7 +310,7 @@ nonisolated enum CatalogProjector {
         _ casks: [Cask],
         using counts: [String: Int]
     ) -> [Cask] {
-        casks.sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
+        casks.sorted { (counts[$0.reference] ?? 0) > (counts[$1.reference] ?? 0) }
     }
 
     // Catalog tokens absent from the mined dates postdate the last mine, so they

@@ -24,7 +24,7 @@ struct CaskIconView: View {
 
     var body: some View {
         ZStack {
-            if let image = imageCache.cachedImage(for: cask.token) ?? loadedImage {
+            if let image = imageCache.cachedImage(for: cask.reference) ?? loadedImage {
                 Image(nsImage: image)
                     .resizable()
                     .interpolation(.high)
@@ -49,7 +49,7 @@ struct CaskIconView: View {
             }
         }
         .animation(.easeIn(duration: 0.2), value: loadedImage != nil)
-        .task(id: [cask.token, imageCache.iconHash(for: cask.token) ?? "", String(imageCache.iconRefreshRevision)]) {
+        .task(id: [cask.reference, imageCache.iconHash(for: cask.reference) ?? "", String(imageCache.iconRefreshRevision)]) {
             didResolve = false
             let image = await imageCache.image(for: cask)
             guard !Task.isCancelled else { return }

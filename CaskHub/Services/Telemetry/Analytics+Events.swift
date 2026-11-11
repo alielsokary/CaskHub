@@ -31,7 +31,7 @@ extension Analytics {
         origin: CaskActionOrigin = .individual
     ) {
         guard let verb = action.analyticsVerb else { return }
-        send("Cask.\(verb.past)", parameters: ["cask": token, "origin": origin.rawValue])
+        send("Cask.\(verb.past)", parameters: ["cask": CaskReference.analyticsName(token), "origin": origin.rawValue])
     }
 
     static func caskActionFailed(
@@ -70,7 +70,7 @@ extension Analytics {
         token: String,
         origin: CaskActionOrigin
     ) -> [String: String] {
-        ["action": verb, "cask": token, "origin": origin.rawValue]
+        ["action": verb, "cask": CaskReference.analyticsName(token), "origin": origin.rawValue]
     }
 
     // MARK: - Navigation

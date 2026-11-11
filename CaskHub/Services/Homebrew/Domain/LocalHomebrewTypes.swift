@@ -238,6 +238,8 @@ nonisolated struct CaskLocalState: Equatable, Sendable {
     let isZombie: Bool
     let canOpen: Bool
     let retirement: CaskRetirement?
+    /// Set when a same-token twin from another source owns the Caskroom entry.
+    let foreignInstallationSource: String?
 
     var isPresent: Bool {
         installationSource != nil
