@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7ADC9358525B7E28FD1AFD /* LocalHomebrewService+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */; };
+		CA7AEFFEF3658BDE98E28FB4 /* TapRemovalPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */; };
+		CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */; };
 		CA7AB63CA09AD83AFBF09C14 /* HomebrewTapLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */; };
 		CA7AA6C13CA9A90B2ABDEDEF /* TapIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */; };
 		CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */; };
@@ -225,6 +228,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Taps.swift"; sourceTree = "<group>"; };
+		CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapRemovalPreview.swift; sourceTree = "<group>"; };
+		CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapWorkflowTests.swift; sourceTree = "<group>"; };
 		CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewTapLoader.swift; sourceTree = "<group>"; };
 		CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapIndex.swift; sourceTree = "<group>"; };
 		CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewTapLoaderTests.swift; sourceTree = "<group>"; };
@@ -793,6 +799,7 @@
 				E2900000000000000000000D /* LocalHomebrewService+Snapshot.swift */,
 				B12000000000000000000002 /* LocalHomebrewService+State.swift */,
 				F32000000000000000000001 /* LocalHomebrewService+Workflows.swift */,
+				CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */,
 			);
 			path = Facade;
 			sourceTree = "<group>";
@@ -817,6 +824,7 @@
 				CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */,
 				CA7AA47B786C4746CE5AD2F1 /* TapAddInput.swift */,
 				CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */,
+				CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -1040,6 +1048,7 @@
 				C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */,
 				B0AD00000000000000000001 /* UninstallZapGateTests.swift */,
 				B12000000000000000000008 /* CaskAdoptionWorkflowTests.swift */,
+				CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */,
 			);
 			path = Workflows;
 			sourceTree = "<group>";
@@ -1326,6 +1335,8 @@
 				CA7AE48EAD303E07CD68B137 /* TapAddInput.swift in Sources */,
 				CA7AA6C13CA9A90B2ABDEDEF /* TapIndex.swift in Sources */,
 				CA7AB63CA09AD83AFBF09C14 /* HomebrewTapLoader.swift in Sources */,
+				CA7AEFFEF3658BDE98E28FB4 /* TapRemovalPreview.swift in Sources */,
+				CA7ADC9358525B7E28FD1AFD /* LocalHomebrewService+Taps.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1404,6 +1415,7 @@
 				CA7A29BFD24A174539F319F9 /* CaskFileTextParserTests.swift in Sources */,
 				CA7A9BFE5A3B9E41E0F0C1DC /* TapAddInputTests.swift in Sources */,
 				CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */,
+				CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -105,7 +105,7 @@ extension LocalHomebrewService {
             return current?.isZombie == false && current != previousInstallation
         case .uninstalling:
             return current == nil
-        case .opening, .updatingHomebrew, .queued:
+        case .opening, .updatingHomebrew, .queued, .addingTap, .removingTap:
             return false
         }
     }

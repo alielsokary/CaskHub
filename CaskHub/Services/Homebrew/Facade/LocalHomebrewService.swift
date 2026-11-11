@@ -50,6 +50,14 @@ final class LocalHomebrewService {
     @ObservationIgnored private let caskPlatformProvider: () async -> CaskPlatform?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
     @ObservationIgnored private let homebrewOutdatedProvider: () async -> HomebrewOutdatedReport?
+    @ObservationIgnored let tapIndexProvider: () async -> TapIndex?
+    @ObservationIgnored let installedFormulaeProvider: (String) async -> [String]
+    @ObservationIgnored let tapUpdateProvider: () async -> Void
+
+    /// Third-party taps; replaced only by a complete, successful load.
+    var tapIndex = TapIndex.empty
+    /// A first install from a tap waiting for the user's trust confirmation.
+    var pendingTrustInstall: Cask?
 
     var isUpdatingAll: Bool {
         operationStore.isUpdatingAll
@@ -93,7 +101,7 @@ final class LocalHomebrewService {
     }
 
     let fileManager: FileManager
-    private let defaults: UserDefaults
+    let defaults: UserDefaults
     private let baseApplicationDirectories: [URL]
 
     var applicationDirectories: [URL] {
@@ -144,6 +152,12 @@ final class LocalHomebrewService {
             ?? { await HomebrewPlatformLoader().load(from: brewBinary()) }
         homebrewOutdatedProvider = dependencies.homebrewOutdatedProvider
             ?? { await HomebrewOutdatedLoader().load(from: brewBinary()) }
+        tapIndexProvider = dependencies.tapIndexProvider
+            ?? { await HomebrewTapLoader().load(from: brewBinary()) }
+        installedFormulaeProvider = dependencies.installedFormulaeProvider
+            ?? { await HomebrewTapLoader().installedFormulae(in: $0, from: brewBinary()) }
+        tapUpdateProvider = dependencies.tapUpdateProvider
+            ?? { await HomebrewTapLoader().update(from: brewBinary()) }
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]

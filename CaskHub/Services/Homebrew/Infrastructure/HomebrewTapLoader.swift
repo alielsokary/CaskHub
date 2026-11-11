@@ -34,6 +34,12 @@ nonisolated struct HomebrewTapLoader: Sendable {
         return output.split(whereSeparator: \.isNewline).map(String.init).filter { $0.hasPrefix("\(tap)/") }
     }
 
+    @concurrent
+    func update(from brewURL: URL?) async {
+        guard let brewURL else { return }
+        _ = ProcessCapture.capture(brewURL, arguments: ["update"])
+    }
+
     static func taps(in tapInfoJSON: String) -> [TapSummary]? {
         guard let taps = try? decoder.decode([TapSummary].self, from: Data(tapInfoJSON.utf8)) else { return nil }
         return taps.filter { !$0.official && !CaskReference.isOfficial(tap: $0.name) }.sorted { $0.name < $1.name }

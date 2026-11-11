@@ -187,6 +187,8 @@ private extension CaskAction {
         case .uninstalling: return ("uninstall", "uninstalled")
         case .updating: return ("update", "updated")
         case .repairing: return ("repair", "repaired")
+        case .addingTap: return ("addTap", "tapAdded")
+        case .removingTap: return ("removeTap", "tapRemoved")
         case .opening, .updatingHomebrew, .queued: return nil
         }
     }

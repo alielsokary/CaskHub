@@ -317,6 +317,34 @@
         }
       }
     },
+    "Adding Tap…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавление тапа…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додавання тапу…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在添加 Tap…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加入 Tap…"
+          }
+        }
+      }
+    },
     "Authorize with Touch ID" : {
       "localizations" : {
         "ru" : {
@@ -397,6 +425,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已從 %@ 安裝"
+          }
+        }
+      }
+    },
+    "Removing Tap…" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удаление тапа…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалення тапу…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在移除 Tap…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在移除 Tap…"
           }
         }
       }
