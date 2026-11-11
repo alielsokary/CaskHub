@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7A7AB90BB7A0E3978600C7 /* CaskFileTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */; };
+		CA7A29BFD24A174539F319F9 /* CaskFileTextParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A4CF0CC535BDFEA113860 /* CaskFileTextParserTests.swift */; };
 		CA7A0A18E21D413F99AAA5BC /* TapCaskIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */; };
 		CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */; };
 		CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */; };
@@ -218,6 +220,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskFileTextParser.swift; sourceTree = "<group>"; };
+		CA7A4CF0CC535BDFEA113860 /* CaskFileTextParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskFileTextParserTests.swift; sourceTree = "<group>"; };
 		CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCaskIdentityTests.swift; sourceTree = "<group>"; };
 		CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReference.swift; sourceTree = "<group>"; };
 		CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReferenceTests.swift; sourceTree = "<group>"; };
@@ -800,6 +804,7 @@
 				CA2510000000000000000001 /* CaskRetirement.swift */,
 				AA1000000000000000000001 /* MaintenanceReport.swift */,
 				CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */,
+				CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -957,6 +962,7 @@
 				B0F000000000000000000003 /* HomebrewCommandFailureTests.swift */,
 				AA100000000000000000000C /* MaintenanceParsingTests.swift */,
 				CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */,
+				CA7A4CF0CC535BDFEA113860 /* CaskFileTextParserTests.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -1301,6 +1307,7 @@
 				41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */,
 				41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */,
 				CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */,
+				CA7A7AB90BB7A0E3978600C7 /* CaskFileTextParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1376,6 +1383,7 @@
 				AA1000000000000000000017 /* TestFactories.swift in Sources */,
 				CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */,
 				CA7A0A18E21D413F99AAA5BC /* TapCaskIdentityTests.swift in Sources */,
+				CA7A29BFD24A174539F319F9 /* CaskFileTextParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
