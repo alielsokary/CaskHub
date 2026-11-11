@@ -18,6 +18,13 @@ final class TapsViewTests: XCTestCase {
         XCTAssertEqual(SidebarView.manageRows(showAdopt: false), [.shelfSetup])
     }
 
+    func test_tap_badge_shows_outside_the_tap_pages_only() {
+        XCTAssertTrue(ContentView.showsTapBadges(on: .discover(.browse)))
+        XCTAssertTrue(ContentView.showsTapBadges(on: .library(.installed)))
+        XCTAssertFalse(ContentView.showsTapBadges(on: .library(.taps)))
+        XCTAssertFalse(ContentView.showsTapBadges(on: .tap("user/tap")))
+    }
+
     func test_taps_icon_exists() {
         XCTAssertNotNil(NSImage(systemSymbolName: LibraryItem.taps.icon, accessibilityDescription: nil))
     }

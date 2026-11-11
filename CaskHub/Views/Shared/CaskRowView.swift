@@ -21,6 +21,7 @@ struct CaskRowView: View {
     @State private var showingInfo = false
 
     @Environment(\.catalogTextScale) private var textScale
+    @Environment(\.showsTapBadges) private var showsTapBadges
 
     private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
 
@@ -103,8 +104,8 @@ struct CaskRowView: View {
                     isInstalled: actionPresentation.localState.isHomebrewInstalled
                 )
             }
-            if let tap = cask.thirdPartyTap {
-                TapChip(tap: tap)
+            if showsTapBadges, let tap = cask.thirdPartyTap {
+                TapBadge(tap: tap)
             }
             metaText
         }

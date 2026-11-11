@@ -19,6 +19,7 @@ struct CaskCardView: View {
     @State private var showDeleteConfirmation = false
 
     @Environment(\.catalogTextScale) private var textScale
+    @Environment(\.showsTapBadges) private var showsTapBadges
 
     private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
 
@@ -73,8 +74,6 @@ struct CaskCardView: View {
                     }
                     .buttonStyle(.plain)
                     .pointerStyle(.link)
-                } else if let tap = cask.thirdPartyTap {
-                    TapChip(tap: tap)
                 }
             }
             .padding(.top, CHSize.titleInsetBelowIcon * textScale)
@@ -83,6 +82,9 @@ struct CaskCardView: View {
 
             VStack(spacing: 8) {
                 infoButton
+                if showsTapBadges, let tap = cask.thirdPartyTap {
+                    TapBadge(tap: tap)
+                }
                 if let retirement = cardState.retirement {
                     RetirementBadge(retirement: retirement, isInstalled: cardState.isHomebrewInstalled)
                 }

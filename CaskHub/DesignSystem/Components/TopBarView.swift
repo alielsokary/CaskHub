@@ -153,6 +153,9 @@ struct CatalogToolbar: ToolbarContent {
                 .accessibilityLabel(Text("Refresh Taps"))
             }
         }
+        if onRefreshTaps != nil, onAddTap != nil, #available(macOS 26, *) {
+            ToolbarSpacer(.fixed)
+        }
         if let onAddTap {
             ToolbarItem(placement: .automatic) {
                 Button(action: onAddTap) {

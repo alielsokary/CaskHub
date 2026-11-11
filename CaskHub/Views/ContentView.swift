@@ -71,6 +71,7 @@ struct ContentView: View {
 
                 detailContent
                     .environment(\.isAdoptPage, selectedSidebar == .library(.adopt))
+                    .environment(\.showsTapBadges, !isTapsPage)
             }
             .onGeometryChange(for: CGFloat.self) { proxy in
                 proxy.size.width

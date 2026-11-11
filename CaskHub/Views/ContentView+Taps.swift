@@ -21,9 +21,13 @@ enum TapDialog: Identifiable, Equatable {
 
 extension ContentView {
     var isTapsPage: Bool {
-        switch selectedSidebar {
-        case .library(.taps), .tap: true
-        default: false
+        !Self.showsTapBadges(on: selectedSidebar)
+    }
+
+    static func showsTapBadges(on selection: SidebarSelection) -> Bool {
+        switch selection {
+        case .library(.taps), .tap: false
+        default: true
         }
     }
 
