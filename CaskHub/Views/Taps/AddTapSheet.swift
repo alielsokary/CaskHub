@@ -140,6 +140,7 @@ struct AddTapSheet: View {
         .frame(width: 440)
         .background(Color.chSurfaceHero)
         .interactiveDismissDisabled(isAdding)
+        .onExitCommand { if !isAdding { dismiss() } }
     }
 
     private var isAdding: Bool {
