@@ -80,6 +80,11 @@ nonisolated struct TapIndex: Equatable, Sendable {
         return trust.taps.contains(remote) || trust.casks.contains("\(remote)/\(CaskReference.bareToken(reference))")
     }
 
+    /// Formula-only taps stay hidden until CaskHub manages formulae.
+    var tapsWithCasks: [TapSummary] {
+        taps.filter { $0.caskCount > 0 }
+    }
+
     func casks(in tap: String) -> [Cask] {
         casks.filter { $0.tap == tap }
     }

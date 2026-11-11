@@ -34,14 +34,14 @@ final class TapCatalogTests: XCTestCase {
         }
     }
 
-    func test_tap_sections_cap_at_eight_and_keep_empty_taps() async throws {
+    func test_tap_sections_cap_at_eight_and_skip_taps_without_casks() async throws {
         let tokens = (1 ... 12).map { "tool-\($0)" }
         let vm = await makeSUT(official: [], taps: ["user/big": tokens, "spotify/public": []])
 
-        XCTAssertEqual(vm.tapSections.map(\.id), ["spotify/public", "user/big"])
-        XCTAssertEqual(vm.tapSections[0].casks.count, 0)
-        XCTAssertEqual(vm.tapSections[1].casks.count, 8)
+        XCTAssertEqual(vm.tapSections.map(\.id), ["user/big"])
+        XCTAssertEqual(vm.tapSections[0].casks.count, 8)
         XCTAssertEqual(vm.tapCasks(in: "user/big").count, 12)
+        XCTAssertEqual(vm.localHomebrew.tapIndex.tapsWithCasks.map(\.name), ["user/big"])
     }
 
     func test_tap_page_search_filters_sections() async throws {

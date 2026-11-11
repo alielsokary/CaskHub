@@ -53,7 +53,7 @@ struct ContentView: View {
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount(includingExternallyManaged: showExternallyManagedApps),
                 adoptableCount: viewModel.adoptableCasks.count,
-                tapsCount: localHomebrew.tapIndex.taps.count,
+                tapsCount: localHomebrew.tapIndex.tapsWithCasks.count,
                 categoryCounts: viewModel.categoryCounts
             )
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)

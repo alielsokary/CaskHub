@@ -535,6 +535,34 @@
         }
       }
     },
+    "%@ has no casks. CaskHub shows casks only for now." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В %@ нет cask-пакетов. Пока CaskHub показывает только их."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У %@ немає cask-пакетів. Поки що CaskHub показує лише їх."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 中没有 Cask。CaskHub 目前只显示 Cask。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 中沒有 Cask。CaskHub 目前只顯示 Cask。"
+          }
+        }
+      }
+    },
     "Add a Tap" : {
       "localizations" : {
         "ru" : {

@@ -17,12 +17,14 @@ final class AddTapModel {
         case offerInstall(Cask)
         case notInTap(token: String, tap: String)
         case alreadyInstalled(token: String)
+        case noCasks(tap: String)
         case failed(String)
     }
 
     struct Environment {
         let addTap: (TapAddRequest) async throws -> Void
         let hasTap: (String) -> Bool
+        let hasCasks: (String) -> Bool
         let tapCask: (String) -> Cask?
         let isInstalled: (String) -> Bool
         let failureMessage: (String) -> String?
@@ -64,6 +66,10 @@ final class AddTapModel {
         return "github.com/\(parts[0])/homebrew-\(parts[1])"
     }
 
+    static func noCasksText(tap: String) -> String {
+        String(localized: "\(tap) has no casks. CaskHub shows casks only for now.")
+    }
+
     static func alreadyInstalledText(token: String) -> String {
         String(localized: "\(token) is already installed.")
     }
@@ -89,7 +95,13 @@ final class AddTapModel {
             phase = .failed(failureText(for: request, environment))
             return false
         }
-        guard let token = request.caskToken else { return true }
+        guard let token = request.caskToken else {
+            guard environment.hasCasks(request.tapName) else {
+                phase = .noCasks(tap: request.tapName)
+                return false
+            }
+            return true
+        }
         let reference = "\(request.tapName)/\(token)"
         if environment.isInstalled(reference) {
             phase = .alreadyInstalled(token: token)
@@ -132,6 +144,8 @@ struct AddTapSheet: View {
                 message(title: String(localized: "Add a Tap"), body: AddTapModel.notInTapText(token: token, tap: tap))
             case let .failed(text):
                 message(title: String(localized: "Add a Tap"), body: text)
+            case let .noCasks(tap):
+                message(title: String(localized: "Add a Tap"), body: AddTapModel.noCasksText(tap: tap))
             case let .alreadyInstalled(token):
                 message(title: String(localized: "Add a Tap"), body: AddTapModel.alreadyInstalledText(token: token))
             }
@@ -251,6 +265,7 @@ struct AddTapSheet: View {
         let environment = AddTapModel.Environment(
             addTap: { try await viewModel.addTap($0) },
             hasTap: { [localHomebrew] name in localHomebrew.tapIndex.taps.contains { $0.name == name } },
+            hasCasks: { [localHomebrew] name in localHomebrew.tapIndex.tapsWithCasks.contains { $0.name == name } },
             tapCask: { [localHomebrew] reference in localHomebrew.tapIndex.casks.first { $0.reference == reference } },
             isInstalled: { [localHomebrew] reference in
                 localHomebrew.installationSnapshot.installedCasks[CaskReference.bareToken(reference)] != nil

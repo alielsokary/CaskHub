@@ -46,6 +46,20 @@ final class AddTapSheetTests: XCTestCase {
         XCTAssertEqual(added.map(\.tapName), ["hashicorp/tap"])
     }
 
+    func test_formula_only_tap_explains_why_it_is_hidden() async {
+        let model = AddTapModel()
+        model.text = "spotify/public"
+
+        let closes = await model.submit(environment(taps: ["spotify/public"], tapsWithCasks: []))
+
+        XCTAssertFalse(closes)
+        XCTAssertEqual(model.phase, .noCasks(tap: "spotify/public"))
+        XCTAssertEqual(
+            AddTapModel.noCasksText(tap: "spotify/public"),
+            "spotify/public has no casks. CaskHub shows casks only for now."
+        )
+    }
+
     func test_pasted_command_offers_the_cask_when_it_exists() async {
         let model = AddTapModel()
         model.text = "brew install --cask saffsanity/sill/sill"
@@ -194,6 +208,7 @@ final class AddTapSheetTests: XCTestCase {
     private func environment(
         added: @escaping (TapAddRequest) throws -> Void = { _ in },
         taps: Set<String> = ["user/broken", "user/slow"],
+        tapsWithCasks: Set<String>? = nil,
         casks: [Cask] = [],
         installed: Set<String> = [],
         failure: String? = nil
@@ -201,6 +216,7 @@ final class AddTapSheetTests: XCTestCase {
         AddTapModel.Environment(
             addTap: { try added($0) },
             hasTap: { taps.contains($0) },
+            hasCasks: { (tapsWithCasks ?? taps).contains($0) },
             tapCask: { reference in casks.first { $0.reference == reference } },
             isInstalled: { installed.contains(CaskReference.bareToken($0)) },
             failureMessage: { _ in failure }

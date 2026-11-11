@@ -20,7 +20,7 @@ extension CaskCatalogViewModel {
     static let tapSectionSize = 8
 
     var tapSections: [TapSection] {
-        localHomebrew.tapIndex.taps.map { tap in
+        localHomebrew.tapIndex.tapsWithCasks.map { tap in
             TapSection(tap: tap, casks: Array(tapCasks(in: tap.name).prefix(Self.tapSectionSize)))
         }
     }

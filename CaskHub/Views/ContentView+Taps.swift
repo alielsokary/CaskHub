@@ -33,7 +33,7 @@ extension ContentView {
 
     @ViewBuilder
     var tapsContent: some View {
-        if localHomebrew.tapIndex.taps.isEmpty {
+        if localHomebrew.tapIndex.tapsWithCasks.isEmpty {
             TapsEmptyStateView { tapDialog = .add }
         } else {
             VStack(alignment: .leading, spacing: CHSpace.s4) {
