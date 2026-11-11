@@ -80,7 +80,7 @@ final class CaskFileTextParserTests: XCTestCase {
     func test_garbage_source() {
         var generator = SystemRandomNumberGenerator()
         let bytes = (0 ..< 200_000).map { _ in UInt8.random(in: 0 ... 255, using: &generator) }
-        let source = String(decoding: bytes, as: UTF8.self)
+        let source = String(bytes: bytes, encoding: .isoLatin1) ?? ""
         let start = Date()
 
         let cask = CaskFileTextParser.cask(fromSource: source, token: "junk", tap: "u/r")

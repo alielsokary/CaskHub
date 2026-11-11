@@ -197,9 +197,7 @@ nonisolated enum CaskProvenance: Hashable, Sendable {
     case homebrewAPI
     /// Built from an install receipt: the API no longer lists the token, or another tap installed it.
     case installedReceipt
-    /// Read as text from an untrusted tap's cask file.
     case tapSource
-    /// Decoded from `brew info --json=v2` for a trusted tap cask.
     case tapInfo
 }
 
@@ -273,13 +271,10 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
         catalogPackageAppIdentifiers?.keys.sorted() ?? []
     }
 
-    var id: String {
-        reference
-    }
+    var id: String { reference }
 
-    var reference: String {
-        CaskReference.make(token: token, tap: tap)
-    }
+    /// `token` for official casks, `user/repo/token` for tap casks.
+    var reference: String { CaskReference.make(token: token, tap: tap) }
 
     /// Bundle names this cask installs into /Applications (e.g. "Google Chrome.app").
     var appArtifactNames: [String] {
@@ -395,48 +390,6 @@ extension Cask {
             disableReplacementFormula: nil
         )
         cask.provenance = .installedReceipt
-        return cask
-    }
-}
-
-extension Cask {
-    static func tapSourceRow(
-        token: String,
-        tap: String,
-        name: String?,
-        desc: String?,
-        homepage: String,
-        version: String
-    ) -> Cask {
-        var cask = Cask(
-            token: token,
-            fullToken: "\(tap)/\(token)",
-            tap: tap,
-            name: [name ?? token],
-            desc: desc,
-            homepage: homepage,
-            url: nil,
-            sha256: nil,
-            version: version,
-            bundleVersion: nil,
-            bundleShortVersion: nil,
-            outdated: false,
-            deprecated: false,
-            disabled: false,
-            autoUpdates: nil,
-            variations: nil,
-            supportedPlatforms: nil,
-            conflictsWith: nil,
-            deprecationDate: nil,
-            deprecationReason: nil,
-            deprecationReplacementCask: nil,
-            deprecationReplacementFormula: nil,
-            disableDate: nil,
-            disableReason: nil,
-            disableReplacementCask: nil,
-            disableReplacementFormula: nil
-        )
-        cask.provenance = .tapSource
         return cask
     }
 }

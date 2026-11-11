@@ -9,18 +9,27 @@ import Foundation
 
 /// Reads display fields from an untrusted tap cask file as plain text; tap Ruby is never evaluated.
 nonisolated enum CaskFileTextParser {
-    private static let maxSourceBytes = 64 * 1024
+    private static let maxSourceCharacters = 64 * 1024
 
     static func cask(fromSource source: String, token: String, tap: String) -> Cask {
-        let text = String(decoding: source.utf8.prefix(maxSourceBytes), as: UTF8.self)
-        return Cask.tapSourceRow(
-            token: token,
-            tap: tap,
-            name: firstLiteral("name", in: text),
+        let text = String(source.prefix(maxSourceCharacters))
+        var cask = Cask(
+            token: token, fullToken: "\(tap)/\(token)", tap: tap,
+            name: [firstLiteral("name", in: text) ?? token],
             desc: firstLiteral("desc", in: text),
             homepage: firstLiteral("homepage", in: text) ?? "",
-            version: version(in: text) ?? ""
+            url: nil, sha256: nil,
+            version: version(in: text) ?? "",
+            bundleVersion: nil, bundleShortVersion: nil,
+            outdated: false, deprecated: false, disabled: false,
+            autoUpdates: nil, variations: nil, supportedPlatforms: nil, conflictsWith: nil,
+            deprecationDate: nil, deprecationReason: nil,
+            deprecationReplacementCask: nil, deprecationReplacementFormula: nil,
+            disableDate: nil, disableReason: nil,
+            disableReplacementCask: nil, disableReplacementFormula: nil
         )
+        cask.provenance = .tapSource
+        return cask
     }
 
     private static func version(in text: String) -> String? {
