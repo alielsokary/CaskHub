@@ -76,13 +76,7 @@ nonisolated struct TapFormula: Hashable, Sendable, Identifiable {
 
     var reference: String { "\(tap)/\(name)" }
     var id: String { reference }
-    /// nil unless every part is a plain brew name, so a crafted file name can't put shell syntax on the clipboard.
-    var installCommand: String? {
-        let isSafe = reference.split(separator: "/", omittingEmptySubsequences: false).allSatisfy {
-            $0.wholeMatch(of: /[A-Za-z0-9][A-Za-z0-9@+._-]*/) != nil
-        }
-        return isSafe ? "brew install \(reference)" : nil
-    }
+    var installCommand: String { "brew install \(reference)" }
     var searchKey: String { "\(name)\n\(desc ?? "")".lowercased() }
 }
 

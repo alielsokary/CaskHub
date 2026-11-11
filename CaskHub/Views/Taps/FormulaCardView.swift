@@ -40,9 +40,7 @@ struct FormulaCardView: View {
                 .font(typography.meta)
                 .foregroundStyle(Color.chTextMuted)
             Spacer(minLength: 2)
-            if let command = formula.installCommand {
-                CopyInstallCommandButton(command: command, fullWidth: true)
-            }
+            CopyInstallCommandButton(formula: formula, fullWidth: true)
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 15)
@@ -77,12 +75,8 @@ struct FormulaRowView: View {
             Text("Formula")
                 .font(typography.tag)
                 .foregroundStyle(Color.chTextBrand)
-            Group {
-                if let command = formula.installCommand {
-                    CopyInstallCommandButton(command: command, fullWidth: false)
-                }
-            }
-            .frame(width: CHSize.listActionWidth, alignment: .trailing)
+            CopyInstallCommandButton(formula: formula, fullWidth: false)
+                .frame(width: CHSize.listActionWidth, alignment: .trailing)
             Color.clear.frame(width: 24)
         }
         .padding(.vertical, 4)
@@ -90,14 +84,14 @@ struct FormulaRowView: View {
 }
 
 private struct CopyInstallCommandButton: View {
-    let command: String
+    let formula: TapFormula
     let fullWidth: Bool
     @State private var copied = false
 
     var body: some View {
         Button {
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(command, forType: .string)
+            NSPasteboard.general.setString(formula.installCommand, forType: .string)
             copied = true
         } label: {
             ActionCapsule(
@@ -111,7 +105,7 @@ private struct CopyInstallCommandButton: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .help(Text(verbatim: command))
+        .help(Text(verbatim: formula.installCommand))
         .task(id: copied) {
             guard copied else { return }
             try? await Task.sleep(for: .seconds(1.5))
