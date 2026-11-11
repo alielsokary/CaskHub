@@ -33,7 +33,7 @@ final class TapsViewTests: XCTestCase {
 
     func test_tap_count_text() {
         let tap = TapSummary(
-            name: "user/tap", remote: nil, official: false, trusted: false,
+            name: "user/tap", remote: nil, official: false, trusted: false, customRemote: false,
             caskTokens: ["user/tap/a"], formulaNames: ["user/tap/f1", "user/tap/f2"], caskFiles: []
         )
 
@@ -93,7 +93,7 @@ final class TapsViewTests: XCTestCase {
         let index = TapIndex(
             taps: taps.keys.sorted().map { name in
                 TapSummary(
-                    name: name, remote: "https://github.com/\(name)", official: false, trusted: false,
+                    name: name, remote: "https://github.com/\(name)", official: false, trusted: false, customRemote: false,
                     caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: []
                 )
             },

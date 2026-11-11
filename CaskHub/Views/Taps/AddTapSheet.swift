@@ -16,6 +16,7 @@ final class AddTapModel {
         case adding(TapAddRequest)
         case offerInstall(Cask)
         case notInTap(token: String, tap: String)
+        case alreadyInstalled(token: String)
         case failed(String)
     }
 
@@ -23,6 +24,7 @@ final class AddTapModel {
         let addTap: (TapAddRequest) async throws -> Void
         let hasTap: (String) -> Bool
         let tapCask: (String) -> Cask?
+        let isInstalled: (String) -> Bool
         let failureMessage: (String) -> String?
     }
 
@@ -62,6 +64,10 @@ final class AddTapModel {
         return "github.com/\(parts[0])/homebrew-\(parts[1])"
     }
 
+    static func alreadyInstalledText(token: String) -> String {
+        String(localized: "\(token) is already installed.")
+    }
+
     static func notInTapText(token: String, tap: String) -> String {
         String(localized: "\(token) isn't in \(tap).")
     }
@@ -84,7 +90,10 @@ final class AddTapModel {
             return false
         }
         guard let token = request.caskToken else { return true }
-        if let cask = environment.tapCask("\(request.tapName)/\(token)") {
+        let reference = "\(request.tapName)/\(token)"
+        if environment.isInstalled(reference) {
+            phase = .alreadyInstalled(token: token)
+        } else if let cask = environment.tapCask(reference) {
             phase = .offerInstall(cask)
         } else {
             phase = .notInTap(token: token, tap: request.tapName)
@@ -123,6 +132,8 @@ struct AddTapSheet: View {
                 message(title: String(localized: "Add a Tap"), body: AddTapModel.notInTapText(token: token, tap: tap))
             case let .failed(text):
                 message(title: String(localized: "Add a Tap"), body: text)
+            case let .alreadyInstalled(token):
+                message(title: String(localized: "Add a Tap"), body: AddTapModel.alreadyInstalledText(token: token))
             }
         }
         .padding(22)
@@ -233,6 +244,9 @@ struct AddTapSheet: View {
             addTap: { try await viewModel.addTap($0) },
             hasTap: { [localHomebrew] name in localHomebrew.tapIndex.taps.contains { $0.name == name } },
             tapCask: { [localHomebrew] reference in localHomebrew.tapIndex.casks.first { $0.reference == reference } },
+            isInstalled: { [localHomebrew] reference in
+                localHomebrew.installationSnapshot.installedCasks[CaskReference.bareToken(reference)] != nil
+            },
             failureMessage: { [localHomebrew] token in
                 guard case let .failure(failure) = localHomebrew.actionAlert(for: token) else { return nil }
                 localHomebrew.send(.dismissFailure(token: token))

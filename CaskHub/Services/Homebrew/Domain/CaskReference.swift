@@ -13,7 +13,7 @@ nonisolated enum CaskReference {
 
     static func isOfficial(tap: String?) -> Bool {
         guard let tap else { return true }
-        return tap.hasPrefix("homebrew/")
+        return tap.lowercased().hasPrefix("homebrew/")
     }
 
     static func make(token: String, tap: String?) -> String {

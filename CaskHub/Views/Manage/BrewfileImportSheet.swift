@@ -36,6 +36,14 @@ nonisolated struct BrewfileImportPlan: Identifiable {
 
     var listedCount: Int { skippedEntries.count + newEntries.count + unavailableEntries.count }
 
+    /// A custom remote is shown, so a familiar tap name can't hide where the code comes from.
+    var tapsToAddText: String {
+        tapsToAdd.map { tap in
+            tap.remoteURL.map { "\(tap.tapName) (from \(($0.host() ?? "") + $0.path()))" } ?? tap.tapName
+        }
+        .joined(separator: ", ")
+    }
+
     /// Adds taps first so their casks resolve; confirming the import is the trust consent, so installs never prompt.
     @MainActor
     func run(
@@ -207,7 +215,7 @@ struct BrewfileImportSheet: View {
 
     @ViewBuilder private var tapNotice: some View {
         if !plan.tapsToAdd.isEmpty {
-            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAdd.map(\.tapName).joined(separator: ", "))"))
+            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAddText)"))
                 .font(CHType.statusMono)
                 .foregroundStyle(Color.chTextBody)
         }

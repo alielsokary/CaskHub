@@ -92,6 +92,29 @@ final class HomebrewTapLoaderTests: XCTestCase {
         XCTAssertEqual(index.casks.map(\.displayName), ["fuse-t", "fuse-t-sshfs"])
     }
 
+    func test_custom_remote_taps_match_trust_by_remote_url() throws {
+        let json = """
+        [{"name": "user/casks", "official": false, "trusted": false, "custom_remote": true,
+          "remote": "https://GitHub.com/User/casks", "cask_tokens": ["user/casks/tool"], "cask_files": []},
+         {"name": "user/whole", "official": false, "trusted": true, "custom_remote": false,
+          "remote": "https://github.com/user/homebrew-whole", "cask_tokens": ["user/whole/app"], "cask_files": []}]
+        """
+        let taps = try XCTUnwrap(HomebrewTapLoader.taps(in: json))
+        let trust = TapTrust(taps: [], casks: ["https://github.com/user/casks/tool"])
+        let index = HomebrewTapLoader.makeIndex(taps: taps, trust: trust, trustedCasks: nil) { _ in nil }
+
+        XCTAssertTrue(index.trusts("user/casks/tool"))
+        XCTAssertTrue(index.trusts("user/whole/app"), "brew's own whole-tap trust flag")
+        XCTAssertFalse(index.trusts("user/casks/other"))
+        XCTAssertTrue(index.trusts("figma"))
+    }
+
+    func test_missing_trust_output_means_nothing_is_trusted() {
+        XCTAssertEqual(HomebrewTapLoader.trustOrNone(nil), TapTrust(taps: [], casks: []))
+        XCTAssertEqual(HomebrewTapLoader.trustOrNone("Error: Unknown command: trust"), TapTrust(taps: [], casks: []))
+        XCTAssertEqual(HomebrewTapLoader.trustOrNone(trustJSON).casks, ["macos-fuse-t/cask/fuse-t"])
+    }
+
     private func tapInfoCask(_ token: String, tap: String, version: String) throws -> Cask {
         let json = """
         {"token": "\(token)", "full_token": "\(tap)/\(token)", "tap": "\(tap)", "name": ["\(token)"],

@@ -33,11 +33,17 @@ extension LocalHomebrewService {
     }
 
     func install(token: String) async throws {
+        if let source = installationSnapshot.foreignInstallationSource(for: token) {
+            operationStore.send(.fail(CaskOperationFailure(
+                kind: .installationPreflight,
+                message: String(localized: "\(CaskReference.bareToken(token)) is already installed from \(source).")
+            )), for: token)
+            return
+        }
         try await runMutationSequence(
             .installing,
             token: token,
-            steps: [
-                .fetch(token: token, cancellation: .untilPerforming),
+            steps: fetchSteps(token, cancellation: .untilPerforming) + [
                 .exclusive(
                     ["install", "--cask", token] + appdirArguments(keeping: []),
                     cancellation: .untilPerforming
@@ -156,8 +162,7 @@ extension LocalHomebrewService {
         try await runMutationSequence(
             action,
             token: token,
-            steps: [
-                .fetch(token: token, cancellation: .never),
+            steps: fetchSteps(token, cancellation: .never) + [
                 HomebrewMutationStep(
                     arguments: ["uninstall", "--cask", token, "--force"],
                     environmentOverrides: ["HOMEBREW_NO_AUTOREMOVE": "1"],
@@ -201,8 +206,7 @@ extension LocalHomebrewService {
         try await runMutationSequence(
             .updating,
             token: token,
-            steps: [
-                .fetch(token: token, cancellation: .untilPerforming),
+            steps: fetchSteps(token, cancellation: .untilPerforming) + [
                 .exclusive(args, cancellation: .whileQueued)
             ],
             origin: origin
@@ -255,6 +259,11 @@ extension LocalHomebrewService {
 
     var statusBarOperation: CaskOperationStatus? {
         operationStore.status
+    }
+
+    /// brew refuses `fetch` for a tap cask it doesn't trust yet; install and upgrade trust it themselves.
+    private func fetchSteps(_ token: String, cancellation: HomebrewStepCancellation) -> [HomebrewMutationStep] {
+        tapIndex.trusts(token) ? [.fetch(token: token, cancellation: cancellation)] : []
     }
 
     func displayName(for token: String) -> String {

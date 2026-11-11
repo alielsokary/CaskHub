@@ -34,6 +34,11 @@ final class CaskReferenceTests: XCTestCase {
         XCTAssertEqual(CaskReference.analyticsName("figma"), "figma")
     }
 
+    func test_official_tap_check_ignores_case() {
+        XCTAssertTrue(CaskReference.isOfficial(tap: "Homebrew/Cask"))
+        XCTAssertEqual(CaskReference.normalized("Homebrew/Cask/foo"), "foo")
+    }
+
     func test_snapshot_lookup_requires_matching_tap() {
         let snapshot = InstallationSnapshot(installedCasks: [
             "opensuperwhisper": installation("opensuperwhisper", tap: "my-monkeys/tap")

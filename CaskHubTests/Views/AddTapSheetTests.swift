@@ -68,6 +68,16 @@ final class AddTapSheetTests: XCTestCase {
         XCTAssertEqual(AddTapModel.notInTapText(token: "ghost", tap: "saffsanity/sill"), "ghost isn't in saffsanity/sill.")
     }
 
+    func test_offer_is_skipped_when_the_cask_or_its_twin_is_installed() async {
+        let model = AddTapModel()
+        model.text = "saffsanity/sill/sill"
+        let sill = CaskFileTextParser.cask(fromSource: "", token: "sill", tap: "saffsanity/sill")
+
+        _ = await model.submit(environment(taps: ["saffsanity/sill"], casks: [sill], installed: ["sill"]))
+
+        XCTAssertEqual(model.phase, .alreadyInstalled(token: "sill"))
+    }
+
     func test_failure_shows_the_operation_message() async {
         let model = AddTapModel()
         model.text = "user/broken"
@@ -185,12 +195,14 @@ final class AddTapSheetTests: XCTestCase {
         added: @escaping (TapAddRequest) throws -> Void = { _ in },
         taps: Set<String> = ["user/broken", "user/slow"],
         casks: [Cask] = [],
+        installed: Set<String> = [],
         failure: String? = nil
     ) -> AddTapModel.Environment {
         AddTapModel.Environment(
             addTap: { try added($0) },
             hasTap: { taps.contains($0) },
             tapCask: { reference in casks.first { $0.reference == reference } },
+            isInstalled: { installed.contains(CaskReference.bareToken($0)) },
             failureMessage: { _ in failure }
         )
     }

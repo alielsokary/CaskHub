@@ -20,7 +20,7 @@ extension LocalHomebrewService {
     }
 
     func isTrusted(_ cask: Cask) -> Bool {
-        tapIndex.trust.trusts(cask.reference)
+        tapIndex.trusts(cask.reference)
     }
 
     /// A tap cask's first install waits for `confirmTrustedInstall`; brew trusts it on install.
@@ -40,25 +40,26 @@ extension LocalHomebrewService {
 
     func addTap(_ request: TapAddRequest) async throws {
         let token = Self.tapOperationToken(request.tapName)
-        do {
-            try await runMutationSequence(
-                .addingTap,
-                token: token,
-                steps: [.exclusive(request.brewArguments, cancellation: .untilPerforming)],
-                origin: .individual,
-                displayName: request.tapName
-            )
-        } catch is CancellationError {
-            await refreshTaps()
-            if tapIndex.taps.contains(where: { $0.name == request.tapName }) {
-                try? await runMutation(.removingTap, token: token, args: ["untap", request.tapName])
-            }
-            throw CancellationError()
-        }
+        cancelledTapAdds.remove(request.tapName)
+        try await runMutationSequence(
+            .addingTap,
+            token: token,
+            steps: [.exclusive(request.brewArguments, cancellation: .untilPerforming)],
+            origin: .individual,
+            displayName: request.tapName
+        )
         await refreshTaps()
+        // The coordinator swallows cancellation, so the cancel request itself is the signal.
+        guard cancelledTapAdds.remove(request.tapName) != nil else { return }
+        if tapIndex.taps.contains(where: { $0.name == request.tapName }) {
+            try? await runMutation(.removingTap, token: token, args: ["untap", request.tapName])
+            await refreshTaps()
+        }
+        throw CancellationError()
     }
 
     func cancelAddTap(_ tapName: String) {
+        cancelledTapAdds.insert(tapName)
         cancelInstall(token: Self.tapOperationToken(tapName))
     }
 
@@ -78,10 +79,12 @@ extension LocalHomebrewService {
     }
 
     func removeTap(_ preview: TapRemovalPreview) async throws {
-        try await runMutation(
+        try await runMutationSequence(
             .removingTap,
             token: Self.tapOperationToken(preview.tapName),
-            args: ["untap"] + (preview.removesInstalledItems ? ["--force"] : []) + [preview.tapName]
+            steps: [.exclusive(["untap"] + (preview.removesInstalledItems ? ["--force"] : []) + [preview.tapName], cancellation: .never)],
+            origin: .individual,
+            displayName: preview.tapName
         )
         await refreshTaps()
         await refreshHomebrewOutdated()
@@ -95,7 +98,9 @@ extension LocalHomebrewService {
             return
         }
         defaults.set(now, forKey: Self.lastTapUpdateKey)
+        guard await lanes.acquire(.exclusive, token: nil, onWait: {}) else { return }
         await tapUpdateProvider()
+        lanes.release(.exclusive)
         await refresh()
         await refreshTaps()
         await refreshHomebrewOutdated()

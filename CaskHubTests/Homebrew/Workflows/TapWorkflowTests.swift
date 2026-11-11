@@ -152,17 +152,77 @@ final class TapWorkflowTests: XCTestCase {
         XCTAssertEqual(sut.outdatedCount, 1)
     }
 
+    func test_untrusted_tap_install_skips_the_fetch_brew_would_refuse() async throws {
+        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"])])
+        await sut.service.refreshTaps()
+        let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
+
+        try await sut.service.confirmTrustedInstall(cask)
+
+        XCTAssertFalse(sut.runner.requests.contains { $0.arguments.first == "fetch" })
+        XCTAssertTrue(sut.runner.requests.contains { $0.arguments.starts(with: ["install", "--cask", "saffsanity/sill/sill"]) })
+    }
+
+    func test_trusted_tap_install_still_fetches_first() async throws {
+        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"], trustedCasks: ["saffsanity/sill/sill"])])
+        await sut.service.refreshTaps()
+
+        try await sut.service.install(token: "saffsanity/sill/sill")
+
+        XCTAssertEqual(sut.runner.requests.first?.arguments.prefix(3), ["fetch", "--cask", "saffsanity/sill/sill"])
+    }
+
+    func test_cancelled_add_untaps_leftover_and_throws() async {
+        let sut = makeSUT(indexes: [index(taps: ["user/slow"], casks: [])])
+        sut.runner.onRequest = { [service = sut.service] request in
+            if request.arguments == ["tap", "user/slow"] { service.cancelAddTap("user/slow") }
+        }
+
+        do {
+            try await sut.service.addTap(TapAddRequest(tapName: "user/slow", remoteURL: nil, caskToken: nil))
+            XCTFail("cancel must surface as CancellationError")
+        } catch {
+            XCTAssertTrue(error is CancellationError)
+        }
+        XCTAssertTrue(sut.runner.requests.contains { $0.arguments == ["untap", "user/slow"] })
+    }
+
+    func test_install_refuses_when_a_twin_owns_the_install() async throws {
+        let sut = makeSUT(indexes: [])
+        updateInstalledCask(installation("foo", version: "1.0"), in: sut.service)
+
+        try await sut.service.install(token: "user/tap/foo")
+
+        XCTAssertTrue(sut.runner.requests.isEmpty)
+        XCTAssertNotNil(sut.service.actionAlert(for: "user/tap/foo"))
+    }
+
+    func test_tap_update_waits_for_the_exclusive_lane() async {
+        let sut = makeSUT(indexes: [])
+        _ = await sut.lanes.acquire(.exclusive, token: "busy") {}
+
+        let update = Task { await sut.service.updateTapsIfStale(now: .now, maxAge: 0) }
+        for _ in 0 ..< 50 { await Task.yield() }
+        XCTAssertEqual(sut.updateCount, 0)
+
+        sut.lanes.release(.exclusive)
+        await update.value
+        XCTAssertEqual(sut.updateCount, 1)
+    }
+
     // MARK: - Helpers
 
     private final class SUT {
         let service: LocalHomebrewService
         let runner: StubBrewProcessRunner
+        let lanes: HomebrewLaneLimiter
         var indexes: [TapIndex?]
         var formulae: [String] = []
         var updateCount = 0
         var outdatedCount = 0
 
-        init(service: LocalHomebrewService, runner: StubBrewProcessRunner, indexes: [TapIndex?]) {
+        init(service: LocalHomebrewService, runner: StubBrewProcessRunner, lanes: HomebrewLaneLimiter, indexes: [TapIndex?]) {
+            self.lanes = lanes
             self.service = service
             self.runner = runner
             self.indexes = indexes
@@ -172,7 +232,9 @@ final class TapWorkflowTests: XCTestCase {
     private func makeSUT(indexes: [TapIndex?]) -> SUT {
         let runner = StubBrewProcessRunner()
         var sut: SUT!
+        let lanes = HomebrewLaneLimiter(downloadLimit: 3)
         let service = LocalHomebrewService(defaults: makeScratchDefaults("tap-workflow-\(UUID().uuidString)")) {
+            $0.laneLimiter = lanes
             $0.fileManager = NoFilesFileManager()
             $0.processRunner = runner
             $0.softwareScanner = MutableInstalledSoftwareScanner()
@@ -186,14 +248,14 @@ final class TapWorkflowTests: XCTestCase {
             $0.installedFormulaeProvider = { tap in sut.formulae.filter { $0.hasPrefix("\(tap)/") } }
             $0.tapUpdateProvider = { sut.updateCount += 1 }
         }
-        sut = SUT(service: service, runner: runner, indexes: indexes)
+        sut = SUT(service: service, runner: runner, lanes: lanes, indexes: indexes)
         return sut
     }
 
     private func index(taps: [String], casks: [String], trustedCasks: Set<String> = []) -> TapIndex {
         let summaries = taps.map {
             TapSummary(
-                name: $0, remote: nil, official: false, trusted: false,
+                name: $0, remote: nil, official: false, trusted: false, customRemote: false,
                 caskTokens: casks.map { token in "\(taps[0])/\(token)" }, formulaNames: [], caskFiles: []
             )
         }

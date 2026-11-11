@@ -58,6 +58,8 @@ final class LocalHomebrewService {
     var tapIndex = TapIndex.empty
     /// A first install from a tap waiting for the user's trust confirmation.
     var pendingTrustInstall: Cask?
+    @ObservationIgnored var cancelledTapAdds: Set<String> = []
+    @ObservationIgnored let lanes: HomebrewLaneLimiter
 
     var isUpdatingAll: Bool {
         operationStore.isUpdatingAll
@@ -124,6 +126,8 @@ final class LocalHomebrewService {
         var dependencies = LocalHomebrewDependencies()
         configureDependencies(&dependencies)
         let operationStore = CaskOperationStore()
+        let lanes = dependencies.laneLimiter ?? .shared
+        self.lanes = lanes
 
         fileManager = dependencies.fileManager
         notificationCenter = dependencies.notificationCenter
@@ -141,7 +145,7 @@ final class LocalHomebrewService {
             brewBinaryProvider: dependencies.brewBinaryProvider,
             askpassProvider: dependencies.askpassProvider,
             fileManager: dependencies.fileManager,
-            lanes: dependencies.laneLimiter ?? .shared
+            lanes: lanes
         )
         softwareScanner = dependencies.softwareScanner
             ?? HomebrewInstallationScanner()

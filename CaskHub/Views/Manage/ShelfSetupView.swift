@@ -171,7 +171,8 @@ struct ShelfSetupView: View {
         for token in tokens {
             let entry = BrewfileImportPlan.Entry(token: token, cask: viewModel.catalogCask(for: CaskReference.normalized(token)))
             let state = entry.cask.map(viewModel.localState(for:))
-            if state?.isPresent == true || snapshot.installation(for: entry.reference) != nil {
+            // Any install of this token, including a same-token twin, owns the Caskroom entry.
+            if state?.isPresent == true || snapshot.installedCasks[CaskReference.bareToken(entry.reference)] != nil {
                 skippedEntries.append(entry)
             } else if state?.retirement?.blocksInstall == true {
                 unavailableEntries.append(entry)
@@ -179,7 +180,7 @@ struct ShelfSetupView: View {
                 newEntries.append(entry)
             }
         }
-        let impliedTaps = newEntries.compactMap(\.tap).map { TapAddRequest(tapName: $0, remoteURL: nil, caskToken: nil) }
+        let impliedTaps = newEntries.compactMap { $0.tap.flatMap { try? TapAddInput.parse($0).get() } }
         let existingTaps = Set(viewModel.localHomebrew.tapIndex.taps.map(\.name))
         var seen: Set<String> = []
         return BrewfileImportPlan(

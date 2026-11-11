@@ -15,11 +15,11 @@ nonisolated struct HomebrewTapLoader: Sendable {
     func load(from brewURL: URL?) async -> TapIndex? {
         guard let brewURL,
               let tapInfo = Self.run(brewURL, ["tap-info", "--json", "--installed"]),
-              let taps = Self.taps(in: tapInfo),
-              let trustOutput = Self.run(brewURL, ["trust", "--json=v1"]),
-              let trust = Self.trust(in: trustOutput)
+              let taps = Self.taps(in: tapInfo)
         else { return nil }
-        let trustedReferences = taps.flatMap(\.caskTokens).filter(trust.trusts)
+        let trust = Self.trustOrNone(Self.run(brewURL, ["trust", "--json=v1"]))
+        let provisional = TapIndex(taps: taps, casks: [], trust: trust)
+        let trustedReferences = taps.flatMap(\.caskTokens).filter(provisional.trusts)
         let trustedCasks = trustedReferences.isEmpty ? [] : Self.run(
             brewURL, ["info", "--cask", "--json=v2"] + trustedReferences
         ).flatMap(Self.infoCasks)
@@ -43,6 +43,11 @@ nonisolated struct HomebrewTapLoader: Sendable {
     static func taps(in tapInfoJSON: String) -> [TapSummary]? {
         guard let taps = try? decoder.decode([TapSummary].self, from: Data(tapInfoJSON.utf8)) else { return nil }
         return taps.filter { !$0.official && !CaskReference.isOfficial(tap: $0.name) }.sorted { $0.name < $1.name }
+    }
+
+    /// Older brew has no `trust` command; then nothing counts as trusted and every first install asks.
+    static func trustOrNone(_ output: String?) -> TapTrust {
+        output.flatMap(trust(in:)) ?? TapTrust(taps: [], casks: [])
     }
 
     static func trust(in trustJSON: String) -> TapTrust? {

@@ -111,7 +111,7 @@ final class TapCatalogTests: XCTestCase {
         let index = TapIndex(
             taps: taps.keys.sorted().map { name in
                 TapSummary(
-                    name: name, remote: nil, official: false, trusted: false,
+                    name: name, remote: nil, official: false, trusted: false, customRemote: false,
                     caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: []
                 )
             },
