@@ -41,6 +41,11 @@ final class AddTapModel {
         try? TapAddInput.parse(text).get()
     }
 
+    /// The field stays highlighted while there is text that doesn't parse yet.
+    var isAwaitingMatch: Bool {
+        !text.isEmpty && request == nil
+    }
+
     var canAdd: Bool {
         request != nil && phase == .input
     }
@@ -177,12 +182,29 @@ struct AddTapSheet: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.chSurfaceField))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(
+                        model.isAwaitingMatch ? Color.chAccent : Color.chHairlineStrong,
+                        lineWidth: model.isAwaitingMatch ? 2 : 1
+                    )
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(Color.chAccent.opacity(model.isAwaitingMatch ? 0.25 : 0), lineWidth: 4)
+                    .padding(-3)
+            )
+            .animation(.easeOut(duration: 0.15), value: model.isAwaitingMatch)
             .onSubmit(submit)
-        if let preview = model.previewText {
-            Label { Text(verbatim: preview) } icon: { Image(systemName: "checkmark") }
-                .font(CHType.bodySm)
-                .foregroundStyle(Color.chActionInstallFg)
+        if let request = model.request {
+            Label {
+                previewText(for: request)
+            } icon: {
+                Image(systemName: "checkmark")
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.chActionDoneFg)
+            }
+            .font(CHType.bodySm)
         } else if let error = model.errorText {
             Text(verbatim: error)
                 .font(CHType.bodySm)
@@ -245,6 +267,15 @@ struct AddTapSheet: View {
             TapSheetPill.primary(String(localized: "Done")) { dismiss() }
                 .keyboardShortcut(.defaultAction)
         }
+    }
+
+    /// Only the tap name is green, so it reads as the thing being matched.
+    private func previewText(for request: TapAddRequest) -> Text {
+        let name = Text(verbatim: request.tapName)
+            .foregroundStyle(Color.chActionDoneFg)
+            .fontWeight(.semibold)
+        return Text("Will tap \(name) from \(AddTapModel.source(of: request))")
+            .foregroundStyle(Color.chTextNav)
     }
 
     private func title(_ text: String) -> some View {

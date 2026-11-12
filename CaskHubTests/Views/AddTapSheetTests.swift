@@ -35,6 +35,17 @@ final class AddTapSheetTests: XCTestCase {
         XCTAssertEqual(model.errorText, "Homebrew's own taps are already included.")
     }
 
+    func test_field_highlights_while_typing_until_the_input_matches() {
+        let model = AddTapModel()
+        XCTAssertFalse(model.isAwaitingMatch)
+
+        model.text = "saffsanity"
+        XCTAssertTrue(model.isAwaitingMatch)
+
+        model.text = "saffsanity/sill"
+        XCTAssertFalse(model.isAwaitingMatch)
+    }
+
     func test_plain_tap_closes_after_adding() async {
         let model = AddTapModel()
         model.text = "hashicorp/tap"
