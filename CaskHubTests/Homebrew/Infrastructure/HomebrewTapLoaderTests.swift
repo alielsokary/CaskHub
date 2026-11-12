@@ -33,7 +33,7 @@ final class HomebrewTapLoaderTests: XCTestCase {
 
         XCTAssertEqual(taps.map(\.name), ["macos-fuse-t/cask", "paninihouse/brewer-cmd"])
         XCTAssertEqual(taps[0].caskCount, 2)
-        XCTAssertEqual(taps[0].formulaNames.count, 1)
+        XCTAssertEqual(taps[0].formulaCount, 1)
         XCTAssertFalse(taps[0].trusted)
         XCTAssertEqual(taps[0].remote, "https://github.com/macos-fuse-t/homebrew-cask")
     }

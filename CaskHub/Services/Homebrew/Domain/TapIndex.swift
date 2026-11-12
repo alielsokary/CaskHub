@@ -19,6 +19,7 @@ nonisolated struct TapSummary: Decodable, Hashable, Sendable {
     let caskFiles: [String]
 
     var caskCount: Int { caskTokens.count }
+    var formulaCount: Int { formulaNames.count }
 
     init(
         name: String, remote: String?, official: Bool, trusted: Bool, customRemote: Bool,

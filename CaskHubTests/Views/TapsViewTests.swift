@@ -44,7 +44,7 @@ final class TapsViewTests: XCTestCase {
             caskTokens: ["user/tap/a"], formulaNames: ["user/tap/f1", "user/tap/f2"], caskFiles: []
         )
 
-        XCTAssertEqual(TapSectionHeader.countText(for: tap), "1 cask")
+        XCTAssertEqual(TapSectionHeader.countText(for: tap), "1 cask · 2 formulae")
     }
 
     func test_github_remote_only_for_github_hosts() {
