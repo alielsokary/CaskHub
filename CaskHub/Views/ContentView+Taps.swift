@@ -97,7 +97,7 @@ struct TapPresentation: ViewModifier {
             .sheet(item: $dialog) { dialog in
                 switch dialog {
                 case .add:
-                    AddTapSheet(viewModel: viewModel, model: AddTapModel())
+                    AddTapSheet(viewModel: viewModel, model: AddTapModel(checker: GitHubTapChecker().availability(of:)))
                 case let .remove(name):
                     RemoveTapDialog(viewModel: viewModel, tapName: name, preview: nil)
                 }

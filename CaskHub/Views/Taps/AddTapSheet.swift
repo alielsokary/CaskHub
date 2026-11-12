@@ -30,16 +30,28 @@ final class AddTapModel {
         let failureMessage: (String) -> String?
     }
 
-    var text = ""
+    var text = "" {
+        didSet {
+            if request(for: oldValue) != request { availability = .unknown }
+        }
+    }
     private(set) var phase: Phase
+    private(set) var availability = TapAvailability.unknown
+    var availabilityDebounce: Duration = .milliseconds(400)
+    private let checker: (URL) async -> TapAvailability
     /// The cask named by a pasted install command, kept after the field is rewritten to `brew tap`.
     private var pastedCask: (tap: String, token: String)?
 
-    init(phase: Phase = .input) {
+    init(phase: Phase = .input, checker: @escaping (URL) async -> TapAvailability) {
         self.phase = phase
+        self.checker = checker
     }
 
     var request: TapAddRequest? {
+        request(for: text)
+    }
+
+    private func request(for text: String) -> TapAddRequest? {
         guard let parsed = try? TapAddInput.parse(text).get() else { return nil }
         guard parsed.caskToken == nil, let pastedCask, pastedCask.tap == parsed.tapName else { return parsed }
         return TapAddRequest(tapName: parsed.tapName, remoteURL: parsed.remoteURL, caskToken: pastedCask.token)
@@ -58,7 +70,34 @@ final class AddTapModel {
     }
 
     var canAdd: Bool {
-        request != nil && phase == .input
+        request != nil && phase == .input && (availability == .available || availability == .unreachable)
+    }
+
+    var missingText: String? {
+        guard availability == .missing, let request else { return nil }
+        let url = Self.repositoryURL(for: request)
+        let source = (url.host() ?? "") + url.path()
+        return String(localized: "No tap at \(source). Check the name, or add private taps from Terminal.")
+    }
+
+    static func repositoryURL(for request: TapAddRequest) -> URL {
+        if let remoteURL = request.remoteURL { return remoteURL }
+        let parts = request.tapName.split(separator: "/")
+        return URL(string: "https://github.com/\(parts[0])/homebrew-\(parts[1])")!
+    }
+
+    /// Debounced so typing doesn't fire a request per keystroke; a stale answer is dropped.
+    func checkAvailability() async {
+        guard let request else {
+            availability = .unknown
+            return
+        }
+        availability = .checking
+        try? await Task.sleep(for: availabilityDebounce)
+        guard !Task.isCancelled, request == self.request else { return }
+        let result = await checker(Self.repositoryURL(for: request))
+        guard !Task.isCancelled, request == self.request else { return }
+        availability = result
     }
 
     var previewText: String? {
@@ -96,7 +135,7 @@ final class AddTapModel {
 
     /// Returns true when the sheet should close.
     func submit(_ environment: Environment) async -> Bool {
-        guard let request, phase == .input else { return false }
+        guard let request, phase == .input, availability != .missing else { return false }
         phase = .adding(request)
         do {
             try await environment.addTap(request)
@@ -189,13 +228,26 @@ struct AddTapSheet: View {
             .kerning(CHType.trackingLabel)
             .foregroundStyle(Color.chTextMuted)
         tapField
-        if let request = model.request {
+        if let missing = model.missingText {
+            Label {
+                Text(verbatim: missing).foregroundStyle(Color.chTextNav)
+            } icon: {
+                Image(systemName: "xmark")
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.chAccent)
+            }
+            .font(CHType.bodySm)
+        } else if let request = model.request {
             Label {
                 previewText(for: request)
             } icon: {
-                Image(systemName: "checkmark")
-                    .fontWeight(.bold)
-                    .foregroundStyle(Color.chActionDoneFg)
+                if model.availability == .checking || model.availability == .unknown {
+                    ProgressView().controlSize(.mini)
+                } else {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.bold)
+                        .foregroundStyle(Color.chActionDoneFg)
+                }
             }
             .font(CHType.bodySm)
         } else if let error = model.errorText {
@@ -289,6 +341,7 @@ struct AddTapSheet: View {
             .onChange(of: model.text) { old, new in
                 if let rewrite = model.rewriteForPaste(from: old, to: new) { play(rewrite) }
             }
+            .task(id: model.request) { await model.checkAvailability() }
     }
 
     private func play(_ next: TapCommandRewrite) {

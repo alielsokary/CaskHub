@@ -29,6 +29,15 @@ nonisolated struct TapCommandRewrite: Equatable, Sendable {
     var finalText: String { "brew tap \(tapName)" }
 }
 
+nonisolated enum TapAvailability: Equatable, Sendable {
+    case unknown
+    case checking
+    case available
+    case missing
+    /// The check itself failed (offline, rate-limited); adding is still allowed and brew reports any error.
+    case unreachable
+}
+
 nonisolated enum TapAddInputError: Error, Equatable {
     case empty
     case unrecognized

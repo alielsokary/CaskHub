@@ -11,13 +11,15 @@ import XCTest
 
 @MainActor
 final class AddTapSheetTests: XCTestCase {
-    func test_preview_and_add_state_follow_the_input() {
-        let model = AddTapModel()
+    func test_preview_and_add_state_follow_the_input() async {
+        let model = AddTapModel(checker: { _ in .available })
+        model.availabilityDebounce = .zero
 
         XCTAssertFalse(model.canAdd)
         XCTAssertNil(model.errorText)
 
         model.text = "https://github.com/hashicorp/homebrew-tap"
+        await model.checkAvailability()
         XCTAssertTrue(model.canAdd)
         XCTAssertEqual(model.previewText, "Will tap hashicorp/tap from github.com/hashicorp/homebrew-tap")
 
@@ -36,7 +38,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_field_highlights_while_typing_until_the_input_matches() {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         XCTAssertFalse(model.isAwaitingMatch)
 
         model.text = "saffsanity"
@@ -47,7 +49,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_pasted_install_command_is_rewritten_and_keeps_the_cask() throws {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
 
         XCTAssertNil(model.rewriteForPaste(from: "", to: "s"), "typing is never rewritten")
         let rewrite = try XCTUnwrap(model.rewriteForPaste(from: "", to: "brew install --cask saffsanity/sill/sill"))
@@ -60,8 +62,65 @@ final class AddTapSheetTests: XCTestCase {
         XCTAssertNil(model.request?.caskToken)
     }
 
+    func test_repository_url_follows_brew_tap() {
+        XCTAssertEqual(
+            AddTapModel.repositoryURL(for: TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil)),
+            URL(string: "https://github.com/saffsanity/homebrew-sill")
+        )
+        let custom = URL(string: "https://github.com/user/casks")
+        XCTAssertEqual(AddTapModel.repositoryURL(for: TapAddRequest(tapName: "user/casks", remoteURL: custom, caskToken: nil)), custom)
+    }
+
+    func test_missing_repository_blocks_adding() async {
+        let model = AddTapModel(checker: { _ in .missing })
+        model.availabilityDebounce = .zero
+        model.text = "saffsanity/sil"
+
+        await model.checkAvailability()
+
+        XCTAssertEqual(model.availability, .missing)
+        XCTAssertFalse(model.canAdd)
+        XCTAssertEqual(
+            model.missingText,
+            "No tap at github.com/saffsanity/homebrew-sil. Check the name, or add private taps from Terminal."
+        )
+    }
+
+    func test_found_or_unreachable_repository_allows_adding() async {
+        for result in [TapAvailability.available, .unreachable] {
+            let model = AddTapModel(checker: { _ in result })
+            model.availabilityDebounce = .zero
+            model.text = "saffsanity/sill"
+            XCTAssertFalse(model.canAdd, "not before the check")
+
+            await model.checkAvailability()
+
+            XCTAssertEqual(model.availability, result)
+            XCTAssertTrue(model.canAdd)
+        }
+    }
+
+    func test_editing_the_input_resets_the_check() async {
+        let model = AddTapModel(checker: { _ in .available })
+        model.availabilityDebounce = .zero
+        model.text = "saffsanity/sill"
+        await model.checkAvailability()
+
+        model.text = "saffsanity/si"
+
+        XCTAssertEqual(model.availability, .unknown)
+        XCTAssertFalse(model.canAdd)
+    }
+
+    func test_http_status_maps_to_availability() {
+        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 200), .available)
+        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 301), .available)
+        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 404), .missing)
+        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 503), .unreachable)
+    }
+
     func test_plain_tap_closes_after_adding() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "hashicorp/tap"
         var added: [TapAddRequest] = []
 
@@ -72,7 +131,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_formula_only_tap_explains_why_it_is_hidden() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "spotify/public"
 
         let closes = await model.submit(environment(taps: ["spotify/public"], tapsWithCasks: []))
@@ -86,7 +145,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_pasted_command_offers_the_cask_when_it_exists() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "brew install --cask saffsanity/sill/sill"
         let sill = CaskFileTextParser.cask(fromSource: "", token: "sill", tap: "saffsanity/sill")
 
@@ -97,7 +156,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_pasted_command_notes_a_missing_cask() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "saffsanity/sill/ghost"
 
         let closes = await model.submit(environment(taps: ["saffsanity/sill"]))
@@ -108,7 +167,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_offer_is_skipped_when_the_cask_or_its_twin_is_installed() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "saffsanity/sill/sill"
         let sill = CaskFileTextParser.cask(fromSource: "", token: "sill", tap: "saffsanity/sill")
 
@@ -118,7 +177,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_failure_shows_the_operation_message() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "user/broken"
 
         let closes = await model.submit(environment(
@@ -131,7 +190,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_tap_missing_after_success_is_a_failure() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "user/ghost"
 
         _ = await model.submit(environment(taps: []))
@@ -140,7 +199,7 @@ final class AddTapSheetTests: XCTestCase {
     }
 
     func test_cancel_closes_without_failure() async {
-        let model = AddTapModel()
+        let model = AddTapModel(checker: { _ in .available })
         model.text = "user/slow"
 
         let closes = await model.submit(environment(added: { _ in throw CancellationError() }))
@@ -201,7 +260,7 @@ final class AddTapSheetTests: XCTestCase {
         let local = LocalHomebrewService(defaults: makeScratchDefaults("add-tap-render"))
         let vm = makeViewModel(api: MockBrewAPIClient(), localHomebrew: local)
         for phase in phases {
-            let model = AddTapModel(phase: phase)
+            let model = AddTapModel(phase: phase, checker: { _ in .available })
             model.text = "hashicorp/tap"
             render(AddTapSheet(viewModel: vm, model: model).environment(local), width: 460, height: 360)
         }

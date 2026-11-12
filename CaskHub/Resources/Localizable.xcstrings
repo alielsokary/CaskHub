@@ -1123,6 +1123,34 @@
         }
       }
     },
+    "No tap at %@. Check the name, or add private taps from Terminal." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тап %@ не найден. Проверьте имя или добавьте приватный тап в Терминале."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тап %@ не знайдено. Перевірте назву або додайте приватний тап у Терміналі."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 Tap %@。请检查名称，私有 Tap 请在终端中添加。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 Tap %@。請檢查名稱，私有 Tap 請在終端機中加入。"
+          }
+        }
+      }
+    },
     "Not Now" : {
       "localizations" : {
         "ru" : {
