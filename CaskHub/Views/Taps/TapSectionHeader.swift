@@ -47,7 +47,9 @@ struct TapSectionHeader: View {
     }
 
     static func countText(for tap: TapSummary) -> String {
-        "\(String(localized: "\(tap.caskCount) casks")) · \(String(localized: "\(tap.formulaCount) formulae"))"
+        let casks = String(localized: "\(tap.caskCount) casks")
+        guard tap.formulaCount > 0 else { return casks }
+        return "\(casks) · \(String(localized: "\(tap.formulaCount) formulae"))"
     }
 
     static func githubURL(for remote: String?) -> URL? {
