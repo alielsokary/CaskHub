@@ -61,6 +61,33 @@ final class TapAddInputTests: XCTestCase {
         XCTAssertEqual(parse("hashicorp/tap")?.brewArguments, ["tap", "hashicorp/tap"])
     }
 
+    func test_install_command_rewrites_to_tap_command() throws {
+        let rewrite = try XCTUnwrap(TapAddInput.tapCommandRewrite(for: "brew install --cask saffsanity/sill/sill"))
+
+        XCTAssertEqual(rewrite.keptPrefix, "brew")
+        XCTAssertEqual(rewrite.removedWords, "install --cask")
+        XCTAssertEqual(rewrite.addedWords, "tap")
+        XCTAssertEqual(rewrite.tapName, "saffsanity/sill")
+        XCTAssertEqual(rewrite.removedSuffix, "/sill")
+        XCTAssertEqual(rewrite.finalText, "brew tap saffsanity/sill")
+        XCTAssertEqual(rewrite.caskToken, "sill")
+    }
+
+    func test_qualified_token_rewrites_with_brew_tap_added() throws {
+        let rewrite = try XCTUnwrap(TapAddInput.tapCommandRewrite(for: "saffsanity/sill/sill"))
+
+        XCTAssertEqual(rewrite.keptPrefix, "")
+        XCTAssertEqual(rewrite.removedWords, "")
+        XCTAssertEqual(rewrite.addedWords, "brew tap")
+        XCTAssertEqual(rewrite.finalText, "brew tap saffsanity/sill")
+    }
+
+    func test_inputs_without_a_cask_are_not_rewritten() {
+        XCTAssertNil(TapAddInput.tapCommandRewrite(for: "hashicorp/tap"))
+        XCTAssertNil(TapAddInput.tapCommandRewrite(for: "brew tap hashicorp/tap"))
+        XCTAssertNil(TapAddInput.tapCommandRewrite(for: "foo; rm -rf ~"))
+    }
+
     private func parse(_ text: String) -> TapAddRequest? {
         try? TapAddInput.parse(text).get()
     }

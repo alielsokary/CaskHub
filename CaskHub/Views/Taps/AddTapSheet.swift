@@ -32,13 +32,24 @@ final class AddTapModel {
 
     var text = ""
     private(set) var phase: Phase
+    /// The cask named by a pasted install command, kept after the field is rewritten to `brew tap`.
+    private var pastedCask: (tap: String, token: String)?
 
     init(phase: Phase = .input) {
         self.phase = phase
     }
 
     var request: TapAddRequest? {
-        try? TapAddInput.parse(text).get()
+        guard let parsed = try? TapAddInput.parse(text).get() else { return nil }
+        guard parsed.caskToken == nil, let pastedCask, pastedCask.tap == parsed.tapName else { return parsed }
+        return TapAddRequest(tapName: parsed.tapName, remoteURL: parsed.remoteURL, caskToken: pastedCask.token)
+    }
+
+    /// Only a paste (several characters at once) is rewritten, never typing in progress.
+    func rewriteForPaste(from old: String, to new: String) -> TapCommandRewrite? {
+        guard new.count - old.count > 1, let rewrite = TapAddInput.tapCommandRewrite(for: new) else { return nil }
+        pastedCask = (rewrite.tapName, rewrite.caskToken)
+        return rewrite
     }
 
     /// The field stays highlighted while there is text that doesn't parse yet.
@@ -130,6 +141,8 @@ struct AddTapSheet: View {
 
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(\.dismiss) private var dismiss
+    @State private var rewrite: TapCommandRewrite?
+    @State private var rewriteSettled = false
 
     init(viewModel: CaskCatalogViewModel, model: AddTapModel) {
         self.viewModel = viewModel
@@ -175,26 +188,7 @@ struct AddTapSheet: View {
             .font(CHType.labelSm)
             .kerning(CHType.trackingLabel)
             .foregroundStyle(Color.chTextMuted)
-        TextField(text: $model.text, prompt: Text(verbatim: "user/repo")) { EmptyView() }
-            .textFieldStyle(.plain)
-            .font(CHType.body)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.chSurfaceField))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(
-                        model.isAwaitingMatch ? Color.chAccent : Color.chHairlineStrong,
-                        lineWidth: model.isAwaitingMatch ? 2 : 1
-                    )
-            )
-            .background(
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .stroke(Color.chAccent.opacity(model.isAwaitingMatch ? 0.25 : 0), lineWidth: 4)
-                    .padding(-3)
-            )
-            .animation(.easeOut(duration: 0.15), value: model.isAwaitingMatch)
-            .onSubmit(submit)
+        tapField
         if let request = model.request {
             Label {
                 previewText(for: request)
@@ -268,6 +262,47 @@ struct AddTapSheet: View {
         }
     }
 
+    /// Matches the toolbar search field's focus ring: one soft accent ring outside a hairline border.
+    private var tapField: some View {
+        TextField(text: $model.text, prompt: Text(verbatim: "user/repo")) { EmptyView() }
+            .textFieldStyle(.plain)
+            .font(CHType.body)
+            .foregroundStyle(rewrite == nil ? Color.primary : Color.clear)
+            .overlay(alignment: .leading) {
+                if let rewrite {
+                    CommandRewriteText(rewrite: rewrite, settled: rewriteSettled)
+                        .font(CHType.body)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.chSurfaceField))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.chHairlineStrong, lineWidth: 1))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14.5, style: .continuous)
+                    .stroke(Color.chAccent.opacity(model.isAwaitingMatch ? 0.65 : 0), lineWidth: 3)
+                    .padding(-2.5)
+            )
+            .animation(.easeOut(duration: 0.15), value: model.isAwaitingMatch)
+            .onSubmit(submit)
+            .onChange(of: model.text) { old, new in
+                if let rewrite = model.rewriteForPaste(from: old, to: new) { play(rewrite) }
+            }
+    }
+
+    private func play(_ next: TapCommandRewrite) {
+        rewrite = next
+        rewriteSettled = false
+        Task {
+            try? await Task.sleep(for: .milliseconds(250))
+            withAnimation(.spring(duration: 0.5)) { rewriteSettled = true }
+            try? await Task.sleep(for: .milliseconds(600))
+            model.text = next.finalText
+            rewrite = nil
+        }
+    }
+
     /// Only the tap name is green, so it reads as the thing being matched.
     private func previewText(for request: TapAddRequest) -> Text {
         let name = Text(verbatim: request.tapName)
@@ -323,5 +358,35 @@ enum TapSheetPill {
             title: title, background: .chActionInstallBg, border: .chActionInstallBorder,
             foreground: .chActionInstallFg, action: action
         )
+    }
+}
+
+/// The pasted install command losing its install words and cask name, the rest sliding left into `brew tap`.
+private struct CommandRewriteText: View {
+    let rewrite: TapCommandRewrite
+    let settled: Bool
+
+    private var collapse: AnyTransition {
+        .opacity.combined(with: .scale(scale: 0.01, anchor: .leading))
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            if !rewrite.keptPrefix.isEmpty {
+                Text(verbatim: rewrite.keptPrefix + " ")
+            }
+            if settled {
+                Text(verbatim: rewrite.addedWords + " ").transition(.opacity)
+            } else if !rewrite.removedWords.isEmpty {
+                Text(verbatim: rewrite.removedWords + " ").transition(collapse)
+            }
+            Text(verbatim: rewrite.tapName)
+            if !settled {
+                Text(verbatim: rewrite.removedSuffix).transition(collapse)
+            }
+        }
+        .lineLimit(1)
+        .fixedSize()
+        .foregroundStyle(Color.primary)
     }
 }

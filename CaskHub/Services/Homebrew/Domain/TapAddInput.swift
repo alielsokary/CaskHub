@@ -17,6 +17,18 @@ nonisolated struct TapAddRequest: Equatable, Sendable {
     }
 }
 
+/// The pieces a pasted install command loses and gains on its way to the tap command.
+nonisolated struct TapCommandRewrite: Equatable, Sendable {
+    let keptPrefix: String
+    let removedWords: String
+    let addedWords: String
+    let tapName: String
+    let removedSuffix: String
+    let caskToken: String
+
+    var finalText: String { "brew tap \(tapName)" }
+}
+
 nonisolated enum TapAddInputError: Error, Equatable {
     case empty
     case unrecognized
@@ -36,6 +48,20 @@ nonisolated enum TapAddInput {
         guard words.count == 1, let word = words.first else { return .failure(.unrecognized) }
         guard let request = githubRequest(word) ?? nameRequest(word) else { return .failure(.unrecognized) }
         return CaskReference.isOfficial(tap: request.tapName) ? .failure(.officialTap) : .success(request)
+    }
+
+    static func tapCommandRewrite(for text: String) -> TapCommandRewrite? {
+        guard case let .success(request) = parse(text), let token = request.caskToken else { return nil }
+        let words = text.split(whereSeparator: \.isWhitespace).map(String.init)
+        let startsWithBrew = words.first == "brew"
+        return TapCommandRewrite(
+            keptPrefix: startsWithBrew ? "brew" : "",
+            removedWords: startsWithBrew ? words.dropFirst().dropLast().joined(separator: " ") : "",
+            addedWords: startsWithBrew ? "tap" : "brew tap",
+            tapName: request.tapName,
+            removedSuffix: "/\(token)",
+            caskToken: token
+        )
     }
 
     private static func githubRequest(_ word: String) -> TapAddRequest? {

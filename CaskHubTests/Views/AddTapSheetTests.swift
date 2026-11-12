@@ -46,6 +46,20 @@ final class AddTapSheetTests: XCTestCase {
         XCTAssertFalse(model.isAwaitingMatch)
     }
 
+    func test_pasted_install_command_is_rewritten_and_keeps_the_cask() throws {
+        let model = AddTapModel()
+
+        XCTAssertNil(model.rewriteForPaste(from: "", to: "s"), "typing is never rewritten")
+        let rewrite = try XCTUnwrap(model.rewriteForPaste(from: "", to: "brew install --cask saffsanity/sill/sill"))
+        model.text = rewrite.finalText
+
+        XCTAssertEqual(model.request?.tapName, "saffsanity/sill")
+        XCTAssertEqual(model.request?.caskToken, "sill", "the install offer still follows")
+
+        model.text = "brew tap other/tap"
+        XCTAssertNil(model.request?.caskToken)
+    }
+
     func test_plain_tap_closes_after_adding() async {
         let model = AddTapModel()
         model.text = "hashicorp/tap"
