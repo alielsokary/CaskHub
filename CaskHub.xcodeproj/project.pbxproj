@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */; };
 		CA7A5CD058F854D2619AABB4 /* GitHubTapChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A44159691ED8160723F41 /* GitHubTapChecker.swift */; };
 		CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */; };
 		CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */; };
@@ -240,6 +241,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCaskIconTests.swift; sourceTree = "<group>"; };
 		CA7A44159691ED8160723F41 /* GitHubTapChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubTapChecker.swift; sourceTree = "<group>"; };
 		CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveTapDialog.swift; sourceTree = "<group>"; };
 		CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTapSheet.swift; sourceTree = "<group>"; };
@@ -990,6 +992,7 @@
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
 				CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */,
 				CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */,
+				CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1472,6 +1475,7 @@
 				CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */,
 				CA7AAD492A2AA6A009BF06D4 /* TapsViewTests.swift in Sources */,
 				CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */,
+				CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

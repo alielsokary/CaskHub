@@ -19,6 +19,14 @@ extension LocalHomebrewService {
         tapIndex = index
     }
 
+    /// Where an installed cask's app should be, from brew's receipt; no disk access, so views may call it.
+    func installedAppCandidates(for cask: Cask) -> [URL] {
+        guard let installation = installationSnapshot.installation(for: cask.reference) else { return [] }
+        return installation.appBundleNames.flatMap { name in
+            applicationDirectories.map { $0.appendingPathComponent(name) }
+        }
+    }
+
     func isTrusted(_ cask: Cask) -> Bool {
         tapIndex.trusts(cask.reference)
     }

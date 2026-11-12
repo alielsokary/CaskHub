@@ -61,6 +61,22 @@ final class ImageCacheService {
         memoryCache.setObject(image, forKey: token as NSString, cost: cost)
     }
 
+    /// Tap casks have no hosted icon yet; an installed one shows its own app's icon.
+    func installedAppIcon(for cask: Cask, candidates: [URL]) async -> NSImage? {
+        guard !candidates.isEmpty else { return nil }
+        let key = "app:\(cask.reference)" as NSString
+        if let cached = memoryCache.object(forKey: key) { return cached }
+        guard let image = await Self.appIcon(at: candidates) else { return nil }
+        memoryCache.setObject(image, forKey: key)
+        return image
+    }
+
+    @concurrent
+    private nonisolated static func appIcon(at candidates: [URL]) async -> NSImage? {
+        guard let app = candidates.first(where: { FileManager.default.fileExists(atPath: $0.path) }) else { return nil }
+        return NSWorkspace.shared.icon(forFile: app.path)
+    }
+
     func image(for cask: Cask) async -> NSImage? {
         // Icon sources are keyed by official tokens; a tap twin would get the wrong app's icon.
         guard CaskReference.isOfficial(tap: cask.tap) else { return nil }
