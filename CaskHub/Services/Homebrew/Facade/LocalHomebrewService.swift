@@ -53,6 +53,7 @@ final class LocalHomebrewService {
     @ObservationIgnored let tapIndexProvider: () async -> TapIndex?
     @ObservationIgnored let installedFormulaeProvider: (String) async -> [String]
     @ObservationIgnored let tapUpdateProvider: () async -> Void
+    @ObservationIgnored let tapTrustProvider: () async -> TapTrust
 
     /// Third-party taps; replaced only by a complete, successful load.
     var tapIndex = TapIndex.empty
@@ -156,15 +157,13 @@ final class LocalHomebrewService {
             ?? { await HomebrewPlatformLoader().load(from: brewBinary()) }
         homebrewOutdatedProvider = dependencies.homebrewOutdatedProvider
             ?? { await HomebrewOutdatedLoader().load(from: brewBinary()) }
-        tapIndexProvider = dependencies.tapIndexProvider
-            ?? { await HomebrewTapLoader().load(from: brewBinary()) }
+        // The test host app must never run real tap or trust queries; tests inject their own.
+        let tapBrew = { CrashReporter.isRunningTests ? nil : brewBinary() }
+        tapIndexProvider = dependencies.tapIndexProvider ?? { await HomebrewTapLoader().load(from: tapBrew()) }
         installedFormulaeProvider = dependencies.installedFormulaeProvider
-            ?? { await HomebrewTapLoader().installedFormulae(in: $0, from: brewBinary()) }
-        tapUpdateProvider = dependencies.tapUpdateProvider ?? {
-            // The test host app must never pull real taps.
-            guard !CrashReporter.isRunningTests else { return }
-            await HomebrewTapLoader().update(from: brewBinary())
-        }
+            ?? { await HomebrewTapLoader().installedFormulae(in: $0, from: tapBrew()) }
+        tapTrustProvider = dependencies.tapTrustProvider ?? { await HomebrewTapLoader().trust(from: tapBrew()) }
+        tapUpdateProvider = dependencies.tapUpdateProvider ?? { await HomebrewTapLoader().update(from: tapBrew()) }
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]

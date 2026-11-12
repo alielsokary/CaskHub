@@ -24,7 +24,12 @@ extension LocalHomebrewService {
     }
 
     /// A tap cask's first install waits for `confirmTrustedInstall`; brew trusts it on install.
+    /// Trust is re-read first: `brew uninstall` drops a cask's trust, so the cached list goes stale.
     func installRequestingTrust(_ cask: Cask) async throws {
+        if cask.thirdPartyTap != nil {
+            let trust = await tapTrustProvider()
+            tapIndex = TapIndex(taps: tapIndex.taps, casks: tapIndex.casks, trust: trust)
+        }
         guard isTrusted(cask) else {
             pendingTrustInstall = cask
             return

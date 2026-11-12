@@ -105,6 +105,7 @@ struct LocalHomebrewDependencies {
     var tapIndexProvider: (() async -> TapIndex?)?
     var installedFormulaeProvider: ((String) async -> [String])?
     var tapUpdateProvider: (() async -> Void)?
+    var tapTrustProvider: (() async -> TapTrust)?
     var laneLimiter: HomebrewLaneLimiter?
 
     func resolvedCommandExecutor() -> any HomebrewCommandExecuting {

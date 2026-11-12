@@ -82,6 +82,7 @@ final class TapWorkflowTests: XCTestCase {
 
     func test_install_trusted_tap_cask_skips_prompt() async throws {
         let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"], trustedCasks: ["saffsanity/sill/sill"])])
+        sut.trust = TapTrust(taps: [], casks: ["saffsanity/sill/sill"])
         await sut.service.refreshTaps()
         let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
 
@@ -163,13 +164,28 @@ final class TapWorkflowTests: XCTestCase {
         XCTAssertTrue(sut.runner.requests.contains { $0.arguments.starts(with: ["install", "--cask", "saffsanity/sill/sill"]) })
     }
 
-    func test_trusted_tap_install_still_fetches_first() async throws {
+    func test_tap_installs_and_updates_never_run_a_separate_fetch() async throws {
         let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"], trustedCasks: ["saffsanity/sill/sill"])])
         await sut.service.refreshTaps()
 
         try await sut.service.install(token: "saffsanity/sill/sill")
+        try await sut.service.upgrade(token: "saffsanity/sill/sill")
 
-        XCTAssertEqual(sut.runner.requests.first?.arguments.prefix(3), ["fetch", "--cask", "saffsanity/sill/sill"])
+        XCTAssertFalse(sut.runner.requests.contains { $0.arguments.first == "fetch" })
+        try await sut.service.install(token: "figma")
+        XCTAssertTrue(sut.runner.requests.contains { $0.arguments.prefix(3) == ["fetch", "--cask", "figma"] })
+    }
+
+    func test_trust_is_rechecked_before_deciding_to_prompt() async throws {
+        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"], trustedCasks: ["saffsanity/sill/sill"])])
+        await sut.service.refreshTaps()
+        let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
+        sut.trust = TapTrust(taps: [], casks: [])
+
+        try await sut.service.installRequestingTrust(cask)
+
+        XCTAssertEqual(sut.service.pendingTrustInstall?.reference, "saffsanity/sill/sill", "uninstall dropped brew's trust")
+        XCTAssertTrue(sut.runner.requests.isEmpty)
     }
 
     func test_cancelled_add_untaps_leftover_and_throws() async {
@@ -219,6 +235,7 @@ final class TapWorkflowTests: XCTestCase {
         var indexes: [TapIndex?]
         var formulae: [String] = []
         var updateCount = 0
+        var trust = TapTrust(taps: [], casks: [])
         var outdatedCount = 0
 
         init(service: LocalHomebrewService, runner: StubBrewProcessRunner, lanes: HomebrewLaneLimiter, indexes: [TapIndex?]) {
@@ -247,6 +264,7 @@ final class TapWorkflowTests: XCTestCase {
             $0.tapIndexProvider = { sut.indexes.isEmpty ? nil : sut.indexes.removeFirst() }
             $0.installedFormulaeProvider = { tap in sut.formulae.filter { $0.hasPrefix("\(tap)/") } }
             $0.tapUpdateProvider = { sut.updateCount += 1 }
+            $0.tapTrustProvider = { sut.trust }
         }
         sut = SUT(service: service, runner: runner, lanes: lanes, indexes: indexes)
         return sut

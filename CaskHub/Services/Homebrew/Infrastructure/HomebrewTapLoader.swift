@@ -35,6 +35,11 @@ nonisolated struct HomebrewTapLoader: Sendable {
     }
 
     @concurrent
+    func trust(from brewURL: URL?) async -> TapTrust {
+        Self.trustOrNone(brewURL.flatMap { Self.run($0, ["trust", "--json=v1"]) })
+    }
+
+    @concurrent
     func update(from brewURL: URL?) async {
         guard let brewURL else { return }
         _ = ProcessCapture.capture(brewURL, arguments: ["update"])

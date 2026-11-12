@@ -261,9 +261,10 @@ extension LocalHomebrewService {
         operationStore.status
     }
 
-    /// brew refuses `fetch` for a tap cask it doesn't trust yet; install and upgrade trust it themselves.
+    /// brew refuses `fetch` for an untrusted tap cask and its trust changes behind CaskHub's back
+    /// (uninstall drops it), so tap casks skip the separate download; install and upgrade fetch themselves.
     private func fetchSteps(_ token: String, cancellation: HomebrewStepCancellation) -> [HomebrewMutationStep] {
-        tapIndex.trusts(token) ? [.fetch(token: token, cancellation: cancellation)] : []
+        CaskReference.tap(of: token) == nil ? [.fetch(token: token, cancellation: cancellation)] : []
     }
 
     func displayName(for token: String) -> String {

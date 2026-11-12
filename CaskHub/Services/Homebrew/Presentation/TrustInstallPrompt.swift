@@ -25,7 +25,7 @@ nonisolated struct TrustInstallPrompt: Equatable {
     }
 
     var title: String {
-        String(localized: "Install \(token) from \(source)?")
+        String(localized: "Trust and install \(token) from \(source)?")
     }
 
     var message: String {
@@ -33,6 +33,9 @@ nonisolated struct TrustInstallPrompt: Equatable {
     }
 
     static func message(name: String, tap: String) -> String {
-        String(localized: "\(name) comes from \(tap), not Homebrew. Installing lets it run code on this Mac.")
+        String(localized: """
+            \(name) comes from \(tap), not Homebrew. \
+            Installing makes Homebrew trust this cask and lets it run code on this Mac.
+            """)
     }
 }

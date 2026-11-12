@@ -154,8 +154,11 @@ final class AddTapSheetTests: XCTestCase {
 
         let prompt = TrustInstallPrompt(cask: sill)
 
-        XCTAssertEqual(prompt.title, "Install sill from saffsanity/sill?")
-        XCTAssertEqual(prompt.message, "sill comes from saffsanity/sill, not Homebrew. Installing lets it run code on this Mac.")
+        XCTAssertEqual(prompt.title, "Trust and install sill from saffsanity/sill?")
+        XCTAssertEqual(
+            prompt.message,
+            "sill comes from saffsanity/sill, not Homebrew. Installing makes Homebrew trust this cask and lets it run code on this Mac."
+        )
     }
 
     func test_trust_prompt_ignores_tap_authored_names() {
@@ -166,7 +169,7 @@ final class AddTapSheetTests: XCTestCase {
 
         XCTAssertFalse(prompt.title.contains("Figma"))
         XCTAssertFalse(prompt.message.contains("official"))
-        XCTAssertEqual(prompt.title, "Install tool from evil/tap?")
+        XCTAssertEqual(prompt.title, "Trust and install tool from evil/tap?")
     }
 
     func test_trust_prompt_strips_unsafe_characters_from_identifiers() {

@@ -423,34 +423,6 @@
         }
       }
     },
-    "%@ comes from %@, not Homebrew. Installing lets it run code on this Mac." : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ поставляется из %2$@, а не из Homebrew. Установка позволит ему выполнять код на этом Mac."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ надходить із %2$@, а не з Homebrew. Встановлення дозволить йому виконувати код на цьому Mac."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ 来自 %2$@，而非 Homebrew。安装后它可以在这台 Mac 上运行代码。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ 來自 %2$@，而非 Homebrew。安裝後它可以在這台 Mac 上執行程式碼。"
-          }
-        }
-      }
-    },
     "%@ isn't in %@." : {
       "localizations" : {
         "ru" : {
@@ -559,6 +531,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 中沒有 Cask。CaskHub 目前只顯示 Cask。"
+          }
+        }
+      }
+    },
+    "%@ comes from %@, not Homebrew. Installing makes Homebrew trust this cask and lets it run code on this Mac." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ поставляется из %2$@, а не из Homebrew. При установке Homebrew начнёт доверять этому cask, и он сможет выполнять код на этом Mac."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ надходить із %2$@, а не з Homebrew. Під час встановлення Homebrew почне довіряти цьому cask, і він зможе виконувати код на цьому Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 来自 %2$@，而非 Homebrew。安装后 Homebrew 将信任此 Cask，它可以在这台 Mac 上运行代码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 來自 %2$@，而非 Homebrew。安裝後 Homebrew 將信任此 Cask，它可以在這台 Mac 上執行程式碼。"
           }
         }
       }
@@ -1067,34 +1067,6 @@
         }
       }
     },
-    "Install %@ from %@?" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Установить %1$@ из %2$@?"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Встановити %1$@ з %2$@?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从 %2$@ 安装 %1$@？"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "從 %2$@ 安裝 %1$@？"
-          }
-        }
-      }
-    },
     "Install %@?" : {
       "localizations" : {
         "ru" : {
@@ -1539,6 +1511,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "這會解除安裝從此 Tap 安裝的所有內容："
+          }
+        }
+      }
+    },
+    "Trust and install %@ from %@?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доверять и установить %1$@ из %2$@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довіряти й встановити %1$@ з %2$@?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任并从 %2$@ 安装 %1$@？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任並從 %2$@ 安裝 %1$@？"
           }
         }
       }
