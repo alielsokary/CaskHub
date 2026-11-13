@@ -92,7 +92,23 @@ final class TapCaskIconTests: XCTestCase {
         XCTAssertTrue(cache.applyIconManifest(Data(#"{"version": 1, "hashes": {}, "taps": {"saffsanity/sill/sill": "\#(hash)"}}"#.utf8)))
 
         XCTAssertEqual(cache.iconHash(for: "saffsanity/sill/sill"), hash)
-        XCTAssertFalse(cache.applyIconManifest(Data(#"{"version": 1, "hashes": {}, "taps": {"../evil": "\#(hash)"}}"#.utf8)))
+    }
+
+    func test_bad_tap_key_drops_only_itself() {
+        let cache = ImageCacheService(diskCache: IconDiskCache(directory: temporaryDirectory()))
+        let hash = String(repeating: "b", count: 40)
+        let manifest = #"""
+        {"version": 1, "hashes": {"figma": "\#(hash)"},
+         "taps": {"saffsanity/sill/sill": "\#(hash)", "../evil": "\#(hash)", "u/r/short": "abc"}}
+        """#
+
+        XCTAssertTrue(cache.applyIconManifest(Data(manifest.utf8)))
+
+        XCTAssertEqual(cache.iconHash(for: "figma"), hash)
+        XCTAssertEqual(cache.iconHash(for: "saffsanity/sill/sill"), hash)
+        XCTAssertNil(cache.iconHash(for: "../evil"))
+        XCTAssertNil(cache.iconHash(for: "u/r/short"))
+        XCTAssertFalse(cache.applyIconManifest(Data(#"{"version": 1, "hashes": {"../x": "\#(hash)"}}"#.utf8)))
     }
 
     func test_covered_tap_cask_loads_its_caskflow_icon_before_the_app_icon() async throws {

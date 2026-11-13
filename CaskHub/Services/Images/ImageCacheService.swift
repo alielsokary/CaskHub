@@ -418,18 +418,18 @@ extension ImageCacheService {
     func applyIconManifest(_ data: Data) -> Bool {
         guard let manifest = try? JSONDecoder().decode(IconManifest.self, from: data),
               manifest.version == 1,
-              Self.isValid(manifest.hashes, keys: #"^[a-z0-9][a-z0-9+@._-]*$"#),
-              Self.isValid(manifest.taps ?? [:], keys: #"^[a-z0-9][a-z0-9_.-]*/[a-z0-9][a-z0-9_.-]*/[a-z0-9][a-z0-9+@._-]*$"#)
+              manifest.hashes.allSatisfy({ Self.isValid(key: $0.key, hash: $0.value, pattern: Self.tokenPattern) })
         else { return false }
-        iconHashes = manifest.hashes.merging(manifest.taps ?? [:]) { official, _ in official }
+        let taps = (manifest.taps ?? [:]).filter { Self.isValid(key: $0.key, hash: $0.value, pattern: Self.tapReferencePattern) }
+        iconHashes = manifest.hashes.merging(taps) { official, _ in official }
         return true
     }
 
-    private nonisolated static func isValid(_ hashes: [String: String], keys pattern: String) -> Bool {
-        hashes.allSatisfy { key, hash in
-            key.range(of: pattern, options: .regularExpression) != nil
-                && hash.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil
-        }
+    private nonisolated static let tokenPattern = #"^[a-z0-9][a-z0-9+@._-]*$"#
+    private nonisolated static let tapReferencePattern = #"^[a-z0-9][a-z0-9_.-]*/[a-z0-9][a-z0-9_.-]*/[a-z0-9][a-z0-9+@._-]*$"#
+
+    private nonisolated static func isValid(key: String, hash: String, pattern: String) -> Bool {
+        key.range(of: pattern, options: .regularExpression) != nil && hash.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil
     }
 
     private nonisolated struct IconManifest: Decodable {
