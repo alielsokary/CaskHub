@@ -181,6 +181,40 @@ final class CategoryService {
         tokenMappings[token]?.primary
     }
 
+    // MARK: - Tap casks
+
+    private var tapMappings: [String: TokenCategoryMapping] = [:]
+    private var tapAliases: [String: String] = [:]
+    private(set) var tapIconRefs: Set<String> = []
+
+    func refreshTapsFromRemote() async {
+        guard let remote = await CaskFlowReleases.fetch(TapCatalogData.self, asset: "tap-categories.json") else { return }
+        applyTapData(remote)
+    }
+
+    func applyTapData(_ data: TapCatalogData) {
+        guard data.version == 1 else { return }
+        tapMappings = data.casks
+        tapAliases = data.sameAs
+        tapIconRefs = Set(data.iconCasks ?? [])
+        catalogStateRevision &+= 1
+    }
+
+    func officialAlias(for reference: String) -> String? {
+        tapAliases[reference]
+    }
+
+    /// Official token, tap reference, or a tap cask aliased to an official one; unknown category ids are dropped.
+    func mapping(for reference: String) -> TokenCategoryMapping? {
+        if let official = tokenMappings[reference] { return official }
+        if let alias = tapAliases[reference] { return tokenMappings[alias] }
+        guard let mapping = tapMappings[reference], categoryDefinitions[mapping.primary] != nil else { return nil }
+        return TokenCategoryMapping(
+            primary: mapping.primary,
+            secondary: mapping.secondary.filter { categoryDefinitions[$0] != nil }
+        )
+    }
+
     func displayName(for categoryID: CategoryID) -> String {
         guard let definition = categoryDefinitions[categoryID] else { return categoryID }
         return localizedCategoryName(categoryID, fallback: definition.displayName)

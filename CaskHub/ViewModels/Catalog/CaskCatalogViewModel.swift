@@ -183,7 +183,8 @@ final class CaskCatalogViewModel {
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
         async let taps: Void = localHomebrew.refreshTaps()
-        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates, taps)
+        async let tapCategories: Void = categoryService.refreshTapsFromRemote()
+        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates, taps, tapCategories)
         let enriched = categoryService.addingAppIdentities(to: catalog.all)
         if enriched != catalog.all {
             catalog = CatalogPartition(enriched, tapCasks: catalog.tapCasks)

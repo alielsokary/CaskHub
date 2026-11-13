@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7A51F8BB8721ED85B44DCB /* TapCatalogData.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */; };
+		CA7A782E69C0F90CB6ECB56E /* TapCategoryDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */; };
 		CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */; };
 		CA7A5CD058F854D2619AABB4 /* GitHubTapChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A44159691ED8160723F41 /* GitHubTapChecker.swift */; };
 		CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */; };
@@ -241,6 +243,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCatalogData.swift; sourceTree = "<group>"; };
+		CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCategoryDataTests.swift; sourceTree = "<group>"; };
 		CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCaskIconTests.swift; sourceTree = "<group>"; };
 		CA7A44159691ED8160723F41 /* GitHubTapChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubTapChecker.swift; sourceTree = "<group>"; };
 		CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveTapDialog.swift; sourceTree = "<group>"; };
@@ -779,6 +783,7 @@
 				41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */,
 				41DFD46F30028F7D00608C7A /* CategoryService.swift */,
 				41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */,
+				CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */,
 			);
 			path = Catalog;
 			sourceTree = "<group>";
@@ -974,6 +979,7 @@
 				CA2510000000000000000003 /* RetiredCaskCatalogTests.swift */,
 				CB0222000000000000000001 /* FontCatalogTests.swift */,
 				CA7A74921CE28363941C4016 /* TapCatalogTests.swift */,
+				CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */,
 			);
 			path = Catalog;
 			sourceTree = "<group>";
@@ -1393,6 +1399,7 @@
 				CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */,
 				CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */,
 				CA7A5CD058F854D2619AABB4 /* GitHubTapChecker.swift in Sources */,
+				CA7A51F8BB8721ED85B44DCB /* TapCatalogData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1476,6 +1483,7 @@
 				CA7AAD492A2AA6A009BF06D4 /* TapsViewTests.swift in Sources */,
 				CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */,
 				CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */,
+				CA7A782E69C0F90CB6ECB56E /* TapCategoryDataTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
