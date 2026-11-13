@@ -186,6 +186,8 @@ final class CategoryService {
     private var tapMappings: [String: TokenCategoryMapping] = [:]
     private var tapAliases: [String: String] = [:]
     private(set) var tapIconRefs: Set<String> = []
+    /// Bumped only by tap data, so tap cask icons reload without reloading every official icon.
+    private(set) var tapDataRevision = 0
 
     func refreshTapsFromRemote() async {
         guard let remote = await CaskFlowReleases.fetch(TapCatalogData.self, asset: "tap-categories.json") else { return }
@@ -197,6 +199,7 @@ final class CategoryService {
         tapMappings = data.casks
         tapAliases = data.sameAs
         tapIconRefs = Set(data.iconCasks ?? [])
+        tapDataRevision &+= 1
         catalogStateRevision &+= 1
     }
 

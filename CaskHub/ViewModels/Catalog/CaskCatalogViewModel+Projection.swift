@@ -94,6 +94,8 @@ extension CaskCatalogViewModel {
 
     func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
         guard CaskReference.isOfficial(tap: cask.tap) else {
+            // Category pages list tap casks only once installed, so only then does the label lead anywhere.
+            guard localState(for: cask).isHomebrewInstalled else { return nil }
             return CaskCategoryProjector.make(
                 token: cask.reference, mappings: categoryMappings, definitions: categoryService.categoryDefinitions
             )

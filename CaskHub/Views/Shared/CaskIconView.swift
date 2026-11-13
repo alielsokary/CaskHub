@@ -51,7 +51,8 @@ struct CaskIconView: View {
         }
         .animation(.easeIn(duration: 0.2), value: loadedImage != nil)
         .task(id: [
-            cask.reference, imageCache.iconHash(for: cask.reference) ?? "", String(imageCache.iconRefreshRevision), installedVersion
+            cask.reference, imageCache.iconHash(for: cask.reference) ?? "", String(imageCache.iconRefreshRevision), installedVersion,
+            cask.thirdPartyTap == nil ? "" : String(imageCache.tapDataRevision())
         ]) {
             didResolve = false
             let image = await imageCache.icon(for: cask, installedCandidates: localHomebrew?.installedAppCandidates(for: cask) ?? [])

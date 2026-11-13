@@ -82,6 +82,7 @@ struct CaskHubApp: App {
         images.knownIconTokens = { categories.iconTokens }
         images.knownTapIconRefs = { categories.tapIconRefs }
         images.officialAlias = { categories.officialAlias(for: $0) }
+        images.tapDataRevision = { categories.tapDataRevision }
         _imageCache = State(initialValue: images)
         _categoryService = State(initialValue: categories)
         _recentlyAdded = State(initialValue: recent)

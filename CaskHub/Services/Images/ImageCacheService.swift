@@ -27,6 +27,7 @@ final class ImageCacheService {
     /// Tap references CaskFlow publishes icons for, and tap casks it aliases to an official token.
     var knownTapIconRefs: () -> Set<String> = { [] }
     var officialAlias: (String) -> String? = { _ in nil }
+    var tapDataRevision: () -> Int = { 0 }
     private var iconHashes: [String: String]?
     private var lastManifestAttempt: Date?
     private var isRefreshingManifest = false

@@ -45,6 +45,17 @@ final class TapCategoryDataTests: XCTestCase {
         XCTAssertNil(service.mapping(for: "user/tap/unknown"))
     }
 
+    func test_tap_data_bumps_its_own_revision_so_tap_icons_reload() throws {
+        let service = try makeService()
+        let before = service.tapDataRevision
+
+        service.applyTapData(try decodeTapData(tapJSON))
+        let official = #"{"version": 1, "generatedDate": "x", "releaseTag": null, "categories": {}, "tokenToCategory": {}}"#
+        service.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: Data(official.utf8)))
+
+        XCTAssertEqual(service.tapDataRevision, before + 1)
+    }
+
     func test_other_versions_are_ignored() throws {
         let service = try makeService()
 

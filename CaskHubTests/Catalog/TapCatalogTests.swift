@@ -51,15 +51,21 @@ final class TapCatalogTests: XCTestCase {
         XCTAssertFalse(vm.browseSections.flatMap(\.casks).contains { $0.thirdPartyTap != nil })
     }
 
-    func test_covered_tap_casks_show_their_category_and_uncovered_ones_none() async throws {
+    func test_only_installed_covered_tap_casks_show_their_category() async throws {
         let vm = await makeSUT(
-            official: [], taps: ["saffsanity/sill": ["other"], "user/tap": ["plain"]], categories: try tapCategories()
+            official: [], taps: ["saffsanity/sill": ["sill", "other"], "user/tap": ["plain"]],
+            installed: [
+                tapInstallation("sill", tap: "saffsanity/sill", version: "1.0"),
+                tapInstallation("plain", tap: "user/tap", version: "1.0")
+            ],
+            categories: try tapCategories()
         )
 
-        let covered = try XCTUnwrap(vm.tapCasks(in: "saffsanity/sill").first)
-        let uncovered = try XCTUnwrap(vm.tapCasks(in: "user/tap").first)
-        XCTAssertEqual(vm.categoryPresentation(for: covered)?.mainName, "Utilities")
-        XCTAssertNil(vm.categoryPresentation(for: uncovered))
+        let all = vm.tapCasks(in: "saffsanity/sill") + vm.tapCasks(in: "user/tap")
+        let casks = Dictionary(uniqueKeysWithValues: all.map { ($0.token, $0) })
+        XCTAssertEqual(vm.categoryPresentation(for: try XCTUnwrap(casks["sill"]))?.mainName, "Utilities")
+        XCTAssertNil(vm.categoryPresentation(for: try XCTUnwrap(casks["other"])), "its category page would not list it")
+        XCTAssertNil(vm.categoryPresentation(for: try XCTUnwrap(casks["plain"])))
     }
 
     func test_tap_sections_cap_at_eight_and_skip_taps_without_casks() async throws {
