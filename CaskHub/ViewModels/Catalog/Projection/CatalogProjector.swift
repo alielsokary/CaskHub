@@ -87,7 +87,9 @@ nonisolated enum CatalogProjector {
             if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
-            if let mapping = input.categoryMappings[cask.reference] {
+            // Tap casks join categories only once installed; uninstalled ones stay on their tap page.
+            if let mapping = input.categoryMappings[cask.reference],
+               cask.thirdPartyTap == nil || localState.isHomebrewInstalled {
                 forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }

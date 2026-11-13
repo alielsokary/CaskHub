@@ -56,7 +56,7 @@ extension CaskCatalogViewModel {
         librarySnapshot.localStates[cask.reference] ?? localHomebrew.localState(for: cask)
     }
 
-    /// CaskFlow's mappings plus the built-in Fonts category for every `font-` cask.
+    /// CaskFlow's mappings, tap casks it covers (by reference), and the built-in Fonts category for every `font-` cask.
     var categoryMappings: [String: TokenCategoryMapping] {
         let key = CategoryPresentationCacheKey(
             catalogRevision: catalogRevision,
@@ -66,6 +66,9 @@ extension CaskCatalogViewModel {
             var mappings = categoryService.tokenMappings
             for cask in catalog.all where cask.isFont && mappings[cask.token] == nil {
                 mappings[cask.token] = TokenCategoryMapping(primary: CategoryService.fontsCategoryID, secondary: [])
+            }
+            for cask in catalog.tapCasks {
+                mappings[cask.reference] = categoryService.mapping(for: cask.reference)
             }
             return mappings
         }
@@ -90,7 +93,11 @@ extension CaskCatalogViewModel {
     }
 
     func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
-        guard CaskReference.isOfficial(tap: cask.tap) else { return nil }
+        guard CaskReference.isOfficial(tap: cask.tap) else {
+            return CaskCategoryProjector.make(
+                token: cask.reference, mappings: categoryMappings, definitions: categoryService.categoryDefinitions
+            )
+        }
         return categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
             token: cask.token,
             mappings: categoryMappings,

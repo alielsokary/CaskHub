@@ -34,6 +34,34 @@ final class TapCatalogTests: XCTestCase {
         }
     }
 
+    func test_only_installed_covered_tap_casks_join_categories() async throws {
+        let vm = await makeSUT(
+            official: [makeCask("figma")],
+            taps: ["saffsanity/sill": ["sill", "other"], "user/tap": ["plain"]],
+            installed: [
+                tapInstallation("sill", tap: "saffsanity/sill", version: "1.0"),
+                tapInstallation("plain", tap: "user/tap", version: "1.0")
+            ],
+            categories: try tapCategories()
+        )
+
+        vm.selectedSidebar = .category("utilities")
+        XCTAssertEqual(vm.filteredCasks.map(\.id), ["saffsanity/sill/sill"])
+        XCTAssertEqual(vm.categoryCounts, ["utilities": 1, "design": 1])
+        XCTAssertFalse(vm.browseSections.flatMap(\.casks).contains { $0.thirdPartyTap != nil })
+    }
+
+    func test_covered_tap_casks_show_their_category_and_uncovered_ones_none() async throws {
+        let vm = await makeSUT(
+            official: [], taps: ["saffsanity/sill": ["other"], "user/tap": ["plain"]], categories: try tapCategories()
+        )
+
+        let covered = try XCTUnwrap(vm.tapCasks(in: "saffsanity/sill").first)
+        let uncovered = try XCTUnwrap(vm.tapCasks(in: "user/tap").first)
+        XCTAssertEqual(vm.categoryPresentation(for: covered)?.mainName, "Utilities")
+        XCTAssertNil(vm.categoryPresentation(for: uncovered))
+    }
+
     func test_tap_sections_cap_at_eight_and_skip_taps_without_casks() async throws {
         let tokens = (1 ... 12).map { "tool-\($0)" }
         let vm = await makeSUT(official: [], taps: ["user/big": tokens, "spotify/public": []])
@@ -106,7 +134,8 @@ final class TapCatalogTests: XCTestCase {
         official: [Cask],
         taps: [String: [String]],
         installed: [LocalCaskInstallation] = [],
-        outdated: Set<String> = []
+        outdated: Set<String> = [],
+        categories: CategoryService? = nil
     ) async -> CaskCatalogViewModel {
         let index = TapIndex(
             taps: taps.keys.sorted().map { name in
@@ -134,12 +163,30 @@ final class TapCatalogTests: XCTestCase {
         }
         let api = MockBrewAPIClient()
         api.casks = official
-        let vm = makeViewModel(api: api, localHomebrew: service)
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: service)
         await service.refresh()
         await service.refreshHomebrewOutdated()
         await vm.fetchCasks()
         await vm.refreshTaps()
         return vm
+    }
+
+    private func tapCategories() throws -> CategoryService {
+        let official = """
+        {"version": 1, "generatedDate": "2026-11-13", "releaseTag": null,
+         "categories": {"utilities": {"displayName": "Utilities", "icon": "wrench"},
+                        "design": {"displayName": "Design", "icon": "paintbrush"}},
+         "tokenToCategory": {"figma": {"primary": "design", "secondary": []}}}
+        """
+        let taps = """
+        {"version": 1, "generatedDate": "2026-11-13", "sameAs": {},
+         "casks": {"saffsanity/sill/sill": {"primary": "utilities", "secondary": []},
+                   "saffsanity/sill/other": {"primary": "utilities", "secondary": []}}}
+        """
+        let service = CategoryService()
+        service.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: Data(official.utf8)))
+        service.applyTapData(try JSONDecoder().decode(TapCatalogData.self, from: Data(taps.utf8)))
+        return service
     }
 
     private func tapInstallation(_ token: String, tap: String, version: String) -> LocalCaskInstallation {
