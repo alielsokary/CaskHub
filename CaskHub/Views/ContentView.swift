@@ -290,7 +290,7 @@ private extension ContentView {
     func refreshUpdates() {
         isRefreshingUpdates = true
         Task {
-            await viewModel.load()
+            await viewModel.load(userRequested: true)
             isRefreshingUpdates = false
         }
     }

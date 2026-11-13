@@ -174,12 +174,13 @@ final class CaskCatalogViewModel {
 
     var lastLoadedAt: Date?
 
-    func load() async {
+    /// `userRequested` runs a full `brew update` before asking Homebrew what is outdated.
+    func load(userRequested: Bool = false) async {
         // Stamped up front so activations during a load don't start another.
         lastLoadedAt = .now
         async let catalogFetch: Void = fetchCasks()
         async let local: Void = localHomebrew.refresh()
-        async let homebrewOutdated: Void = localHomebrew.refreshHomebrewOutdated()
+        async let homebrewOutdated: Void = localHomebrew.refreshHomebrewOutdated(userRequested: userRequested)
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
         _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates)
