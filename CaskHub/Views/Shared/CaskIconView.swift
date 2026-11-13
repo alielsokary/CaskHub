@@ -54,9 +54,7 @@ struct CaskIconView: View {
             cask.reference, imageCache.iconHash(for: cask.reference) ?? "", String(imageCache.iconRefreshRevision), installedVersion
         ]) {
             didResolve = false
-            let image = cask.thirdPartyTap == nil
-                ? await imageCache.image(for: cask)
-                : await imageCache.installedAppIcon(for: cask, candidates: localHomebrew?.installedAppCandidates(for: cask) ?? [])
+            let image = await imageCache.icon(for: cask, installedCandidates: localHomebrew?.installedAppCandidates(for: cask) ?? [])
             guard !Task.isCancelled else { return }
             loadedImage = image
             didResolve = true
