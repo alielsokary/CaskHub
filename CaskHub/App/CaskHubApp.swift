@@ -79,10 +79,7 @@ struct CaskHubApp: App {
         }
         let homebrew = LocalHomebrewService()
         let images = ImageCacheService()
-        images.knownIconTokens = { categories.iconTokens }
-        images.knownTapIconRefs = { categories.tapIconRefs }
-        images.officialAlias = { categories.officialAlias(for: $0) }
-        images.tapDataRevision = { categories.tapDataRevision }
+        images.connect(to: categories)
         _imageCache = State(initialValue: images)
         _categoryService = State(initialValue: categories)
         _recentlyAdded = State(initialValue: recent)

@@ -148,6 +148,27 @@ final class TapCaskIconTests: XCTestCase {
         XCTAssertEqual(TapIconProtocol.requests.withLock { $0 }, [])
     }
 
+    func test_connect_follows_category_data() throws {
+        let categories = CategoryService()
+        let images = ImageCacheService(diskCache: IconDiskCache(directory: temporaryDirectory()))
+        images.connect(to: categories)
+        let official = #"""
+        {"version": 1, "generatedDate": "x", "releaseTag": null, "categories": {}, "tokenToCategory": {}, "iconTokens": ["figma"]}
+        """#
+        let taps = #"{"version": 1, "generatedDate": "x", "casks": {}, "sameAs": {"n/n/ngrok": "ngrok"}, "iconCasks": ["u/r/t"]}"#
+        let tapData = try JSONDecoder().decode(TapCatalogData.self, from: Data(taps.utf8))
+
+        categories.applyData(try JSONDecoder().decode(CaskCategoryData.self, from: Data(official.utf8)))
+        categories.applyTapData(tapData)
+        let revision = images.tapDataRevision()
+        categories.applyTapData(tapData)
+
+        XCTAssertEqual(images.knownIconTokens(), ["figma"])
+        XCTAssertEqual(images.knownTapIconRefs(), ["u/r/t"])
+        XCTAssertEqual(images.officialAlias("n/n/ngrok"), "ngrok")
+        XCTAssertEqual(images.tapDataRevision(), revision + 1)
+    }
+
     // MARK: - Helpers
 
     static let png: Data = {
