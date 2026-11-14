@@ -93,8 +93,7 @@ final class CaskFileTextParserTests: XCTestCase {
     }
 
     func test_garbage_source() {
-        var generator = SystemRandomNumberGenerator()
-        let bytes = (0 ..< 200_000).map { _ in UInt8.random(in: 0 ... 255, using: &generator) }
+        let bytes = (0 ..< 200_000).map { UInt8(truncatingIfNeeded: ($0 &* 0x9E37_79B1) >> 16) }
         let source = String(bytes: bytes, encoding: .isoLatin1) ?? ""
         let start = Date()
 

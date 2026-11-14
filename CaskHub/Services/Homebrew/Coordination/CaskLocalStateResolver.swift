@@ -114,10 +114,7 @@ struct CaskLocalStateResolver {
         let source = installationSource(for: cask)
         let externalVersion = externalApplication(for: cask)?.version
         let target = cask.updateTarget(for: platform)
-        let outdated = CaskReference.isOfficial(tap: cask.tap)
-            ? target.map { isOutdated(token: cask.reference, remoteVersion: $0.version, autoUpdates: $0.autoUpdates) } ?? false
-            // Tap versions read as text are unreliable; brew outdated is the authority.
-            : isInstalled(token: cask.reference) && isListedByHomebrew(cask.reference)
+        let outdated = isOutdated(cask, target: target)
         let ownsInstallation = source == .homebrew
         return CaskLocalState(
             installationSource: source,
@@ -134,9 +131,7 @@ struct CaskLocalStateResolver {
             ),
             externalCLIPath: source == .externalExecutable ? externalCLIPath(cask) : nil,
             uninstallAvailability: uninstallAvailability(for: cask),
-            hasAvailableUpdate: outdated
-                && homebrewOutdated?.pinned.contains(cask.token) != true
-                && (greedyUpdates || target?.autoUpdates != true || isListedByHomebrew(cask.reference)),
+            hasAvailableUpdate: outdated && offersUpdate(cask, target: target),
             isOutdated: outdated,
             isZombie: isZombie(cask),
             canOpen: canOpen(cask),
@@ -296,6 +291,19 @@ private extension CaskLocalStateResolver {
     /// Tap casks never claim apps installed outside Homebrew.
     func detectsExternalInstalls(_ cask: Cask) -> Bool {
         CaskReference.isOfficial(tap: cask.tap)
+    }
+
+    func isOutdated(_ cask: Cask, target: CaskUpdateTarget?) -> Bool {
+        guard CaskReference.isOfficial(tap: cask.tap) else {
+            // Tap versions read as text are unreliable; brew outdated is the authority.
+            return isInstalled(token: cask.reference) && isListedByHomebrew(cask.reference)
+        }
+        return target.map { isOutdated(token: cask.reference, remoteVersion: $0.version, autoUpdates: $0.autoUpdates) } ?? false
+    }
+
+    func offersUpdate(_ cask: Cask, target: CaskUpdateTarget?) -> Bool {
+        homebrewOutdated?.pinned.contains(cask.token) != true
+            && (greedyUpdates || target?.autoUpdates != true || isListedByHomebrew(cask.reference))
     }
 
     func isListedByHomebrew(_ reference: String) -> Bool {
