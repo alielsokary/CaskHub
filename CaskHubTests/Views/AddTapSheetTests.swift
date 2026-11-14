@@ -31,7 +31,7 @@ final class AddTapSheetTests: XCTestCase {
 
         model.text = "foo; rm -rf ~"
         XCTAssertFalse(model.canAdd)
-        XCTAssertEqual(model.errorText, "Enter a tap like user/repo or a GitHub URL.")
+        XCTAssertEqual(model.errorText, "Enter a tap like user/repo, a GitHub URL, or an https Git URL.")
 
         model.text = "homebrew/cask"
         XCTAssertEqual(model.errorText, "Homebrew's own taps are already included.")
@@ -112,11 +112,21 @@ final class AddTapSheetTests: XCTestCase {
         XCTAssertFalse(model.canAdd)
     }
 
-    func test_http_status_maps_to_availability() {
-        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 200), .available)
-        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 301), .available)
-        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 404), .missing)
-        XCTAssertEqual(GitHubTapChecker.availability(forStatusCode: 503), .unreachable)
+    func test_git_answers_map_to_availability() {
+        XCTAssertEqual(TapRepositoryChecker.availability(forStatusCode: 200), .available)
+        for status in [401, 403, 404] {
+            XCTAssertEqual(TapRepositoryChecker.availability(forStatusCode: status), .missing, "\(status)")
+        }
+        XCTAssertEqual(TapRepositoryChecker.availability(forStatusCode: 503), .unreachable)
+    }
+
+    func test_probe_asks_git_smart_http_on_any_host() {
+        let github = URL(string: "https://github.com/saffsanity/homebrew-sill")!
+        let codeberg = URL(string: "https://codeberg.org/User/Casks.git")!
+        XCTAssertEqual(TapRepositoryChecker.probeURL(for: github).absoluteString,
+                       "https://github.com/saffsanity/homebrew-sill.git/info/refs?service=git-upload-pack")
+        XCTAssertEqual(TapRepositoryChecker.probeURL(for: codeberg).absoluteString,
+                       "https://codeberg.org/User/Casks.git/info/refs?service=git-upload-pack")
     }
 
     func test_plain_tap_closes_after_adding() async {

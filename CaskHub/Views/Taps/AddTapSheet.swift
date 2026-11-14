@@ -108,8 +108,9 @@ final class AddTapModel {
         guard case let .failure(error) = TapAddInput.parse(text) else { return nil }
         switch error {
         case .empty: return nil
-        case .unrecognized: return String(localized: "Enter a tap like user/repo or a GitHub URL.")
+        case .unrecognized: return String(localized: "Enter a tap like user/repo, a GitHub URL, or an https Git URL.")
         case .officialTap: return String(localized: "Homebrew's own taps are already included.")
+        case .insecureRemote: return String(localized: "Use an https:// address. Unencrypted Git URLs aren't supported.")
         }
     }
 
@@ -255,7 +256,7 @@ struct AddTapSheet: View {
                 .font(CHType.bodySm)
                 .foregroundStyle(Color.chTextMuted)
         }
-        Text("Examples: user/repo · github.com/user/homebrew-repo")
+        Text("Examples: user/repo · github.com/user/homebrew-repo · https://gitlab.com/user/homebrew-repo")
             .font(CHType.statusMono)
             .foregroundStyle(Color.chTextMuted)
         Text("Adding a tap doesn't trust it. Each cask asks before its first install.")
@@ -278,7 +279,7 @@ struct AddTapSheet: View {
             .foregroundStyle(Color.chTextBody)
         ProgressView()
             .progressViewStyle(.linear)
-        Text(verbatim: "Cloning into …/Taps/\(AddTapModel.source(of: request).replacingOccurrences(of: "github.com/", with: ""))")
+        Text(verbatim: "Cloning into \(request.cloneFolder)")
             .font(CHType.statusMono)
             .foregroundStyle(Color.chTextMuted)
             .lineLimit(1)

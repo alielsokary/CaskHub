@@ -32,8 +32,12 @@ struct TapSectionHeader: View {
                 .buttonStyle(.plain)
             }
             Menu {
-                if let url = Self.githubURL(for: tap.remote) {
-                    Button("Open on GitHub") { openURL(url) }
+                if let url = Self.repositoryURL(for: tap.remote) {
+                    if url.host?.lowercased() == "github.com" {
+                        Button("Open on GitHub") { openURL(url) }
+                    } else {
+                        Button("Open Repository") { openURL(url) }
+                    }
                 }
                 Button("Remove Tap…", role: .destructive, action: onRemove)
             } label: {
@@ -52,8 +56,7 @@ struct TapSectionHeader: View {
         return "\(casks) · \(String(localized: "\(tap.formulaCount) formulae"))"
     }
 
-    static func githubURL(for remote: String?) -> URL? {
-        guard let url = remote.flatMap(URL.web), url.host?.lowercased() == "github.com" else { return nil }
-        return url
+    static func repositoryURL(for remote: String?) -> URL? {
+        remote.flatMap(URL.web)
     }
 }

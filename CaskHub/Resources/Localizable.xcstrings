@@ -843,30 +843,30 @@
         }
       }
     },
-    "Enter a tap like user/repo or a GitHub URL." : {
+    "Enter a tap like user/repo, a GitHub URL, or an https Git URL." : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Введите тап вида user/repo или URL GitHub."
+            "value" : "Введите тап вида user/repo, URL GitHub или https-адрес Git."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Введіть тап у форматі user/repo або URL GitHub."
+            "value" : "Введіть тап у форматі user/repo, URL GitHub або https-адресу Git."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请输入 user/repo 形式的 Tap 或 GitHub URL。"
+            "value" : "请输入 user/repo 形式的 Tap、GitHub URL 或 https Git URL。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "請輸入 user/repo 形式的 Tap 或 GitHub URL。"
+            "value" : "請輸入 user/repo 形式的 Tap、GitHub URL 或 https Git URL。"
           }
         }
       }
@@ -927,30 +927,30 @@
         }
       }
     },
-    "Examples: user/repo · github.com/user/homebrew-repo" : {
+    "Examples: user/repo · github.com/user/homebrew-repo · https://gitlab.com/user/homebrew-repo" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Примеры: user/repo · github.com/user/homebrew-repo"
+            "value" : "Примеры: user/repo · github.com/user/homebrew-repo · https://gitlab.com/user/homebrew-repo"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Приклади: user/repo · github.com/user/homebrew-repo"
+            "value" : "Приклади: user/repo · github.com/user/homebrew-repo · https://gitlab.com/user/homebrew-repo"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "示例：user/repo · github.com/user/homebrew-repo"
+            "value" : "示例：user/repo · github.com/user/homebrew-repo · https://gitlab.com/user/homebrew-repo"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "範例：user/repo · github.com/user/homebrew-repo"
+            "value" : "範例：user/repo · github.com/user/homebrew-repo · https://gitlab.com/user/homebrew-repo"
           }
         }
       }
@@ -1203,6 +1203,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在 GitHub 上打開"
+          }
+        }
+      }
+    },
+    "Open Repository" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть репозиторий"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити репозиторій"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开仓库"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開儲存庫"
           }
         }
       }
@@ -1567,6 +1595,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "信任並從 %2$@ 安裝 %1$@？"
+          }
+        }
+      }
+    },
+    "Use an https:// address. Unencrypted Git URLs aren't supported." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Используйте адрес https://. Незашифрованные адреса Git не поддерживаются."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовуйте адресу https://. Незашифровані адреси Git не підтримуються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请使用 https:// 地址。不支持未加密的 Git URL。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請使用 https:// 位址。不支援未加密的 Git URL。"
           }
         }
       }

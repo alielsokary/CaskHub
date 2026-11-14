@@ -52,14 +52,25 @@ final class TapsViewTests: XCTestCase {
         XCTAssertEqual(TapSectionHeader.countText(for: caskOnly), "2 casks")
     }
 
-    func test_github_remote_only_for_github_hosts() {
+    func test_repository_link_for_web_remotes_on_any_host() {
         XCTAssertEqual(
-            TapSectionHeader.githubURL(for: "https://github.com/macos-fuse-t/homebrew-cask"),
+            TapSectionHeader.repositoryURL(for: "https://github.com/macos-fuse-t/homebrew-cask"),
             URL(string: "https://github.com/macos-fuse-t/homebrew-cask")
         )
-        XCTAssertNil(TapSectionHeader.githubURL(for: "https://gitlab.com/u/homebrew-r"))
-        XCTAssertNil(TapSectionHeader.githubURL(for: "file:///tmp/repo"))
-        XCTAssertNil(TapSectionHeader.githubURL(for: nil))
+        XCTAssertEqual(
+            TapSectionHeader.repositoryURL(for: "https://gitlab.com/u/homebrew-r.git"),
+            URL(string: "https://gitlab.com/u/homebrew-r.git")
+        )
+        XCTAssertNil(TapSectionHeader.repositoryURL(for: "file:///tmp/repo"))
+        XCTAssertNil(TapSectionHeader.repositoryURL(for: "git@gitlab.com:u/homebrew-r.git"))
+        XCTAssertNil(TapSectionHeader.repositoryURL(for: nil))
+    }
+
+    func test_cloning_line_names_the_folder_brew_creates() {
+        let remote = URL(string: "https://gitlab.com/group/homebrew-tools")
+        let gitlab = TapAddRequest(tapName: "group/tools", remoteURL: remote, caskToken: nil)
+        XCTAssertEqual(gitlab.cloneFolder, "…/Taps/group/homebrew-tools")
+        XCTAssertEqual(AddTapModel.source(of: gitlab), "gitlab.com/group/homebrew-tools")
     }
 
     func test_page_analytics_never_names_a_tap() {

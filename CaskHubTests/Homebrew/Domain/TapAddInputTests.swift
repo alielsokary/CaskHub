@@ -47,11 +47,45 @@ final class TapAddInputTests: XCTestCase {
         for text in [
             "brew install --cask foo/bar/baz; rm -rf ~",
             "$(curl x)/a",
-            "https://gitlab.com/u/r",
             "fоо/bar",
             "a/b/c/d",
             "-rf/x",
             "foo"
+        ] {
+            XCTAssertEqual(TapAddInput.parse(text), .failure(.unrecognized), text)
+        }
+    }
+
+    func test_https_urls_on_other_hosts_keep_their_remote() {
+        XCTAssertEqual(parse("https://gitlab.com/group/homebrew-tools"), TapAddRequest(
+            tapName: "group/tools", remoteURL: URL(string: "https://gitlab.com/group/homebrew-tools"), caskToken: nil
+        ))
+        let codeberg = parse("https://codeberg.org/User/Casks.git/")
+        XCTAssertEqual(codeberg, TapAddRequest(
+            tapName: "user/casks", remoteURL: URL(string: "https://codeberg.org/User/Casks.git"), caskToken: nil
+        ))
+        XCTAssertEqual(codeberg?.brewArguments, ["tap", "user/casks", "https://codeberg.org/User/Casks.git"])
+        XCTAssertEqual(parse("https://git.example.com:8443/org/homebrew-apps")?.remoteURL,
+                       URL(string: "https://git.example.com:8443/org/homebrew-apps"))
+    }
+
+    func test_unencrypted_remotes_are_refused() {
+        XCTAssertEqual(TapAddInput.parse("http://gitlab.com/u/homebrew-r"), .failure(.insecureRemote))
+        XCTAssertEqual(TapAddInput.parse("git://example.com/u/homebrew-r"), .failure(.insecureRemote))
+    }
+
+    func test_other_remote_forms_are_not_recognized() {
+        for text in [
+            "https://user:token@gitlab.com/u/homebrew-r",
+            "https://gitlab.com/u/homebrew-r?ref=main",
+            "https://gitlab.com/u/homebrew-r/-/tree/main",
+            "https://github.com/u/homebrew-r/tree/main",
+            "https://git.example.com/org/sub/homebrew-apps",
+            "https://gitlab.com/u/..",
+            "https://gitlab.com/u",
+            "git@gitlab.com:u/homebrew-r.git",
+            "ssh://git@gitlab.com/u/homebrew-r",
+            "file:///tmp/homebrew-r"
         ] {
             XCTAssertEqual(TapAddInput.parse(text), .failure(.unrecognized), text)
         }
