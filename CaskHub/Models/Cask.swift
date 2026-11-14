@@ -358,40 +358,34 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
 }
 
 extension Cask {
+    /// A cask known only from local data, without Homebrew API metadata.
+    static func localOnly(
+        token: String, tap: String?, name: String, version: String, provenance: CaskProvenance,
+        fullToken: String? = nil, desc: String? = nil, homepage: String = ""
+    ) -> Cask {
+        var cask = Cask(
+            token: token, fullToken: fullToken, tap: tap, name: [name], desc: desc, homepage: homepage,
+            url: nil, sha256: nil, version: version, bundleVersion: nil, bundleShortVersion: nil,
+            outdated: false, deprecated: false, disabled: false,
+            autoUpdates: nil, variations: nil, supportedPlatforms: nil, conflictsWith: nil,
+            deprecationDate: nil, deprecationReason: nil,
+            deprecationReplacementCask: nil, deprecationReplacementFormula: nil,
+            disableDate: nil, disableReason: nil,
+            disableReplacementCask: nil, disableReplacementFormula: nil
+        )
+        cask.provenance = provenance
+        return cask
+    }
+
     static func receiptRow(for installation: LocalCaskInstallation) -> Cask {
         let appName = installation.appBundleNames.first.map {
             $0.hasSuffix(".app") ? String($0.dropLast(4)) : $0
         }
-        var cask = Cask(
-            token: installation.token,
-            fullToken: nil,
-            tap: installation.tap,
-            name: [appName ?? installation.token],
-            desc: nil,
-            homepage: "",
-            url: nil,
-            sha256: nil,
-            version: installation.installedVersion,
-            bundleVersion: nil,
-            bundleShortVersion: nil,
-            outdated: false,
-            deprecated: false,
-            disabled: false,
-            autoUpdates: nil,
-            variations: nil,
-            supportedPlatforms: nil,
-            conflictsWith: nil,
-            deprecationDate: nil,
-            deprecationReason: nil,
-            deprecationReplacementCask: nil,
-            deprecationReplacementFormula: nil,
-            disableDate: nil,
-            disableReason: nil,
-            disableReplacementCask: nil,
-            disableReplacementFormula: nil
+        return localOnly(
+            token: installation.token, tap: installation.tap,
+            name: appName ?? installation.token, version: installation.installedVersion,
+            provenance: .installedReceipt
         )
-        cask.provenance = .installedReceipt
-        return cask
     }
 }
 

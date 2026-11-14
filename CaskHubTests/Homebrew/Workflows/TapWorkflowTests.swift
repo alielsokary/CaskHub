@@ -11,7 +11,7 @@ import XCTest
 @MainActor
 final class TapWorkflowTests: XCTestCase {
     func test_add_tap_runs_brew_tap_then_refreshes_index() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: [])])
+        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": []])])
 
         try await sut.service.addTap(TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil))
 
@@ -53,9 +53,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_install_untrusted_tap_cask_waits_for_confirmation() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"])])
-        await sut.service.refreshTaps()
-        let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
+        let (sut, cask) = try await loadedSillTap()
 
         try await sut.service.installRequestingTrust(cask)
 
@@ -69,9 +67,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_cancel_trusted_install_clears_prompt() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"])])
-        await sut.service.refreshTaps()
-        let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
+        let (sut, cask) = try await loadedSillTap()
 
         try await sut.service.installRequestingTrust(cask)
         sut.service.send(.cancelTrustedInstall)
@@ -81,10 +77,8 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_install_trusted_tap_cask_skips_prompt() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"], trustedCasks: ["saffsanity/sill/sill"])])
+        let (sut, cask) = try await loadedSillTap(trusted: true)
         sut.trust = TapTrust(taps: [], casks: ["saffsanity/sill/sill"])
-        await sut.service.refreshTaps()
-        let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
 
         try await sut.service.installRequestingTrust(cask)
 
@@ -102,7 +96,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_update_and_uninstall_never_prompt() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"])])
+        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": ["sill"]])])
         await sut.service.refreshTaps()
         updateInstalledCask(tapInstallation("sill", tap: "saffsanity/sill"), in: sut.service)
 
@@ -115,7 +109,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_failed_index_load_keeps_previous_index() async {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"]), nil])
+        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": ["sill"]]), nil])
 
         await sut.service.refreshTaps()
         await sut.service.refreshTaps()
@@ -144,7 +138,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_tap_update_refreshes_index_and_outdated() async {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: [])])
+        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": []])])
 
         await sut.service.updateTapsIfStale(now: .now, maxAge: 0)
 
@@ -154,9 +148,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_untrusted_tap_install_skips_the_fetch_brew_would_refuse() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"])])
-        await sut.service.refreshTaps()
-        let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
+        let (sut, cask) = try await loadedSillTap()
 
         try await sut.service.confirmTrustedInstall(cask)
 
@@ -165,7 +157,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_tap_installs_and_updates_never_run_a_separate_fetch() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"], trustedCasks: ["saffsanity/sill/sill"])])
+        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": ["sill"]], trustedCasks: ["saffsanity/sill/sill"])])
         await sut.service.refreshTaps()
 
         try await sut.service.install(token: "saffsanity/sill/sill")
@@ -177,9 +169,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_trust_is_rechecked_before_deciding_to_prompt() async throws {
-        let sut = makeSUT(indexes: [index(taps: ["saffsanity/sill"], casks: ["sill"], trustedCasks: ["saffsanity/sill/sill"])])
-        await sut.service.refreshTaps()
-        let cask = try XCTUnwrap(sut.service.tapIndex.casks.first)
+        let (sut, cask) = try await loadedSillTap(trusted: true)
         sut.trust = TapTrust(taps: [], casks: [])
 
         try await sut.service.installRequestingTrust(cask)
@@ -189,7 +179,7 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_cancelled_add_untaps_leftover_and_throws() async {
-        let sut = makeSUT(indexes: [index(taps: ["user/slow"], casks: [])])
+        let sut = makeSUT(indexes: [makeTapIndex(["user/slow": []])])
         sut.runner.onRequest = { [service = sut.service] request in
             if request.arguments == ["tap", "user/slow"] { service.cancelAddTap("user/slow") }
         }
@@ -270,15 +260,11 @@ final class TapWorkflowTests: XCTestCase {
         return sut
     }
 
-    private func index(taps: [String], casks: [String], trustedCasks: Set<String> = []) -> TapIndex {
-        let summaries = taps.map {
-            TapSummary(
-                name: $0, remote: nil, official: false, trusted: false, customRemote: false,
-                caskTokens: casks.map { token in "\(taps[0])/\(token)" }, formulaNames: [], caskFiles: []
-            )
-        }
-        let rows = casks.map { CaskFileTextParser.cask(fromSource: "", token: $0, tap: taps[0]) }
-        return TapIndex(taps: summaries, casks: rows, trust: TapTrust(taps: [], casks: trustedCasks))
+    private func loadedSillTap(trusted: Bool = false) async throws -> (SUT, Cask) {
+        let trustedCasks: Set<String> = trusted ? ["saffsanity/sill/sill"] : []
+        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": ["sill"]], trustedCasks: trustedCasks)])
+        await sut.service.refreshTaps()
+        return (sut, try XCTUnwrap(sut.service.tapIndex.casks.first))
     }
 
     private func tapInstallation(_ token: String, tap: String) -> LocalCaskInstallation {

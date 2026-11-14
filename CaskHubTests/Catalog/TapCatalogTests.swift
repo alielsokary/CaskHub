@@ -35,15 +35,7 @@ final class TapCatalogTests: XCTestCase {
     }
 
     func test_only_installed_covered_tap_casks_join_categories() async throws {
-        let vm = await makeSUT(
-            official: [makeCask("figma")],
-            taps: ["saffsanity/sill": ["sill", "other"], "user/tap": ["plain"]],
-            installed: [
-                tapInstallation("sill", tap: "saffsanity/sill", version: "1.0"),
-                tapInstallation("plain", tap: "user/tap", version: "1.0")
-            ],
-            categories: try tapCategories()
-        )
+        let vm = try await makeCoveredTapsSUT(official: [makeCask("figma")])
 
         vm.selectedSidebar = .category("utilities")
         XCTAssertEqual(vm.filteredCasks.map(\.id), ["saffsanity/sill/sill"])
@@ -52,14 +44,7 @@ final class TapCatalogTests: XCTestCase {
     }
 
     func test_only_installed_covered_tap_casks_show_their_category() async throws {
-        let vm = await makeSUT(
-            official: [], taps: ["saffsanity/sill": ["sill", "other"], "user/tap": ["plain"]],
-            installed: [
-                tapInstallation("sill", tap: "saffsanity/sill", version: "1.0"),
-                tapInstallation("plain", tap: "user/tap", version: "1.0")
-            ],
-            categories: try tapCategories()
-        )
+        let vm = try await makeCoveredTapsSUT(official: [])
 
         let all = vm.tapCasks(in: "saffsanity/sill") + vm.tapCasks(in: "user/tap")
         let casks = Dictionary(uniqueKeysWithValues: all.map { ($0.token, $0) })
@@ -87,10 +72,7 @@ final class TapCatalogTests: XCTestCase {
     }
 
     func test_installed_tap_cask_uses_tap_row() async throws {
-        let vm = await makeSUT(
-            official: [], taps: ["saffsanity/sill": ["sill"]],
-            installed: [tapInstallation("sill", tap: "saffsanity/sill", version: "1.0")]
-        )
+        let vm = await makeInstalledSillSUT()
 
         vm.selectedSidebar = .library(.installed)
 
@@ -99,11 +81,7 @@ final class TapCatalogTests: XCTestCase {
     }
 
     func test_tap_cask_update_follows_brew_outdated() async throws {
-        let vm = await makeSUT(
-            official: [makeCask("sill", version: "9.0")], taps: ["saffsanity/sill": ["sill"]],
-            installed: [tapInstallation("sill", tap: "saffsanity/sill", version: "1.0")],
-            outdated: ["sill"]
-        )
+        let vm = await makeInstalledSillSUT(official: [makeCask("sill", version: "9.0")], outdated: ["sill"])
 
         vm.selectedSidebar = .library(.updates)
 
@@ -111,10 +89,7 @@ final class TapCatalogTests: XCTestCase {
     }
 
     func test_tap_cask_not_listed_by_brew_has_no_update() async throws {
-        let vm = await makeSUT(
-            official: [], taps: ["saffsanity/sill": ["sill"]],
-            installed: [tapInstallation("sill", tap: "saffsanity/sill", version: "1.0")]
-        )
+        let vm = await makeInstalledSillSUT()
 
         vm.selectedSidebar = .library(.updates)
 
@@ -143,20 +118,7 @@ final class TapCatalogTests: XCTestCase {
         outdated: Set<String> = [],
         categories: CategoryService? = nil
     ) async -> CaskCatalogViewModel {
-        let index = TapIndex(
-            taps: taps.keys.sorted().map { name in
-                TapSummary(
-                    name: name, remote: nil, official: false, trusted: false, customRemote: false,
-                    caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: []
-                )
-            },
-            casks: taps.keys.sorted().flatMap { name in
-                taps[name, default: []].map {
-                    CaskFileTextParser.cask(fromSource: "cask \"\($0)\" do\n  name \"\($0)\"\nend\n", token: $0, tap: name)
-                }
-            },
-            trust: TapTrust(taps: [], casks: [])
-        )
+        let index = makeTapIndex(taps, source: { "cask \"\($0)\" do\n  name \"\($0)\"\nend\n" })
         let service = LocalHomebrewService(defaults: makeScratchDefaults("tap-catalog-\(UUID().uuidString)")) {
             $0.softwareScanner = MutableInstalledSoftwareScanner()
             $0.brewBinaryProvider = { nil }
@@ -175,6 +137,26 @@ final class TapCatalogTests: XCTestCase {
         await vm.fetchCasks()
         await vm.refreshTaps()
         return vm
+    }
+
+    private func makeCoveredTapsSUT(official: [Cask]) async throws -> CaskCatalogViewModel {
+        await makeSUT(
+            official: official,
+            taps: ["saffsanity/sill": ["sill", "other"], "user/tap": ["plain"]],
+            installed: [
+                tapInstallation("sill", tap: "saffsanity/sill", version: "1.0"),
+                tapInstallation("plain", tap: "user/tap", version: "1.0")
+            ],
+            categories: try tapCategories()
+        )
+    }
+
+    private func makeInstalledSillSUT(official: [Cask] = [], outdated: Set<String> = []) async -> CaskCatalogViewModel {
+        await makeSUT(
+            official: official, taps: ["saffsanity/sill": ["sill"]],
+            installed: [tapInstallation("sill", tap: "saffsanity/sill", version: "1.0")],
+            outdated: outdated
+        )
     }
 
     private func tapCategories() throws -> CategoryService {

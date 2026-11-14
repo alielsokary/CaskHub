@@ -383,26 +383,7 @@ final class TopBarViewTests: XCTestCase {
 
         // Tall enough that every browse shelf — and any sentinel wrongly attached
         // to one — materializes inside the lazy containers.
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 3000),
-            styleMask: .borderless,
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
-            .environment(categories)
-            .environment(local)
-            .environment(ImageCacheService())
-            .environment(MaintenanceViewModel(
-                localHomebrew: local,
-                catalog: vm,
-                clearImageCache: {},
-                probe: RecordingMaintenanceProbe(),
-                defaults: makeScratchDefaults("maintenance-browse-render")
-            )))
-        window.orderFrontRegardless()
-
+        renderInWindow(vm, categories: categories, local: local, width: 900, height: 3000)
         let deadline = Date().addingTimeInterval(2)
         while Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
@@ -410,9 +391,6 @@ final class TopBarViewTests: XCTestCase {
 
         addTeardownBlock { @MainActor in
             UserDefaults.standard.set(storedViewMode, forKey: "viewMode")
-            window.contentView = NSView()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            window.close()
         }
 
         XCTAssertEqual(
@@ -544,42 +522,5 @@ final class TopBarViewTests: XCTestCase {
         XCTAssertNotNil(vm.errorMessage)
 
         renderInWindow(vm, categories: categories, local: local)
-    }
-
-    @MainActor
-    @discardableResult
-    private func renderInWindow(
-        _ vm: CaskCatalogViewModel,
-        categories: CategoryService,
-        local: LocalHomebrewService,
-        width: CGFloat = 1200
-    ) -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: width, height: 550),
-            styleMask: .borderless,
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
-            .environment(categories)
-            .environment(local)
-            .environment(ImageCacheService())
-            .environment(MaintenanceViewModel(
-                localHomebrew: local,
-                catalog: vm,
-                clearImageCache: {},
-                probe: RecordingMaintenanceProbe(),
-                defaults: makeScratchDefaults("maintenance-harness-render")
-            )))
-        window.orderFrontRegardless()
-        RunLoop.main.run(until: Date().addingTimeInterval(0.25))
-
-        addTeardownBlock { @MainActor in
-            window.contentView = NSView()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            window.close()
-        }
-        return window
     }
 }

@@ -113,18 +113,7 @@ final class TapsViewTests: XCTestCase {
     }
 
     private func makeSUT(taps: [String: [String]]) async -> SUT {
-        let index = TapIndex(
-            taps: taps.keys.sorted().map { name in
-                TapSummary(
-                    name: name, remote: "https://github.com/\(name)", official: false, trusted: false, customRemote: false,
-                    caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: []
-                )
-            },
-            casks: taps.keys.sorted().flatMap { name in
-                taps[name, default: []].map { CaskFileTextParser.cask(fromSource: "", token: $0, tap: name) }
-            },
-            trust: TapTrust(taps: [], casks: [])
-        )
+        let index = makeTapIndex(taps, remote: { "https://github.com/\($0)" })
         let local = LocalHomebrewService(defaults: makeScratchDefaults("taps-view-\(UUID().uuidString)")) {
             $0.softwareScanner = MutableInstalledSoftwareScanner()
             $0.brewBinaryProvider = { nil }
@@ -142,32 +131,6 @@ final class TapsViewTests: XCTestCase {
 
     @discardableResult
     private func render(_ sut: SUT) -> NSWindow {
-        let (vm, categories, local) = (sut.vm, sut.categories, sut.local)
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1200, height: 600),
-            styleMask: [.titled, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
-            .environment(categories)
-            .environment(local)
-            .environment(ImageCacheService())
-            .environment(MaintenanceViewModel(
-                localHomebrew: local,
-                catalog: vm,
-                clearImageCache: {},
-                probe: RecordingMaintenanceProbe(),
-                defaults: makeScratchDefaults("taps-view-maintenance")
-            )))
-        window.orderFrontRegardless()
-        RunLoop.main.run(until: Date().addingTimeInterval(0.25))
-        addTeardownBlock { @MainActor in
-            window.contentView = NSView()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            window.close()
-        }
-        return window
+        renderInWindow(sut.vm, categories: sut.categories, local: sut.local)
     }
 }

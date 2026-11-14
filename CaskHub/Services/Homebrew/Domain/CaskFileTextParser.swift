@@ -13,23 +13,15 @@ nonisolated enum CaskFileTextParser {
 
     static func cask(fromSource source: String, token: String, tap: String) -> Cask {
         let text = String(source.prefix(maxSourceCharacters))
-        var cask = Cask(
-            token: token, fullToken: "\(tap)/\(token)", tap: tap,
-            name: [firstLiteral("name", in: text) ?? token],
-            desc: firstLiteral("desc", in: text),
-            homepage: firstLiteral("homepage", in: text).flatMap(URL.web)?.absoluteString ?? "",
-            url: nil, sha256: nil,
+        return .localOnly(
+            token: token, tap: tap,
+            name: firstLiteral("name", in: text) ?? token,
             version: version(in: text) ?? "",
-            bundleVersion: nil, bundleShortVersion: nil,
-            outdated: false, deprecated: false, disabled: false,
-            autoUpdates: nil, variations: nil, supportedPlatforms: nil, conflictsWith: nil,
-            deprecationDate: nil, deprecationReason: nil,
-            deprecationReplacementCask: nil, deprecationReplacementFormula: nil,
-            disableDate: nil, disableReason: nil,
-            disableReplacementCask: nil, disableReplacementFormula: nil
+            provenance: .tapSource,
+            fullToken: "\(tap)/\(token)",
+            desc: firstLiteral("desc", in: text),
+            homepage: firstLiteral("homepage", in: text).flatMap(URL.web)?.absoluteString ?? ""
         )
-        cask.provenance = .tapSource
-        return cask
     }
 
     private static func version(in text: String) -> String? {
