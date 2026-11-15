@@ -68,8 +68,8 @@ final class HomebrewTapLoaderTests: XCTestCase {
         XCTAssertEqual(index.casks.map(\.provenance), [.tapInfo, .tapSource])
         XCTAssertEqual(index.casks[1].displayName, "SSHFS")
         XCTAssertEqual(readPaths, ["/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask/Casks/fuse-t-sshfs.rb"])
-        XCTAssertEqual(index.casks(in: "macos-fuse-t/cask").count, 2)
-        XCTAssertTrue(index.casks(in: "paninihouse/brewer-cmd").isEmpty)
+        XCTAssertEqual(index.casks.filter { $0.tap == "macos-fuse-t/cask" }.count, 2)
+        XCTAssertTrue(index.casks.filter { $0.tap == "paninihouse/brewer-cmd" }.isEmpty)
     }
 
     func test_trusted_cask_missing_from_brew_json_falls_back_to_text() throws {

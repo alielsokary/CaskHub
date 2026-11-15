@@ -64,11 +64,11 @@ final class AddTapSheetTests: XCTestCase {
 
     func test_repository_url_follows_brew_tap() {
         XCTAssertEqual(
-            AddTapModel.repositoryURL(for: TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil)),
+            TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil).repositoryURL,
             URL(string: "https://github.com/saffsanity/homebrew-sill")
         )
         let custom = URL(string: "https://github.com/user/casks")
-        XCTAssertEqual(AddTapModel.repositoryURL(for: TapAddRequest(tapName: "user/casks", remoteURL: custom, caskToken: nil)), custom)
+        XCTAssertEqual(TapAddRequest(tapName: "user/casks", remoteURL: custom, caskToken: nil).repositoryURL, custom)
     }
 
     func test_missing_repository_blocks_adding() async {

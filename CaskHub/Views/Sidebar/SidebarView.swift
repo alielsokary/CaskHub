@@ -83,7 +83,7 @@ struct SidebarView: View {
             }
         }
         .onChange(of: showTaps) { _, shown in
-            if !shown, !ContentView.showsTapBadges(on: selection) {
+            if !shown, ContentView.isTapsPage(selection) {
                 selection = .library(.installed)
             }
         }

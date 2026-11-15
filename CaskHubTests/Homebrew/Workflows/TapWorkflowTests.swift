@@ -204,6 +204,16 @@ final class TapWorkflowTests: XCTestCase {
         XCTAssertTrue(sut.runner.requests.contains { $0.arguments == ["untap", "user/slow"] })
     }
 
+    func test_failed_tap_add_message_is_read_once() async {
+        let sut = makeSUT(indexes: [makeTapIndex([:])])
+        sut.runner.queuedResults = [BrewProcessResult(exitCode: 1, output: "Error: Invalid tap name 'user/nope'")]
+
+        try? await sut.service.addTap(TapAddRequest(tapName: "user/nope", remoteURL: nil, caskToken: nil))
+
+        XCTAssertNotNil(sut.service.takeTapFailureMessage("user/nope"))
+        XCTAssertNil(sut.service.takeTapFailureMessage("user/nope"))
+    }
+
     func test_install_refuses_when_a_twin_owns_the_install() async throws {
         let sut = makeSUT(indexes: [])
         updateInstalledCask(installation("foo", version: "1.0"), in: sut.service)

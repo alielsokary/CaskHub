@@ -91,13 +91,7 @@ struct RemoveTapDialog: View {
                 try await viewModel.removeTap(preview)
                 dismiss()
             } catch {
-                let token = LocalHomebrewService.tapOperationToken(tapName)
-                if case let .failure(operationFailure) = localHomebrew.actionAlert(for: token) {
-                    failure = operationFailure.message
-                    localHomebrew.send(.dismissFailure(token: token))
-                } else {
-                    failure = error.localizedDescription
-                }
+                failure = localHomebrew.takeTapFailureMessage(tapName) ?? error.localizedDescription
             }
             isRemoving = false
         }

@@ -39,8 +39,8 @@ nonisolated struct HomebrewTapLoader: Sendable {
         Self.trustOrNone(brewURL.flatMap { Self.run($0, ["trust", "--json=v1"]) })
     }
 
-    /// Output goes nowhere, so git children outliving a terminated brew can't hold a pipe open.
     // ponytail: fixed 5 min ceiling while holding the exclusive lane; make it cancellable if users hit it.
+    /// Output goes nowhere, so git children outliving a terminated brew can't hold a pipe open.
     @concurrent
     func update(from brewURL: URL?, timeout: TimeInterval = 300) async {
         guard let brewURL else { return }

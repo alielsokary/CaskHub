@@ -32,7 +32,7 @@ struct TapSectionHeader: View {
                 .buttonStyle(.plain)
             }
             Menu {
-                if let url = Self.repositoryURL(for: tap.remote) {
+                if let url = tap.remote.flatMap(URL.web) {
                     if url.host?.lowercased() == "github.com" {
                         Button("Open on GitHub") { openURL(url) }
                     } else {
@@ -54,9 +54,5 @@ struct TapSectionHeader: View {
         let casks = String(localized: "\(tap.caskCount) casks")
         guard tap.formulaCount > 0 else { return casks }
         return "\(casks) · \(String(localized: "\(tap.formulaCount) formulae"))"
-    }
-
-    static func repositoryURL(for remote: String?) -> URL? {
-        remote.flatMap(URL.web)
     }
 }

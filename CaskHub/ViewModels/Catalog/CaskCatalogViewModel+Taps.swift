@@ -9,7 +9,9 @@ import Foundation
 
 struct TapSection: Identifiable {
     let tap: TapSummary
+    /// The first `tapSectionSize` matches.
     let casks: [Cask]
+    let matchCount: Int
 
     var id: String {
         tap.name
@@ -21,7 +23,8 @@ extension CaskCatalogViewModel {
 
     var tapSections: [TapSection] {
         localHomebrew.tapIndex.tapsWithCasks.map { tap in
-            TapSection(tap: tap, casks: Array(tapCasks(in: tap.name).prefix(Self.tapSectionSize)))
+            let matches = tapCasks(in: tap.name)
+            return TapSection(tap: tap, casks: Array(matches.prefix(Self.tapSectionSize)), matchCount: matches.count)
         }
     }
 
