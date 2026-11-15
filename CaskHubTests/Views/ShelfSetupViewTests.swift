@@ -161,6 +161,8 @@ final class ShelfSetupViewTests: XCTestCase {
         let vm = await makePinnedSUT()
 
         XCTAssertTrue(vm.pinnedCasks.isEmpty)
+        XCTAssertEqual(String(localized: .shelfSetupPinEmpty), "No pinned apps.")
+        XCTAssertEqual(String(localized: .shelfSetupPinAddButton), "Pin an app")
         render(PinnedUpdatesCard(viewModel: vm).environment(vm.localHomebrew), width: 1100, height: 300)
     }
 
@@ -176,8 +178,20 @@ final class ShelfSetupViewTests: XCTestCase {
     func test_pin_picker_messages_and_render() async {
         let vm = await makePinnedSUT()
 
-        XCTAssertEqual(PinPickerSheet.emptyMessage(query: ""), "No installed casks to pin.")
-        XCTAssertEqual(PinPickerSheet.emptyMessage(query: "zzz"), "No matching casks.")
+        updateInstallationSnapshot(of: vm.localHomebrew) {
+            $0.installationIndex = CaskInstallationIndex(
+                catalogTokens: ["zed", "onyx"], macAppStoreApplications: [:], externalCLIPaths: [:],
+                homebrewApplications: ["onyx": makeDetectedApplication("OnyX.app", version: "2.0.1")]
+            )
+        }
+        let picker = PinPickerSheet(viewModel: vm, note: nil, pin: { _ in })
+        let casks = vm.pinnableCasks(matching: "")
+
+        XCTAssertEqual(PinPickerSheet.emptyMessage(query: ""), "No installed apps to pin.")
+        XCTAssertEqual(PinPickerSheet.emptyMessage(query: "zzz"), "No matching apps.")
+        XCTAssertEqual(casks.map(\.token), ["onyx", "zed"])
+        XCTAssertEqual(picker.installedVersion(for: casks[0]), "2.0.1")
+        XCTAssertEqual(picker.installedVersion(for: casks[1]), "1.0")
         let failure = BrewfileNote(message: "Error: zed is not installed", isFailure: true)
         XCTAssertEqual(PinPickerSheet(viewModel: vm, note: failure, pin: { _ in }).note?.message, failure.message)
         render(PinPickerSheet(viewModel: vm, note: failure, pin: { _ in })

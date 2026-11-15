@@ -14631,37 +14631,37 @@
       }
     },
     "shelfSetup.pin.addButton" : {
-      "comment" : "Button opening the picker of installed casks to pin",
+      "comment" : "Button opening the picker of installed apps to pin",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pin a cask"
+            "value" : "Pin an app"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Закрепить пакет"
+            "value" : "Закрепить приложение"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Закріпити пакет"
+            "value" : "Закріпити програму"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "固定 Cask"
+            "value" : "固定应用"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "固定 Cask"
+            "value" : "固定 App"
           }
         }
       }
@@ -14691,49 +14691,49 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Homebrew 不会更新这些 Cask，CaskHub 也不会为它们提供更新。"
+            "value" : "Homebrew 不会更新这些应用，CaskHub 也不会为它们提供更新。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Homebrew 不會更新這些 Cask，CaskHub 也不會為它們提供更新。"
+            "value" : "Homebrew 不會更新這些 App，CaskHub 也不會為它們提供更新。"
           }
         }
       }
     },
     "shelfSetup.pin.empty" : {
-      "comment" : "Shown when no casks are pinned",
+      "comment" : "Shown when no apps are pinned",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No pinned casks."
+            "value" : "No pinned apps."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Нет закреплённых пакетов."
+            "value" : "Нет закреплённых приложений."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Немає закріплених пакетів."
+            "value" : "Немає закріплених програм."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有已固定的 Cask。"
+            "value" : "没有已固定的应用。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "沒有已固定的 Cask。"
+            "value" : "沒有已固定的 App。"
           }
         }
       }
@@ -14745,31 +14745,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter casks…"
+            "value" : "Filter apps…"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Фильтр пакетов…"
+            "value" : "Фильтр приложений…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Фільтр пакетів…"
+            "value" : "Фільтр програм…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "筛选 Cask…"
+            "value" : "筛选应用…"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "篩選 Cask…"
+            "value" : "篩選 App…"
           }
         }
       }
@@ -14811,37 +14811,37 @@
       }
     },
     "shelfSetup.pin.pickerEmpty" : {
-      "comment" : "Shown in the pin picker when every installed cask is pinned",
+      "comment" : "Shown in the pin picker when every installed app is pinned",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No installed casks to pin."
+            "value" : "No installed apps to pin."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Нет установленных пакетов для закрепления."
+            "value" : "Нет установленных приложений для закрепления."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Немає встановлених пакетів для закріплення."
+            "value" : "Немає встановлених програм для закріплення."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有可固定的已安装 Cask。"
+            "value" : "没有可固定的已安装应用。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "沒有可固定的已安裝 Cask。"
+            "value" : "沒有可固定的已安裝 App。"
           }
         }
       }
@@ -14853,103 +14853,103 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No matching casks."
+            "value" : "No matching apps."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подходящих пакетов нет."
+            "value" : "Подходящих приложений нет."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Немає відповідних пакетів."
+            "value" : "Немає відповідних програм."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有匹配的 Cask。"
+            "value" : "没有匹配的应用。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "沒有符合的 Cask。"
+            "value" : "沒有符合的 App。"
           }
         }
       }
     },
     "shelfSetup.pin.pickerSubtitle" : {
-      "comment" : "Subtitle of the pin-a-cask picker sheet",
+      "comment" : "Subtitle of the pin-an-app picker sheet",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pinned casks stay at their installed version until you unpin them."
+            "value" : "Pinned apps stay at their installed version until you unpin them."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Закреплённые пакеты остаются на установленной версии, пока вы их не открепите."
+            "value" : "Закреплённые приложения остаются на установленной версии, пока вы их не открепите."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Закріплені пакети залишаються на встановленій версії, доки ви їх не відкріпите."
+            "value" : "Закріплені програми залишаються на встановленій версії, доки ви їх не відкріпите."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已固定的 Cask 会保持当前安装的版本，直到你取消固定。"
+            "value" : "已固定的应用会保持当前安装的版本，直到你取消固定。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已固定的 Cask 會保持目前安裝的版本，直到你取消固定。"
+            "value" : "已固定的 App 會保持目前安裝的版本，直到你取消固定。"
           }
         }
       }
     },
     "shelfSetup.pin.pickerTitle" : {
-      "comment" : "Title of the pin-a-cask picker sheet",
+      "comment" : "Title of the pin-an-app picker sheet",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pin a cask"
+            "value" : "Pin an app"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Закрепить пакет"
+            "value" : "Закрепить приложение"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Закріпити пакет"
+            "value" : "Закріпити програму"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "固定 Cask"
+            "value" : "固定应用"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "固定 Cask"
+            "value" : "固定 App"
           }
         }
       }

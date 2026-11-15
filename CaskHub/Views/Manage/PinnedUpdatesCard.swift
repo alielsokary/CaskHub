@@ -148,6 +148,12 @@ struct PinPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
 
+    /// Same precedence as the detail page's Installed row.
+    func installedVersion(for cask: Cask) -> String? {
+        viewModel.localState(for: cask).homebrewAppVersion
+            ?? viewModel.localHomebrew.installationSnapshot.installation(for: cask.reference)?.installedVersion
+    }
+
     static func emptyMessage(query: String) -> String {
         query.trimmingCharacters(in: .whitespaces).isEmpty
             ? String(localized: .shelfSetupPinPickerEmpty)
@@ -209,10 +215,17 @@ struct PinPickerSheet: View {
     private func pinnableRow(_ cask: Cask) -> some View {
         HStack(spacing: 10) {
             CaskIconView(cask: cask, size: 28, alignment: .center)
-            Text(cask.displayName)
-                .font(CHType.cardTitle)
-                .foregroundStyle(Color.chTextTitle)
-                .lineLimit(1)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(cask.displayName)
+                    .font(CHType.cardTitle)
+                    .foregroundStyle(Color.chTextTitle)
+                if let version = installedVersion(for: cask) {
+                    Text(verbatim: version)
+                        .font(CHType.statusMono)
+                        .foregroundStyle(Color.chTextFaint)
+                }
+            }
+            .lineLimit(1)
             Spacer(minLength: 10)
             PillButton(
                 title: String(localized: .shelfSetupPinPinButton),
