@@ -25,9 +25,11 @@ final class HoverHintTests: XCTestCase {
     func test_hint_bubble_wraps_even_when_its_anchor_limits_lines() {
         let long = "maccy has `auto_updates true` and may update itself outside Homebrew despite being pinned."
         let limited = NSHostingView(rootView: HintBubble(message: long).lineLimit(1)).fittingSize
-        let oneLine = NSHostingView(rootView: HintBubble(message: "maccy").lineLimit(1)).fittingSize
+        let unlimited = NSHostingView(rootView: HintBubble(message: long)).fittingSize
+        let oneLine = NSHostingView(rootView: HintBubble(message: "maccy")).fittingSize
 
-        XCTAssertGreaterThan(limited.height, oneLine.height * 1.5)
+        XCTAssertEqual(limited, unlimited)
+        XCTAssertGreaterThan(unlimited.height, oneLine.height)
     }
 
     @MainActor
