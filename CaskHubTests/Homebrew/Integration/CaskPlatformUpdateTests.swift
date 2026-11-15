@@ -118,6 +118,15 @@ final class CaskPlatformUpdateTests: XCTestCase {
         }
     }
 
+    func test_scanned_pin_hides_update_that_brew_outdated_omits() async throws {
+        let context = try await makeContext(platform: sequoia, receipt: "4.8.4", overrides: ["auto_updates": true])
+        defer { context.session.invalidateAndCancel() }
+        assertUpdates(context, off: false, greedy: true)
+
+        updateInstallationSnapshot(of: context.service) { $0.pinnedVersions = ["onyx": "4.8.4"] }
+        assertUpdates(context, off: false, greedy: false)
+    }
+
     private let sequoia = CaskPlatform(tag: "arm64_sequoia")
 
     private struct Context {
