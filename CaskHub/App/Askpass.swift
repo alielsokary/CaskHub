@@ -104,6 +104,7 @@ nonisolated enum Askpass {
     static func runDialog(token: String?, cancellationMarker: URL?, attemptMarker: URL?) -> Never {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
+        app.mainMenu = editMenu()
 
         let callerVerified = AskpassCallerVerifier.isLaunchedByCaskHub()
         let outcome = resolve(
@@ -123,6 +124,21 @@ nonisolated enum Askpass {
         }
         print(password)
         exit(0)
+    }
+
+    // Command-key shortcuts reach text fields only through the main menu; accessory apps never display it.
+    @MainActor
+    static func editMenu() -> NSMenu {
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        let editItem = NSMenuItem()
+        editItem.submenu = edit
+        let root = NSMenu()
+        root.addItem(editItem)
+        return root
     }
 
     private static func touchIDReason(token: String?) -> String {
