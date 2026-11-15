@@ -37,7 +37,7 @@ final class PinnedUpdatesCardTests: XCTestCase {
 
         XCTAssertEqual(vm.pinnedCasks.map(\.token), ["onyx", "zed"])
         XCTAssertEqual(card.pinnedLabel(for: vm.pinnedCasks[1]), "pinned at 1.0")
-        XCTAssertEqual(card.pinnedLabel(for: vm.pinnedCasks[0]), "pinned at 2.1,77")
+        XCTAssertEqual(card.pinnedLabel(for: vm.pinnedCasks[0]), "pinned at 2.1")
         XCTAssertEqual(
             card.selfUpdatingHelp(for: vm.pinnedCasks[0]),
             "onyx has `auto_updates true` and may update itself outside Homebrew despite being pinned."
@@ -47,6 +47,7 @@ final class PinnedUpdatesCardTests: XCTestCase {
         XCTAssertFalse(card.isPinChanging(vm.pinnedCasks[1]))
         vm.localHomebrew.pinChangesInFlight.insert(vm.pinnedCasks[1].reference)
         XCTAssertTrue(card.isPinChanging(vm.pinnedCasks[1]))
+        XCTAssertFalse(card.isBlocked(vm.pinnedCasks[1]), "a running pin shows its spinner, not the dimmed state")
         render(PinnedUpdatesCard(viewModel: vm, picker: .constant(nil)).environment(vm.localHomebrew), width: 1100, height: 400)
         vm.localHomebrew.pinChangesInFlight.removeAll()
         XCTAssertTrue(card.canPin)
@@ -54,6 +55,7 @@ final class PinnedUpdatesCardTests: XCTestCase {
         XCTAssertFalse(card.isBusy(vm.pinnedCasks[1]))
         vm.localHomebrew.operationStore.send(.enqueue(.updating), for: "onyx")
         XCTAssertTrue(card.isBusy(vm.pinnedCasks[0]))
+        XCTAssertTrue(card.isBlocked(vm.pinnedCasks[0]))
         render(ShelfSetupView(viewModel: vm, picker: .constant(nil))
             .environment(vm.localHomebrew)
             .environment(ImageCacheService()), width: 1100, height: 800)
@@ -93,8 +95,12 @@ final class PinnedUpdatesCardTests: XCTestCase {
         XCTAssertEqual(PinPickerSheet.emptyMessage(query: ""), "No installed apps to pin.")
         XCTAssertEqual(PinPickerSheet.emptyMessage(query: "zzz"), "No matching apps.")
         XCTAssertEqual(casks.map(\.token), ["onyx", "zed"])
-        XCTAssertEqual(picker.installedVersion(for: casks[0]), "2.0.1")
+        XCTAssertEqual(picker.installedVersion(for: casks[0]), "1.0", "Homebrew's version, the one a pin keeps")
         XCTAssertEqual(picker.installedVersion(for: casks[1]), "1.0")
+        updateInstalledCask(LocalCaskInstallation(
+            token: "zed", installedVersion: "2026.1.2.10,quail2,AI-261", installedAt: nil, appBundleNames: [], tap: "homebrew/cask"
+        ), in: vm.localHomebrew)
+        XCTAssertEqual(picker.installedVersion(for: casks[1]), "2026.1.2.10")
         XCTAssertEqual(ShelfSetupPicker.pin.id, "pin")
         XCTAssertEqual(ShelfSetupPicker.adoptIgnore.id, "adoptIgnore")
         render(PinPickerSheet(viewModel: vm)

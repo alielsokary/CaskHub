@@ -23,7 +23,7 @@ struct PinnedUpdatesCard: View {
 
     func pinnedLabel(for cask: Cask) -> String? {
         localHomebrew.pinnedVersion(for: cask.reference).map {
-            String(localized: .shelfSetupPinPinnedAt($0))
+            String(localized: .shelfSetupPinPinnedAt(Cask.displayVersion(of: $0)))
         }
     }
 
@@ -124,8 +124,8 @@ struct PinnedUpdatesCard: View {
                 ) {
                     Task { try? await localHomebrew.setPinned(false, reference: cask.reference) }
                 }
-                .disabled(isBusy(cask))
-                .opacity(isBusy(cask) && !isPinChanging(cask) ? 0.5 : 1)
+                .disabled(isBlocked(cask))
+                .opacity(isBlocked(cask) ? 0.5 : 1)
             }
         }
         .padding(.vertical, 10)
@@ -135,6 +135,11 @@ struct PinnedUpdatesCard: View {
     func isBusy(_ cask: Cask) -> Bool {
         !localHomebrew.canChangePin(for: cask.reference)
     }
+
+    /// Busy for another reason than its own running pin change, which shows a spinner instead.
+    func isBlocked(_ cask: Cask) -> Bool {
+        isBusy(cask) && !isPinChanging(cask)
+    }
 }
 
 struct PinPickerSheet: View {
@@ -142,10 +147,15 @@ struct PinPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
 
-    /// Same precedence as the detail page's Installed row.
+    /// Homebrew's version, the one a pin keeps, so it matches the card's "pinned at".
     func installedVersion(for cask: Cask) -> String? {
-        viewModel.localState(for: cask).homebrewAppVersion
-            ?? viewModel.localHomebrew.installationSnapshot.installation(for: cask.reference)?.installedVersion
+        viewModel.localHomebrew.installationSnapshot.installation(for: cask.reference)
+            .map { Cask.displayVersion(of: $0.installedVersion) }
+    }
+
+    private func isBlocked(_ cask: Cask) -> Bool {
+        let homebrew = viewModel.localHomebrew
+        return !homebrew.canChangePin(for: cask.reference) && !homebrew.pinChangesInFlight.contains(cask.reference)
     }
 
     static func emptyMessage(query: String) -> String {
@@ -232,11 +242,8 @@ struct PinPickerSheet: View {
             ) {
                 Task { try? await viewModel.localHomebrew.setPinned(true, reference: cask.reference) }
             }
-            .disabled(!viewModel.localHomebrew.canChangePin(for: cask.reference))
-            .opacity(
-                viewModel.localHomebrew.canChangePin(for: cask.reference)
-                    || viewModel.localHomebrew.pinChangesInFlight.contains(cask.reference) ? 1 : 0.5
-            )
+            .disabled(isBlocked(cask))
+            .opacity(isBlocked(cask) ? 0.5 : 1)
         }
         .padding(.vertical, 8)
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }

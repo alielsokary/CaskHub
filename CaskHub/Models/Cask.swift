@@ -340,6 +340,11 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     }
 
     var displayVersion: String {
+        Self.displayVersion(of: version)
+    }
+
+    /// `2026.1.2.10,quail2,AI-261` → `2026.1.2.10`
+    static func displayVersion(of version: String) -> String {
         let raw = version.split(separator: ",", maxSplits: 1).first.map(String.init) ?? version
         let base = raw.first == "v" && raw.dropFirst().first?.isNumber == true ? String(raw.dropFirst()) : raw
 

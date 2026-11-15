@@ -98,19 +98,19 @@ struct PillButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        // Not .disabled while loading: the system dims disabled content and the spinner fades with it.
+        Button { if !isLoading { action() } } label: {
             ActionCapsule(background: background, border: border, foreground: foreground) {
                 ZStack {
                     Text(title).opacity(isLoading ? 0 : 1)
                     if isLoading {
-                        ProgressView().controlSize(.mini).tint(foreground)
+                        ProgressView().controlSize(.small)
                     }
                 }
             }
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(isLoading)
     }
 }
 
