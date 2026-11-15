@@ -25,6 +25,11 @@ extension LocalHomebrewService {
         operationStore.state(for: reference)?.action == nil && !pinChangesInFlight.contains(reference)
     }
 
+    /// Busy for another reason than its own running pin change, which shows a spinner instead.
+    func isPinBlocked(_ reference: String) -> Bool {
+        !canChangePin(for: reference) && !pinChangesInFlight.contains(reference)
+    }
+
     func setPinned(_ pinned: Bool, reference: String) async throws {
         guard canChangePin(for: reference) else { return }
         pinChangesInFlight.insert(reference)
