@@ -37,11 +37,6 @@ struct ContentView: View {
         CHSize.catalogWidth(availableWidth: detailWidth - 2 * CHSize.catalogInset)
     }
 
-    var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: CHSize.minimumCardWidth, maximum: CHSize.maximumCardWidth),
-                  spacing: CHSpace.gridGap)]
-    }
-
     var body: some View {
         NavigationSplitView(columnVisibility: $sidebarVisibility) {
             SidebarView(

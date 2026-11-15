@@ -302,7 +302,8 @@ private extension CaskLocalStateResolver {
     }
 
     func offersUpdate(_ cask: Cask, target: CaskUpdateTarget?) -> Bool {
-        homebrewOutdated?.pinned.contains(cask.token) != true
+        snapshot.pinnedVersions[cask.token] == nil
+            && homebrewOutdated?.pinned.contains(cask.token) != true
             && (greedyUpdates || target?.autoUpdates != true || isListedByHomebrew(cask.reference))
     }
 

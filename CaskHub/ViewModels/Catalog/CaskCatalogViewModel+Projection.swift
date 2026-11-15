@@ -48,6 +48,33 @@ extension CaskCatalogViewModel {
             }
     }
 
+    var pinnedCasks: [Cask] {
+        Self.sortedByName(librarySnapshot.homebrewInstalledCasks.filter {
+            localHomebrew.pinnedVersion(for: $0.reference) != nil
+        })
+    }
+
+    func pinnableCasks(matching query: String) -> [Cask] {
+        let query = query.trimmingCharacters(in: .whitespaces)
+        return Self.sortedByName(librarySnapshot.homebrewInstalledCasks.filter { cask in
+            localHomebrew.pinnedVersion(for: cask.reference) == nil
+                && !localState(for: cask).isZombie
+                && (query.isEmpty
+                    || cask.displayName.localizedStandardContains(query)
+                    || cask.token.localizedStandardContains(query))
+        })
+    }
+
+    private static func sortedByName(_ casks: [Cask]) -> [Cask] {
+        casks.sorted { lhs, rhs in
+            switch lhs.displayName.localizedStandardCompare(rhs.displayName) {
+            case .orderedAscending: true
+            case .orderedDescending: false
+            case .orderedSame: lhs.reference < rhs.reference
+            }
+        }
+    }
+
     var categoryCounts: [String: Int] {
         librarySnapshot.categoryCounts
     }

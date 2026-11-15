@@ -73,6 +73,12 @@ nonisolated enum HomebrewLocator {
         return brewURL
     }
 
+    static func validatedBrewURL(_ url: URL?) throws -> URL {
+        guard let url else { throw LocalHomebrewError.brewBinaryNotFound }
+        guard isCompatible(brewURL: url) else { throw LocalHomebrewError.incompatibleBrewPath }
+        return url
+    }
+
     static func isCompatible(
         brewURL: URL,
         machineIsAppleSilicon: Bool = isAppleSilicon

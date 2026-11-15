@@ -7,10 +7,17 @@
 
 import SwiftUI
 
+enum ShelfSetupPicker: String, Identifiable {
+    case adoptIgnore
+    case pin
+
+    var id: String { rawValue }
+}
+
 struct ShelfSetupView: View {
     let viewModel: CaskCatalogViewModel
+    @State private var picker: ShelfSetupPicker?
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @State private var showsIgnorePicker = false
     @State private var exportNote: BrewfileNote?
     @State private var importNote: BrewfileNote?
     @State private var importPlan: BrewfileImportPlan?
@@ -19,6 +26,7 @@ struct ShelfSetupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 brewfileCard
+                PinnedUpdatesCard(viewModel: viewModel, picker: $picker)
                 ignoreCard
             }
             .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
@@ -29,8 +37,11 @@ struct ShelfSetupView: View {
         .toolbarScrollEdge()
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
-        .sheet(isPresented: $showsIgnorePicker) {
-            AdoptIgnorePickerSheet(viewModel: viewModel)
+        .sheet(item: $picker) { picker in
+            switch picker {
+            case .adoptIgnore: AdoptIgnorePickerSheet(viewModel: viewModel)
+            case .pin: PinPickerSheet(viewModel: viewModel)
+            }
         }
         .sheet(item: $importPlan) { plan in
             BrewfileImportSheet(plan: plan, addTap: { try await viewModel.addTap($0) })
@@ -207,7 +218,7 @@ struct ShelfSetupView: View {
                     border: .chHairlineStrong,
                     foreground: .chTextNav
                 ) {
-                    showsIgnorePicker = true
+                    picker = .adoptIgnore
                 }
             }
             Text(String(localized: .shelfSetupIgnoreDescription))
@@ -226,9 +237,11 @@ struct ShelfSetupView: View {
             } else {
                 ForEach(viewModel.adoptIgnoredCasks) { cask in
                     ignoredRow(cask)
+                        .transition(.opacity)
                 }
             }
         }
+        .animation(.snappy, value: viewModel.adoptIgnoredCasks.map(\.reference))
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
     }
@@ -294,11 +307,13 @@ struct AdoptIgnorePickerSheet: View {
                     } else {
                         ForEach(viewModel.adoptableCasks) { cask in
                             adoptableRow(cask)
+                                .transition(.opacity)
                         }
                     }
                 }
+                .animation(.snappy, value: viewModel.adoptableCasks.map(\.reference))
             }
-            .frame(maxHeight: 300)
+            .frame(height: 300)
 
             HStack {
                 Spacer()

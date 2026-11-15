@@ -10,6 +10,11 @@ import SwiftUI
 // MARK: - Grid, List & Error Views
 
 extension ContentView {
+    var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: CHSize.minimumCardWidth, maximum: CHSize.maximumCardWidth),
+                  spacing: CHSpace.gridGap)]
+    }
+
     var catalogView: some View {
         ScrollView {
             catalogContent

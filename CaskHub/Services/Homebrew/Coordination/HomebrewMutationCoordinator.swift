@@ -194,13 +194,7 @@ extension HomebrewMutationCoordinator {
     }
 
     private func validateBrewLocation() throws -> URL {
-        guard let brewURL = brewBinaryProvider() else {
-            throw LocalHomebrewError.brewBinaryNotFound
-        }
-        guard HomebrewLocator.isCompatible(brewURL: brewURL) else {
-            throw LocalHomebrewError.incompatibleBrewPath
-        }
-        return brewURL
+        try HomebrewLocator.validatedBrewURL(brewBinaryProvider())
     }
 
     private func preflightBrewLocation(

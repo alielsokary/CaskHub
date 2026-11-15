@@ -35,6 +35,8 @@ struct HintBubble: View {
         HintWidth(maxWidth: 260) {
             Text(verbatim: message)
                 .font(CHType.bodySm)
+                // The anchor's line limit reaches popover content through the environment.
+                .lineLimit(nil)
         }
         .padding(12)
     }

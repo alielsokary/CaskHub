@@ -114,6 +114,7 @@ struct InstallationSnapshotFixture {
     var externalPackageInstallations: [String: ExternalPackageInstallation]
     var installationIndex: CaskInstallationIndex
     var installationDatesByToken: [String: CaskInstallationDates]
+    var pinnedVersions: [String: String]
     var scannedAt: Date?
 
     init(snapshot: InstallationSnapshot) {
@@ -128,6 +129,7 @@ struct InstallationSnapshotFixture {
         externalPackageInstallations = snapshot.externalPackageInstallations
         installationIndex = snapshot.installationIndex
         installationDatesByToken = snapshot.installationDatesByToken
+        pinnedVersions = snapshot.pinnedVersions
         scannedAt = snapshot.scannedAt
     }
 
@@ -146,6 +148,7 @@ struct InstallationSnapshotFixture {
             externalPackageInstallations: externalPackageInstallations,
             installationIndex: installationIndex,
             installationDatesByToken: installationDatesByToken,
+            pinnedVersions: pinnedVersions,
             scannedAt: scannedAt
         )
     }

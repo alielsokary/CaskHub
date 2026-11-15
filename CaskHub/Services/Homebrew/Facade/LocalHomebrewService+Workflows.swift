@@ -75,8 +75,9 @@ extension LocalHomebrewService {
     }
 
     func uninstallArguments(token: String, removingData: Bool) -> [String] {
-        // Brew rejects plain uninstall for caskfile-less zombies and stranded apps; --force works.
+        // Brew rejects plain uninstall for caskfile-less zombies, stranded apps and pins; --force works and unpins.
         let force = installationSnapshot.installation(for: token)?.isZombie == true || hasStrandedInstalledApp(token: token)
+            || pinnedVersion(for: token) != nil
         // Without Full Disk Access brew aborts a zap after the app is already gone.
         let zap = removingData && fullDiskAccessProbe() != .denied
         return ["uninstall", "--cask", token]
