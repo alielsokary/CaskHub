@@ -86,17 +86,18 @@ nonisolated enum Askpass {
         }
     }
 
-    static func nextAttempt(marker: URL?) -> Int? {
+    /// sudo re-runs askpass only after rejecting a password, and one brew command may start several sudo
+    /// processes, so attempts are counted per sudo process: askpass's parent.
+    static func nextAttempt(marker: URL?, sudoPID: pid_t = getppid()) -> Int? {
         guard let marker else { return nil }
-        var previous = 0
+        var attempt = 1
         if FileManager.default.fileExists(atPath: marker.path) {
-            guard let text = try? String(contentsOf: marker, encoding: .utf8),
-                  let count = Int(text.trimmingCharacters(in: .whitespacesAndNewlines))
-            else { return nil }
-            previous = count
+            guard let text = try? String(contentsOf: marker, encoding: .utf8) else { return nil }
+            let fields = text.split(separator: " ").compactMap { Int32($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            guard fields.count == 2 else { return nil }
+            if fields[0] == sudoPID { attempt = Int(fields[1]) + 1 }
         }
-        let attempt = previous + 1
-        guard (try? Data(String(attempt).utf8).write(to: marker, options: .atomic)) != nil else { return nil }
+        guard (try? Data("\(sudoPID) \(attempt)".utf8).write(to: marker, options: .atomic)) != nil else { return nil }
         return attempt
     }
 

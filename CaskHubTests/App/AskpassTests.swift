@@ -122,8 +122,10 @@ final class AskpassTests: XCTestCase {
             .appendingPathComponent("askpass-attempts-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: marker) }
 
-        XCTAssertEqual(Askpass.nextAttempt(marker: marker), 1)
-        XCTAssertEqual(Askpass.nextAttempt(marker: marker), 2)
+        XCTAssertEqual(Askpass.nextAttempt(marker: marker, sudoPID: 100), 1)
+        XCTAssertEqual(Askpass.nextAttempt(marker: marker, sudoPID: 100), 2)
+        XCTAssertEqual(Askpass.nextAttempt(marker: marker, sudoPID: 200), 1, "a new sudo process is a first prompt, not a rejection")
+        XCTAssertEqual(Askpass.nextAttempt(marker: marker, sudoPID: 200), 2)
         XCTAssertNil(Askpass.nextAttempt(marker: nil))
         XCTAssertNil(Askpass.nextAttempt(marker: URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)/attempts")))
     }
