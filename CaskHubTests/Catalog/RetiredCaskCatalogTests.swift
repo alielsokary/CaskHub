@@ -212,9 +212,7 @@ final class RetiredCaskCatalogTests: XCTestCase {
                 XCTAssertEqual(Set(tokens.suffix(2)), retired, context)
                 XCTAssertTrue(tokens.dropLast(2).allSatisfy { !retired.contains($0) }, context)
                 XCTAssertFalse(tokens.contains("app@beta"), context)
-                if page != .featured, page != .recentlyAdded {
-                    XCTAssertTrue(tokens.dropLast(2).contains("font-app"), "fonts list like apps: \(context)")
-                }
+                XCTAssertEqual(tokens.contains("font-app"), page == .browse, "only Browse lists fonts: \(context)")
                 vm.searchText = ""
                 XCTAssertTrue(vm.filteredCasks.allSatisfy { !retired.contains($0.token) }, context)
             }
