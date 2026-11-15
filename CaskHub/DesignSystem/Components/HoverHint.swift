@@ -23,14 +23,20 @@ private struct HoverHint: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onHover { isPresented = $0 && message != nil }
-            .popover(isPresented: $isPresented) {
-                HintWidth(maxWidth: 260) {
-                    Text(verbatim: message ?? "")
-                        .font(CHType.bodySm)
-                }
-                .padding(12)
-            }
+            .popover(isPresented: $isPresented) { HintBubble(message: message ?? "") }
             .accessibilityHint(message.map { Text(verbatim: $0) } ?? Text(verbatim: ""))
+    }
+}
+
+struct HintBubble: View {
+    let message: String
+
+    var body: some View {
+        HintWidth(maxWidth: 260) {
+            Text(verbatim: message)
+                .font(CHType.bodySm)
+        }
+        .padding(12)
     }
 }
 

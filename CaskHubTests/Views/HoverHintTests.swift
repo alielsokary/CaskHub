@@ -25,6 +25,12 @@ final class HoverHintTests: XCTestCase {
     func test_hover_hint_renders_with_and_without_message() {
         render(Text(verbatim: "Badge").hoverHint("Explains the badge"), width: 120, height: 40)
         render(Text(verbatim: "Badge").hoverHint(nil), width: 120, height: 40)
+        render(TapBadge(tap: "foo/bar"), width: 40, height: 40)
+    }
+
+    @MainActor
+    func test_hint_bubble_lays_out_its_message() {
+        render(HintBubble(message: "From the foo/bar tap"), width: 300, height: 80)
     }
 
     @MainActor
