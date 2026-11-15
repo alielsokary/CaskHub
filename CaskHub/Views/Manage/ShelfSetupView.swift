@@ -173,18 +173,24 @@ struct ShelfSetupView: View {
     func makeImportPlan(
         fileName: String,
         tokens: [String],
-        taps: [TapAddRequest]
+        taps: BrewfileTaps
     ) -> BrewfileImportPlan {
         let snapshot = viewModel.localHomebrew.installationSnapshot
+        let existingTaps = Set(viewModel.localHomebrew.tapIndex.taps.map(\.name))
+        // A tap already on this Mac keeps its own remote, so its casks stay installable.
+        let unsupportedTaps = taps.unsupported.filter { !existingTaps.contains($0) }
         var skippedEntries: [BrewfileImportPlan.Entry] = []
         var newEntries: [BrewfileImportPlan.Entry] = []
         var unavailableEntries: [BrewfileImportPlan.Entry] = []
+        var unsupportedTapEntries: [BrewfileImportPlan.Entry] = []
         for token in tokens {
             let entry = BrewfileImportPlan.Entry(token: token, cask: viewModel.catalogCask(for: CaskReference.normalized(token)))
             let state = entry.cask.map(viewModel.localState(for:))
             // Any install of this token, including a same-token twin, owns the Caskroom entry.
             if state?.isPresent == true || snapshot.installedCasks[CaskReference.bareToken(entry.reference)] != nil {
                 skippedEntries.append(entry)
+            } else if let tap = entry.tap, unsupportedTaps.contains(tap) {
+                unsupportedTapEntries.append(entry)
             } else if state?.retirement?.blocksInstall == true {
                 unavailableEntries.append(entry)
             } else {
@@ -192,14 +198,15 @@ struct ShelfSetupView: View {
             }
         }
         let impliedTaps = newEntries.compactMap { $0.tap.flatMap { try? TapAddInput.parse($0).get() } }
-        let existingTaps = Set(viewModel.localHomebrew.tapIndex.taps.map(\.name))
         var seen: Set<String> = []
         return BrewfileImportPlan(
             fileName: fileName,
             skippedEntries: skippedEntries,
             newEntries: newEntries,
             unavailableEntries: unavailableEntries,
-            tapsToAdd: (taps + impliedTaps).filter { !existingTaps.contains($0.tapName) && seen.insert($0.tapName).inserted }
+            unsupportedTapEntries: unsupportedTapEntries,
+            tapsToAdd: (taps.toAdd + impliedTaps).filter { !existingTaps.contains($0.tapName) && seen.insert($0.tapName).inserted },
+            unsupportedTaps: unsupportedTaps
         )
     }
 

@@ -133,7 +133,7 @@ final class ShelfSetupViewTests: XCTestCase {
         let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["homebrew/cask/google-chrome", "raycast", "mystery-app"],
-            taps: []
+            taps: BrewfileTaps()
         )
 
         XCTAssertEqual(
@@ -165,7 +165,7 @@ final class ShelfSetupViewTests: XCTestCase {
         let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["qbittorrent", "gone-app", "chromium", "legacy-app", "raycast"],
-            taps: []
+            taps: BrewfileTaps()
         )
 
         XCTAssertEqual(plan.skippedEntries.map(\.token), ["qbittorrent", "gone-app"])
@@ -193,10 +193,10 @@ final class ShelfSetupViewTests: XCTestCase {
         let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["sill", "saffsanity/sill/sill"],
-            taps: [
+            taps: BrewfileTaps(toAdd: [
                 TapAddRequest(tapName: "hashicorp/tap", remoteURL: nil, caskToken: nil),
                 TapAddRequest(tapName: "user/casks", remoteURL: URL(string: "https://github.com/user/casks"), caskToken: nil)
-            ]
+            ])
         )
 
         XCTAssertEqual(plan.newEntries.map(\.reference), ["sill", "saffsanity/sill/sill"])
@@ -218,7 +218,7 @@ final class ShelfSetupViewTests: XCTestCase {
         )
 
         let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
-            fileName: "~/Brewfile", tokens: ["foo", "Homebrew/Cask/bar"], taps: []
+            fileName: "~/Brewfile", tokens: ["foo", "Homebrew/Cask/bar"], taps: BrewfileTaps()
         )
 
         XCTAssertEqual(plan.skippedEntries.map(\.token), ["foo"])
@@ -229,11 +229,12 @@ final class ShelfSetupViewTests: XCTestCase {
     @MainActor
     func test_import_sheet_names_a_custom_tap_remote() {
         let plan = BrewfileImportPlan(
-            fileName: "~/Brewfile", skippedEntries: [], newEntries: [], unavailableEntries: [],
+            fileName: "~/Brewfile", skippedEntries: [], newEntries: [], unavailableEntries: [], unsupportedTapEntries: [],
             tapsToAdd: [
                 TapAddRequest(tapName: "hashicorp/tap", remoteURL: URL(string: "https://evil.example/x"), caskToken: nil),
                 TapAddRequest(tapName: "user/plain", remoteURL: nil, caskToken: nil)
-            ]
+            ],
+            unsupportedTaps: []
         )
 
         XCTAssertEqual(plan.tapsToAddText, "hashicorp/tap (from evil.example/x), user/plain")
@@ -245,7 +246,9 @@ final class ShelfSetupViewTests: XCTestCase {
             fileName: "~/Brewfile", skippedEntries: [],
             newEntries: [.init(token: "saffsanity/sill/sill", cask: nil), .init(token: "figma", cask: nil)],
             unavailableEntries: [],
-            tapsToAdd: [TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil)]
+            unsupportedTapEntries: [],
+            tapsToAdd: [TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil)],
+            unsupportedTaps: []
         )
         var events: [String] = []
 
@@ -263,6 +266,61 @@ final class ShelfSetupViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_import_counts_casks_of_a_failed_tap_as_failed_without_installing_them() async {
+        struct TapFailed: Error {}
+        let plan = BrewfileImportPlan(
+            fileName: "~/Brewfile", skippedEntries: [],
+            newEntries: [.init(token: "user/broken/app", cask: nil), .init(token: "figma", cask: nil)],
+            unavailableEntries: [],
+            unsupportedTapEntries: [],
+            tapsToAdd: [TapAddRequest(tapName: "user/broken", remoteURL: nil, caskToken: nil)],
+            unsupportedTaps: []
+        )
+        var installed: [String] = []
+
+        let failed = await plan.run(
+            selected: plan.newEntries,
+            addTap: { _ in throw TapFailed() },
+            installAll: { references in
+                installed = references
+                return 0
+            }
+        )
+
+        XCTAssertEqual(failed, 1)
+        XCTAssertEqual(installed, ["figma"])
+    }
+
+    @MainActor
+    func test_import_plan_skips_casks_of_taps_with_unsupported_remotes_unless_already_tapped() async {
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("brewfile-unsupported"), externalApps: [:])
+        let (vm, _) = await makeSUT(casks: [], localHomebrew: homebrew)
+        homebrew.tapIndex = TapIndex(
+            taps: [TapSummary(
+                name: "user/known", remote: nil, official: false, trusted: false, customRemote: false,
+                caskTokens: [], formulaNames: [], caskFiles: []
+            )],
+            casks: [],
+            trust: TapTrust(taps: [], casks: [])
+        )
+
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+            fileName: "~/Brewfile",
+            tokens: ["user/ssh/app", "user/known/tool"],
+            taps: BrewfileTaps(unsupported: ["user/ssh", "user/known"])
+        )
+
+        XCTAssertEqual(plan.unsupportedTapEntries.map(\.reference), ["user/ssh/app"])
+        XCTAssertEqual(plan.newEntries.map(\.reference), ["user/known/tool"])
+        XCTAssertEqual(plan.unsupportedTaps, ["user/ssh"])
+        XCTAssertTrue(plan.tapsToAdd.isEmpty, "the skipped tap is never added from its name alone")
+        XCTAssertEqual(plan.listedCount, 2)
+        render(BrewfileImportSheet(plan: plan, addTap: { _ in })
+            .environment(homebrew)
+            .environment(ImageCacheService()), width: 1100, height: 600)
+    }
+
+    @MainActor
     func test_brewfile_import_sheet_renders_every_phase() {
         let homebrew = makeHomebrew(
             defaults: makeScratchDefaults("brewfile-render"),
@@ -276,7 +334,9 @@ final class ShelfSetupViewTests: XCTestCase {
                 .init(token: "mystery-app", cask: nil)
             ],
             unavailableEntries: [],
-            tapsToAdd: []
+            unsupportedTapEntries: [],
+            tapsToAdd: [],
+            unsupportedTaps: []
         )
         let phases: [BrewfileImportPhase] = [
             .preview, .running(completedCount: 1), .done(failedCount: 0), .done(failedCount: 1)
@@ -291,7 +351,9 @@ final class ShelfSetupViewTests: XCTestCase {
             skippedEntries: plan.skippedEntries,
             newEntries: [],
             unavailableEntries: [],
-            tapsToAdd: []
+            unsupportedTapEntries: [],
+            tapsToAdd: [],
+            unsupportedTaps: []
         )
         render(BrewfileImportSheet(plan: nothingNew, addTap: { _ in })
             .environment(homebrew)

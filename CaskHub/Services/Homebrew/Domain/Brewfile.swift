@@ -21,19 +21,27 @@ nonisolated enum Brewfile {
         }
     }
 
-    /// Third-party taps only; an optional second argument is kept when it is an http(s) URL.
-    static func taps(in contents: String) -> [TapAddRequest] {
+    /// Third-party taps only. A tap whose second argument isn't a secure https remote is never added:
+    /// dropping the remote would make brew clone a different repository under the same name.
+    static func taps(in contents: String) -> BrewfileTaps {
         var seen: Set<String> = []
-        return contents.split(whereSeparator: \.isNewline).compactMap { line in
+        var taps = BrewfileTaps()
+        for line in contents.split(whereSeparator: \.isNewline) {
             guard let match = line.firstMatch(
                 of: /^\s*tap\s+["']([^"']+)["'](?:\s*,\s*["']([^"']+)["'])?/
             ),
                 case let .success(parsed) = TapAddInput.parse(String(match.1)),
                 parsed.caskToken == nil,
                 seen.insert(parsed.tapName).inserted
-            else { return nil }
-            return TapAddRequest(tapName: parsed.tapName, remoteURL: match.2.flatMap { URL.web(String($0)) }, caskToken: nil)
+            else { continue }
+            let remote = match.2.map { TapAddInput.secureRemote(String($0)) }
+            if case .some(.none) = remote {
+                taps.unsupported.append(parsed.tapName)
+            } else {
+                taps.toAdd.append(TapAddRequest(tapName: parsed.tapName, remoteURL: remote ?? nil, caskToken: nil))
+            }
         }
+        return taps
     }
 
     static func contents(forCaskReferences references: [String]) -> String {
@@ -41,4 +49,10 @@ nonisolated enum Brewfile {
         return taps.map { "tap \"\($0)\"\n" }.joined()
             + references.sorted().map { "cask \"\($0)\"\n" }.joined()
     }
+}
+
+nonisolated struct BrewfileTaps: Equatable {
+    var toAdd: [TapAddRequest] = []
+    /// Taps with a remote CaskHub won't pass to brew; their casks are skipped too.
+    var unsupported: [String] = []
 }

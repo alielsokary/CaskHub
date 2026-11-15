@@ -16,10 +16,24 @@ nonisolated struct TapAddRequest: Equatable, Sendable {
         ["tap", tapName] + (remoteURL.map { [$0.absoluteString] } ?? [])
     }
 
+    private var nameParts: (user: Substring, repo: Substring) {
+        let parts = tapName.split(separator: "/")
+        return (parts[0], parts[1])
+    }
+
     /// Where brew clones the tap: always `Taps/<user>/homebrew-<repo>`, whatever the remote.
     var cloneFolder: String {
-        let parts = tapName.split(separator: "/")
-        return "…/Taps/\(parts[0])/homebrew-\(parts[1])"
+        "…/Taps/\(nameParts.user)/homebrew-\(nameParts.repo)"
+    }
+
+    /// The custom remote, else the GitHub repository brew derives from the name.
+    var repositoryURL: URL {
+        remoteURL ?? URL(string: "https://github.com/\(nameParts.user)/homebrew-\(nameParts.repo)")!
+    }
+
+    /// `host/path` of the repository, so a familiar tap name can't hide where the code comes from.
+    var sourceText: String {
+        (repositoryURL.host() ?? "") + repositoryURL.path()
     }
 }
 
@@ -59,7 +73,6 @@ nonisolated enum TapAddInput {
     static func parse(_ text: String) -> Result<TapAddRequest, TapAddInputError> {
         var words = text.split(whereSeparator: \.isWhitespace).map(String.init)
         guard !words.isEmpty else { return .failure(.empty) }
-        if words.first == "brew" { words.removeFirst() }
         while let first = words.first, leadingWords.contains(first) { words.removeFirst() }
         words.removeAll { $0.hasPrefix("-") }
         guard words.count == 1, let word = words.first else { return .failure(.unrecognized) }
@@ -82,6 +95,14 @@ nonisolated enum TapAddInput {
         )
     }
 
+    /// A `brew tap` remote CaskHub accepts: https with a host, and no credentials, query, or fragment.
+    static func secureRemote(_ text: String) -> URL? {
+        guard let url = URLComponents(string: text), url.scheme?.lowercased() == "https", url.host?.isEmpty == false,
+              url.user == nil, url.password == nil, url.query == nil, url.fragment == nil
+        else { return nil }
+        return url.url
+    }
+
     private static func githubRequest(_ word: String) -> TapAddRequest? {
         var path = word
         for prefix in ["https://", "http://"] where path.lowercased().hasPrefix(prefix) {
@@ -93,31 +114,22 @@ nonisolated enum TapAddInput {
         if path.hasSuffix(".git") { path.removeLast(4) }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
         guard parts.count == 2, parts.allSatisfy(isValidComponent) else { return nil }
-        let user = parts[0].lowercased(), repo = parts[1].lowercased()
-        if repo.hasPrefix("homebrew-"), repo.count > "homebrew-".count {
-            return TapAddRequest(tapName: "\(user)/\(repo.dropFirst("homebrew-".count))", remoteURL: nil, caskToken: nil)
-        }
-        return TapAddRequest(
-            tapName: "\(user)/\(repo)",
-            remoteURL: URL(string: "https://github.com/\(parts[0])/\(parts[1])"),
-            caskToken: nil
-        )
+        let repo = tapRepoName(parts[1])
+        // brew finds github.com/user/homebrew-repo by itself; any other repository needs its URL.
+        let remote = parts[1].lowercased() == "homebrew-\(repo)" ? nil : URL(string: "https://github.com/\(parts[0])/\(parts[1])")
+        return TapAddRequest(tapName: "\(parts[0].lowercased())/\(repo)", remoteURL: remote, caskToken: nil)
     }
 
     /// An https Git URL on any other host, as `brew tap user/repo <URL>` takes it.
     private static func remoteRequest(_ word: String) -> Result<TapAddRequest, TapAddInputError>? {
-        guard word.contains("://"), let url = URLComponents(string: word), let scheme = url.scheme?.lowercased() else { return nil }
+        guard word.contains("://"), let scheme = URLComponents(string: word)?.scheme?.lowercased() else { return nil }
         if scheme == "http" || scheme == "git" { return .failure(.insecureRemote) }
-        guard scheme == "https", let host = url.host?.lowercased(), !host.isEmpty, host != "github.com",
-              url.user == nil, url.password == nil, url.query == nil, url.fragment == nil
-        else { return .failure(.unrecognized) }
-        var path = url.path
-        while path.hasSuffix("/") { path.removeLast() }
-        let parts = path.split(separator: "/").map(String.init)
+        guard let url = secureRemote(word), let host = url.host()?.lowercased(), host != "github.com" else {
+            return .failure(.unrecognized)
+        }
+        let parts = url.path().split(separator: "/").map(String.init)
         guard parts.count == 2, parts.allSatisfy(isValidComponent) else { return .failure(.unrecognized) }
-        var repo = parts[1].lowercased()
-        if repo.hasSuffix(".git") { repo.removeLast(4) }
-        if repo.hasPrefix("homebrew-"), repo.count > "homebrew-".count { repo.removeFirst("homebrew-".count) }
+        let repo = tapRepoName(parts[1])
         guard isValidComponent(repo) else { return .failure(.unrecognized) }
         let port = url.port.map { ":\($0)" } ?? ""
         return .success(TapAddRequest(
@@ -125,6 +137,14 @@ nonisolated enum TapAddInput {
             remoteURL: URL(string: "https://\(host)\(port)/\(parts[0])/\(parts[1])"),
             caskToken: nil
         ))
+    }
+
+    /// `homebrew-tools.git` names the tap `tools`, as brew does.
+    private static func tapRepoName(_ repository: String) -> String {
+        var repo = repository.lowercased()
+        if repo.hasSuffix(".git") { repo.removeLast(4) }
+        if repo.hasPrefix("homebrew-"), repo.count > "homebrew-".count { repo.removeFirst("homebrew-".count) }
+        return repo
     }
 
     private static func nameRequest(_ word: String) -> TapAddRequest? {

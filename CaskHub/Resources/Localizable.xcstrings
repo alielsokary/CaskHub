@@ -1543,6 +1543,34 @@
         }
       }
     },
+    "Not added, address not supported: %@" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не добавлены, адрес не поддерживается: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не додано, адреса не підтримується: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未添加，地址不受支持：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未加入，位址不受支援：%@"
+          }
+        }
+      }
+    },
     "Taps to add: %@" : {
       "localizations" : {
         "ru" : {
@@ -14322,6 +14350,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld 個已被 Homebrew 停用，無法安裝"
+          }
+        }
+      }
+    },
+    "shelfSetup.brewfile.sheet.unsupportedTap" : {
+      "comment" : "Import sheet section header; count of Brewfile casks skipped because their tap's address isn't supported",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld skipped, their tap isn't added"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропущено, тап не добавлен: %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропущено, тап не додано: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个已跳过，其 Tap 未添加"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 個已略過，其 Tap 未加入"
           }
         }
       }
