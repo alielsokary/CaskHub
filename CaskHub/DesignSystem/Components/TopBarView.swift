@@ -273,11 +273,7 @@ private struct UpdateAllButton: View {
             .padding(.horizontal, CHSpace.toolbarLabelInset)
         }
         .disabled(isUpdatingAll || isUpdatingHomebrew)
-        .help(
-            isUpdatingHomebrew
-                ? String(localized: "Wait for the current action to finish.")
-                : String(localized: "Update All")
-        )
+        .hoverHint(isUpdatingHomebrew ? String(localized: "Wait for the current action to finish.") : nil)
         .alert("Update All Apps?", isPresented: $showsConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Update All", action: onUpdateAll)

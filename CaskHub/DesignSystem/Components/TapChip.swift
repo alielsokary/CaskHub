@@ -19,7 +19,7 @@ struct TapChip: View {
             .padding(.horizontal, 5)
             .padding(.vertical, 1)
             .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Color.chHairline, lineWidth: 1))
-            .help(String(localized: "From the \(tap) tap"))
+            .hoverHint(String(localized: "From the \(tap) tap"))
     }
 }
 
@@ -32,7 +32,7 @@ struct TapBadge: View {
             .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(Color.chTextMuted)
             .contentShape(Rectangle())
-            .help(String(localized: "From the \(tap) tap"))
+            .hoverHint(String(localized: "From the \(tap) tap"))
             .accessibilityLabel(Text(String(localized: "From the \(tap) tap")))
     }
 }
