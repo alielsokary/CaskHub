@@ -7,9 +7,16 @@
 
 import SwiftUI
 
+enum ShelfSetupPicker: String, Identifiable {
+    case adoptIgnore
+    case pin
+
+    var id: String { rawValue }
+}
+
 struct ShelfSetupView: View {
     let viewModel: CaskCatalogViewModel
-    @Binding var picker: ShelfSetupPicker?
+    @State private var picker: ShelfSetupPicker?
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var exportNote: BrewfileNote?
     @State private var importNote: BrewfileNote?
@@ -30,6 +37,12 @@ struct ShelfSetupView: View {
         .toolbarScrollEdge()
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
+        .sheet(item: $picker) { picker in
+            switch picker {
+            case .adoptIgnore: AdoptIgnorePickerSheet(viewModel: viewModel)
+            case .pin: PinPickerSheet(viewModel: viewModel)
+            }
+        }
         .sheet(item: $importPlan) { plan in
             BrewfileImportSheet(plan: plan, addTap: { try await viewModel.addTap($0) })
         }
@@ -351,7 +364,7 @@ struct AdoptIgnorePickerSheet: View {
         categoryService: categories,
         recentlyAdded: recent,
         localHomebrew: homebrew
-    ), picker: .constant(nil))
+    ))
     .environment(homebrew)
     .environment(ImageCacheService())
     .frame(width: 1100, height: 600)

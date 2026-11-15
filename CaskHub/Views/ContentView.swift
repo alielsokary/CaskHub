@@ -30,7 +30,6 @@ struct ContentView: View {
     @State private var isRefreshingUpdates = false
     @State var isRefreshingTaps = false
     @State var tapDialog: TapDialog?
-    @State private var shelfSetupPicker: ShelfSetupPicker?
 
     @State private var detailWidth: CGFloat = CHSize.contentWidth + 2 * CHSize.catalogInset
 
@@ -94,7 +93,6 @@ struct ContentView: View {
             ))
         }
         .modifier(TapPresentation(dialog: $tapDialog, viewModel: viewModel))
-        .modifier(ShelfSetupPresentation(picker: $shelfSetupPicker, viewModel: viewModel))
         .overlay {
             Button("") { searchFocused = true }
                 .keyboardShortcut("f", modifiers: .command)
@@ -235,7 +233,7 @@ struct ContentView: View {
     private var detailContent: some View {
         switch selectedSidebar {
         case .shelfSetup:
-            ShelfSetupView(viewModel: viewModel, picker: $shelfSetupPicker)
+            ShelfSetupView(viewModel: viewModel)
         case .maintenance:
             MaintenanceView(model: maintenance)
         default:

@@ -164,7 +164,6 @@
 		B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09100000000000000000001 /* CaskHubHelpSearch.swift */; };
 		B09200000000000000000002 /* HelpViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09200000000000000000001 /* HelpViewTests.swift */; };
 		B0C000000000000000000002 /* ShelfSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C000000000000000000001 /* ShelfSetupView.swift */; };
-		04440FD9CE025911AA3897BB /* ShelfSetupPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E483001EE9CB8AA99582DD /* ShelfSetupPresentation.swift */; };
 		0215EBCED2518D6E8EF79188 /* PinnedUpdatesCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F232F02A12C9709EDC09C15 /* PinnedUpdatesCard.swift */; };
 		AA1000000000000000000002 /* MaintenanceReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000001 /* MaintenanceReport.swift */; };
 		AA1000000000000000000004 /* MaintenanceProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000003 /* MaintenanceProbe.swift */; };
@@ -405,7 +404,6 @@
 		B09100000000000000000001 /* CaskHubHelpSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubHelpSearch.swift; sourceTree = "<group>"; };
 		B09200000000000000000001 /* HelpViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewTests.swift; sourceTree = "<group>"; };
 		B0C000000000000000000001 /* ShelfSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupView.swift; sourceTree = "<group>"; };
-		43E483001EE9CB8AA99582DD /* ShelfSetupPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupPresentation.swift; sourceTree = "<group>"; };
 		9F232F02A12C9709EDC09C15 /* PinnedUpdatesCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedUpdatesCard.swift; sourceTree = "<group>"; };
 		AA1000000000000000000001 /* MaintenanceReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceReport.swift; sourceTree = "<group>"; };
 		AA1000000000000000000003 /* MaintenanceProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceProbe.swift; sourceTree = "<group>"; };
@@ -790,7 +788,6 @@
 			children = (
 				BF11E0000000000000000003 /* BrewfileImportSheet.swift */,
 				B0C000000000000000000001 /* ShelfSetupView.swift */,
-				43E483001EE9CB8AA99582DD /* ShelfSetupPresentation.swift */,
 				9F232F02A12C9709EDC09C15 /* PinnedUpdatesCard.swift */,
 			);
 			path = Manage;
@@ -1312,7 +1309,6 @@
 				B08000000000000000000004 /* CaskHubHelpView.swift in Sources */,
 				B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */,
 				B0C000000000000000000002 /* ShelfSetupView.swift in Sources */,
-				04440FD9CE025911AA3897BB /* ShelfSetupPresentation.swift in Sources */,
 				0215EBCED2518D6E8EF79188 /* PinnedUpdatesCard.swift in Sources */,
 				AA1000000000000000000002 /* MaintenanceReport.swift in Sources */,
 				AA1000000000000000000004 /* MaintenanceProbe.swift in Sources */,

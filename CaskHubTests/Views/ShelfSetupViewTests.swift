@@ -98,7 +98,7 @@ final class ShelfSetupViewTests: XCTestCase {
         )
         homebrew.setAdoptIgnored("slack", true)
 
-        render(ShelfSetupView(viewModel: vm, picker: .constant(nil))
+        render(ShelfSetupView(viewModel: vm)
             .environment(homebrew)
             .environment(ImageCacheService()), width: 1100, height: 600)
     }
@@ -111,7 +111,7 @@ final class ShelfSetupViewTests: XCTestCase {
         )
         let (vm, _) = await makeSUT(casks: [], localHomebrew: homebrew)
 
-        render(ShelfSetupView(viewModel: vm, picker: .constant(nil))
+        render(ShelfSetupView(viewModel: vm)
             .environment(homebrew)
             .environment(ImageCacheService()), width: 1100, height: 600)
     }
@@ -130,7 +130,7 @@ final class ShelfSetupViewTests: XCTestCase {
             localHomebrew: homebrew
         )
 
-        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["homebrew/cask/google-chrome", "raycast", "mystery-app"],
             taps: []
@@ -162,7 +162,7 @@ final class ShelfSetupViewTests: XCTestCase {
             updateInstalledCask(installation(token, version: "1.0"), in: homebrew)
         }
 
-        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["qbittorrent", "gone-app", "chromium", "legacy-app", "raycast"],
             taps: []
@@ -190,7 +190,7 @@ final class ShelfSetupViewTests: XCTestCase {
             trust: TapTrust(taps: [], casks: [])
         )
 
-        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["sill", "saffsanity/sill/sill"],
             taps: [
@@ -217,7 +217,7 @@ final class ShelfSetupViewTests: XCTestCase {
             in: homebrew
         )
 
-        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile", tokens: ["foo", "Homebrew/Cask/bar"], taps: []
         )
 
@@ -373,7 +373,7 @@ final class ShelfSetupViewTests: XCTestCase {
         for style in AppStyle.allCases {
             AppStyle.current = style
             let pages = [
-                AnyView(ShelfSetupView(viewModel: vm, picker: .constant(nil)).environment(homebrew).environment(imageCache)),
+                AnyView(ShelfSetupView(viewModel: vm).environment(homebrew).environment(imageCache)),
                 AnyView(MaintenanceView(model: model).environment(imageCache))
             ]
             for (index, page) in pages.enumerated() {

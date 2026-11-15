@@ -56,7 +56,7 @@ final class PinnedUpdatesCardTests: XCTestCase {
         vm.localHomebrew.operationStore.send(.enqueue(.updating), for: "onyx")
         XCTAssertTrue(card.isBusy(vm.pinnedCasks[0]))
         XCTAssertTrue(card.isBlocked(vm.pinnedCasks[0]))
-        render(ShelfSetupView(viewModel: vm, picker: .constant(nil))
+        render(ShelfSetupView(viewModel: vm)
             .environment(vm.localHomebrew)
             .environment(ImageCacheService()), width: 1100, height: 800)
     }
