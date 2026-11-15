@@ -45,6 +45,8 @@ final class LocalHomebrewService {
 
     @ObservationIgnored let applicationLauncher: any ApplicationLaunching
     @ObservationIgnored let mutationCoordinator: HomebrewMutationCoordinator
+    @ObservationIgnored let pinCommands: HomebrewPinCommands
+    var pinChangesInFlight: Set<String> = []
     @ObservationIgnored let softwareScanner: any InstalledSoftwareScanning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let caskPlatformProvider: () async -> CaskPlatform?
@@ -140,13 +142,18 @@ final class LocalHomebrewService {
         applicationLauncher = dependencies.applicationLauncher
             ?? WorkspaceApplicationLauncher()
         self.operationStore = operationStore
+        let commandExecutor = dependencies.resolvedCommandExecutor()
         mutationCoordinator = HomebrewMutationCoordinator(
             operationStore: operationStore,
-            commandExecutor: dependencies.resolvedCommandExecutor(),
+            commandExecutor: commandExecutor,
             brewBinaryProvider: dependencies.brewBinaryProvider,
             askpassProvider: dependencies.askpassProvider,
             fileManager: dependencies.fileManager,
             lanes: lanes
+        )
+        pinCommands = HomebrewPinCommands(
+            commandExecutor: commandExecutor,
+            brewBinaryProvider: dependencies.brewBinaryProvider
         )
         softwareScanner = dependencies.softwareScanner
             ?? HomebrewInstallationScanner()
