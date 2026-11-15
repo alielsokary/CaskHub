@@ -238,6 +238,8 @@ nonisolated struct CaskLocalState: Equatable, Sendable {
     let isZombie: Bool
     let canOpen: Bool
     let retirement: CaskRetirement?
+    /// Set when a same-token twin from another source owns the Caskroom entry.
+    let foreignInstallationSource: String?
 
     var isPresent: Bool {
         installationSource != nil
@@ -323,6 +325,8 @@ nonisolated enum CaskAction: Equatable, Sendable {
     case uninstalling
     case repairing
     case queued
+    case addingTap
+    case removingTap
 
     var inProgressLabel: String {
         switch self {
@@ -334,6 +338,8 @@ nonisolated enum CaskAction: Equatable, Sendable {
         case .uninstalling: return String(localized: "Uninstalling…")
         case .repairing: return String(localized: "Repairing…")
         case .queued: return String(localized: "Queued…")
+        case .addingTap: return String(localized: "Adding Tap…")
+        case .removingTap: return String(localized: "Removing Tap…")
         }
     }
 
@@ -349,6 +355,8 @@ nonisolated enum CaskAction: Equatable, Sendable {
         case .uninstalling: return "uninstalling"
         case .repairing: return "repairing"
         case .queued: return "queued"
+        case .addingTap: return "adding-tap"
+        case .removingTap: return "removing-tap"
         }
     }
 }

@@ -7,6 +7,35 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA7AE72541265EB408E4152C /* ImageCacheService+Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A5F72D8D7D814389270C4 /* ImageCacheService+Categories.swift */; };
+		CA7A51F8BB8721ED85B44DCB /* TapCatalogData.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */; };
+		CA7A782E69C0F90CB6ECB56E /* TapCategoryDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */; };
+		CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */; };
+		CA7A5CD058F854D2619AABB4 /* TapRepositoryChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A44159691ED8160723F41 /* TapRepositoryChecker.swift */; };
+		CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */; };
+		CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */; };
+		CA7AAE608EBE151203B74B40 /* TrustInstallPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */; };
+		CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */; };
+		CA7A3B60B96C269271BAAED1 /* ContentView+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AB5D71D34E4EB0C77940D /* ContentView+Taps.swift */; };
+		CA7AD1CF9F056DE3402CCD25 /* TapsEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A760067F0AFD41BAEDA64 /* TapsEmptyStateView.swift */; };
+		CA7AFEF9659FED9683868983 /* TapSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */; };
+		CA7AAD492A2AA6A009BF06D4 /* TapsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */; };
+		CA7AB3A9F99766591C19FAC9 /* TapChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */; };
+		CA7A082722C6593FFB7E9750 /* CaskCatalogViewModel+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */; };
+		CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A74921CE28363941C4016 /* TapCatalogTests.swift */; };
+		CA7ADC9358525B7E28FD1AFD /* LocalHomebrewService+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */; };
+		CA7AEFFEF3658BDE98E28FB4 /* TapRemovalPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */; };
+		CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */; };
+		CA7AB63CA09AD83AFBF09C14 /* HomebrewTapLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */; };
+		CA7AA6C13CA9A90B2ABDEDEF /* TapIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */; };
+		CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */; };
+		CA7AE48EAD303E07CD68B137 /* TapAddInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AA47B786C4746CE5AD2F1 /* TapAddInput.swift */; };
+		CA7A9BFE5A3B9E41E0F0C1DC /* TapAddInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A58759D682C62D89DB682 /* TapAddInputTests.swift */; };
+		CA7A7AB90BB7A0E3978600C7 /* CaskFileTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */; };
+		CA7A29BFD24A174539F319F9 /* CaskFileTextParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A4CF0CC535BDFEA113860 /* CaskFileTextParserTests.swift */; };
+		CA7A0A18E21D413F99AAA5BC /* TapCaskIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */; };
+		CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */; };
+		CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */; };
 		CA2150000000000000000002 /* CaskUpdateTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000001 /* CaskUpdateTarget.swift */; };
 		CA2510000000000000000002 /* CaskRetirement.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2510000000000000000001 /* CaskRetirement.swift */; };
 		CA2150000000000000000006 /* HomebrewPlatformLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2150000000000000000005 /* HomebrewPlatformLoader.swift */; };
@@ -215,6 +244,35 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA7A5F72D8D7D814389270C4 /* ImageCacheService+Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ImageCacheService+Categories.swift"; sourceTree = "<group>"; };
+		CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCatalogData.swift; sourceTree = "<group>"; };
+		CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCategoryDataTests.swift; sourceTree = "<group>"; };
+		CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCaskIconTests.swift; sourceTree = "<group>"; };
+		CA7A44159691ED8160723F41 /* TapRepositoryChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapRepositoryChecker.swift; sourceTree = "<group>"; };
+		CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveTapDialog.swift; sourceTree = "<group>"; };
+		CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTapSheet.swift; sourceTree = "<group>"; };
+		CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustInstallPrompt.swift; sourceTree = "<group>"; };
+		CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTapSheetTests.swift; sourceTree = "<group>"; };
+		CA7AB5D71D34E4EB0C77940D /* ContentView+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Taps.swift"; sourceTree = "<group>"; };
+		CA7A760067F0AFD41BAEDA64 /* TapsEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsEmptyStateView.swift; sourceTree = "<group>"; };
+		CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapSectionHeader.swift; sourceTree = "<group>"; };
+		CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsViewTests.swift; sourceTree = "<group>"; };
+		CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapChip.swift; sourceTree = "<group>"; };
+		CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CaskCatalogViewModel+Taps.swift"; sourceTree = "<group>"; };
+		CA7A74921CE28363941C4016 /* TapCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCatalogTests.swift; sourceTree = "<group>"; };
+		CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Taps.swift"; sourceTree = "<group>"; };
+		CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapRemovalPreview.swift; sourceTree = "<group>"; };
+		CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapWorkflowTests.swift; sourceTree = "<group>"; };
+		CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewTapLoader.swift; sourceTree = "<group>"; };
+		CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapIndex.swift; sourceTree = "<group>"; };
+		CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewTapLoaderTests.swift; sourceTree = "<group>"; };
+		CA7AA47B786C4746CE5AD2F1 /* TapAddInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapAddInput.swift; sourceTree = "<group>"; };
+		CA7A58759D682C62D89DB682 /* TapAddInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapAddInputTests.swift; sourceTree = "<group>"; };
+		CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskFileTextParser.swift; sourceTree = "<group>"; };
+		CA7A4CF0CC535BDFEA113860 /* CaskFileTextParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskFileTextParserTests.swift; sourceTree = "<group>"; };
+		CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCaskIdentityTests.swift; sourceTree = "<group>"; };
+		CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReference.swift; sourceTree = "<group>"; };
+		CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskReferenceTests.swift; sourceTree = "<group>"; };
 		7D1D00000000000000000001 /* CaskHub.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CaskHub.entitlements; sourceTree = "<group>"; };
 		CA2150000000000000000001 /* CaskUpdateTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskUpdateTarget.swift; sourceTree = "<group>"; };
 		CA2510000000000000000001 /* CaskRetirement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskRetirement.swift; sourceTree = "<group>"; };
@@ -434,6 +492,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CA7ABCECDC3883A179F3ED9B /* Taps */ = {
+			isa = PBXGroup;
+			children = (
+				CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */,
+				CA7A760067F0AFD41BAEDA64 /* TapsEmptyStateView.swift */,
+				CA7AC2BCE646EB493FAE2A0D /* AddTapSheet.swift */,
+				CA7A9A4A50CF13BC24381D5C /* RemoveTapDialog.swift */,
+			);
+			path = Taps;
+			sourceTree = "<group>";
+		};
 		41DFD45030028F7D00608C7A /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -458,6 +527,7 @@
 				41DFD45530028F7D00608C7A /* HeroCard.swift */,
 				41DFD45630028F7D00608C7A /* StatusBarView.swift */,
 				41DFD45730028F7D00608C7A /* TopBarView.swift */,
+				CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -589,6 +659,8 @@
 				41DFD48130028F7D00608C7A /* Sidebar */,
 				41DFD48230028F7D00608C7A /* ContentView.swift */,
 				B0D000000000000000000001 /* ContentView+Catalog.swift */,
+				CA7ABCECDC3883A179F3ED9B /* Taps */,
+				CA7AB5D71D34E4EB0C77940D /* ContentView+Taps.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -713,6 +785,7 @@
 				41DFD46E30028F7D00608C7A /* CaskFlowReleases.swift */,
 				41DFD46F30028F7D00608C7A /* CategoryService.swift */,
 				41DFD47430028F7D00608C7A /* RecentlyAddedService.swift */,
+				CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */,
 			);
 			path = Catalog;
 			sourceTree = "<group>";
@@ -723,6 +796,7 @@
 				A1C0D0013A00000100000001 /* IconDiskCache.swift */,
 				A1C0D0033A00000100000001 /* IconBitmap.swift */,
 				41DFD47030028F7D00608C7A /* ImageCacheService.swift */,
+				CA7A5F72D8D7D814389270C4 /* ImageCacheService+Categories.swift */,
 			);
 			path = Images;
 			sourceTree = "<group>";
@@ -773,6 +847,7 @@
 				E2900000000000000000000D /* LocalHomebrewService+Snapshot.swift */,
 				B12000000000000000000002 /* LocalHomebrewService+State.swift */,
 				F32000000000000000000001 /* LocalHomebrewService+Workflows.swift */,
+				CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */,
 			);
 			path = Facade;
 			sourceTree = "<group>";
@@ -793,6 +868,11 @@
 				CA2150000000000000000001 /* CaskUpdateTarget.swift */,
 				CA2510000000000000000001 /* CaskRetirement.swift */,
 				AA1000000000000000000001 /* MaintenanceReport.swift */,
+				CA7A7DB47062C5F7FC70ECF6 /* CaskReference.swift */,
+				CA7A23943EDBDB959B5E6D9C /* CaskFileTextParser.swift */,
+				CA7AA47B786C4746CE5AD2F1 /* TapAddInput.swift */,
+				CA7ADE3C65D424013F6BE7C6 /* TapIndex.swift */,
+				CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -815,6 +895,7 @@
 			isa = PBXGroup;
 			children = (
 				E29000000000000000000015 /* CaskActionPresentation.swift */,
+				CA7AEF232C4D8E87EF112ECF /* TrustInstallPrompt.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -843,6 +924,8 @@
 				F28000000000000000000001 /* InstallationIndexBuilder.swift */,
 				AA1000000000000000000003 /* MaintenanceProbe.swift */,
 				F30000000000000000000003 /* PackageReceiptResolver.swift */,
+				CA7AC73991118EE908285809 /* HomebrewTapLoader.swift */,
+				CA7A44159691ED8160723F41 /* TapRepositoryChecker.swift */,
 			);
 			path = Infrastructure;
 			sourceTree = "<group>";
@@ -853,6 +936,7 @@
 				41DFD47630028F7D00608C7A /* CaskCatalogViewModel.swift */,
 				F27000000000000000000003 /* CaskCatalogViewModel+Projection.swift */,
 				F3200000000000000000001D /* Projection */,
+				CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */,
 			);
 			path = Catalog;
 			sourceTree = "<group>";
@@ -897,6 +981,8 @@
 				A51000000000000000000001 /* ExternallyManagedCasksTests.swift */,
 				CA2510000000000000000003 /* RetiredCaskCatalogTests.swift */,
 				CB0222000000000000000001 /* FontCatalogTests.swift */,
+				CA7A74921CE28363941C4016 /* TapCatalogTests.swift */,
+				CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */,
 			);
 			path = Catalog;
 			sourceTree = "<group>";
@@ -913,6 +999,9 @@
 				7D1D0000000000000000001C /* AdministratorPasswordSettingsTests.swift */,
 				B0C000000000000000000004 /* ShelfSetupViewTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
+				CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */,
+				CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */,
+				CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -949,6 +1038,9 @@
 				E29000000000000000000003 /* CaskOperationStateTests.swift */,
 				B0F000000000000000000003 /* HomebrewCommandFailureTests.swift */,
 				AA100000000000000000000C /* MaintenanceParsingTests.swift */,
+				CA7AD6B7184A157C760488C5 /* CaskReferenceTests.swift */,
+				CA7A4CF0CC535BDFEA113860 /* CaskFileTextParserTests.swift */,
+				CA7A58759D682C62D89DB682 /* TapAddInputTests.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -989,6 +1081,7 @@
 				C0FE00000000000000000009 /* HomebrewLaneLimiterTests.swift */,
 				A29100000000000000000006 /* InstallationDateIndexTests.swift */,
 				AA1000000000000000000012 /* MaintenanceProbeTests.swift */,
+				CA7AF91F0CEA348EA5C5AD6C /* HomebrewTapLoaderTests.swift */,
 			);
 			path = Infrastructure;
 			sourceTree = "<group>";
@@ -1011,6 +1104,7 @@
 				C0FE0000000000000000000D /* ConcurrentDownloadTests.swift */,
 				B0AD00000000000000000001 /* UninstallZapGateTests.swift */,
 				B12000000000000000000008 /* CaskAdoptionWorkflowTests.swift */,
+				CA7AAC6D4ED8C5805337B7A1 /* TapWorkflowTests.swift */,
 			);
 			path = Workflows;
 			sourceTree = "<group>";
@@ -1024,6 +1118,7 @@
 				B23300000000000000000001 /* HomebrewAppVersionTests.swift */,
 				CA2150000000000000000003 /* CaskPlatformUpdateTests.swift */,
 				41DFD4B130028F9F00608C7A /* CaskHubTests.swift */,
+				CA7A243398141C531D08B9C2 /* TapCaskIdentityTests.swift */,
 			);
 			path = Integration;
 			sourceTree = "<group>";
@@ -1291,6 +1386,24 @@
 				41DFD4AD30028F7D00608C7A /* CaskRowView.swift in Sources */,
 				41DFD4AE30028F7D00608C7A /* SidebarView.swift in Sources */,
 				41DFD4AF30028F7D00608C7A /* ContentView.swift in Sources */,
+				CA7A29A6ECB6CDAEF9BE78F7 /* CaskReference.swift in Sources */,
+				CA7A7AB90BB7A0E3978600C7 /* CaskFileTextParser.swift in Sources */,
+				CA7AE48EAD303E07CD68B137 /* TapAddInput.swift in Sources */,
+				CA7AA6C13CA9A90B2ABDEDEF /* TapIndex.swift in Sources */,
+				CA7AB63CA09AD83AFBF09C14 /* HomebrewTapLoader.swift in Sources */,
+				CA7AEFFEF3658BDE98E28FB4 /* TapRemovalPreview.swift in Sources */,
+				CA7ADC9358525B7E28FD1AFD /* LocalHomebrewService+Taps.swift in Sources */,
+				CA7A082722C6593FFB7E9750 /* CaskCatalogViewModel+Taps.swift in Sources */,
+				CA7AB3A9F99766591C19FAC9 /* TapChip.swift in Sources */,
+				CA7AFEF9659FED9683868983 /* TapSectionHeader.swift in Sources */,
+				CA7AD1CF9F056DE3402CCD25 /* TapsEmptyStateView.swift in Sources */,
+				CA7A3B60B96C269271BAAED1 /* ContentView+Taps.swift in Sources */,
+				CA7AAE608EBE151203B74B40 /* TrustInstallPrompt.swift in Sources */,
+				CA7A8B654DCF6516EBAADFEC /* AddTapSheet.swift in Sources */,
+				CA7AE7014946CAA3A1FD86BB /* RemoveTapDialog.swift in Sources */,
+				CA7A5CD058F854D2619AABB4 /* TapRepositoryChecker.swift in Sources */,
+				CA7A51F8BB8721ED85B44DCB /* TapCatalogData.swift in Sources */,
+				CA7AE72541265EB408E4152C /* ImageCacheService+Categories.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1364,6 +1477,17 @@
 				41DFD4B830028F9F00608C7A /* SharedTestHelpers.swift in Sources */,
 				B0AD00000000000000000012 /* ScratchDefaultsTests.swift in Sources */,
 				AA1000000000000000000017 /* TestFactories.swift in Sources */,
+				CA7A2764B853AA1A2C32655D /* CaskReferenceTests.swift in Sources */,
+				CA7A0A18E21D413F99AAA5BC /* TapCaskIdentityTests.swift in Sources */,
+				CA7A29BFD24A174539F319F9 /* CaskFileTextParserTests.swift in Sources */,
+				CA7A9BFE5A3B9E41E0F0C1DC /* TapAddInputTests.swift in Sources */,
+				CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */,
+				CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */,
+				CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */,
+				CA7AAD492A2AA6A009BF06D4 /* TapsViewTests.swift in Sources */,
+				CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */,
+				CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */,
+				CA7A782E69C0F90CB6ECB56E /* TapCategoryDataTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

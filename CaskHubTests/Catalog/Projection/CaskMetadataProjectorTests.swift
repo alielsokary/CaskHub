@@ -130,17 +130,41 @@ final class CaskMetadataProjectorTests: XCTestCase {
         )
     }
 
+    func test_only_web_urls_become_links() {
+        XCTAssertEqual(CaskInfoProjector.webLink("https://example.com/a"), URL(string: "https://example.com/a"))
+        XCTAssertEqual(CaskInfoProjector.webLink("HTTP://example.com"), URL(string: "HTTP://example.com"))
+        for text in ["file:///etc/passwd", "javascript:alert(1)", "x-apple.systempreferences:", "https://", "example.com"] {
+            XCTAssertNil(CaskInfoProjector.webLink(text), text)
+        }
+    }
+
     func test_info_projection_omits_sha256_row_when_missing() {
         XCTAssertNil(valuesByProperty(makeDownloadRows(sha256: nil))["SHA"])
     }
 
+    func test_text_read_tap_cask_hides_rows_it_cannot_know() {
+        var cask = CaskFileTextParser.cask(fromSource: "", token: "tool", tap: "user/tap")
+        let properties = Set(makeRows(for: cask).map(\.property))
+
+        for hidden in ["Auto Updates", "Outdated", "Deprecated", "Disabled"] {
+            XCTAssertFalse(properties.contains(String(localized: String.LocalizationValue(hidden))), hidden)
+        }
+        XCTAssertTrue(properties.contains(String(localized: "Main Category")), "taps may be classified later")
+
+        cask.provenance = .tapInfo
+        let brewProperties = Set(makeRows(for: cask).map(\.property))
+        XCTAssertTrue(brewProperties.contains(String(localized: "Main Category")))
+        XCTAssertTrue(brewProperties.contains(String(localized: "Auto Updates")))
+        XCTAssertTrue(brewProperties.contains(String(localized: "Deprecated")))
+    }
+
     private func makeDownloadRows(sha256: String?) -> [CaskInfoRow] {
+        makeRows(for: Cask.preview(token: "studio", url: "https://example.com/studio.dmg", sha256: sha256))
+    }
+
+    private func makeRows(for cask: Cask) -> [CaskInfoRow] {
         CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
-            cask: Cask.preview(
-                token: "studio",
-                url: "https://example.com/studio.dmg",
-                sha256: sha256
-            ),
+            cask: cask,
             category: nil,
             downloadSize: .unknown,
             actionPresentation: CaskActionPresentation(
@@ -155,7 +179,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
                     isOutdated: false,
                     isZombie: false,
                     canOpen: false,
-                    retirement: nil
+                    retirement: nil,
+                    foreignInstallationSource: nil
                 ),
                 homebrewInstallation: nil,
                 operationState: nil,
@@ -201,7 +226,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
             isOutdated: false,
             isZombie: false,
             canOpen: true,
-            retirement: nil
+            retirement: nil, foreignInstallationSource: nil
         )
         return CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(
             cask: cask,

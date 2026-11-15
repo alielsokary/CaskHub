@@ -23,11 +23,15 @@ extension ContentView {
 
     @ViewBuilder
     var catalogContent: some View {
-        switch viewMode {
-        case .grid:
-            gridContent
-        case .list:
-            listContent
+        if selectedSidebar == .library(.taps) {
+            tapsContent
+        } else {
+            switch viewMode {
+            case .grid:
+                gridContent
+            case .list:
+                listContent
+            }
         }
     }
 
@@ -44,7 +48,7 @@ extension ContentView {
             if let hero = heroCask {
                 HeroCard(
                     cask: hero,
-                    downloads: viewModel.formattedDownloads(for: hero.token),
+                    downloads: viewModel.formattedDownloads(for: hero.reference),
                     categoryName: categoryInfo(for: hero)?.mainName,
                     localState: viewModel.localState(for: hero)
                 )
@@ -73,7 +77,7 @@ extension ContentView {
                     VStack(spacing: 0) {
                         CaskRowView(
                             cask: hero,
-                            downloads: viewModel.formattedDownloads(for: hero.token),
+                            downloads: viewModel.formattedDownloads(for: hero.reference),
                             category: categoryInfo(for: hero),
                             localState: viewModel.localState(for: hero),
                             eyebrow: "✷ HOUSE PICK"
@@ -112,7 +116,7 @@ extension ContentView {
         ForEach(casks) { cask in
             CaskRowView(
                 cask: cask,
-                downloads: viewModel.formattedDownloads(for: cask.token),
+                downloads: viewModel.formattedDownloads(for: cask.reference),
                 category: categoryInfo(for: cask),
                 localState: viewModel.localState(for: cask)
             )
@@ -129,7 +133,7 @@ extension ContentView {
             ForEach(casks) { cask in
                 CaskCardView(
                     cask: cask,
-                    downloads: viewModel.formattedDownloads(for: cask.token),
+                    downloads: viewModel.formattedDownloads(for: cask.reference),
                     category: categoryInfo(for: cask),
                     onSelectCategory: { viewModel.selectedSidebar = .category($0) },
                     localState: viewModel.localState(for: cask)

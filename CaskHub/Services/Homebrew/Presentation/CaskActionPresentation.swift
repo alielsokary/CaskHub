@@ -55,6 +55,10 @@ nonisolated struct CaskActionPresentation: Equatable, Sendable {
         activeAction != nil || isHomebrewMutationBlocked
     }
 
+    var blockingInstallSource: String? {
+        localState.foreignInstallationSource
+    }
+
 }
 
 extension CaskRetirement {

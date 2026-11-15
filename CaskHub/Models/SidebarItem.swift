@@ -43,6 +43,7 @@ enum DiscoverItem: String, CaseIterable, Identifiable {
 enum LibraryItem: String, CaseIterable, Identifiable {
     case installed = "Installed"
     case updates = "Updates"
+    case taps = "Taps"
     case adopt = "Adopt Apps"
 
     var id: String {
@@ -54,6 +55,7 @@ enum LibraryItem: String, CaseIterable, Identifiable {
         switch self {
         case .installed: return String(localized: .sidebarInstalled)
         case .updates: return String(localized: .sidebarUpdates)
+        case .taps: return String(localized: "Taps")
         case .adopt: return String(localized: "Adopt Apps")
         }
     }
@@ -62,6 +64,7 @@ enum LibraryItem: String, CaseIterable, Identifiable {
         switch self {
         case .installed: return "arrow.down.to.line"
         case .updates: return "arrow.triangle.2.circlepath"
+        case .taps: return "spigot"
         case .adopt: return "tray.and.arrow.down"
         }
     }
@@ -75,6 +78,7 @@ enum SidebarSelection: Hashable, Identifiable {
     case shelfSetup
     case maintenance
     case category(String)
+    case tap(String)
 
     var id: String {
         switch self {
@@ -83,6 +87,7 @@ enum SidebarSelection: Hashable, Identifiable {
         case .shelfSetup: return "manage.shelfSetup"
         case .maintenance: return "maintenance.health"
         case let .category(categoryID): return "category.\(categoryID)"
+        case let .tap(name): return "tap.\(name)"
         }
     }
 }

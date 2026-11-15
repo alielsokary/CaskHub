@@ -187,7 +187,7 @@ nonisolated extension HomebrewCommandFailure {
         guard arguments.first == "install",
               let token = arguments.drop(while: { $0 != "--cask" }).dropFirst().first
         else { return nil }
-        let summary = "\(token.lowercased()) was successfully installed!"
+        let summary = "\(CaskReference.bareToken(token).lowercased()) was successfully installed!"
         // Match the requested cask, never a dependency that succeeded before it failed.
         let succeeded = text.components(separatedBy: .newlines).contains {
             $0 == summary || $0.hasSuffix("  \(summary)")

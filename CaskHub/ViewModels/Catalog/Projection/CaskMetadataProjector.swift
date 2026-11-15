@@ -54,6 +54,10 @@ nonisolated struct CaskInfoProjectionInput {
 }
 
 nonisolated enum CaskInfoProjector {
+    static func webLink(_ text: String) -> URL? {
+        URL.web(text)
+    }
+
     static func makeRows(from input: CaskInfoProjectionInput) -> [CaskInfoRow] {
         identityRows(for: input.cask)
             + downloadRows(for: input.cask, size: input.downloadSize)
@@ -63,10 +67,15 @@ nonisolated enum CaskInfoProjector {
                 dates: input.installationDates
             )
             + metadataRows(for: input.cask, category: input.category)
-            + statusRows(
-                isOutdated: input.actionPresentation.localState.isOutdated,
-                retirement: input.actionPresentation.localState.retirement
-            )
+            + statusRows(for: input)
+    }
+
+    /// Text-read tap casks have no reliable auto-update or retirement data.
+    private static func statusRows(for input: CaskInfoProjectionInput) -> [CaskInfoRow] {
+        let state = input.actionPresentation.localState
+        let rows = statusRows(isOutdated: state.isOutdated, retirement: state.retirement)
+        guard input.cask.provenance == .tapSource else { return rows }
+        return state.isHomebrewInstalled ? Array(rows.prefix(1)) : []
     }
 
     private static func identityRows(for cask: Cask) -> [CaskInfoRow] {
@@ -81,7 +90,7 @@ nonisolated enum CaskInfoProjector {
             rows.append(CaskInfoRow(
                 property: String(localized: "Homepage"),
                 value: cask.homepage,
-                link: URL(string: cask.homepage)
+                link: webLink(cask.homepage)
             ))
         }
         return rows
@@ -92,7 +101,7 @@ nonisolated enum CaskInfoProjector {
         size: DownloadSizeResult?
     ) -> [CaskInfoRow] {
         guard let url = cask.url else { return [] }
-        var rows = [CaskInfoRow(property: "URL", value: url, link: URL(string: url))]
+        var rows = [CaskInfoRow(property: "URL", value: url, link: webLink(url))]
         if let sha256 = cask.sha256 {
             rows.append(CaskInfoRow(
                 property: "SHA",
@@ -172,10 +181,12 @@ nonisolated enum CaskInfoProjector {
             value: category?.subcategoryNames.joined(separator: ", ").nilIfEmpty
                 ?? String(localized: "None")
         ))
-        rows.append(CaskInfoRow(
-            property: String(localized: "Auto Updates"),
-            value: cask.autoUpdates.map(yesNo) ?? String(localized: "Unknown")
-        ))
+        if cask.provenance != .tapSource {
+            rows.append(CaskInfoRow(
+                property: String(localized: "Auto Updates"),
+                value: cask.autoUpdates.map(yesNo) ?? String(localized: "Unknown")
+            ))
+        }
         return rows
     }
 

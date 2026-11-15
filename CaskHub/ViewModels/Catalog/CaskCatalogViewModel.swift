@@ -50,7 +50,7 @@ enum SortOption: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CaskCatalogViewModel {
-    private(set) var catalog = CatalogPartition([]) {
+    private(set) var catalog = CatalogPartition([], tapCasks: []) {
         didSet { catalogRevision &+= 1 }
     }
     var casks: [Cask] {
@@ -60,8 +60,8 @@ final class CaskCatalogViewModel {
         catalog.retired
     }
 
-    func catalogCask(for token: String) -> Cask? {
-        catalog.byToken[token]
+    func catalogCask(for reference: String) -> Cask? {
+        catalog.byReference[reference]
     }
     private(set) var isLoading = false
     private(set) var errorMessage: String?
@@ -128,7 +128,7 @@ final class CaskCatalogViewModel {
             switch selectedSidebar {
             case .library(.installed):
                 sortOption = .recentlyInstalled
-            case .library(.updates), .library(.adopt):
+            case .library(.updates), .library(.adopt), .library(.taps), .tap:
                 sortOption = .nameAZ
             case .discover(.recentlyAdded):
                 sortOption = .newest
@@ -182,12 +182,35 @@ final class CaskCatalogViewModel {
         async let homebrewOutdated: Void = localHomebrew.refreshHomebrewOutdated()
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
-        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates)
+        async let taps: Void = localHomebrew.refreshTaps()
+        async let tapCategories: Void = categoryService.refreshTapsFromRemote()
+        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates, taps, tapCategories)
         let enriched = categoryService.addingAppIdentities(to: catalog.all)
         if enriched != catalog.all {
-            catalog = CatalogPartition(enriched)
+            catalog = CatalogPartition(enriched, tapCasks: catalog.tapCasks)
             await localHomebrew.updatePackageCatalog(catalog.all)
         }
+        applyTapIndex()
+        await updateTaps(maxAge: Self.tapUpdateInterval)
+    }
+
+    static let tapUpdateInterval: TimeInterval = 3 * 3600
+
+    func refreshTaps() async {
+        await localHomebrew.refreshTaps()
+        applyTapIndex()
+    }
+
+    /// `maxAge: 0` is the Taps page's Refresh button.
+    func updateTaps(maxAge: TimeInterval) async {
+        await localHomebrew.updateTapsIfStale(now: .now, maxAge: maxAge)
+        applyTapIndex()
+    }
+
+    func applyTapIndex() {
+        let tapCasks = localHomebrew.tapIndex.casks
+        guard tapCasks != catalog.tapCasks else { return }
+        catalog = CatalogPartition(catalog.all, tapCasks: tapCasks)
     }
 
     func refreshIfStale(maxAge: TimeInterval = 3600) async {
@@ -209,7 +232,7 @@ final class CaskCatalogViewModel {
 
             let allCasks = try await caskRequest
             await categoryService.loadBundledCategoriesAsync()
-            catalog = CatalogPartition(categoryService.addingAppIdentities(to: allCasks))
+            catalog = CatalogPartition(categoryService.addingAppIdentities(to: allCasks), tapCasks: localHomebrew.tapIndex.casks)
             await localHomebrew.updatePackageCatalog(catalog.all)
 
             if let analytics = try? await analyticsRequest {
@@ -281,8 +304,8 @@ final class CaskCatalogViewModel {
         .notation(.compactName)
         .locale(Locale(identifier: "en_US"))
 
-    func formattedDownloads(for token: String) -> String? {
-        guard let count = downloadCounts[token], count > 0 else { return nil }
+    func formattedDownloads(for reference: String) -> String? {
+        guard let count = downloadCounts[reference], count > 0 else { return nil }
         return count.formatted(Self.downloadsStyle)
     }
 }

@@ -57,12 +57,16 @@ struct CatalogToolbar: ToolbarContent {
     var greedyUpdates: Bool?
     var onToggleGreedy: ((Bool) -> Void)?
     var showsSort = true
+    var onRefreshTaps: (() -> Void)?
+    var isRefreshingTaps = false
+    var onAddTap: (() -> Void)?
 
     var body: some ToolbarContent {
         if #available(macOS 26, *) {
             ToolbarSpacer(.flexible)
         }
         updatesControls
+        tapControls
         if showsSort {
             ToolbarItem(placement: .automatic) {
                 OptionMenu(current: sortOption, options: sortOptions, label: \.title, systemImage: "arrow.up.arrow.down") {
@@ -130,6 +134,38 @@ struct CatalogToolbar: ToolbarContent {
             }
         }
         if onRefreshUpdates != nil, showsSort, #available(macOS 26, *) {
+            ToolbarSpacer(.fixed)
+        }
+    }
+
+    @ToolbarContentBuilder private var tapControls: some ToolbarContent {
+        if let onRefreshTaps {
+            ToolbarItem(placement: .automatic) {
+                Button(action: onRefreshTaps) {
+                    if isRefreshingTaps {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+                .disabled(isRefreshingTaps)
+                .help(Text("Refresh Taps"))
+                .accessibilityLabel(Text("Refresh Taps"))
+            }
+        }
+        if onRefreshTaps != nil, onAddTap != nil, #available(macOS 26, *) {
+            ToolbarSpacer(.fixed)
+        }
+        if let onAddTap {
+            ToolbarItem(placement: .automatic) {
+                Button(action: onAddTap) {
+                    Image(systemName: "plus")
+                }
+                .help(Text("Add Tap"))
+                .accessibilityLabel(Text("Add Tap"))
+            }
+        }
+        if onAddTap != nil, #available(macOS 26, *) {
             ToolbarSpacer(.fixed)
         }
     }

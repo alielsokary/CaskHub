@@ -43,7 +43,8 @@ final class CaskCatalogSortTests: XCTestCase {
             isOutdated: hasAvailableUpdate,
             isZombie: false,
             canOpen: true,
-            retirement: nil
+            retirement: nil,
+            foreignInstallationSource: nil
         )
     }
 
@@ -73,12 +74,14 @@ final class CaskCatalogSortTests: XCTestCase {
                     secondary: []
                 )
             ],
+            officialTwins: [],
             adoptIgnoredTokens: []
         )
 
         let library = CatalogProjector.makeLibrary(from: input)
         let filtered = CatalogProjector.makeFiltered(from: CatalogFilteredProjectionInput(
             casks: input.casks,
+            tapCasks: [],
             retiredCasks: [],
             library: library,
             selectedSidebar: .library(.updates),

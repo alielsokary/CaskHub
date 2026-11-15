@@ -56,7 +56,7 @@ struct CaskInfoPopover: View {
         }
         .padding()
         .frame(minWidth: 400)
-        .task(id: cask.token) {
+        .task(id: cask.reference) {
             downloadSize = await downloadMetadataProvider.downloadSize(for: cask.url)
         }
     }

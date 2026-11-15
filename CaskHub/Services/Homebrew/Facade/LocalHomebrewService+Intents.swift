@@ -7,6 +7,8 @@
 
 enum CaskIntent {
     case install(Cask)
+    case confirmTrustedInstall(Cask)
+    case cancelTrustedInstall
     case uninstall(token: String)
     case uninstallKeepingData(token: String)
     case repair(token: String)
@@ -36,14 +38,15 @@ extension LocalHomebrewService {
     ) -> CaskActionPresentation {
         CaskActionPresentation(
             localState: suppliedState ?? localState(for: cask),
-            homebrewInstallation: installationSnapshot.installedCasks[cask.token],
-            operationState: operationStore.state(for: cask.token),
+            homebrewInstallation: installationSnapshot.installation(for: cask.reference),
+            operationState: operationStore.state(for: cask.reference),
             isHomebrewMutationBlocked: operationStore.isUpdatingHomebrew
         )
     }
 
     func send(_ intent: CaskIntent) {
         if handleMutationIntent(intent)
+            || handleTrustIntent(intent)
             || handleAdoptionIntent(intent)
             || handleOpenIntent(intent)
             || handleOperationStateIntent(intent) {
@@ -55,7 +58,7 @@ extension LocalHomebrewService {
     private func handleMutationIntent(_ intent: CaskIntent) -> Bool {
         switch intent {
         case let .install(cask):
-            Task { try? await install(cask) }
+            Task { try? await installRequestingTrust(cask) }
         case let .uninstall(token):
             Task { try? await uninstall(token: token) }
         case let .uninstallKeepingData(token):
@@ -70,6 +73,18 @@ extension LocalHomebrewService {
             Task { try? await upgrade(token: token) }
         case let .updateAll(tokens):
             Task { await updateAll(tokens: tokens) }
+        default:
+            return false
+        }
+        return true
+    }
+
+    private func handleTrustIntent(_ intent: CaskIntent) -> Bool {
+        switch intent {
+        case let .confirmTrustedInstall(cask):
+            Task { try? await confirmTrustedInstall(cask) }
+        case .cancelTrustedInstall:
+            pendingTrustInstall = nil
         default:
             return false
         }

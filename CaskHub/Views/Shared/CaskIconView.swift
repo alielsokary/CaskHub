@@ -13,6 +13,7 @@ struct CaskIconView: View {
     var alignment: Alignment = .top
 
     @Environment(ImageCacheService.self) private var imageCache
+    @Environment(LocalHomebrewService.self) private var localHomebrew: LocalHomebrewService?
     @State private var loadedImage: NSImage?
     @State private var didResolve = false
 
@@ -24,7 +25,7 @@ struct CaskIconView: View {
 
     var body: some View {
         ZStack {
-            if let image = imageCache.cachedImage(for: cask.token) ?? loadedImage {
+            if let image = imageCache.cachedImage(for: cask.reference) ?? loadedImage {
                 Image(nsImage: image)
                     .resizable()
                     .interpolation(.high)
@@ -49,13 +50,21 @@ struct CaskIconView: View {
             }
         }
         .animation(.easeIn(duration: 0.2), value: loadedImage != nil)
-        .task(id: [cask.token, imageCache.iconHash(for: cask.token) ?? "", String(imageCache.iconRefreshRevision)]) {
+        .task(id: [
+            cask.reference, imageCache.iconHash(for: cask.reference) ?? "", String(imageCache.iconRefreshRevision), installedVersion,
+            cask.thirdPartyTap == nil ? "" : String(imageCache.tapDataRevision())
+        ]) {
             didResolve = false
-            let image = await imageCache.image(for: cask)
+            let image = await imageCache.icon(for: cask, installedCandidates: localHomebrew?.installedAppCandidates(for: cask) ?? [])
             guard !Task.isCancelled else { return }
             loadedImage = image
             didResolve = true
         }
+    }
+
+    /// Reloads a tap cask's icon once it is installed or removed.
+    private var installedVersion: String {
+        localHomebrew?.installationSnapshot.installation(for: cask.reference)?.installedVersion ?? ""
     }
 
     private var cliTile: some View {

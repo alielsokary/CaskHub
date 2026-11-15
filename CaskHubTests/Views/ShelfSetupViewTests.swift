@@ -132,7 +132,8 @@ final class ShelfSetupViewTests: XCTestCase {
 
         let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
-            tokens: ["homebrew/cask/google-chrome", "raycast", "mystery-app"]
+            tokens: ["homebrew/cask/google-chrome", "raycast", "mystery-app"],
+            taps: []
         )
 
         XCTAssertEqual(
@@ -163,16 +164,102 @@ final class ShelfSetupViewTests: XCTestCase {
 
         let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
             fileName: "~/Brewfile",
-            tokens: ["qbittorrent", "gone-app", "chromium", "legacy-app", "raycast"]
+            tokens: ["qbittorrent", "gone-app", "chromium", "legacy-app", "raycast"],
+            taps: []
         )
 
         XCTAssertEqual(plan.skippedEntries.map(\.token), ["qbittorrent", "gone-app"])
         XCTAssertEqual(plan.unavailableEntries.map(\.token), ["chromium"])
         XCTAssertEqual(plan.newEntries.map(\.token), ["legacy-app", "raycast"])
         XCTAssertEqual(plan.listedCount, 5)
-        render(BrewfileImportSheet(plan: plan)
+        render(BrewfileImportSheet(plan: plan, addTap: { _ in })
             .environment(homebrew)
             .environment(ImageCacheService()), width: 1100, height: 600)
+    }
+
+    @MainActor
+    func test_import_plan_keeps_tap_casks_apart_from_official_twins() async {
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("brewfile-taps"), externalApps: [:])
+        let (vm, _) = await makeSUT(casks: [makeCask("sill")], localHomebrew: homebrew)
+        homebrew.tapIndex = TapIndex(
+            taps: [TapSummary(
+                name: "hashicorp/tap", remote: nil, official: false, trusted: false, customRemote: false,
+                caskTokens: [], formulaNames: [], caskFiles: []
+            )],
+            casks: [],
+            trust: TapTrust(taps: [], casks: [])
+        )
+
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+            fileName: "~/Brewfile",
+            tokens: ["sill", "saffsanity/sill/sill"],
+            taps: [
+                TapAddRequest(tapName: "hashicorp/tap", remoteURL: nil, caskToken: nil),
+                TapAddRequest(tapName: "user/casks", remoteURL: URL(string: "https://github.com/user/casks"), caskToken: nil)
+            ]
+        )
+
+        XCTAssertEqual(plan.newEntries.map(\.reference), ["sill", "saffsanity/sill/sill"])
+        XCTAssertNotNil(plan.newEntries.first?.cask)
+        XCTAssertNil(plan.newEntries.last?.cask, "never resolves to the official twin")
+        XCTAssertEqual(plan.tapsToAdd.map(\.tapName), ["user/casks", "saffsanity/sill"])
+        render(BrewfileImportSheet(plan: plan, addTap: { _ in })
+            .environment(homebrew)
+            .environment(ImageCacheService()), width: 1100, height: 600)
+    }
+
+    @MainActor
+    func test_import_plan_skips_casks_whose_twin_is_installed_and_ignores_case_tricks() async {
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("brewfile-twins"), externalApps: [:])
+        let (vm, _) = await makeSUT(casks: [makeCask("foo")], localHomebrew: homebrew)
+        updateInstalledCask(
+            LocalCaskInstallation(token: "foo", installedVersion: "1.0", installedAt: nil, appBundleNames: [], tap: "user/tap"),
+            in: homebrew
+        )
+
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+            fileName: "~/Brewfile", tokens: ["foo", "Homebrew/Cask/bar"], taps: []
+        )
+
+        XCTAssertEqual(plan.skippedEntries.map(\.token), ["foo"])
+        XCTAssertEqual(plan.newEntries.map(\.reference), ["bar"])
+        XCTAssertTrue(plan.tapsToAdd.isEmpty)
+    }
+
+    @MainActor
+    func test_import_sheet_names_a_custom_tap_remote() {
+        let plan = BrewfileImportPlan(
+            fileName: "~/Brewfile", skippedEntries: [], newEntries: [], unavailableEntries: [],
+            tapsToAdd: [
+                TapAddRequest(tapName: "hashicorp/tap", remoteURL: URL(string: "https://evil.example/x"), caskToken: nil),
+                TapAddRequest(tapName: "user/plain", remoteURL: nil, caskToken: nil)
+            ]
+        )
+
+        XCTAssertEqual(plan.tapsToAddText, "hashicorp/tap (from evil.example/x), user/plain")
+    }
+
+    @MainActor
+    func test_import_adds_taps_before_installing_without_prompting() async {
+        let plan = BrewfileImportPlan(
+            fileName: "~/Brewfile", skippedEntries: [],
+            newEntries: [.init(token: "saffsanity/sill/sill", cask: nil), .init(token: "figma", cask: nil)],
+            unavailableEntries: [],
+            tapsToAdd: [TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil)]
+        )
+        var events: [String] = []
+
+        let failed = await plan.run(
+            selected: plan.newEntries,
+            addTap: { events.append("tap \($0.tapName)") },
+            installAll: { references in
+                events.append("install \(references.joined(separator: ","))")
+                return 0
+            }
+        )
+
+        XCTAssertEqual(failed, 0)
+        XCTAssertEqual(events, ["tap saffsanity/sill", "install saffsanity/sill/sill,figma"])
     }
 
     @MainActor
@@ -188,13 +275,14 @@ final class ShelfSetupViewTests: XCTestCase {
                 .init(token: "raycast", cask: makeCask("raycast")),
                 .init(token: "mystery-app", cask: nil)
             ],
-            unavailableEntries: []
+            unavailableEntries: [],
+            tapsToAdd: []
         )
         let phases: [BrewfileImportPhase] = [
             .preview, .running(completedCount: 1), .done(failedCount: 0), .done(failedCount: 1)
         ]
         for phase in phases {
-            render(BrewfileImportSheet(plan: plan, phase: phase)
+            render(BrewfileImportSheet(plan: plan, phase: phase, addTap: { _ in })
                 .environment(homebrew)
                 .environment(ImageCacheService()), width: 1100, height: 600)
         }
@@ -202,9 +290,10 @@ final class ShelfSetupViewTests: XCTestCase {
             fileName: "~/Brewfile",
             skippedEntries: plan.skippedEntries,
             newEntries: [],
-            unavailableEntries: []
+            unavailableEntries: [],
+            tapsToAdd: []
         )
-        render(BrewfileImportSheet(plan: nothingNew)
+        render(BrewfileImportSheet(plan: nothingNew, addTap: { _ in })
             .environment(homebrew)
             .environment(ImageCacheService()), width: 1100, height: 600)
     }

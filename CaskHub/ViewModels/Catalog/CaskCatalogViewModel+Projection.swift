@@ -53,10 +53,10 @@ extension CaskCatalogViewModel {
     }
 
     func localState(for cask: Cask) -> CaskLocalState {
-        librarySnapshot.localStates[cask.token] ?? localHomebrew.localState(for: cask)
+        librarySnapshot.localStates[cask.reference] ?? localHomebrew.localState(for: cask)
     }
 
-    /// CaskFlow's mappings plus the built-in Fonts category for every `font-` cask.
+    /// CaskFlow's mappings, tap casks it covers (by reference), and the built-in Fonts category for every `font-` cask.
     var categoryMappings: [String: TokenCategoryMapping] {
         let key = CategoryPresentationCacheKey(
             catalogRevision: catalogRevision,
@@ -66,6 +66,9 @@ extension CaskCatalogViewModel {
             var mappings = categoryService.tokenMappings
             for cask in catalog.all where cask.isFont && mappings[cask.token] == nil {
                 mappings[cask.token] = TokenCategoryMapping(primary: CategoryService.fontsCategoryID, secondary: [])
+            }
+            for cask in catalog.tapCasks {
+                mappings[cask.reference] = categoryService.mapping(for: cask.reference)
             }
             return mappings
         }
@@ -90,7 +93,12 @@ extension CaskCatalogViewModel {
     }
 
     func categoryPresentation(for cask: Cask) -> CaskCategoryPresentation? {
-        categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
+        guard CaskReference.isOfficial(tap: cask.tap) else {
+            return CaskCategoryProjector.make(
+                token: cask.reference, mappings: categoryMappings, definitions: categoryService.categoryDefinitions
+            )
+        }
+        return categoryPresentations[cask.token] ?? CaskCategoryProjector.make(
             token: cask.token,
             mappings: categoryMappings,
             definitions: categoryService.categoryDefinitions
@@ -111,12 +119,14 @@ extension CaskCatalogViewModel {
                 installations: localHomebrew.installationSnapshot.installedCasks,
                 partition: catalog
             )
+            let libraryCasks = catalog.browsable + catalog.tapCasks
             return CatalogProjector.makeLibrary(from: CatalogLibraryProjectionInput(
-                casks: catalog.browsable,
+                casks: libraryCasks,
                 installedOnlyCasks: installedOnly,
                 retiredCasks: catalog.retired,
-                localStates: localHomebrew.localStates(for: catalog.browsable + installedOnly + catalog.retired),
+                localStates: localHomebrew.localStates(for: libraryCasks + installedOnly + catalog.retired),
                 categoryMappings: categoryMappings,
+                officialTwins: Set(catalog.tapCasks.map(\.reference).filter { categoryService.officialAlias(for: $0) != nil }),
                 adoptIgnoredTokens: Set(localHomebrew.adoptIgnoredDates.keys)
             ))
         }
@@ -155,14 +165,14 @@ extension CaskCatalogViewModel {
     // MARK: - Filtered Casks
 
     private var searchKeys: [String: String] {
-        searchKeysCache.value(for: catalogRevision) { [casks = casks + retiredCasks] in
-            Dictionary(casks.map { ($0.token, $0.searchKey) }) { first, _ in first }
+        searchKeysCache.value(for: catalogRevision) { [casks = casks + retiredCasks + catalog.tapCasks] in
+            Dictionary(casks.map { ($0.reference, $0.searchKey) }) { first, _ in first }
         }
     }
 
     /// Collation-equal names share a rank so descending sorts keep ties stable.
     private var nameRanks: [String: Int] {
-        nameRankCache.value(for: catalogRevision) { [casks = casks + retiredCasks] in
+        nameRankCache.value(for: catalogRevision) { [casks = casks + retiredCasks + catalog.tapCasks] in
             let sorted = casks.sorted {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
                     == .orderedAscending
@@ -177,7 +187,7 @@ extension CaskCatalogViewModel {
                    ) != .orderedSame {
                     rank = index
                 }
-                if ranks[cask.token] == nil { ranks[cask.token] = rank }
+                if ranks[cask.reference] == nil { ranks[cask.reference] = rank }
             }
             return ranks
         }
@@ -228,6 +238,7 @@ extension CaskCatalogViewModel {
     private var filteredProjectionInput: CatalogFilteredProjectionInput {
         CatalogFilteredProjectionInput(
             casks: casks,
+            tapCasks: catalog.tapCasks,
             retiredCasks: retiredCasks,
             library: librarySnapshot,
             selectedSidebar: selectedSidebar,

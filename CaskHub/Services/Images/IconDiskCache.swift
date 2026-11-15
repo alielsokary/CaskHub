@@ -156,8 +156,9 @@ actor IconDiskCache {
         }
     }
 
+    /// Tap references contain `/`; `%` never appears in tokens or tap names, so `%2F` keeps names distinct.
     private func path(token: String, fileExtension pathExtension: String) -> URL {
-        directory.appendingPathComponent("\(token).\(pathExtension)")
+        directory.appendingPathComponent("\(token.replacingOccurrences(of: "/", with: "%2F")).\(pathExtension)")
     }
 
     private func modificationDate(for url: URL) -> Date? {

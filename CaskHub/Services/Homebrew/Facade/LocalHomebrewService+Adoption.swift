@@ -17,7 +17,7 @@ extension LocalHomebrewService {
     }
 
     private func requestAdoption(_ cask: Cask, intent: CaskAdoptionIntent) async {
-        guard operationStore.canBeginOperation(.adopting, for: cask.token) else { return }
+        guard operationStore.canBeginOperation(.adopting, for: cask.reference) else { return }
         if currentAdoptionRequest(for: cask, intent: intent) == nil {
             await refresh()
         }
@@ -38,7 +38,7 @@ extension LocalHomebrewService {
             return
         }
         guard current == request else {
-            operationStore.send(.awaitAdoption(current), for: request.cask.token)
+            operationStore.send(.awaitAdoption(current), for: request.cask.reference)
             return
         }
         guard let permission = await requireAdoptionPermission(
@@ -58,13 +58,13 @@ extension LocalHomebrewService {
         case .replaceApplication: flags = ["--force"]
         case .installPackage: flags = []
         case .replacePackage:
-            try await replacePackageForAdoption(token: request.cask.token, context: context)
+            try await replacePackageForAdoption(token: request.cask.reference, context: context)
             return
         }
         try await runMutation(
             .adopting,
-            token: request.cask.token,
-            args: ["install", "--cask", request.cask.token] + flags
+            token: request.cask.reference,
+            args: ["install", "--cask", request.cask.reference] + flags
                 + appdirArguments(keeping: request.cask.appArtifactNames),
             context: context
         )
@@ -112,7 +112,7 @@ extension LocalHomebrewService {
     private func requestAdoption(_ request: CaskAdoptionRequest) async {
         guard preflightAdoption(request) else { return }
         guard await requireAdoptionPermission(for: request) != nil else { return }
-        operationStore.send(.awaitAdoption(request), for: request.cask.token)
+        operationStore.send(.awaitAdoption(request), for: request.cask.reference)
     }
 
     private func preflightAdoption(_ request: CaskAdoptionRequest) -> Bool {
@@ -127,7 +127,7 @@ extension LocalHomebrewService {
             .first {
             Analytics.caskActionFailed(
                 .adopting,
-                token: request.cask.token,
+                token: request.cask.reference,
                 failureKind: .caskConflict
             )
             operationStore.send(
@@ -136,7 +136,7 @@ extension LocalHomebrewService {
                     message: "\(request.cask.displayName) conflicts with the Homebrew-managed "
                         + "cask “\(conflict)”. Uninstall that cask before adopting this one."
                 )),
-                for: request.cask.token
+                for: request.cask.reference
             )
             return false
         }
@@ -152,7 +152,7 @@ extension LocalHomebrewService {
         )
         Analytics.caskActionFailed(
             .adopting,
-            token: request.cask.token,
+            token: request.cask.reference,
             failureKind: .missingArtifactSource
         )
         operationStore.send(
@@ -161,7 +161,7 @@ extension LocalHomebrewService {
                 message: message,
                 recoveries: [.replaceWithHomebrew]
             )),
-            for: request.cask.token
+            for: request.cask.reference
         )
         return false
     }
@@ -174,7 +174,7 @@ extension LocalHomebrewService {
             Refresh the catalog and try again. If this persists, move the existing app \
             out of the installation folder before installing with Homebrew.
             """)
-        )), for: cask.token)
+        )), for: cask.reference)
     }
 
     private func requireAdoptionPermission(
@@ -193,7 +193,7 @@ extension LocalHomebrewService {
         case .denied, .unknown:
             operationStore.send(
                 .awaitPermission(request),
-                for: request.cask.token
+                for: request.cask.reference
             )
             return nil
         }

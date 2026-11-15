@@ -24,6 +24,10 @@ final class ImageCacheService {
     /// categories.json — absent tokens are guaranteed 404s, never requested.
     /// nil = manifest unknown (old category data) → fall back to probing.
     var knownIconTokens: () -> Set<String>? = { nil }
+    /// Tap references CaskFlow publishes icons for, and tap casks it aliases to an official token.
+    var knownTapIconRefs: () -> Set<String> = { [] }
+    var officialAlias: (String) -> String? = { _ in nil }
+    var tapDataRevision: () -> Int = { 0 }
     private var iconHashes: [String: String]?
     private var lastManifestAttempt: Date?
     private var isRefreshingManifest = false
@@ -61,14 +65,56 @@ final class ImageCacheService {
         memoryCache.setObject(image, forKey: token as NSString, cost: cost)
     }
 
+    /// Tap casks: the official twin's icon when CaskFlow aliases them, their CaskFlow icon, else the installed app's.
+    func icon(for cask: Cask, installedCandidates: [URL]) async -> NSImage? {
+        if let hosted = await image(for: cask) { return hosted }
+        guard cask.thirdPartyTap != nil else { return nil }
+        return await installedAppIcon(for: cask, candidates: installedCandidates)
+    }
+
     func image(for cask: Cask) async -> NSImage? {
-        let token = cask.token
-        if let hash = iconHash(for: token) { return await hashedImage(for: cask, hash: hash) }
+        guard let subject = iconSubject(for: cask) else { return nil }
+        return await image(for: subject)
+    }
+
+    /// Icon sources are keyed by official tokens, so a tap cask uses one only through CaskFlow's alias.
+    private func iconSubject(for cask: Cask) -> IconSubject? {
+        let key: String
+        if cask.thirdPartyTap == nil {
+            key = cask.token
+        } else if let alias = officialAlias(cask.reference) {
+            key = alias
+        } else if isInManifest(cask.reference) {
+            return IconSubject(key: cask.reference, isCLI: cask.isCLI, isFont: cask.isFont, allowsAppFair: false)
+        } else {
+            return nil
+        }
+        return IconSubject(key: key, isCLI: cask.isCLI, isFont: cask.isFont, allowsAppFair: !cask.isCLI)
+    }
+
+    func installedAppIcon(for cask: Cask, candidates: [URL]) async -> NSImage? {
+        guard !candidates.isEmpty else { return nil }
+        let key = "app:\(cask.reference)" as NSString
+        if let cached = memoryCache.object(forKey: key) { return cached }
+        guard let image = await Self.appIcon(at: candidates) else { return nil }
+        memoryCache.setObject(image, forKey: key)
+        return image
+    }
+
+    @concurrent
+    private nonisolated static func appIcon(at candidates: [URL]) async -> NSImage? {
+        guard let app = candidates.first(where: { FileManager.default.fileExists(atPath: $0.path) }) else { return nil }
+        return NSWorkspace.shared.icon(forFile: app.path)
+    }
+
+    private func image(for subject: IconSubject) async -> NSImage? {
+        let token = subject.key
+        if let hash = iconHash(for: token) { return await hashedImage(for: subject, hash: hash) }
         if let cached = memoryCache.object(forKey: token as NSString) { return cached }
         if let existing = inFlightTasks[token] { return await existing.value }
         let task = Task {
             let generation = await diskCache.currentGeneration()
-            return await loadImage(for: cask, generation: generation)
+            return await loadImage(for: subject, generation: generation)
         }
         inFlightTasks[token] = task
         let image = await task.value
@@ -76,30 +122,30 @@ final class ImageCacheService {
         return image
     }
 
-    private func loadImage(for cask: Cask, generation: UInt64) async -> NSImage? {
-        let token = cask.token
-        if cask.isCLI {
+    private func loadImage(for subject: IconSubject, generation: UInt64) async -> NSImage? {
+        let token = subject.key
+        if subject.isCLI {
             await purgeStaleCLIIcon(token: token)
         }
 
         if let data = await diskCache.loadData(token: token),
            let diskImage = await Self.preparedImage(from: data) {
             guard !Task.isCancelled, await diskCache.isCurrent(generation) else { return nil }
-            if iconHash(for: token) != nil { return await image(for: cask) }
+            if iconHash(for: token) != nil { return await image(for: subject) }
             remember(diskImage, token: token)
             memoryHashes.removeValue(forKey: token)
             await maybeUpgradeFallbackIcon(token: token, generation: generation)
             return diskImage
         }
 
-        return await loadUncachedImage(for: cask, generation: generation)
+        return await loadUncachedImage(for: subject, generation: generation)
     }
 
-    private func loadUncachedImage(for cask: Cask, generation: UInt64) async -> NSImage? {
-        let token = cask.token
+    private func loadUncachedImage(for subject: IconSubject, generation: UInt64) async -> NSImage? {
+        let token = subject.key
         let inManifest = isInManifest(token)
         // Neither CLI tools nor fonts ship an app icon, so only CaskFlow's manifest can supply one.
-        if cask.isCLI || cask.isFont, !inManifest {
+        if subject.isCLI || subject.isFont, !inManifest {
             return nil
         }
 
@@ -112,7 +158,7 @@ final class ImageCacheService {
             return nil
         }
 
-        return await fetchImage(for: cask, inManifest: inManifest, generation: generation)
+        return await fetchImage(for: subject, inManifest: inManifest, generation: generation)
     }
 
     func clearCache() async {
@@ -134,11 +180,11 @@ final class ImageCacheService {
     // MARK: - Private
 
     private func fetchImage(
-        for cask: Cask,
+        for subject: IconSubject,
         inManifest: Bool,
         generation: UInt64
     ) async -> NSImage? {
-        let token = cask.token
+        let token = subject.key
         var sawHTTPResponse = false
         func fetch(_ url: URL) async -> Data? {
             let (data, responded) = await downloadImage(from: url)
@@ -156,7 +202,7 @@ final class ImageCacheService {
             }
         }
 
-        if !cask.isCLI,
+        if subject.allowsAppFair,
            let url = CaskIconURL.appFairIconURL(for: token),
            let data = await fetch(url) {
             if let image = await cache(data: data, token: token, generation: generation) { return image }
@@ -208,7 +254,8 @@ final class ImageCacheService {
     private static let cliIconCutover = Date(timeIntervalSince1970: 1_783_598_400)
 
     private func isInManifest(_ token: String) -> Bool {
-        iconHashes.map { $0[token] != nil } ?? knownIconTokens()?.contains(token) ?? true
+        if token.contains("/") { return iconHashes?[token] != nil || knownTapIconRefs().contains(token) }
+        return iconHashes.map { $0[token] != nil } ?? knownIconTokens()?.contains(token) ?? true
     }
 
     private func purgeStaleCLIIcon(token: String) async {
@@ -266,20 +313,20 @@ final class ImageCacheService {
 }
 
 extension ImageCacheService {
-    private func hashedImage(for cask: Cask, hash: String) async -> NSImage? {
-        let token = cask.token
+    private func hashedImage(for subject: IconSubject, hash: String) async -> NSImage? {
+        let token = subject.key
         if memoryHashes[token] == hash,
            let image = memoryCache.object(forKey: token as NSString) { return image }
         let generation = await diskCache.currentGeneration()
         let key = "\(token):\(hash):\(generation)"
-        guard iconHash(for: token) == hash else { return await image(for: cask) }
+        guard iconHash(for: token) == hash else { return await image(for: subject) }
         for (otherKey, task) in inFlightTasks where otherKey != key
             && (otherKey == token || otherKey.hasPrefix("\(token):")) {
             task.cancel()
         }
         if let task = inFlightTasks[key] { return await task.value }
         let task = Task {
-            await refreshHashedImage(for: cask, hash: hash, generation: generation)
+            await refreshHashedImage(for: subject, hash: hash, generation: generation)
         }
         inFlightTasks[key] = task
         let image = await task.value
@@ -287,8 +334,8 @@ extension ImageCacheService {
         return image
     }
 
-    private func refreshHashedImage(for cask: Cask, hash: String, generation: UInt64) async -> NSImage? {
-        let token = cask.token
+    private func refreshHashedImage(for subject: IconSubject, hash: String, generation: UInt64) async -> NSImage? {
+        let token = subject.key
         var previous = memoryCache.object(forKey: token as NSString)
         if let data = await diskCache.loadData(token: token),
            let image = await Self.preparedImage(from: data) {
@@ -303,7 +350,7 @@ extension ImageCacheService {
         }
         if let image = await downloadHashedImage(token: token, hash: hash, generation: generation) { return image }
         guard !Task.isCancelled, iconHash(for: token) == hash else { return previous }
-        if previous == nil, !cask.isCLI, let url = CaskIconURL.appFairIconURL(for: token) {
+        if previous == nil, subject.allowsAppFair, let url = CaskIconURL.appFairIconURL(for: token) {
             let (data, _) = await downloadImage(from: url)
             if let data {
                 return await cache(data: data, token: token, generation: generation, expectedHash: hash)
@@ -371,16 +418,33 @@ extension ImageCacheService {
     func applyIconManifest(_ data: Data) -> Bool {
         guard let manifest = try? JSONDecoder().decode(IconManifest.self, from: data),
               manifest.version == 1,
-              manifest.hashes.allSatisfy({ token, hash in
-                  token.range(of: #"^[a-z0-9][a-z0-9+@._-]*$"#, options: .regularExpression) != nil
-                      && hash.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil
-              }) else { return false }
-        iconHashes = manifest.hashes
+              manifest.hashes.allSatisfy({ Self.isValid(key: $0.key, hash: $0.value, pattern: Self.tokenPattern) })
+        else { return false }
+        let taps = (manifest.taps ?? [:]).filter { Self.isValid(key: $0.key, hash: $0.value, pattern: Self.tapReferencePattern) }
+        iconHashes = manifest.hashes.merging(taps) { official, _ in official }
         return true
+    }
+
+    private nonisolated static let tokenPattern = #"^[a-z0-9][a-z0-9+@._-]*$"#
+    private nonisolated static let tapReferencePattern = #"^[a-z0-9][a-z0-9_.-]*/[a-z0-9][a-z0-9_.-]*/[a-z0-9][a-z0-9+@._-]*$"#
+
+    private nonisolated static func isValid(key: String, hash: String, pattern: String) -> Bool {
+        key.range(of: pattern, options: .regularExpression) != nil && hash.range(of: #"^[0-9a-f]{40}$"#, options: .regularExpression) != nil
     }
 
     private nonisolated struct IconManifest: Decodable {
         let version: Int
         let hashes: [String: String]
+        /// Tap icons, keyed by `user/repo/token`.
+        let taps: [String: String]?
     }
+}
+
+/// What one icon load is keyed by: an official token, or a tap reference CaskFlow has an icon for.
+private nonisolated struct IconSubject {
+    let key: String
+    let isCLI: Bool
+    let isFont: Bool
+    /// AppFair icons are keyed by official tokens only.
+    let allowsAppFair: Bool
 }

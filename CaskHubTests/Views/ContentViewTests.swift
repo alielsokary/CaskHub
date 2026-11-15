@@ -233,16 +233,31 @@ final class ContentViewTests: XCTestCase {
 final class SidebarViewTests: XCTestCase {
     @MainActor
     private final class SelectionProbe {
-        var selection: SidebarSelection = .library(.adopt)
+        var selection: SidebarSelection
+
+        init(_ selection: SidebarSelection) {
+            self.selection = selection
+        }
     }
 
     @MainActor
     func test_hiding_adopt_apps_moves_adopt_selection_to_installed() {
-        let defaults = UserDefaults.standard
-        defaults.set(true, forKey: SidebarView.showAdoptKey)
-        addTeardownBlock { defaults.removeObject(forKey: SidebarView.showAdoptKey) }
+        assertHiding(SidebarView.showAdoptKey, movesToInstalledFrom: .library(.adopt))
+    }
 
-        let probe = SelectionProbe()
+    @MainActor
+    func test_hiding_taps_moves_tap_selections_to_installed() {
+        assertHiding(SidebarView.showTapsKey, movesToInstalledFrom: .library(.taps))
+        assertHiding(SidebarView.showTapsKey, movesToInstalledFrom: .tap("user/tap"))
+    }
+
+    @MainActor
+    private func assertHiding(_ key: String, movesToInstalledFrom start: SidebarSelection, line: UInt = #line) {
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: key)
+        defer { defaults.removeObject(forKey: key) }
+
+        let probe = SelectionProbe(start)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 226, height: 700),
             styleMask: .borderless,
@@ -253,18 +268,19 @@ final class SidebarViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: SidebarView(
             selection: Binding(get: { probe.selection }, set: { probe.selection = $0 }),
             categoryService: CategoryService(),
-            adoptableCount: 3
+            adoptableCount: 3,
+            tapsCount: 0
         ))
         window.orderFrontRegardless()
         RunLoop.main.run(until: Date().addingTimeInterval(0.1))
 
-        defaults.set(false, forKey: SidebarView.showAdoptKey)
+        defaults.set(false, forKey: key)
         let deadline = Date().addingTimeInterval(2)
-        while probe.selection == .library(.adopt), Date() < deadline {
+        while probe.selection == start, Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.02))
         }
 
-        XCTAssertEqual(probe.selection, .library(.installed))
+        XCTAssertEqual(probe.selection, .library(.installed), line: line)
         window.contentView = NSView()
         window.close()
     }
@@ -382,26 +398,7 @@ final class TopBarViewTests: XCTestCase {
 
         // Tall enough that every browse shelf — and any sentinel wrongly attached
         // to one — materializes inside the lazy containers.
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 3000),
-            styleMask: .borderless,
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
-            .environment(categories)
-            .environment(local)
-            .environment(ImageCacheService())
-            .environment(MaintenanceViewModel(
-                localHomebrew: local,
-                catalog: vm,
-                clearImageCache: {},
-                probe: RecordingMaintenanceProbe(),
-                defaults: makeScratchDefaults("maintenance-browse-render")
-            )))
-        window.orderFrontRegardless()
-
+        renderInWindow(vm, categories: categories, local: local, width: 900, height: 3000)
         let deadline = Date().addingTimeInterval(2)
         while Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
@@ -409,9 +406,6 @@ final class TopBarViewTests: XCTestCase {
 
         addTeardownBlock { @MainActor in
             UserDefaults.standard.set(storedViewMode, forKey: "viewMode")
-            window.contentView = NSView()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            window.close()
         }
 
         XCTAssertEqual(
@@ -543,42 +537,5 @@ final class TopBarViewTests: XCTestCase {
         XCTAssertNotNil(vm.errorMessage)
 
         renderInWindow(vm, categories: categories, local: local)
-    }
-
-    @MainActor
-    @discardableResult
-    private func renderInWindow(
-        _ vm: CaskCatalogViewModel,
-        categories: CategoryService,
-        local: LocalHomebrewService,
-        width: CGFloat = 1200
-    ) -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: width, height: 550),
-            styleMask: .borderless,
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
-            .environment(categories)
-            .environment(local)
-            .environment(ImageCacheService())
-            .environment(MaintenanceViewModel(
-                localHomebrew: local,
-                catalog: vm,
-                clearImageCache: {},
-                probe: RecordingMaintenanceProbe(),
-                defaults: makeScratchDefaults("maintenance-harness-render")
-            )))
-        window.orderFrontRegardless()
-        RunLoop.main.run(until: Date().addingTimeInterval(0.25))
-
-        addTeardownBlock { @MainActor in
-            window.contentView = NSView()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            window.close()
-        }
-        return window
     }
 }

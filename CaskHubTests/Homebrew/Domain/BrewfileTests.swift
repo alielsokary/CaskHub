@@ -45,17 +45,39 @@ final class BrewfileTests: XCTestCase {
 
     func test_serializing_sorts_tokens_into_cask_lines() {
         XCTAssertEqual(
-            Brewfile.contents(forCaskTokens: ["raycast", "figma"]),
+            Brewfile.contents(forCaskReferences: ["raycast", "figma"]),
             "cask \"figma\"\ncask \"raycast\"\n"
         )
-        XCTAssertEqual(Brewfile.contents(forCaskTokens: []), "")
+        XCTAssertEqual(Brewfile.contents(forCaskReferences: []), "")
     }
 
     func test_roundtrip_preserves_tokens() {
         let tokens = ["figma", "google-chrome", "raycast"]
         XCTAssertEqual(
-            Brewfile.caskTokens(in: Brewfile.contents(forCaskTokens: tokens)),
+            Brewfile.caskTokens(in: Brewfile.contents(forCaskReferences: tokens)),
             tokens
+        )
+    }
+
+    func test_parsing_taps_keeps_urls_skips_official_and_dedupes() {
+        let contents = """
+        tap "hashicorp/tap"
+        tap 'user/casks', "https://github.com/user/casks"
+        tap "homebrew/cask"
+        tap "hashicorp/tap"
+        cask "figma"
+        """
+
+        XCTAssertEqual(Brewfile.taps(in: contents), [
+            TapAddRequest(tapName: "hashicorp/tap", remoteURL: nil, caskToken: nil),
+            TapAddRequest(tapName: "user/casks", remoteURL: URL(string: "https://github.com/user/casks"), caskToken: nil)
+        ])
+    }
+
+    func test_export_writes_taps_before_qualified_casks() {
+        XCTAssertEqual(
+            Brewfile.contents(forCaskReferences: ["saffsanity/sill/sill", "figma"]),
+            "tap \"saffsanity/sill\"\ncask \"figma\"\ncask \"saffsanity/sill/sill\"\n"
         )
     }
 }

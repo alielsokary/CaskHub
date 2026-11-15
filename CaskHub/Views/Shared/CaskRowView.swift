@@ -21,6 +21,7 @@ struct CaskRowView: View {
     @State private var showingInfo = false
 
     @Environment(\.catalogTextScale) private var textScale
+    @Environment(\.showsTapBadges) private var showsTapBadges
 
     private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
 
@@ -103,6 +104,9 @@ struct CaskRowView: View {
                     isInstalled: actionPresentation.localState.isHomebrewInstalled
                 )
             }
+            if showsTapBadges, let tap = cask.thirdPartyTap {
+                TapBadge(tap: tap)
+            }
             metaText
         }
     }
@@ -142,7 +146,7 @@ struct CaskRowView: View {
                 }
             },
             onUpdate: {
-                localHomebrew.send(.update(token: cask.token))
+                localHomebrew.send(.update(token: cask.reference))
             },
             onUninstall: {
                 showDeleteConfirmation = true
