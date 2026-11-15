@@ -86,6 +86,14 @@ final class CaskReferenceTests: XCTestCase {
         XCTAssertEqual(row.id, "saffsanity/sill/sill")
     }
 
+    func test_receipt_rows_from_any_official_tap_read_as_removed_from_homebrew() {
+        for tap in ["homebrew/cask", "homebrew/cask-fonts", "Homebrew/cask-versions", nil] {
+            let row = Cask.receiptRow(for: installation("gone", tap: tap))
+            XCTAssertEqual(row.retirement(for: nil), .removedFromHomebrew, tap ?? "nil")
+        }
+        XCTAssertNil(Cask.receiptRow(for: installation("sill", tap: "saffsanity/sill")).retirement(for: nil))
+    }
+
     private func installation(_ token: String, tap: String?) -> LocalCaskInstallation {
         LocalCaskInstallation(
             token: token,
