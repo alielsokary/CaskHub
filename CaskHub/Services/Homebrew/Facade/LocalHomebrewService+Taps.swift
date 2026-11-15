@@ -104,8 +104,9 @@ extension LocalHomebrewService {
     }
 
     /// Pulls every tap so tap-cask updates appear; never runs beside a cask operation.
+    /// `brew update` also updates Homebrew itself, so it runs only for users with a third-party tap.
     func updateTapsIfStale(now: Date, maxAge: TimeInterval) async {
-        guard !operationStore.hasActiveOperations else { return }
+        guard !tapIndex.taps.isEmpty, !operationStore.hasActiveOperations else { return }
         if let last = defaults.object(forKey: Self.lastTapUpdateKey) as? Date,
            now.timeIntervalSince(last) < maxAge {
             return
