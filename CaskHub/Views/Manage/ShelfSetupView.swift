@@ -224,9 +224,11 @@ struct ShelfSetupView: View {
             } else {
                 ForEach(viewModel.adoptIgnoredCasks) { cask in
                     ignoredRow(cask)
+                        .transition(.opacity)
                 }
             }
         }
+        .animation(.snappy, value: viewModel.adoptIgnoredCasks.map(\.reference))
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
     }
@@ -292,9 +294,11 @@ struct AdoptIgnorePickerSheet: View {
                     } else {
                         ForEach(viewModel.adoptableCasks) { cask in
                             adoptableRow(cask)
+                                .transition(.opacity)
                         }
                     }
                 }
+                .animation(.snappy, value: viewModel.adoptableCasks.map(\.reference))
             }
             .frame(height: 300)
 

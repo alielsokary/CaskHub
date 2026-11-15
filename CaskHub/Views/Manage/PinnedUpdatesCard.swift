@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct PinnedUpdatesCard: View {
+    static let selfUpdatingSymbol = LibraryItem.updates.icon
+
     let viewModel: CaskCatalogViewModel
     @Binding var picker: ShelfSetupPicker?
 
@@ -100,11 +102,10 @@ struct PinnedUpdatesCard: View {
                         .font(CHType.statusMono)
                         .foregroundStyle(Color.chTextFaint)
                     if let help = selfUpdatingHelp(for: cask) {
-                        Image(systemName: "arrow.clockwise")
+                        Image(systemName: Self.selfUpdatingSymbol)
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color.chTextFaint)
-                            .help(help)
-                            .accessibilityLabel(help)
+                            .hoverHint(help)
                     }
                 }
                 .lineLimit(1)

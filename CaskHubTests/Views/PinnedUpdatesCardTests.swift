@@ -43,6 +43,7 @@ final class PinnedUpdatesCardTests: XCTestCase {
             "onyx has `auto_updates true` and may update itself outside Homebrew despite being pinned."
         )
         XCTAssertNil(card.selfUpdatingHelp(for: vm.pinnedCasks[1]))
+        XCTAssertEqual(PinnedUpdatesCard.selfUpdatingSymbol, LibraryItem.updates.icon)
         XCTAssertFalse(card.isPinChanging(vm.pinnedCasks[1]))
         vm.localHomebrew.pinChangesInFlight.insert(vm.pinnedCasks[1].reference)
         XCTAssertTrue(card.isPinChanging(vm.pinnedCasks[1]))
