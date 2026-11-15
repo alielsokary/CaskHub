@@ -68,10 +68,24 @@ final class BrewfileTests: XCTestCase {
         cask "figma"
         """
 
-        XCTAssertEqual(Brewfile.taps(in: contents), [
+        XCTAssertEqual(Brewfile.taps(in: contents), BrewfileTaps(toAdd: [
             TapAddRequest(tapName: "hashicorp/tap", remoteURL: nil, caskToken: nil),
             TapAddRequest(tapName: "user/casks", remoteURL: URL(string: "https://github.com/user/casks"), caskToken: nil)
-        ])
+        ]))
+    }
+
+    func test_tap_with_an_unusable_remote_is_never_added_from_its_name_alone() {
+        let contents = """
+        tap "user/ssh", "git@gitlab.com:user/homebrew-ssh.git"
+        tap "user/plain", "http://example.com/user/homebrew-plain"
+        tap "user/creds", "https://token@example.com/user/homebrew-creds"
+        tap "user/ok", "https://gitlab.com/user/homebrew-ok"
+        """
+
+        XCTAssertEqual(Brewfile.taps(in: contents), BrewfileTaps(
+            toAdd: [TapAddRequest(tapName: "user/ok", remoteURL: URL(string: "https://gitlab.com/user/homebrew-ok"), caskToken: nil)],
+            unsupported: ["user/ssh", "user/plain", "user/creds"]
+        ))
     }
 
     func test_export_writes_taps_before_qualified_casks() {

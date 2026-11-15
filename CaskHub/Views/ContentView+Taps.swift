@@ -21,13 +21,14 @@ enum TapDialog: Identifiable, Equatable {
 
 extension ContentView {
     var isTapsPage: Bool {
-        !Self.showsTapBadges(on: selectedSidebar)
+        Self.isTapsPage(selectedSidebar)
     }
 
-    static func showsTapBadges(on selection: SidebarSelection) -> Bool {
+    /// Taps pages list every cask under its tap, so cards skip the tap badge there.
+    static func isTapsPage(_ selection: SidebarSelection) -> Bool {
         switch selection {
-        case .library(.taps), .tap: false
-        default: true
+        case .library(.taps), .tap: true
+        default: false
         }
     }
 
@@ -48,13 +49,13 @@ extension ContentView {
     }
 
     var tapsSummary: String {
-        let count = viewModel.tapSections.reduce(0) { $0 + viewModel.tapCasks(in: $1.id).count }
+        let count = viewModel.tapSections.reduce(0) { $0 + $1.matchCount }
         return String(localized: "\(count) casks")
     }
 
     private func tapSectionView(_ section: TapSection) -> some View {
         let name = section.tap.name
-        let hasMore = viewModel.tapCasks(in: name).count > CaskCatalogViewModel.tapSectionSize
+        let hasMore = section.matchCount > section.casks.count
         return VStack(alignment: .leading, spacing: CHSpace.s3) {
             TapSectionHeader(
                 tap: section.tap,

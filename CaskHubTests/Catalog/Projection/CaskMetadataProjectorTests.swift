@@ -131,10 +131,10 @@ final class CaskMetadataProjectorTests: XCTestCase {
     }
 
     func test_only_web_urls_become_links() {
-        XCTAssertEqual(CaskInfoProjector.webLink("https://example.com/a"), URL(string: "https://example.com/a"))
-        XCTAssertEqual(CaskInfoProjector.webLink("HTTP://example.com"), URL(string: "HTTP://example.com"))
+        XCTAssertEqual(URL.web("https://example.com/a"), URL(string: "https://example.com/a"))
+        XCTAssertEqual(URL.web("HTTP://example.com"), URL(string: "HTTP://example.com"))
         for text in ["file:///etc/passwd", "javascript:alert(1)", "x-apple.systempreferences:", "https://", "example.com"] {
-            XCTAssertNil(CaskInfoProjector.webLink(text), text)
+            XCTAssertNil(URL.web(text), text)
         }
     }
 

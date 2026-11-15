@@ -13,6 +13,11 @@ final class TapAddInputTests: XCTestCase {
         XCTAssertEqual(parse("hashicorp/tap"), TapAddRequest(tapName: "hashicorp/tap", remoteURL: nil, caskToken: nil))
     }
 
+    func test_tap_names_are_canonical_like_brew() {
+        XCTAssertEqual(parse("User/homebrew-Tools")?.tapName, "user/tools")
+        XCTAssertEqual(parse("user/homebrew-tools/app"), TapAddRequest(tapName: "user/tools", remoteURL: nil, caskToken: "app"))
+    }
+
     func test_github_urls_with_homebrew_prefix_map_to_short_name() {
         let expected = TapAddRequest(tapName: "hashicorp/tap", remoteURL: nil, caskToken: nil)
         XCTAssertEqual(parse("https://github.com/hashicorp/homebrew-tap"), expected)

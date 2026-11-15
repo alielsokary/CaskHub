@@ -22,7 +22,8 @@ nonisolated struct BrewfileImportPlan: Identifiable {
         var id: String { token }
         var displayName: String { cask?.displayName ?? CaskReference.bareToken(token) }
         var reference: String { CaskReference.normalized(token) }
-        var tap: String? { CaskReference.tap(of: reference) }
+        /// Canonical, as brew names it, so `User/homebrew-X` matches the `user/x` tap line; raw when CaskHub can't parse it.
+        var tap: String? { CaskReference.tap(of: reference).map { (try? TapAddInput.parse($0).get().tapName) ?? $0 } }
     }
 
     let id = UUID()
@@ -31,30 +32,36 @@ nonisolated struct BrewfileImportPlan: Identifiable {
     let newEntries: [Entry]
     /// Homebrew refuses to install these: disabled, or removed for this platform.
     let unavailableEntries: [Entry]
+    /// Casks from `unsupportedTaps`, never installed.
+    let unsupportedTapEntries: [Entry]
     /// Taps from `tap` lines and tap-qualified casks that this Mac doesn't have yet.
     let tapsToAdd: [TapAddRequest]
+    /// Taps whose remote CaskHub won't pass to brew.
+    let unsupportedTaps: [String]
 
-    var listedCount: Int { skippedEntries.count + newEntries.count + unavailableEntries.count }
+    var listedCount: Int {
+        skippedEntries.count + newEntries.count + unavailableEntries.count + unsupportedTapEntries.count
+    }
 
-    /// A custom remote is shown, so a familiar tap name can't hide where the code comes from.
     var tapsToAddText: String {
-        tapsToAdd.map { tap in
-            tap.remoteURL.map { "\(tap.tapName) (from \(($0.host() ?? "") + $0.path()))" } ?? tap.tapName
-        }
-        .joined(separator: ", ")
+        tapsToAdd.map { $0.remoteURL == nil ? $0.tapName : "\($0.tapName) (from \($0.sourceText))" }
+            .joined(separator: ", ")
     }
 
     /// Adds taps first so their casks resolve; confirming the import is the trust consent, so installs never prompt.
+    /// A cask whose tap failed to add counts as failed instead of reaching brew.
     @MainActor
     func run(
         selected: [Entry],
         addTap: (TapAddRequest) async throws -> Void,
         installAll: ([String]) async -> Int
     ) async -> Int {
+        var failedTaps: Set<String> = []
         for tap in tapsToAdd {
-            try? await addTap(tap)
+            do { try await addTap(tap) } catch { failedTaps.insert(tap.tapName) }
         }
-        return await installAll(selected.map(\.reference))
+        let installable = selected.filter { $0.tap.map { !failedTaps.contains($0) } ?? true }
+        return selected.count - installable.count + (await installAll(installable.map(\.reference)))
     }
 }
 
@@ -136,12 +143,18 @@ struct BrewfileImportSheet: View {
                         BrewfileEntryRow(entry: entry, isSelected: selectionBinding(entry))
                     }
                     if !plan.unavailableEntries.isEmpty {
-                        unavailableHeader
+                        unavailableHeader(String(localized: .shelfSetupBrewfileSheetUnavailable(plan.unavailableEntries.count)))
                         ForEach(plan.unavailableEntries) { entry in
                             BrewfileEntryRow(entry: entry)
                                 .hoverHint(entry.cask.flatMap {
                                     localHomebrew.localState(for: $0).retirement?.summary(isInstalled: false)
                                 })
+                        }
+                    }
+                    if !plan.unsupportedTapEntries.isEmpty {
+                        unavailableHeader(String(localized: .shelfSetupBrewfileSheetUnsupportedTap(plan.unsupportedTapEntries.count)))
+                        ForEach(plan.unsupportedTapEntries) { entry in
+                            BrewfileEntryRow(entry: entry)
                         }
                     }
                     if !plan.skippedEntries.isEmpty {
@@ -213,46 +226,6 @@ struct BrewfileImportSheet: View {
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 
-    @ViewBuilder private var tapNotice: some View {
-        if !plan.tapsToAdd.isEmpty {
-            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAddText)"))
-                .font(CHType.statusMono)
-                .foregroundStyle(Color.chTextBody)
-        }
-        if selectedEntries.contains(where: { $0.tap != nil }) {
-            Text("Importing installs apps from these taps. They can run code on this Mac.")
-                .font(CHType.bodySm)
-                .foregroundStyle(Color.chTextMuted)
-        }
-    }
-
-    private var skippedHeader: some View {
-        HStack(spacing: 8) {
-            BrewfileDoneMark(size: 16)
-            Text(String(localized: .shelfSetupBrewfileSheetSkipped(
-                plan.skippedEntries.count
-            )))
-            .font(CHType.bodySm)
-            .foregroundStyle(Color.chTextBody)
-        }
-        .padding(.vertical, 8)
-        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
-    }
-
-    private var unavailableHeader: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color.red)
-                .frame(width: 16, height: 16)
-            Text(String(localized: .shelfSetupBrewfileSheetUnavailable(plan.unavailableEntries.count)))
-                .font(CHType.bodySm)
-                .foregroundStyle(Color.chTextBody)
-        }
-        .padding(.vertical, 8)
-        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
-    }
-
     private func progress(completedCount: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             GeometryReader { geo in
@@ -317,13 +290,62 @@ struct BrewfileImportSheet: View {
         guard case .preview = phase, !selectedEntries.isEmpty else { return }
         phase = .running(completedCount: 0)
         Task {
-            let failedCount = await plan.run(selected: selectedEntries, addTap: addTap) { references in
-                await localHomebrew.installAll(tokens: references) {
-                    phase = .running(completedCount: $0)
+            let selected = selectedEntries
+            let failedCount = await plan.run(selected: selected, addTap: addTap) { references in
+                let skipped = selected.count - references.count
+                return await localHomebrew.installAll(tokens: references) {
+                    phase = .running(completedCount: skipped + $0)
                 }
             }
             phase = .done(failedCount: failedCount)
         }
+    }
+}
+
+private extension BrewfileImportSheet {
+    @ViewBuilder var tapNotice: some View {
+        if !plan.tapsToAdd.isEmpty {
+            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAddText)"))
+                .font(CHType.statusMono)
+                .foregroundStyle(Color.chTextBody)
+        }
+        if !plan.unsupportedTaps.isEmpty {
+            Text(verbatim: String(localized: "Not added, address not supported: \(plan.unsupportedTaps.joined(separator: ", "))"))
+                .font(CHType.statusMono)
+                .foregroundStyle(Color.chTextBody)
+        }
+        if selectedEntries.contains(where: { $0.tap != nil }) {
+            Text("Importing installs apps from these taps. They can run code on this Mac.")
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextMuted)
+        }
+    }
+
+    var skippedHeader: some View {
+        HStack(spacing: 8) {
+            BrewfileDoneMark(size: 16)
+            Text(String(localized: .shelfSetupBrewfileSheetSkipped(
+                plan.skippedEntries.count
+            )))
+            .font(CHType.bodySm)
+            .foregroundStyle(Color.chTextBody)
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
+    }
+
+    func unavailableHeader(_ text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.red)
+                .frame(width: 16, height: 16)
+            Text(verbatim: text)
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextBody)
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 }
 

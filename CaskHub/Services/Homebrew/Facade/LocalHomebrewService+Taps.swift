@@ -71,6 +71,14 @@ extension LocalHomebrewService {
         throw CancellationError()
     }
 
+    /// The failure a tap add or removal left behind, cleared on read so it shows once.
+    func takeTapFailureMessage(_ tapName: String) -> String? {
+        let token = Self.tapOperationToken(tapName)
+        guard case let .failure(failure) = actionAlert(for: token) else { return nil }
+        send(.dismissFailure(token: token))
+        return failure.message
+    }
+
     func cancelAddTap(_ tapName: String) {
         cancelledTapAdds.insert(tapName)
         cancelInstall(token: Self.tapOperationToken(tapName))
@@ -104,8 +112,9 @@ extension LocalHomebrewService {
     }
 
     /// Pulls every tap so tap-cask updates appear; never runs beside a cask operation.
+    /// `brew update` also updates Homebrew itself, so it runs only for users with a third-party tap.
     func updateTapsIfStale(now: Date, maxAge: TimeInterval) async {
-        guard !operationStore.hasActiveOperations else { return }
+        guard !tapIndex.taps.isEmpty, !operationStore.hasActiveOperations else { return }
         if let last = defaults.object(forKey: Self.lastTapUpdateKey) as? Date,
            now.timeIntervalSince(last) < maxAge {
             return

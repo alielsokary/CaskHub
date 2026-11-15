@@ -78,6 +78,7 @@ final class TapCatalogTests: XCTestCase {
 
         XCTAssertEqual(vm.tapSections.map(\.id), ["user/big"])
         XCTAssertEqual(vm.tapSections[0].casks.count, 8)
+        XCTAssertEqual(vm.tapSections[0].matchCount, 12, "View All needs the full count")
         XCTAssertEqual(vm.tapCasks(in: "user/big").count, 12)
         XCTAssertEqual(vm.localHomebrew.tapIndex.tapsWithCasks.map(\.name), ["user/big"])
     }

@@ -20,10 +20,10 @@ final class TapsViewTests: XCTestCase {
     }
 
     func test_tap_badge_shows_outside_the_tap_pages_only() {
-        XCTAssertTrue(ContentView.showsTapBadges(on: .discover(.browse)))
-        XCTAssertTrue(ContentView.showsTapBadges(on: .library(.installed)))
-        XCTAssertFalse(ContentView.showsTapBadges(on: .library(.taps)))
-        XCTAssertFalse(ContentView.showsTapBadges(on: .tap("user/tap")))
+        XCTAssertFalse(ContentView.isTapsPage(.discover(.browse)))
+        XCTAssertFalse(ContentView.isTapsPage(.library(.installed)))
+        XCTAssertTrue(ContentView.isTapsPage(.library(.taps)))
+        XCTAssertTrue(ContentView.isTapsPage(.tap("user/tap")))
     }
 
     func test_taps_icon_exists() {
@@ -55,23 +55,22 @@ final class TapsViewTests: XCTestCase {
 
     func test_repository_link_for_web_remotes_on_any_host() {
         XCTAssertEqual(
-            TapSectionHeader.repositoryURL(for: "https://github.com/macos-fuse-t/homebrew-cask"),
+            URL.web("https://github.com/macos-fuse-t/homebrew-cask"),
             URL(string: "https://github.com/macos-fuse-t/homebrew-cask")
         )
         XCTAssertEqual(
-            TapSectionHeader.repositoryURL(for: "https://gitlab.com/u/homebrew-r.git"),
+            URL.web("https://gitlab.com/u/homebrew-r.git"),
             URL(string: "https://gitlab.com/u/homebrew-r.git")
         )
-        XCTAssertNil(TapSectionHeader.repositoryURL(for: "file:///tmp/repo"))
-        XCTAssertNil(TapSectionHeader.repositoryURL(for: "git@gitlab.com:u/homebrew-r.git"))
-        XCTAssertNil(TapSectionHeader.repositoryURL(for: nil))
+        XCTAssertNil(URL.web("file:///tmp/repo"))
+        XCTAssertNil(URL.web("git@gitlab.com:u/homebrew-r.git"))
     }
 
     func test_cloning_line_names_the_folder_brew_creates() {
         let remote = URL(string: "https://gitlab.com/group/homebrew-tools")
         let gitlab = TapAddRequest(tapName: "group/tools", remoteURL: remote, caskToken: nil)
         XCTAssertEqual(gitlab.cloneFolder, "…/Taps/group/homebrew-tools")
-        XCTAssertEqual(AddTapModel.source(of: gitlab), "gitlab.com/group/homebrew-tools")
+        XCTAssertEqual(gitlab.sourceText, "gitlab.com/group/homebrew-tools")
     }
 
     func test_page_analytics_never_names_a_tap() {

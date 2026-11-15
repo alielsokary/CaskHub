@@ -119,6 +119,7 @@ final class TapWorkflowTests: XCTestCase {
 
     func test_tap_update_skipped_while_operation_running() async {
         let sut = makeSUT(indexes: [])
+        sut.service.tapIndex = makeTapIndex(["saffsanity/sill": []])
         sut.service.operationStore.send(.enqueue(.installing), for: "figma")
 
         await sut.service.updateTapsIfStale(now: .now, maxAge: 0)
@@ -126,8 +127,17 @@ final class TapWorkflowTests: XCTestCase {
         XCTAssertEqual(sut.updateCount, 0)
     }
 
+    func test_tap_update_skipped_without_third_party_taps() async {
+        let sut = makeSUT(indexes: [])
+
+        await sut.service.updateTapsIfStale(now: .now, maxAge: 0)
+
+        XCTAssertEqual(sut.updateCount, 0, "brew update also updates Homebrew itself")
+    }
+
     func test_tap_update_throttled_by_max_age() async {
         let sut = makeSUT(indexes: [])
+        sut.service.tapIndex = makeTapIndex(["saffsanity/sill": []])
         let start = Date()
 
         await sut.service.updateTapsIfStale(now: start, maxAge: 3600)
@@ -138,12 +148,13 @@ final class TapWorkflowTests: XCTestCase {
     }
 
     func test_tap_update_refreshes_index_and_outdated() async {
-        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": []])])
+        let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": []]), makeTapIndex(["saffsanity/sill": [], "user/new": []])])
+        await sut.service.refreshTaps()
 
         await sut.service.updateTapsIfStale(now: .now, maxAge: 0)
 
         XCTAssertEqual(sut.updateCount, 1)
-        XCTAssertEqual(sut.service.tapIndex.taps.map(\.name), ["saffsanity/sill"])
+        XCTAssertEqual(sut.service.tapIndex.taps.map(\.name), ["saffsanity/sill", "user/new"])
         XCTAssertEqual(sut.outdatedCount, 1)
     }
 
@@ -193,6 +204,16 @@ final class TapWorkflowTests: XCTestCase {
         XCTAssertTrue(sut.runner.requests.contains { $0.arguments == ["untap", "user/slow"] })
     }
 
+    func test_failed_tap_add_message_is_read_once() async {
+        let sut = makeSUT(indexes: [makeTapIndex([:])])
+        sut.runner.queuedResults = [BrewProcessResult(exitCode: 1, output: "Error: Invalid tap name 'user/nope'")]
+
+        try? await sut.service.addTap(TapAddRequest(tapName: "user/nope", remoteURL: nil, caskToken: nil))
+
+        XCTAssertNotNil(sut.service.takeTapFailureMessage("user/nope"))
+        XCTAssertNil(sut.service.takeTapFailureMessage("user/nope"))
+    }
+
     func test_install_refuses_when_a_twin_owns_the_install() async throws {
         let sut = makeSUT(indexes: [])
         updateInstalledCask(installation("foo", version: "1.0"), in: sut.service)
@@ -205,6 +226,7 @@ final class TapWorkflowTests: XCTestCase {
 
     func test_tap_update_waits_for_the_exclusive_lane() async {
         let sut = makeSUT(indexes: [])
+        sut.service.tapIndex = makeTapIndex(["saffsanity/sill": []])
         _ = await sut.lanes.acquire(.exclusive, token: "busy") {}
 
         let update = Task { await sut.service.updateTapsIfStale(now: .now, maxAge: 0) }

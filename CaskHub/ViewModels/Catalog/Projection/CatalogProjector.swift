@@ -128,8 +128,7 @@ nonisolated enum CatalogProjector {
         partition: CatalogPartition
     ) -> [Cask] {
         guard !partition.all.isEmpty else { return [] }
-        return installations.keys.sorted().compactMap { token in
-            guard let installation = installations[token] else { return nil }
+        return installations.values.sorted { $0.token < $1.token }.compactMap { installation in
             let reference = CaskReference.make(token: installation.token, tap: installation.tap)
             guard let cask = partition.byReference[reference] else {
                 return Cask.receiptRow(for: installation)

@@ -33,7 +33,7 @@ struct TapBadge: View {
             .foregroundStyle(Color.chTextMuted)
             .contentShape(Rectangle())
             .hoverHint(String(localized: "From the \(tap) tap"))
-            .accessibilityLabel(Text(String(localized: "From the \(tap) tap")))
+            .accessibilityLabel(Text("Tap"))
     }
 }
 

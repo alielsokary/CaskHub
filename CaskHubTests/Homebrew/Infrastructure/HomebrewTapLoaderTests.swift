@@ -68,8 +68,8 @@ final class HomebrewTapLoaderTests: XCTestCase {
         XCTAssertEqual(index.casks.map(\.provenance), [.tapInfo, .tapSource])
         XCTAssertEqual(index.casks[1].displayName, "SSHFS")
         XCTAssertEqual(readPaths, ["/opt/homebrew/Library/Taps/macos-fuse-t/homebrew-cask/Casks/fuse-t-sshfs.rb"])
-        XCTAssertEqual(index.casks(in: "macos-fuse-t/cask").count, 2)
-        XCTAssertTrue(index.casks(in: "paninihouse/brewer-cmd").isEmpty)
+        XCTAssertEqual(index.casks.filter { $0.tap == "macos-fuse-t/cask" }.count, 2)
+        XCTAssertTrue(index.casks.filter { $0.tap == "paninihouse/brewer-cmd" }.isEmpty)
     }
 
     func test_trusted_cask_missing_from_brew_json_falls_back_to_text() throws {
@@ -113,6 +113,18 @@ final class HomebrewTapLoaderTests: XCTestCase {
         XCTAssertEqual(HomebrewTapLoader.trustOrNone(nil), TapTrust(taps: [], casks: []))
         XCTAssertEqual(HomebrewTapLoader.trustOrNone("Error: Unknown command: trust"), TapTrust(taps: [], casks: []))
         XCTAssertEqual(HomebrewTapLoader.trustOrNone(trustJSON).casks, ["macos-fuse-t/cask/fuse-t"])
+    }
+
+    func test_update_gives_up_on_a_hung_brew_at_the_timeout() async throws {
+        let brew = FileManager.default.temporaryDirectory.appendingPathComponent("hung-brew-\(UUID().uuidString)")
+        try "#!/bin/sh\nsleep 30\n".write(to: brew, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: brew.path)
+        defer { try? FileManager.default.removeItem(at: brew) }
+        let start = Date()
+
+        await HomebrewTapLoader().update(from: brew, timeout: 0.5)
+
+        XCTAssertLessThan(Date().timeIntervalSince(start), 10)
     }
 
     private func tapInfoCask(_ token: String, tap: String, version: String) throws -> Cask {

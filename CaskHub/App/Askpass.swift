@@ -44,10 +44,9 @@ nonisolated enum Askpass {
             )
         }
         if case .emit(let password) = step { return .password(password) }
-        let request = dialogRequest(
-            for: step, token: token, attempt: attempt, storeAvailable: storeAvailable, touchIDEnabled: enabled
-        )
-        guard let request, let response = presentDialog(request) else { return .cancelled }
+        guard let request = dialogRequest(for: step, token: token, attempt: attempt),
+              let response = presentDialog(request)
+        else { return .cancelled }
         if storeAvailable {
             remember(response, passwordSaved: passwordSaved, store: store, passwordAccepted: passwordAccepted)
         }
@@ -61,42 +60,34 @@ nonisolated enum Askpass {
         passwordAccepted: (String) -> Bool
     ) {
         store.touchID.setEnabled(response.remember)
-        switch AskpassCredentialFlow.storeAction(remember: response.remember, passwordSaved: passwordSaved, storeAvailable: true) {
+        switch AskpassCredentialFlow.storeAction(remember: response.remember, passwordSaved: passwordSaved) {
         case .save where passwordAccepted(response.password): try? store.save(response.password)
         case .delete: store.delete()
         case .save, .none: break
         }
     }
 
-    static func dialogRequest(
-        for step: AskpassStep, token: String?, attempt: Int?, storeAvailable: Bool, touchIDEnabled: Bool
-    ) -> AskpassDialogRequest? {
-        let rejected = (attempt ?? 0) > 1
-        switch step {
-        case .emit:
-            return nil
-        case let .dialog(offerRemember, rememberChecked):
-            return AskpassDialogRequest(
-                token: token, offerRemember: offerRemember, rememberChecked: rememberChecked, previousAttemptRejected: rejected
-            )
-        case .touchID:
-            return AskpassDialogRequest(
-                token: token, offerRemember: storeAvailable, rememberChecked: touchIDEnabled, previousAttemptRejected: rejected
-            )
-        }
+    /// `resolve` has already turned `.touchID` into a password or a dialog step.
+    static func dialogRequest(for step: AskpassStep, token: String?, attempt: Int?) -> AskpassDialogRequest? {
+        guard case let .dialog(offerRemember, rememberChecked) = step else { return nil }
+        return AskpassDialogRequest(
+            token: token, offerRemember: offerRemember, rememberChecked: rememberChecked,
+            previousAttemptRejected: (attempt ?? 0) > 1
+        )
     }
 
-    static func nextAttempt(marker: URL?) -> Int? {
+    /// sudo re-runs askpass only after rejecting a password, and one brew command may start several sudo
+    /// processes, so attempts are counted per sudo process: askpass's parent.
+    static func nextAttempt(marker: URL?, sudoPID: pid_t = getppid()) -> Int? {
         guard let marker else { return nil }
-        var previous = 0
+        var attempt = 1
         if FileManager.default.fileExists(atPath: marker.path) {
-            guard let text = try? String(contentsOf: marker, encoding: .utf8),
-                  let count = Int(text.trimmingCharacters(in: .whitespacesAndNewlines))
-            else { return nil }
-            previous = count
+            guard let text = try? String(contentsOf: marker, encoding: .utf8) else { return nil }
+            let fields = text.split(separator: " ").compactMap { Int32($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            guard fields.count == 2 else { return nil }
+            if fields[0] == sudoPID { attempt = Int(fields[1]) + 1 }
         }
-        let attempt = previous + 1
-        guard (try? Data(String(attempt).utf8).write(to: marker, options: .atomic)) != nil else { return nil }
+        guard (try? Data("\(sudoPID) \(attempt)".utf8).write(to: marker, options: .atomic)) != nil else { return nil }
         return attempt
     }
 
@@ -152,15 +143,9 @@ nonisolated enum Askpass {
             ? String(localized: "The password was not accepted. Try again.")
             : request.token.map { String(localized: "The installer for “\($0)” requires your login password.") }
                 ?? String(localized: "This installer requires your login password.")
-        return AdministratorPasswordDialog.present(
+        return AdministratorPasswordPrompt(
             message: message, offerRemember: request.offerRemember, rememberChecked: request.rememberChecked
-        )
-    }
-}
-
-enum AdministratorPasswordDialog {
-    static func present(message: String, offerRemember: Bool, rememberChecked: Bool) -> AskpassDialogResponse? {
-        AdministratorPasswordPrompt(message: message, offerRemember: offerRemember, rememberChecked: rememberChecked).run()
+        ).run()
     }
 }
 

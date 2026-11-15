@@ -75,15 +75,7 @@ final class AddTapModel {
 
     var missingText: String? {
         guard availability == .missing, let request else { return nil }
-        let url = Self.repositoryURL(for: request)
-        let source = (url.host() ?? "") + url.path()
-        return String(localized: "No tap at \(source). Check the name, or add private taps from Terminal.")
-    }
-
-    static func repositoryURL(for request: TapAddRequest) -> URL {
-        if let remoteURL = request.remoteURL { return remoteURL }
-        let parts = request.tapName.split(separator: "/")
-        return URL(string: "https://github.com/\(parts[0])/homebrew-\(parts[1])")!
+        return String(localized: "No tap at \(request.sourceText). Check the name, or add private taps from Terminal.")
     }
 
     /// Debounced so typing doesn't fire a request per keystroke; a stale answer is dropped.
@@ -95,13 +87,13 @@ final class AddTapModel {
         availability = .checking
         try? await Task.sleep(for: availabilityDebounce)
         guard !Task.isCancelled, request == self.request else { return }
-        let result = await checker(Self.repositoryURL(for: request))
+        let result = await checker(request.repositoryURL)
         guard !Task.isCancelled, request == self.request else { return }
         availability = result
     }
 
     var previewText: String? {
-        request.map { String(localized: "Will tap \($0.tapName) from \(Self.source(of: $0))") }
+        request.map { String(localized: "Will tap \($0.tapName) from \($0.sourceText)") }
     }
 
     var errorText: String? {
@@ -112,14 +104,6 @@ final class AddTapModel {
         case .officialTap: return String(localized: "Homebrew's own taps are already included.")
         case .insecureRemote: return String(localized: "Use an https:// address. Unencrypted Git URLs aren't supported.")
         }
-    }
-
-    static func source(of request: TapAddRequest) -> String {
-        if let remoteURL = request.remoteURL {
-            return (remoteURL.host() ?? "") + remoteURL.path()
-        }
-        let parts = request.tapName.split(separator: "/")
-        return "github.com/\(parts[0])/homebrew-\(parts[1])"
     }
 
     static func noCasksText(tap: String) -> String {
@@ -170,7 +154,7 @@ final class AddTapModel {
     }
 
     private func failureText(for request: TapAddRequest, _ environment: Environment) -> String {
-        environment.failureMessage(LocalHomebrewService.tapOperationToken(request.tapName))
+        environment.failureMessage(request.tapName)
             ?? String(localized: "CaskHub couldn't add \(request.tapName).")
     }
 }
@@ -362,7 +346,7 @@ struct AddTapSheet: View {
         let name = Text(verbatim: request.tapName)
             .foregroundStyle(Color.chActionDoneFg)
             .fontWeight(.semibold)
-        return Text("Will tap \(name) from \(AddTapModel.source(of: request))")
+        return Text("Will tap \(name) from \(request.sourceText)")
             .foregroundStyle(Color.chTextNav)
     }
 
@@ -389,11 +373,7 @@ struct AddTapSheet: View {
             isInstalled: { [localHomebrew] reference in
                 localHomebrew.installationSnapshot.installedCasks[CaskReference.bareToken(reference)] != nil
             },
-            failureMessage: { [localHomebrew] token in
-                guard case let .failure(failure) = localHomebrew.actionAlert(for: token) else { return nil }
-                localHomebrew.send(.dismissFailure(token: token))
-                return failure.message
-            }
+            failureMessage: localHomebrew.takeTapFailureMessage
         )
         Task {
             if await model.submit(environment) { dismiss() }
