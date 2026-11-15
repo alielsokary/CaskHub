@@ -5,6 +5,7 @@
 //  Created by Ali Elsokary on 06/11/2026.
 //
 
+import AppKit
 @testable import CaskHub
 import XCTest
 
@@ -222,5 +223,35 @@ final class AskpassUnreachableStepTests: XCTestCase {
         XCTAssertNil(
             Askpass.dialogRequest(for: .emit("pw"), token: "zoom", attempt: 1, storeAvailable: true, touchIDEnabled: true)
         )
+    }
+}
+
+@MainActor
+final class AskpassEditMenuTests: XCTestCase {
+    func test_edit_menu_routes_standard_editing_shortcuts_to_the_first_responder() throws {
+        let editMenu = try XCTUnwrap(Askpass.editMenu().items.first?.submenu)
+        let shortcuts = editMenu.items.map { item in
+            "\(item.keyEquivalentModifierMask == .command ? "⌘" : "?")\(item.keyEquivalent) \(item.action.map(NSStringFromSelector) ?? "")"
+        }
+        XCTAssertEqual(shortcuts, ["⌘x cut:", "⌘c copy:", "⌘v paste:", "⌘a selectAll:"])
+        XCTAssertTrue(editMenu.items.allSatisfy { $0.target == nil })
+    }
+}
+
+@MainActor
+final class AdministratorPasswordPromptTests: XCTestCase {
+    func test_allow_is_enabled_only_while_the_password_field_has_text() {
+        let prompt = AdministratorPasswordPrompt(message: "m", offerRemember: true, rememberChecked: false)
+        let field = prompt.passwordField
+        XCTAssertTrue(field.delegate === prompt)
+        XCTAssertFalse(prompt.allowButton.isEnabled)
+
+        field.stringValue = "pw"
+        prompt.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+        XCTAssertTrue(prompt.allowButton.isEnabled)
+
+        field.stringValue = ""
+        prompt.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+        XCTAssertFalse(prompt.allowButton.isEnabled)
     }
 }

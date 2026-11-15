@@ -104,6 +104,7 @@ nonisolated enum Askpass {
     static func runDialog(token: String?, cancellationMarker: URL?, attemptMarker: URL?) -> Never {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
+        app.mainMenu = editMenu()
 
         let callerVerified = AskpassCallerVerifier.isLaunchedByCaskHub()
         let outcome = resolve(
@@ -125,6 +126,21 @@ nonisolated enum Askpass {
         exit(0)
     }
 
+    // Command-key shortcuts reach text fields only through the main menu; accessory apps never display it.
+    @MainActor
+    static func editMenu() -> NSMenu {
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        let editItem = NSMenuItem()
+        editItem.submenu = edit
+        let root = NSMenu()
+        root.addItem(editItem)
+        return root
+    }
+
     private static func touchIDReason(token: String?) -> String {
         token.map { String(localized: "authorize changes for “\($0)”") }
             ?? String(localized: "authorize a Homebrew change")
@@ -144,15 +160,26 @@ nonisolated enum Askpass {
 
 enum AdministratorPasswordDialog {
     static func present(message: String, offerRemember: Bool, rememberChecked: Bool) -> AskpassDialogResponse? {
-        let app = NSApplication.shared
-        let alert = NSAlert()
+        AdministratorPasswordPrompt(message: message, offerRemember: offerRemember, rememberChecked: rememberChecked).run()
+    }
+}
+
+final class AdministratorPasswordPrompt: NSObject, NSTextFieldDelegate {
+    let passwordField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 230, height: 24))
+    private let alert = NSAlert()
+    private var rememberBox: NSButton?
+
+    var allowButton: NSButton { alert.buttons[0] }
+
+    init(message: String, offerRemember: Bool, rememberChecked: Bool) {
+        super.init()
         alert.messageText = String(localized: "CaskHub needs administrator access")
         alert.informativeText = message
         alert.addButton(withTitle: String(localized: "Allow"))
         alert.addButton(withTitle: String(localized: "Cancel"))
+        allowButton.isEnabled = false
+        passwordField.delegate = self
 
-        let passwordField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 230, height: 24))
-        var rememberBox: NSButton?
         if offerRemember {
             let box = NSButton(checkboxWithTitle: String(localized: "Use Touch ID next time"), target: nil, action: nil)
             box.state = rememberChecked ? .on : .off
@@ -168,7 +195,14 @@ enum AdministratorPasswordDialog {
             alert.accessoryView = passwordField
         }
         alert.window.initialFirstResponder = passwordField
+    }
 
+    func controlTextDidChange(_ notification: Notification) {
+        allowButton.isEnabled = !passwordField.stringValue.isEmpty
+    }
+
+    func run() -> AskpassDialogResponse? {
+        let app = NSApplication.shared
         // Activation is cooperative; the floating level keeps the prompt on top.
         alert.window.level = .floating
         app.activate()
