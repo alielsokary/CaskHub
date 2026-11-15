@@ -23,14 +23,8 @@ nonisolated struct CaskUpdateVariation: Decodable, Hashable, Sendable {
     private let autoUpdates: Bool?
     private let disabled: Bool?
     private let deprecated: Bool?
-    private let deprecationDate: String?
-    private let deprecationReason: String?
-    private let deprecationReplacementCask: String?
-    private let deprecationReplacementFormula: String?
-    private let disableDate: String?
-    private let disableReason: String?
-    private let disableReplacementCask: String?
-    private let disableReplacementFormula: String?
+    /// The `deprecate!` and `disable!` text fields this variant replaces; an explicit null is a key without a value.
+    private let retirementText: [CodingKeys: String]
     private let fields: Set<CodingKeys>
 
     private enum CodingKeys: String, CodingKey {
@@ -39,6 +33,11 @@ nonisolated struct CaskUpdateVariation: Decodable, Hashable, Sendable {
         case disableDate, disableReason, disableReplacementCask, disableReplacementFormula
     }
 
+    private static let retirementTextKeys: [CodingKeys] = [
+        .deprecationDate, .deprecationReason, .deprecationReplacementCask, .deprecationReplacementFormula,
+        .disableDate, .disableReason, .disableReplacementCask, .disableReplacementFormula
+    ]
+
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         fields = Set(values.allKeys)
@@ -46,37 +45,26 @@ nonisolated struct CaskUpdateVariation: Decodable, Hashable, Sendable {
         autoUpdates = try values.decodeIfPresent(Bool.self, forKey: .autoUpdates)
         disabled = try values.decodeIfPresent(Bool.self, forKey: .disabled)
         deprecated = try values.decodeIfPresent(Bool.self, forKey: .deprecated)
-        deprecationDate = try values.decodeIfPresent(String.self, forKey: .deprecationDate)
-        deprecationReason = try values.decodeIfPresent(String.self, forKey: .deprecationReason)
-        deprecationReplacementCask = try values.decodeIfPresent(String.self, forKey: .deprecationReplacementCask)
-        deprecationReplacementFormula = try values.decodeIfPresent(String.self, forKey: .deprecationReplacementFormula)
-        disableDate = try values.decodeIfPresent(String.self, forKey: .disableDate)
-        disableReason = try values.decodeIfPresent(String.self, forKey: .disableReason)
-        disableReplacementCask = try values.decodeIfPresent(String.self, forKey: .disableReplacementCask)
-        disableReplacementFormula = try values.decodeIfPresent(String.self, forKey: .disableReplacementFormula)
+        retirementText = try Self.retirementTextKeys.reduce(into: [:]) { text, key in
+            text[key] = try values.decodeIfPresent(String.self, forKey: key)
+        }
     }
 
     func retirementFields(inheriting base: CaskRetirementFields) -> CaskRetirementFields {
-        func pick<Value>(_ key: CodingKeys, _ value: Value, _ inherited: Value) -> Value {
-            fields.contains(key) ? value : inherited
+        func text(_ key: CodingKeys, _ inherited: String?) -> String? {
+            fields.contains(key) ? retirementText[key] : inherited
         }
         return CaskRetirementFields(
             deprecated: fields.contains(.deprecated) ? deprecated == true : base.deprecated,
-            deprecationDate: pick(.deprecationDate, deprecationDate, base.deprecationDate),
-            deprecationReason: pick(.deprecationReason, deprecationReason, base.deprecationReason),
-            deprecationReplacementCask: pick(
-                .deprecationReplacementCask, deprecationReplacementCask, base.deprecationReplacementCask
-            ),
-            deprecationReplacementFormula: pick(
-                .deprecationReplacementFormula, deprecationReplacementFormula, base.deprecationReplacementFormula
-            ),
+            deprecationDate: text(.deprecationDate, base.deprecationDate),
+            deprecationReason: text(.deprecationReason, base.deprecationReason),
+            deprecationReplacementCask: text(.deprecationReplacementCask, base.deprecationReplacementCask),
+            deprecationReplacementFormula: text(.deprecationReplacementFormula, base.deprecationReplacementFormula),
             disabled: fields.contains(.disabled) ? disabled == true : base.disabled,
-            disableDate: pick(.disableDate, disableDate, base.disableDate),
-            disableReason: pick(.disableReason, disableReason, base.disableReason),
-            disableReplacementCask: pick(.disableReplacementCask, disableReplacementCask, base.disableReplacementCask),
-            disableReplacementFormula: pick(
-                .disableReplacementFormula, disableReplacementFormula, base.disableReplacementFormula
-            )
+            disableDate: text(.disableDate, base.disableDate),
+            disableReason: text(.disableReason, base.disableReason),
+            disableReplacementCask: text(.disableReplacementCask, base.disableReplacementCask),
+            disableReplacementFormula: text(.disableReplacementFormula, base.disableReplacementFormula)
         )
     }
 
