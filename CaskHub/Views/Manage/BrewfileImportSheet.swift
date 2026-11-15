@@ -22,8 +22,8 @@ nonisolated struct BrewfileImportPlan: Identifiable {
         var id: String { token }
         var displayName: String { cask?.displayName ?? CaskReference.bareToken(token) }
         var reference: String { CaskReference.normalized(token) }
-        /// Canonical, as brew names it, so `User/homebrew-X` matches the `user/x` tap line.
-        var tap: String? { CaskReference.tap(of: reference).flatMap { try? TapAddInput.parse($0).get().tapName } }
+        /// Canonical, as brew names it, so `User/homebrew-X` matches the `user/x` tap line; raw when CaskHub can't parse it.
+        var tap: String? { CaskReference.tap(of: reference).map { (try? TapAddInput.parse($0).get().tapName) ?? $0 } }
     }
 
     let id = UUID()
@@ -226,51 +226,6 @@ struct BrewfileImportSheet: View {
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 
-    @ViewBuilder private var tapNotice: some View {
-        if !plan.tapsToAdd.isEmpty {
-            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAddText)"))
-                .font(CHType.statusMono)
-                .foregroundStyle(Color.chTextBody)
-        }
-        if !plan.unsupportedTaps.isEmpty {
-            Text(verbatim: String(localized: "Not added, address not supported: \(plan.unsupportedTaps.joined(separator: ", "))"))
-                .font(CHType.statusMono)
-                .foregroundStyle(Color.chTextBody)
-        }
-        if selectedEntries.contains(where: { $0.tap != nil }) {
-            Text("Importing installs apps from these taps. They can run code on this Mac.")
-                .font(CHType.bodySm)
-                .foregroundStyle(Color.chTextMuted)
-        }
-    }
-
-    private var skippedHeader: some View {
-        HStack(spacing: 8) {
-            BrewfileDoneMark(size: 16)
-            Text(String(localized: .shelfSetupBrewfileSheetSkipped(
-                plan.skippedEntries.count
-            )))
-            .font(CHType.bodySm)
-            .foregroundStyle(Color.chTextBody)
-        }
-        .padding(.vertical, 8)
-        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
-    }
-
-    private func unavailableHeader(_ text: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color.red)
-                .frame(width: 16, height: 16)
-            Text(verbatim: text)
-                .font(CHType.bodySm)
-                .foregroundStyle(Color.chTextBody)
-        }
-        .padding(.vertical, 8)
-        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
-    }
-
     private func progress(completedCount: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             GeometryReader { geo in
@@ -344,6 +299,53 @@ struct BrewfileImportSheet: View {
             }
             phase = .done(failedCount: failedCount)
         }
+    }
+}
+
+private extension BrewfileImportSheet {
+    @ViewBuilder var tapNotice: some View {
+        if !plan.tapsToAdd.isEmpty {
+            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAddText)"))
+                .font(CHType.statusMono)
+                .foregroundStyle(Color.chTextBody)
+        }
+        if !plan.unsupportedTaps.isEmpty {
+            Text(verbatim: String(localized: "Not added, address not supported: \(plan.unsupportedTaps.joined(separator: ", "))"))
+                .font(CHType.statusMono)
+                .foregroundStyle(Color.chTextBody)
+        }
+        if selectedEntries.contains(where: { $0.tap != nil }) {
+            Text("Importing installs apps from these taps. They can run code on this Mac.")
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextMuted)
+        }
+    }
+
+    var skippedHeader: some View {
+        HStack(spacing: 8) {
+            BrewfileDoneMark(size: 16)
+            Text(String(localized: .shelfSetupBrewfileSheetSkipped(
+                plan.skippedEntries.count
+            )))
+            .font(CHType.bodySm)
+            .foregroundStyle(Color.chTextBody)
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
+    }
+
+    func unavailableHeader(_ text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.red)
+                .frame(width: 16, height: 16)
+            Text(verbatim: text)
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextBody)
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 }
 
