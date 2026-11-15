@@ -139,9 +139,9 @@ struct BrewfileImportSheet: View {
                         unavailableHeader
                         ForEach(plan.unavailableEntries) { entry in
                             BrewfileEntryRow(entry: entry)
-                                .help(entry.cask.flatMap {
+                                .hoverHint(entry.cask.flatMap {
                                     localHomebrew.localState(for: $0).retirement?.summary(isInstalled: false)
-                                } ?? "")
+                                })
                         }
                     }
                     if !plan.skippedEntries.isEmpty {

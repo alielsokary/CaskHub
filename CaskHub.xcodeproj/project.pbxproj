@@ -21,6 +21,7 @@
 		CA7AFEF9659FED9683868983 /* TapSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */; };
 		CA7AAD492A2AA6A009BF06D4 /* TapsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */; };
 		CA7AB3A9F99766591C19FAC9 /* TapChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */; };
+		C0F1E0000000000000000010 /* HoverHint.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F1E0000000000000000020 /* HoverHint.swift */; };
 		CA7A082722C6593FFB7E9750 /* CaskCatalogViewModel+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */; };
 		CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A74921CE28363941C4016 /* TapCatalogTests.swift */; };
 		4271DD0E5E3B5A1AFB889D4C /* PinnedCaskCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64414447B54083C899561E0E /* PinnedCaskCatalogTests.swift */; };
@@ -135,6 +136,7 @@
 		A17200000000000000000002 /* ApplicationDirectorySettingsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17200000000000000000001 /* ApplicationDirectorySettingsRow.swift */; };
 		7D1D0000000000000000001F /* AdministratorPasswordSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1D0000000000000000001E /* AdministratorPasswordSettingsSection.swift */; };
 		A26000000000000000000004 /* UpdateSettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26000000000000000000003 /* UpdateSettingsViewTests.swift */; };
+		C0F1E0000000000000000030 /* HoverHintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F1E0000000000000000040 /* HoverHintTests.swift */; };
 		A29000000000000000000002 /* ApplicationTerminationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */; };
 		A29000000000000000000004 /* ApplicationTerminationCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */; };
 		A29100000000000000000002 /* CaskMetadataProjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29100000000000000000001 /* CaskMetadataProjector.swift */; };
@@ -268,6 +270,7 @@
 		CA7AADB35AE469865D1EB3EE /* TapSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapSectionHeader.swift; sourceTree = "<group>"; };
 		CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsViewTests.swift; sourceTree = "<group>"; };
 		CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapChip.swift; sourceTree = "<group>"; };
+		C0F1E0000000000000000020 /* HoverHint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverHint.swift; sourceTree = "<group>"; };
 		CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CaskCatalogViewModel+Taps.swift"; sourceTree = "<group>"; };
 		CA7A74921CE28363941C4016 /* TapCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCatalogTests.swift; sourceTree = "<group>"; };
 		64414447B54083C899561E0E /* PinnedCaskCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedCaskCatalogTests.swift; sourceTree = "<group>"; };
@@ -374,6 +377,7 @@
 		A17200000000000000000001 /* ApplicationDirectorySettingsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationDirectorySettingsRow.swift; sourceTree = "<group>"; };
 		7D1D0000000000000000001E /* AdministratorPasswordSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdministratorPasswordSettingsSection.swift; sourceTree = "<group>"; };
 		A26000000000000000000003 /* UpdateSettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSettingsViewTests.swift; sourceTree = "<group>"; };
+		C0F1E0000000000000000040 /* HoverHintTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverHintTests.swift; sourceTree = "<group>"; };
 		A29000000000000000000001 /* ApplicationTerminationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinator.swift; sourceTree = "<group>"; };
 		A29000000000000000000003 /* ApplicationTerminationCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTerminationCoordinatorTests.swift; sourceTree = "<group>"; };
 		A29100000000000000000001 /* CaskMetadataProjector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskMetadataProjector.swift; sourceTree = "<group>"; };
@@ -549,6 +553,7 @@
 				41DFD45630028F7D00608C7A /* StatusBarView.swift */,
 				41DFD45730028F7D00608C7A /* TopBarView.swift */,
 				CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */,
+				C0F1E0000000000000000020 /* HoverHint.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1027,6 +1032,7 @@
 				8D8BBC63FC69CB0C0180BEBD /* PinnedUpdatesCardTests.swift */,
 				EE8CAA93D9ECDEC2664F7998 /* NativeSearchFieldTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
+				C0F1E0000000000000000040 /* HoverHintTests.swift */,
 				CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */,
 				CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */,
 				CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */,
@@ -1430,6 +1436,7 @@
 				23FBAEBAE2160A11BD4EB0BE /* LocalHomebrewService+Pins.swift in Sources */,
 				CA7A082722C6593FFB7E9750 /* CaskCatalogViewModel+Taps.swift in Sources */,
 				CA7AB3A9F99766591C19FAC9 /* TapChip.swift in Sources */,
+				C0F1E0000000000000000010 /* HoverHint.swift in Sources */,
 				CA7AFEF9659FED9683868983 /* TapSectionHeader.swift in Sources */,
 				CA7AD1CF9F056DE3402CCD25 /* TapsEmptyStateView.swift in Sources */,
 				CA7A3B60B96C269271BAAED1 /* ContentView+Taps.swift in Sources */,
@@ -1479,6 +1486,7 @@
 				AA100000000000000000000F /* MaintenanceViewModelTests.swift in Sources */,
 				AA1000000000000000000011 /* MaintenanceViewTests.swift in Sources */,
 				A26000000000000000000004 /* UpdateSettingsViewTests.swift in Sources */,
+				C0F1E0000000000000000030 /* HoverHintTests.swift in Sources */,
 				FC77AC4ED839460894E8ED53 /* AdoptionTests.swift in Sources */,
 				C0FE0000000000000000000E /* ConcurrentDownloadTests.swift in Sources */,
 				B0AD00000000000000000002 /* UninstallZapGateTests.swift in Sources */,

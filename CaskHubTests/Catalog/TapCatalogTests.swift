@@ -34,23 +34,42 @@ final class TapCatalogTests: XCTestCase {
         }
     }
 
-    func test_only_installed_covered_tap_casks_join_categories() async throws {
+    func test_covered_tap_casks_join_categories_installed_or_not() async throws {
         let vm = try await makeCoveredTapsSUT(official: [makeCask("figma")])
 
         vm.selectedSidebar = .category("utilities")
-        XCTAssertEqual(vm.filteredCasks.map(\.id), ["saffsanity/sill/sill"])
-        XCTAssertEqual(vm.categoryCounts, ["utilities": 1, "design": 1])
+        XCTAssertEqual(Set(vm.filteredCasks.map(\.id)), ["saffsanity/sill/sill", "saffsanity/sill/other"])
+        XCTAssertEqual(vm.categoryCounts, ["utilities": 2, "design": 1])
         XCTAssertFalse(vm.browseSections.flatMap(\.casks).contains { $0.thirdPartyTap != nil })
     }
 
-    func test_only_installed_covered_tap_casks_show_their_category() async throws {
+    func test_covered_tap_casks_show_their_category_installed_or_not() async throws {
         let vm = try await makeCoveredTapsSUT(official: [])
 
         let all = vm.tapCasks(in: "saffsanity/sill") + vm.tapCasks(in: "user/tap")
         let casks = Dictionary(uniqueKeysWithValues: all.map { ($0.token, $0) })
         XCTAssertEqual(vm.categoryPresentation(for: try XCTUnwrap(casks["sill"]))?.mainName, "Utilities")
-        XCTAssertNil(vm.categoryPresentation(for: try XCTUnwrap(casks["other"])), "its category page would not list it")
+        XCTAssertEqual(vm.categoryPresentation(for: try XCTUnwrap(casks["other"]))?.mainName, "Utilities")
         XCTAssertNil(vm.categoryPresentation(for: try XCTUnwrap(casks["plain"])))
+    }
+
+    func test_an_uninstalled_twin_shows_the_official_category_without_doubling_its_page() async throws {
+        let vm = await makeSUT(official: [makeCask("figma")], taps: ["user/tap": ["figma"]], categories: try tapCategories())
+
+        let twin = try XCTUnwrap(vm.catalogCask(for: "user/tap/figma"))
+        XCTAssertEqual(vm.categoryPresentation(for: twin)?.mainName, "Design")
+        vm.selectedSidebar = .category("design")
+        XCTAssertEqual(vm.filteredCasks.map(\.id), ["figma"])
+    }
+
+    func test_an_installed_twin_joins_its_category_page() async throws {
+        let vm = await makeSUT(
+            official: [makeCask("figma")], taps: ["user/tap": ["figma"]],
+            installed: [tapInstallation("figma", tap: "user/tap", version: "1.0")], categories: try tapCategories()
+        )
+
+        vm.selectedSidebar = .category("design")
+        XCTAssertEqual(Set(vm.filteredCasks.map(\.id)), ["figma", "user/tap/figma"])
     }
 
     func test_tap_sections_cap_at_eight_and_skip_taps_without_casks() async throws {
@@ -167,7 +186,7 @@ final class TapCatalogTests: XCTestCase {
          "tokenToCategory": {"figma": {"primary": "design", "secondary": []}}}
         """
         let taps = """
-        {"version": 1, "generatedDate": "2026-11-13", "sameAs": {},
+        {"version": 1, "generatedDate": "2026-11-13", "sameAs": {"user/tap/figma": "figma"},
          "casks": {"saffsanity/sill/sill": {"primary": "utilities", "secondary": []},
                    "saffsanity/sill/other": {"primary": "utilities", "secondary": []}}}
         """

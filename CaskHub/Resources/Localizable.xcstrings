@@ -1375,6 +1375,34 @@
         }
       }
     },
+    "Show Taps" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать тапы"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати тапи"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 Tap"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示 Tap"
+          }
+        }
+      }
+    },
     "Some developers publish their Mac apps in their own Homebrew repository, called a tap. Add one to browse and install its apps here." : {
       "localizations" : {
         "ru" : {
@@ -1483,6 +1511,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap"
+          }
+        }
+      }
+    },
+    "Taps lists the third-party Homebrew taps you added and their casks." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В разделе «Тапы» перечислены добавленные вами сторонние тапы Homebrew и их приложения."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У розділі «Тапи» перелічено додані вами сторонні тапи Homebrew та їхні програми."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「Tap」会列出你添加的第三方 Homebrew Tap 及其中的应用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「Tap」會列出你加入的第三方 Homebrew Tap 及其中的 App。"
           }
         }
       }

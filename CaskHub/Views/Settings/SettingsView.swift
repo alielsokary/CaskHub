@@ -176,6 +176,7 @@ struct GeneralSettingsView: View {
     @State private var fullDiskAccess = FullDiskAccessPermission.Status.unknown
     @State private var touchIDModel = AdministratorPasswordSettingsModel()
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
+    @AppStorage(SidebarView.showTapsKey) private var showTaps = true
     @AppStorage(ContentView.showExternallyManagedAppsKey) private var showExternallyManagedApps = true
 
     var body: some View {
@@ -192,6 +193,10 @@ struct GeneralSettingsView: View {
             Section("Sidebar") {
                 Toggle("Show Adopt Apps", isOn: $showAdoptApps)
                 Text("Adopt Apps lists installed apps that Homebrew can start managing for you.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Toggle("Show Taps", isOn: $showTaps)
+                Text("Taps lists the third-party Homebrew taps you added and their casks.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

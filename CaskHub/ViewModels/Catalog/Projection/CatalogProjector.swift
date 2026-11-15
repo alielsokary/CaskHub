@@ -33,6 +33,8 @@ nonisolated struct CatalogLibraryProjectionInput {
     let retiredCasks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
+    /// Tap casks CaskFlow matched to an official cask; that cask already stands for them on category pages.
+    let officialTwins: Set<String>
     let adoptIgnoredTokens: Set<String>
 }
 
@@ -87,9 +89,9 @@ nonisolated enum CatalogProjector {
             if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
-            // Tap casks join categories only once installed; uninstalled ones stay on their tap page.
+            // An uninstalled twin would list the official cask's app twice.
             if let mapping = input.categoryMappings[cask.reference],
-               cask.thirdPartyTap == nil || localState.isHomebrewInstalled {
+               !input.officialTwins.contains(cask.reference) || localState.isHomebrewInstalled {
                 forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }
@@ -158,7 +160,7 @@ nonisolated enum CatalogProjector {
             BrowseSection(
                 title: String(localized: "Most Popular"),
                 destination: .discover(.topCharts),
-                casks: Array(popularityOrder.prefix(sectionSize))
+                casks: Array(popularityOrder.lazy.filter { !$0.isFont }.prefix(sectionSize))
             ),
             BrowseSection(
                 title: String(localized: "Recently Added"),
@@ -195,8 +197,8 @@ nonisolated enum CatalogProjector {
 
     private static func retiredSearchPool(_ input: CatalogFilteredProjectionInput) -> [Cask] {
         switch input.selectedSidebar {
-        case .discover(.recentlyAdded): input.retiredCasks.filter { !$0.isFont }
-        case .discover: input.retiredCasks
+        case .discover(.browse): input.retiredCasks
+        case .discover: input.retiredCasks.filter { !$0.isFont }
         case let .category(categoryID): input.library.retiredCasksByCategory[categoryID] ?? []
         case .library, .shelfSetup, .maintenance, .tap: []
         }
@@ -221,11 +223,11 @@ nonisolated enum CatalogProjector {
             return input.searchText.isEmpty ? input.casks : input.casks + input.tapCasks
         case .discover(.featured):
             return Array(sortedByDownloads(
-                input.casks,
+                input.casks.filter { !$0.isFont },
                 using: input.downloadCounts
             ).prefix(100))
         case .discover(.topCharts):
-            return input.casks
+            return input.casks.filter { !$0.isFont }
         case .discover(.recentlyAdded):
             return input.casks.filter {
                 !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
