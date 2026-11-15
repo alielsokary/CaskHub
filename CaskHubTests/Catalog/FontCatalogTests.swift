@@ -12,7 +12,7 @@ import XCTest
 
 @MainActor
 final class FontCatalogTests: XCTestCase {
-    func test_fonts_get_their_own_category_and_list_like_apps_except_recently_added() async {
+    func test_fonts_get_their_own_category_and_stay_off_discover_lists() async {
         let recent = RecentlyAddedService()
         recent.addedDates = ["old-app": "2020-01-01T00:00:00Z"]
         let (vm, _) = await makeSUT(
@@ -37,8 +37,14 @@ final class FontCatalogTests: XCTestCase {
         vm.searchText = "font"
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["font-inter", "font-fira-code", "font-old"])
 
-        vm.selectedSidebar = .discover(.topCharts)
-        XCTAssertEqual(vm.filteredCasks.map(\.token), ["font-inter", "firefox", "font-fira-code"])
+        for page in [DiscoverItem.featured, .topCharts] {
+            vm.selectedSidebar = .discover(page)
+            XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"], "\(page)")
+            vm.searchText = "font"
+            XCTAssertEqual(vm.filteredCasks.map(\.token), [], "\(page)")
+        }
+        let popularShelf = vm.browseSections.first { $0.destination == .discover(.topCharts) }
+        XCTAssertEqual(popularShelf?.casks.map(\.token), ["firefox"])
 
         vm.selectedSidebar = .discover(.recentlyAdded)
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["firefox"], "unmined fonts would otherwise count as new")

@@ -158,7 +158,7 @@ nonisolated enum CatalogProjector {
             BrowseSection(
                 title: String(localized: "Most Popular"),
                 destination: .discover(.topCharts),
-                casks: Array(popularityOrder.prefix(sectionSize))
+                casks: Array(popularityOrder.lazy.filter { !$0.isFont }.prefix(sectionSize))
             ),
             BrowseSection(
                 title: String(localized: "Recently Added"),
@@ -195,8 +195,8 @@ nonisolated enum CatalogProjector {
 
     private static func retiredSearchPool(_ input: CatalogFilteredProjectionInput) -> [Cask] {
         switch input.selectedSidebar {
-        case .discover(.recentlyAdded): input.retiredCasks.filter { !$0.isFont }
-        case .discover: input.retiredCasks
+        case .discover(.browse): input.retiredCasks
+        case .discover: input.retiredCasks.filter { !$0.isFont }
         case let .category(categoryID): input.library.retiredCasksByCategory[categoryID] ?? []
         case .library, .shelfSetup, .maintenance, .tap: []
         }
@@ -221,11 +221,11 @@ nonisolated enum CatalogProjector {
             return input.searchText.isEmpty ? input.casks : input.casks + input.tapCasks
         case .discover(.featured):
             return Array(sortedByDownloads(
-                input.casks,
+                input.casks.filter { !$0.isFont },
                 using: input.downloadCounts
             ).prefix(100))
         case .discover(.topCharts):
-            return input.casks
+            return input.casks.filter { !$0.isFont }
         case .discover(.recentlyAdded):
             return input.casks.filter {
                 !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
