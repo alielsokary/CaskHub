@@ -160,15 +160,26 @@ nonisolated enum Askpass {
 
 enum AdministratorPasswordDialog {
     static func present(message: String, offerRemember: Bool, rememberChecked: Bool) -> AskpassDialogResponse? {
-        let app = NSApplication.shared
-        let alert = NSAlert()
+        AdministratorPasswordPrompt(message: message, offerRemember: offerRemember, rememberChecked: rememberChecked).run()
+    }
+}
+
+final class AdministratorPasswordPrompt: NSObject, NSTextFieldDelegate {
+    let passwordField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 230, height: 24))
+    private let alert = NSAlert()
+    private var rememberBox: NSButton?
+
+    var allowButton: NSButton { alert.buttons[0] }
+
+    init(message: String, offerRemember: Bool, rememberChecked: Bool) {
+        super.init()
         alert.messageText = String(localized: "CaskHub needs administrator access")
         alert.informativeText = message
         alert.addButton(withTitle: String(localized: "Allow"))
         alert.addButton(withTitle: String(localized: "Cancel"))
+        allowButton.isEnabled = false
+        passwordField.delegate = self
 
-        let passwordField = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 230, height: 24))
-        var rememberBox: NSButton?
         if offerRemember {
             let box = NSButton(checkboxWithTitle: String(localized: "Use Touch ID next time"), target: nil, action: nil)
             box.state = rememberChecked ? .on : .off
@@ -184,7 +195,14 @@ enum AdministratorPasswordDialog {
             alert.accessoryView = passwordField
         }
         alert.window.initialFirstResponder = passwordField
+    }
 
+    func controlTextDidChange(_ notification: Notification) {
+        allowButton.isEnabled = !passwordField.stringValue.isEmpty
+    }
+
+    func run() -> AskpassDialogResponse? {
+        let app = NSApplication.shared
         // Activation is cooperative; the floating level keeps the prompt on top.
         alert.window.level = .floating
         app.activate()

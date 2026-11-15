@@ -237,3 +237,21 @@ final class AskpassEditMenuTests: XCTestCase {
         XCTAssertTrue(editMenu.items.allSatisfy { $0.target == nil })
     }
 }
+
+@MainActor
+final class AdministratorPasswordPromptTests: XCTestCase {
+    func test_allow_is_enabled_only_while_the_password_field_has_text() {
+        let prompt = AdministratorPasswordPrompt(message: "m", offerRemember: true, rememberChecked: false)
+        let field = prompt.passwordField
+        XCTAssertTrue(field.delegate === prompt)
+        XCTAssertFalse(prompt.allowButton.isEnabled)
+
+        field.stringValue = "pw"
+        prompt.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+        XCTAssertTrue(prompt.allowButton.isEnabled)
+
+        field.stringValue = ""
+        prompt.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+        XCTAssertFalse(prompt.allowButton.isEnabled)
+    }
+}
