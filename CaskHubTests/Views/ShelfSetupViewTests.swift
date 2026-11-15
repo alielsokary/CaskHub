@@ -321,6 +321,23 @@ final class ShelfSetupViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_unsupported_tap_check_survives_other_spellings_of_the_tap() async {
+        let homebrew = makeHomebrew(defaults: makeScratchDefaults("brewfile-spellings"), externalApps: [:])
+        let (vm, _) = await makeSUT(casks: [], localHomebrew: homebrew)
+
+        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+            fileName: "~/Brewfile",
+            tokens: ["User/SSH/app", "user/homebrew-ssh/tool"],
+            taps: Brewfile.taps(in: "tap \"user/homebrew-ssh\", \"git@gitlab.com:user/homebrew-ssh.git\"")
+        )
+
+        XCTAssertEqual(plan.unsupportedTaps, ["user/ssh"])
+        XCTAssertEqual(plan.unsupportedTapEntries.count, 2)
+        XCTAssertTrue(plan.newEntries.isEmpty)
+        XCTAssertTrue(plan.tapsToAdd.isEmpty, "never re-added from a differently spelled cask reference")
+    }
+
+    @MainActor
     func test_brewfile_import_sheet_renders_every_phase() {
         let homebrew = makeHomebrew(
             defaults: makeScratchDefaults("brewfile-render"),

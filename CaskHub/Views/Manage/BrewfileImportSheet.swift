@@ -22,7 +22,8 @@ nonisolated struct BrewfileImportPlan: Identifiable {
         var id: String { token }
         var displayName: String { cask?.displayName ?? CaskReference.bareToken(token) }
         var reference: String { CaskReference.normalized(token) }
-        var tap: String? { CaskReference.tap(of: reference) }
+        /// Canonical, as brew names it, so `User/homebrew-X` matches the `user/x` tap line.
+        var tap: String? { CaskReference.tap(of: reference).flatMap { try? TapAddInput.parse($0).get().tapName } }
     }
 
     let id = UUID()

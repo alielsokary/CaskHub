@@ -129,7 +129,9 @@ nonisolated enum TapAddInput {
         }
         let parts = url.path().split(separator: "/").map(String.init)
         guard parts.count == 2, parts.allSatisfy(isValidComponent) else { return .failure(.unrecognized) }
-        let repo = tapRepoName(parts[1])
+        var name = parts[1].lowercased()
+        if name.hasSuffix(".git") { name.removeLast(4) }
+        let repo = tapRepoName(name)
         guard isValidComponent(repo) else { return .failure(.unrecognized) }
         let port = url.port.map { ":\($0)" } ?? ""
         return .success(TapAddRequest(
@@ -139,19 +141,17 @@ nonisolated enum TapAddInput {
         ))
     }
 
-    /// `homebrew-tools.git` names the tap `tools`, as brew does.
+    /// brew names `user/homebrew-tools` the tap `user/tools`, so every spelling compares equal.
     private static func tapRepoName(_ repository: String) -> String {
-        var repo = repository.lowercased()
-        if repo.hasSuffix(".git") { repo.removeLast(4) }
-        if repo.hasPrefix("homebrew-"), repo.count > "homebrew-".count { repo.removeFirst("homebrew-".count) }
-        return repo
+        let repo = repository.lowercased()
+        return repo.hasPrefix("homebrew-") && repo.count > "homebrew-".count ? String(repo.dropFirst("homebrew-".count)) : repo
     }
 
     private static func nameRequest(_ word: String) -> TapAddRequest? {
         let parts = word.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
         guard (2 ... 3).contains(parts.count), parts.allSatisfy(isValidComponent) else { return nil }
         return TapAddRequest(
-            tapName: "\(parts[0])/\(parts[1])".lowercased(),
+            tapName: "\(parts[0].lowercased())/\(tapRepoName(parts[1]))",
             remoteURL: nil,
             caskToken: parts.count == 3 ? parts[2].lowercased() : nil
         )
