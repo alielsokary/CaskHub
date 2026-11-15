@@ -113,6 +113,22 @@ final class ContentViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_click_on_search_field_clear_button_keeps_focus() {
+        let probe = FocusProbe()
+        let window = makeWindow(probe: probe)
+        let searchField = NSSearchField(frame: NSRect(x: 10, y: 80, width: 180, height: 22))
+        searchField.stringValue = "zed"
+        window.contentView!.addSubview(searchField)
+        let cancelRect = searchField.rectForCancelButton(whenCentered: false)
+        let point = searchField.convert(NSPoint(x: cancelRect.midX, y: cancelRect.midY), to: nil)
+
+        click(at: point, in: window)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+
+        XCTAssertEqual(probe.resignCount, 0)
+    }
+
+    @MainActor
     func test_deferred_resign_rechecks_focus() {
         let probe = FocusProbe()
         let window = makeWindow(probe: probe)
