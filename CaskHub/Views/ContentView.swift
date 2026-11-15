@@ -335,7 +335,7 @@ struct ResignFocusOnOutsideClick: ViewModifier {
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
                     if isFocused(),
                        let frameView = event.window?.contentView?.superview,
-                       !(frameView.hitTest(event.locationInWindow) is NSTextView) {
+                       !Self.isSearchInput(frameView.hitTest(event.locationInWindow)) {
                         DispatchQueue.main.async {
                             guard isFocused() else { return }
                             resign()
@@ -348,6 +348,12 @@ struct ResignFocusOnOutsideClick: ViewModifier {
                 if let monitor { NSEvent.removeMonitor(monitor) }
                 monitor = nil
             }
+    }
+
+    // Resigning mid-click on the clear button commits the old text before the field empties.
+    private static func isSearchInput(_ view: NSView?) -> Bool {
+        sequence(first: view, next: { $0?.superview })
+            .contains { $0 is NSTextView || $0 is NSSearchField }
     }
 }
 
