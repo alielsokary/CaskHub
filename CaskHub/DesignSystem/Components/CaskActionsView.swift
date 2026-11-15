@@ -77,14 +77,14 @@ struct CaskActionsView: View {
             }
         } else if let externalPath = state.externalCLIPath {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
-                .help(
+                .hoverHint(
                     state.uninstallAvailability.unavailableReason
                         ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
         } else if let source = presentation.blockingInstallSource {
             ActionCapsuleLabel(action: .install, fullWidth: fullWidth)
                 .opacity(0.45)
-                .help(String(localized: "Installed from \(source)"))
+                .hoverHint(String(localized: "Installed from \(source)"))
         } else {
             // Homebrew refuses to install a disabled cask; the retirement badge explains why.
             let installBlocked = state.retirement?.blocksInstall == true
@@ -207,7 +207,7 @@ private extension View {
         if disabled {
             self
                 .disabled(true)
-                .help(String(localized: "Wait for the current action to finish."))
+                .hoverHint(String(localized: "Wait for the current action to finish."))
         } else {
             self
         }
@@ -225,48 +225,7 @@ private struct DisabledUninstallControl: View {
             .background(Circle().fill(Color.chSurfaceField.opacity(0.5)))
             .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
             .contentShape(Circle())
-            .modifier(HoverHint(message: message))
+            .hoverHint(message)
             .accessibilityLabel("Uninstall")
-            .accessibilityHint(message)
-    }
-}
-
-/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
-/// pointer remains over the view. This hint follows hover state directly, so it
-/// stays visible until the pointer actually leaves the control.
-private struct HoverHint: ViewModifier {
-    let message: String
-
-    @State private var isHovering = false
-
-    func body(content: Content) -> some View {
-        content
-            .onHover { isHovering = $0 }
-            .overlay(alignment: .topTrailing) {
-                if isHovering {
-                    Text(message)
-                        .font(CHType.bodySm)
-                        .foregroundStyle(Color.chTextTitle)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(width: 220, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.chSurfaceToolbar)
-                                .shadow(color: Color.chShadowCard, radius: 8, y: 3)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
-                        )
-                        // A zero-height frame lets any bubble height grow upward from the control's top.
-                        .frame(height: 0, alignment: .bottom)
-                        .offset(y: -8)
-                        .allowsHitTesting(false)
-                }
-            }
-            .zIndex(isHovering ? 10 : 0)
     }
 }
