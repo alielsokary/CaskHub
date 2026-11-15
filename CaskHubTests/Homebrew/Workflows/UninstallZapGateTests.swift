@@ -107,6 +107,17 @@ final class UninstallZapGateTests: XCTestCase {
         XCTAssertFalse(service.zapBlockedByFullDiskAccess)
     }
 
+    func test_uninstall_forces_a_pinned_cask_so_brew_unpins_it() {
+        let service = makeService(runner: StubBrewProcessRunner())
+        updateInstallationSnapshot(of: service) { $0.pinnedVersions = ["zed": "1.0"] }
+
+        XCTAssertEqual(service.uninstallArguments(token: "zed", removingData: false), ["uninstall", "--cask", "zed", "--force"])
+        XCTAssertEqual(
+            service.uninstallArguments(token: "zed", removingData: true),
+            ["uninstall", "--cask", "zed", "--force", "--zap"]
+        )
+    }
+
     func test_uninstall_stays_plain_when_the_caskroom_only_keeps_an_undeclared_helper_app() throws {
         let service = makeService(runner: StubBrewProcessRunner())
 
