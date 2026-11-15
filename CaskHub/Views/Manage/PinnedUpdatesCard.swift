@@ -25,8 +25,12 @@ struct PinnedUpdatesCard: View {
         }
     }
 
-    func showsSelfUpdatingHint(_ cask: Cask) -> Bool {
-        cask.autoUpdates == true
+    func selfUpdatingHelp(for cask: Cask) -> String? {
+        cask.autoUpdates == true ? String(localized: .shelfSetupPinSelfUpdatingHint(cask.token)) : nil
+    }
+
+    func isPinChanging(_ cask: Cask) -> Bool {
+        localHomebrew.pinChangesInFlight.contains(cask.reference)
     }
 
     var body: some View {
@@ -65,7 +69,8 @@ struct PinnedUpdatesCard: View {
             }
             Spacer().frame(height: 8)
 
-            if viewModel.pinnedCasks.isEmpty {
+            let pinnedCasks = viewModel.pinnedCasks
+            if pinnedCasks.isEmpty {
                 Text(String(localized: .shelfSetupPinEmpty))
                     .font(CHType.bodySm)
                     .foregroundStyle(Color.chTextMuted)
@@ -73,11 +78,13 @@ struct PinnedUpdatesCard: View {
                     .padding(.vertical, 14)
                     .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
             } else {
-                ForEach(viewModel.pinnedCasks) { cask in
+                ForEach(pinnedCasks) { cask in
                     pinnedRow(cask)
+                        .transition(.opacity)
                 }
             }
         }
+        .animation(.snappy, value: viewModel.pinnedCasks.map(\.reference))
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
     }
@@ -92,6 +99,13 @@ struct PinnedUpdatesCard: View {
                     Text(verbatim: cask.token)
                         .font(CHType.statusMono)
                         .foregroundStyle(Color.chTextFaint)
+                    if let help = selfUpdatingHelp(for: cask) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color.chTextFaint)
+                            .help(help)
+                            .accessibilityLabel(help)
+                    }
                 }
                 .lineLimit(1)
                 Spacer(minLength: 10)
@@ -104,17 +118,13 @@ struct PinnedUpdatesCard: View {
                     title: String(localized: .shelfSetupPinUnpinButton),
                     background: .chActionDoneBg,
                     border: .chActionDoneBorder,
-                    foreground: .chActionDoneFg
+                    foreground: .chActionDoneFg,
+                    isLoading: isPinChanging(cask)
                 ) {
                     Task { try? await localHomebrew.setPinned(false, reference: cask.reference) }
                 }
                 .disabled(isBusy(cask))
-                .opacity(isBusy(cask) ? 0.5 : 1)
-            }
-            if showsSelfUpdatingHint(cask) {
-                Text(String(localized: .shelfSetupPinSelfUpdatingHint))
-                    .font(CHType.bodySm)
-                    .foregroundStyle(Color.chTextMuted)
+                .opacity(isBusy(cask) && !isPinChanging(cask) ? 0.5 : 1)
             }
         }
         .padding(.vertical, 10)
@@ -171,9 +181,11 @@ struct PinPickerSheet: View {
                     } else {
                         ForEach(casks) { cask in
                             pinnableRow(cask)
+                                .transition(.opacity)
                         }
                     }
                 }
+                .animation(.snappy, value: casks.map(\.reference))
             }
             .frame(height: 300)
 
@@ -214,12 +226,16 @@ struct PinPickerSheet: View {
                 title: String(localized: .shelfSetupPinPinButton),
                 background: .chActionUpdateBg,
                 border: .chActionUpdateBorder,
-                foreground: .chActionUpdateFg
+                foreground: .chActionUpdateFg,
+                isLoading: viewModel.localHomebrew.pinChangesInFlight.contains(cask.reference)
             ) {
                 Task { try? await viewModel.localHomebrew.setPinned(true, reference: cask.reference) }
             }
             .disabled(!viewModel.localHomebrew.canChangePin(for: cask.reference))
-            .opacity(viewModel.localHomebrew.canChangePin(for: cask.reference) ? 1 : 0.5)
+            .opacity(
+                viewModel.localHomebrew.canChangePin(for: cask.reference)
+                    || viewModel.localHomebrew.pinChangesInFlight.contains(cask.reference) ? 1 : 0.5
+            )
         }
         .padding(.vertical, 8)
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }

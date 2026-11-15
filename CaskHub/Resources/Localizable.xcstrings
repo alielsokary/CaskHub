@@ -15027,37 +15027,37 @@
       }
     },
     "shelfSetup.pin.selfUpdatingHint" : {
-      "comment" : "Hint on a pinned cask that updates itself outside Homebrew",
+      "comment" : "Tooltip on a pinned cask's update icon, worded like Homebrew's pin warning; %@ is the cask token",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Updates itself. The pin only stops Homebrew."
+            "value" : "%@ has `auto_updates true` and may update itself outside Homebrew despite being pinned."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Обновляется сам. Закрепление останавливает только Homebrew."
+            "value" : "У %@ указано `auto_updates true`, поэтому оно может обновиться само вне Homebrew, несмотря на закрепление."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Оновлюється самостійно. Закріплення зупиняє лише Homebrew."
+            "value" : "%@ має `auto_updates true` і може оновитися самостійно поза Homebrew, попри закріплення."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "会自行更新。固定只会阻止 Homebrew。"
+            "value" : "%@ 设置了 `auto_updates true`，即使已固定，也可能在 Homebrew 之外自行更新。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "會自行更新。固定只會阻止 Homebrew。"
+            "value" : "%@ 設定了 `auto_updates true`，即使已固定，也可能在 Homebrew 之外自行更新。"
           }
         }
       }

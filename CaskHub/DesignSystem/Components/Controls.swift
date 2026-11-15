@@ -94,16 +94,23 @@ struct PillButton: View {
     let background: Color
     let border: Color
     let foreground: Color
+    var isLoading = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             ActionCapsule(background: background, border: border, foreground: foreground) {
-                Text(title)
+                ZStack {
+                    Text(title).opacity(isLoading ? 0 : 1)
+                    if isLoading {
+                        ProgressView().controlSize(.mini).tint(foreground)
+                    }
+                }
             }
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .disabled(isLoading)
     }
 }
 
