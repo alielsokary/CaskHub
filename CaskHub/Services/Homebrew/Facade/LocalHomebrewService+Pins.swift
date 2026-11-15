@@ -20,9 +20,14 @@ extension LocalHomebrewService {
         installationSnapshot.pinnedVersions[CaskReference.bareToken(reference)]
     }
 
+    /// A leftover failed or awaiting state never blocks a pin; only queued or running work does.
+    func canChangePin(for reference: String) -> Bool {
+        operationStore.state(for: reference)?.action == nil && !pinChangesInFlight.contains(reference)
+    }
+
     func setPinned(_ pinned: Bool, reference: String) async throws {
-        guard operationStore.state(for: reference) == nil,
-              pinChangesInFlight.insert(reference).inserted else { return }
+        guard canChangePin(for: reference) else { return }
+        pinChangesInFlight.insert(reference)
         defer { pinChangesInFlight.remove(reference) }
         try await pinCommands.run(pinned: pinned, reference: reference)
         await refresh()

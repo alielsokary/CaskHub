@@ -78,6 +78,15 @@ final class CaskPinWorkflowTests: XCTestCase {
         XCTAssertTrue(arguments.isEmpty)
     }
 
+    func test_failed_operation_left_on_the_cask_does_not_block_pinning() async throws {
+        let service = makeService()
+        service.operationStore.send(.fail(CaskOperationFailure(kind: .brewCommand, message: "upgrade failed")), for: "zed")
+
+        try await service.setPinned(true, reference: "zed")
+
+        XCTAssertEqual(arguments, [["pin", "--cask", "zed"]])
+    }
+
     func test_pinning_support_follows_the_homebrew_version() async {
         for (version, expected) in [
             ("5.1.11", false), ("5.1.12", true), ("7.0.13-140-g1cd7b3e", true), ("test", true), (nil, true)

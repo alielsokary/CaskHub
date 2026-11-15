@@ -82,7 +82,7 @@ struct PinnedUpdatesCard: View {
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
         .sheet(isPresented: $showsPicker) {
-            PinPickerSheet(viewModel: viewModel) { setPinned(true, cask: $0) }
+            PinPickerSheet(viewModel: viewModel, note: note) { setPinned(true, cask: $0) }
         }
     }
 
@@ -125,9 +125,8 @@ struct PinnedUpdatesCard: View {
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 
-    private func isBusy(_ cask: Cask) -> Bool {
-        localHomebrew.pinChangesInFlight.contains(cask.reference)
-            || localHomebrew.operationStore.state(for: cask.reference) != nil
+    func isBusy(_ cask: Cask) -> Bool {
+        !localHomebrew.canChangePin(for: cask.reference)
     }
 
     private func setPinned(_ pinned: Bool, cask: Cask) {
@@ -144,6 +143,7 @@ struct PinnedUpdatesCard: View {
 
 struct PinPickerSheet: View {
     let viewModel: CaskCatalogViewModel
+    let note: BrewfileNote?
     let pin: (Cask) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -163,6 +163,11 @@ struct PinPickerSheet: View {
             Text(String(localized: .shelfSetupPinPickerSubtitle))
                 .font(CHType.bodySm)
                 .foregroundStyle(Color.chTextBody)
+            if let note {
+                Text(note.message)
+                    .font(CHType.bodySm)
+                    .foregroundStyle(Color.chActionUpdateFg)
+            }
             NativeSearchField(text: $query, prompt: String(localized: .shelfSetupPinFilterPrompt))
 
             ScrollView {
@@ -217,7 +222,8 @@ struct PinPickerSheet: View {
             ) {
                 pin(cask)
             }
-            .disabled(viewModel.localHomebrew.pinChangesInFlight.contains(cask.reference))
+            .disabled(!viewModel.localHomebrew.canChangePin(for: cask.reference))
+            .opacity(viewModel.localHomebrew.canChangePin(for: cask.reference) ? 1 : 0.5)
         }
         .padding(.vertical, 8)
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }

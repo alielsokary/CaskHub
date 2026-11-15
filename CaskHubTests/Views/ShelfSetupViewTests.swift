@@ -147,6 +147,10 @@ final class ShelfSetupViewTests: XCTestCase {
         XCTAssertTrue(card.showsSelfUpdatingHint(vm.pinnedCasks[0]))
         XCTAssertFalse(card.showsSelfUpdatingHint(vm.pinnedCasks[1]))
         XCTAssertTrue(card.canPin)
+        vm.localHomebrew.operationStore.send(.fail(CaskOperationFailure(kind: .brewCommand, message: "failed")), for: "zed")
+        XCTAssertFalse(card.isBusy(vm.pinnedCasks[1]))
+        vm.localHomebrew.operationStore.send(.enqueue(.updating), for: "onyx")
+        XCTAssertTrue(card.isBusy(vm.pinnedCasks[0]))
         render(ShelfSetupView(viewModel: vm)
             .environment(vm.localHomebrew)
             .environment(ImageCacheService()), width: 1100, height: 800)
@@ -174,7 +178,9 @@ final class ShelfSetupViewTests: XCTestCase {
 
         XCTAssertEqual(PinPickerSheet.emptyMessage(query: ""), "No installed casks to pin.")
         XCTAssertEqual(PinPickerSheet.emptyMessage(query: "zzz"), "No matching casks.")
-        render(PinPickerSheet(viewModel: vm, pin: { _ in })
+        let failure = BrewfileNote(message: "Error: zed is not installed", isFailure: true)
+        XCTAssertEqual(PinPickerSheet(viewModel: vm, note: failure, pin: { _ in }).note?.message, failure.message)
+        render(PinPickerSheet(viewModel: vm, note: failure, pin: { _ in })
             .environment(vm.localHomebrew)
             .environment(ImageCacheService()), width: 400, height: 500)
     }
