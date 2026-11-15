@@ -19,6 +19,7 @@ struct ShelfSetupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 brewfileCard
+                PinnedUpdatesCard(viewModel: viewModel)
                 ignoreCard
             }
             .frame(maxWidth: CHSize.contentWidth, alignment: .leading)

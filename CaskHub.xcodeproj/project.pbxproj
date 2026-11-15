@@ -67,6 +67,7 @@
 		41DFD48E30028F7D00608C7A /* CaskActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45230028F7D00608C7A /* CaskActionsView.swift */; };
 		CB0111000000000000000002 /* RetirementBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0111000000000000000001 /* RetirementBadge.swift */; };
 		41DFD48F30028F7D00608C7A /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45330028F7D00608C7A /* Controls.swift */; };
+		A9A689579FE8629C755197E1 /* NativeSearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CF9F46604C1309F78183A5 /* NativeSearchField.swift */; };
 		41DFD49030028F7D00608C7A /* GlassPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45430028F7D00608C7A /* GlassPanel.swift */; };
 		41DFD49130028F7D00608C7A /* HeroCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45530028F7D00608C7A /* HeroCard.swift */; };
 		41DFD49230028F7D00608C7A /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD45630028F7D00608C7A /* StatusBarView.swift */; };
@@ -161,6 +162,7 @@
 		B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09100000000000000000001 /* CaskHubHelpSearch.swift */; };
 		B09200000000000000000002 /* HelpViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09200000000000000000001 /* HelpViewTests.swift */; };
 		B0C000000000000000000002 /* ShelfSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C000000000000000000001 /* ShelfSetupView.swift */; };
+		0215EBCED2518D6E8EF79188 /* PinnedUpdatesCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F232F02A12C9709EDC09C15 /* PinnedUpdatesCard.swift */; };
 		AA1000000000000000000002 /* MaintenanceReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000001 /* MaintenanceReport.swift */; };
 		AA1000000000000000000004 /* MaintenanceProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000003 /* MaintenanceProbe.swift */; };
 		AA1000000000000000000006 /* MaintenanceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000005 /* MaintenanceViewModel.swift */; };
@@ -173,6 +175,7 @@
 		AA1000000000000000000015 /* MaintenanceViewModel+Freshness.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000014 /* MaintenanceViewModel+Freshness.swift */; };
 		B0D000000000000000000002 /* ContentView+Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D000000000000000000001 /* ContentView+Catalog.swift */; };
 		B0C000000000000000000005 /* ShelfSetupViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C000000000000000000004 /* ShelfSetupViewTests.swift */; };
+		F0E6563691653D6E112CB476 /* NativeSearchFieldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8CAA93D9ECDEC2664F7998 /* NativeSearchFieldTests.swift */; };
 		C12000000000000000000001 /* BrewProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000001 /* BrewProcessRunner.swift */; };
 		C12000000000000000000002 /* added_dates.json in Resources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000002 /* added_dates.json */; };
 		C12000000000000000000010 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = D12000000000000000000010 /* Localizable.xcstrings */; };
@@ -303,6 +306,7 @@
 		41DFD45230028F7D00608C7A /* CaskActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskActionsView.swift; sourceTree = "<group>"; };
 		CB0111000000000000000001 /* RetirementBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetirementBadge.swift; sourceTree = "<group>"; };
 		41DFD45330028F7D00608C7A /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
+		73CF9F46604C1309F78183A5 /* NativeSearchField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSearchField.swift; sourceTree = "<group>"; };
 		41DFD45430028F7D00608C7A /* GlassPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanel.swift; sourceTree = "<group>"; };
 		41DFD45530028F7D00608C7A /* HeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroCard.swift; sourceTree = "<group>"; };
 		41DFD45630028F7D00608C7A /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
@@ -395,6 +399,7 @@
 		B09100000000000000000001 /* CaskHubHelpSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskHubHelpSearch.swift; sourceTree = "<group>"; };
 		B09200000000000000000001 /* HelpViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewTests.swift; sourceTree = "<group>"; };
 		B0C000000000000000000001 /* ShelfSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupView.swift; sourceTree = "<group>"; };
+		9F232F02A12C9709EDC09C15 /* PinnedUpdatesCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedUpdatesCard.swift; sourceTree = "<group>"; };
 		AA1000000000000000000001 /* MaintenanceReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceReport.swift; sourceTree = "<group>"; };
 		AA1000000000000000000003 /* MaintenanceProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceProbe.swift; sourceTree = "<group>"; };
 		AA1000000000000000000005 /* MaintenanceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceViewModel.swift; sourceTree = "<group>"; };
@@ -407,6 +412,7 @@
 		AA1000000000000000000014 /* MaintenanceViewModel+Freshness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MaintenanceViewModel+Freshness.swift"; sourceTree = "<group>"; };
 		B0D000000000000000000001 /* ContentView+Catalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Catalog.swift"; sourceTree = "<group>"; };
 		B0C000000000000000000004 /* ShelfSetupViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSetupViewTests.swift; sourceTree = "<group>"; };
+		EE8CAA93D9ECDEC2664F7998 /* NativeSearchFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSearchFieldTests.swift; sourceTree = "<group>"; };
 		B12000000000000000000001 /* LocalHomebrewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHomebrewTypes.swift; sourceTree = "<group>"; };
 		B12000000000000000000005 /* CaskAdoptionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAdoptionPlan.swift; sourceTree = "<group>"; };
 		BF11E0000000000000000001 /* Brewfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brewfile.swift; sourceTree = "<group>"; };
@@ -533,6 +539,7 @@
 				CB0111000000000000000001 /* RetirementBadge.swift */,
 				E24000000000000000000002 /* CaskOperationCapsule.swift */,
 				41DFD45330028F7D00608C7A /* Controls.swift */,
+				73CF9F46604C1309F78183A5 /* NativeSearchField.swift */,
 				41DFD45430028F7D00608C7A /* GlassPanel.swift */,
 				41DFD45530028F7D00608C7A /* HeroCard.swift */,
 				41DFD45630028F7D00608C7A /* StatusBarView.swift */,
@@ -774,6 +781,7 @@
 			children = (
 				BF11E0000000000000000003 /* BrewfileImportSheet.swift */,
 				B0C000000000000000000001 /* ShelfSetupView.swift */,
+				9F232F02A12C9709EDC09C15 /* PinnedUpdatesCard.swift */,
 			);
 			path = Manage;
 			sourceTree = "<group>";
@@ -1011,6 +1019,7 @@
 				ABCA0F0400ABCA0F0400ABCA /* SettingsViewTests.swift */,
 				7D1D0000000000000000001C /* AdministratorPasswordSettingsTests.swift */,
 				B0C000000000000000000004 /* ShelfSetupViewTests.swift */,
+				EE8CAA93D9ECDEC2664F7998 /* NativeSearchFieldTests.swift */,
 				A26000000000000000000003 /* UpdateSettingsViewTests.swift */,
 				CA7A1DE485339CDD41144EC1 /* TapsViewTests.swift */,
 				CA7A09AFB67A0901D901B930 /* AddTapSheetTests.swift */,
@@ -1291,6 +1300,7 @@
 				B08000000000000000000004 /* CaskHubHelpView.swift in Sources */,
 				B09100000000000000000002 /* CaskHubHelpSearch.swift in Sources */,
 				B0C000000000000000000002 /* ShelfSetupView.swift in Sources */,
+				0215EBCED2518D6E8EF79188 /* PinnedUpdatesCard.swift in Sources */,
 				AA1000000000000000000002 /* MaintenanceReport.swift in Sources */,
 				AA1000000000000000000004 /* MaintenanceProbe.swift in Sources */,
 				AA1000000000000000000006 /* MaintenanceViewModel.swift in Sources */,
@@ -1303,6 +1313,7 @@
 				CB0111000000000000000002 /* RetirementBadge.swift in Sources */,
 				F24000000000000000000002 /* CaskOperationCapsule.swift in Sources */,
 				41DFD48F30028F7D00608C7A /* Controls.swift in Sources */,
+				A9A689579FE8629C755197E1 /* NativeSearchField.swift in Sources */,
 				41DFD49030028F7D00608C7A /* GlassPanel.swift in Sources */,
 				41DFD49130028F7D00608C7A /* HeroCard.swift in Sources */,
 				41DFD49230028F7D00608C7A /* StatusBarView.swift in Sources */,
@@ -1454,6 +1465,7 @@
 				7D1D0000000000000000001D /* AdministratorPasswordSettingsTests.swift in Sources */,
 				C1A000000000000000000004 /* LaunchCardTests.swift in Sources */,
 				B0C000000000000000000005 /* ShelfSetupViewTests.swift in Sources */,
+				F0E6563691653D6E112CB476 /* NativeSearchFieldTests.swift in Sources */,
 				AA100000000000000000000D /* MaintenanceParsingTests.swift in Sources */,
 				AA1000000000000000000013 /* MaintenanceProbeTests.swift in Sources */,
 				AA100000000000000000000F /* MaintenanceViewModelTests.swift in Sources */,

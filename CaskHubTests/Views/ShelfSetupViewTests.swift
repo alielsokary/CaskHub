@@ -117,6 +117,69 @@ final class ShelfSetupViewTests: XCTestCase {
     }
 
     @MainActor
+    private func makePinnedSUT(brewVersion: String? = "test") async -> CaskCatalogViewModel {
+        let homebrew = LocalHomebrewService(defaults: makeScratchDefaults("pin-render-\(UUID().uuidString)")) {
+            $0.softwareScanner = EmptyInstalledSoftwareScanner()
+            $0.brewBinaryProvider = { nil }
+            $0.caskPlatformProvider = { nil }
+            $0.brewVersionProvider = { brewVersion }
+        }
+        await homebrew.refresh()
+        let selfUpdating = Cask.preview(token: "onyx", name: "OnyX", autoUpdates: true)
+        let (vm, _) = await makeSUT(casks: [makeCask("zed", name: "Zed"), selfUpdating], localHomebrew: homebrew)
+        for token in ["zed", "onyx"] {
+            updateInstalledCask(LocalCaskInstallation(
+                token: token, installedVersion: "1.0", installedAt: nil, appBundleNames: [], tap: "homebrew/cask"
+            ), in: homebrew)
+        }
+        return vm
+    }
+
+    @MainActor
+    func test_pinned_card_labels_pins_and_self_updating_casks() async {
+        let vm = await makePinnedSUT()
+        updateInstallationSnapshot(of: vm.localHomebrew) { $0.pinnedVersions = ["zed": "1.0", "onyx": "2.1,77"] }
+        let card = PinnedUpdatesCard(viewModel: vm)
+
+        XCTAssertEqual(vm.pinnedCasks.map(\.token), ["onyx", "zed"])
+        XCTAssertEqual(card.pinnedLabel(for: vm.pinnedCasks[1]), "pinned at 1.0")
+        XCTAssertEqual(card.pinnedLabel(for: vm.pinnedCasks[0]), "pinned at 2.1,77")
+        XCTAssertTrue(card.showsSelfUpdatingHint(vm.pinnedCasks[0]))
+        XCTAssertFalse(card.showsSelfUpdatingHint(vm.pinnedCasks[1]))
+        XCTAssertTrue(card.canPin)
+        render(ShelfSetupView(viewModel: vm)
+            .environment(vm.localHomebrew)
+            .environment(ImageCacheService()), width: 1100, height: 800)
+    }
+
+    @MainActor
+    func test_pinned_card_renders_empty_state() async {
+        let vm = await makePinnedSUT()
+
+        XCTAssertTrue(vm.pinnedCasks.isEmpty)
+        render(PinnedUpdatesCard(viewModel: vm).environment(vm.localHomebrew), width: 1100, height: 300)
+    }
+
+    @MainActor
+    func test_pinned_card_hides_pinning_on_old_homebrew() async {
+        let vm = await makePinnedSUT(brewVersion: "5.1.11")
+
+        XCTAssertFalse(PinnedUpdatesCard(viewModel: vm).canPin)
+        render(PinnedUpdatesCard(viewModel: vm).environment(vm.localHomebrew), width: 1100, height: 300)
+    }
+
+    @MainActor
+    func test_pin_picker_messages_and_render() async {
+        let vm = await makePinnedSUT()
+
+        XCTAssertEqual(PinPickerSheet.emptyMessage(query: ""), "No installed casks to pin.")
+        XCTAssertEqual(PinPickerSheet.emptyMessage(query: "zzz"), "No matching casks.")
+        render(PinPickerSheet(viewModel: vm, pin: { _ in })
+            .environment(vm.localHomebrew)
+            .environment(ImageCacheService()), width: 400, height: 500)
+    }
+
+    @MainActor
     func test_make_import_plan_splits_installed_new_and_unknown_tokens() async {
         let homebrew = makeHomebrew(
             defaults: makeScratchDefaults("brewfile-plan"),
