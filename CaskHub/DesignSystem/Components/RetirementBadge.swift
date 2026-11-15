@@ -17,8 +17,7 @@ struct RetirementBadge: View {
             .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(retirement.blocksInstall ? Color.red : Color.yellow)
             .contentShape(Rectangle())
-            .help(summary)
+            .hoverHint(summary)
             .accessibilityLabel(retirement.blocksInstall ? String(localized: "Disabled") : String(localized: "Deprecated"))
-            .accessibilityHint(summary)
     }
 }

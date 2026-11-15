@@ -33,6 +33,8 @@ nonisolated struct CatalogLibraryProjectionInput {
     let retiredCasks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
+    /// Tap casks CaskFlow matched to an official cask; that cask already stands for them on category pages.
+    let officialTwins: Set<String>
     let adoptIgnoredTokens: Set<String>
 }
 
@@ -87,9 +89,9 @@ nonisolated enum CatalogProjector {
             if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
-            // Tap casks join categories only once installed; uninstalled ones stay on their tap page.
+            // An uninstalled twin would list the official cask's app twice.
             if let mapping = input.categoryMappings[cask.reference],
-               cask.thirdPartyTap == nil || localState.isHomebrewInstalled {
+               !input.officialTwins.contains(cask.reference) || localState.isHomebrewInstalled {
                 forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }

@@ -9,9 +9,11 @@ import SwiftUI
 
 struct SidebarView: View {
     static let showAdoptKey = "showAdoptApps"
+    static let showTapsKey = "showTaps"
 
     @Binding var selection: SidebarSelection
     @AppStorage(Self.showAdoptKey) private var showAdoptApps = true
+    @AppStorage(Self.showTapsKey) private var showTaps = true
     var categoryService: CategoryService
     var updatesCount: Int = 0
     var installedCount: Int = 0
@@ -45,7 +47,7 @@ struct SidebarView: View {
                     }
 
                     sectionHeader("LIBRARY")
-                    ForEach(Self.libraryRows) { libraryRow($0) }
+                    ForEach(Self.libraryRows(showTaps: showTaps)) { libraryRow($0) }
 
                     sectionHeader("MANAGE")
                     ForEach(Self.manageRows(showAdopt: showAdoptApps)) { libraryRow($0) }
@@ -80,11 +82,18 @@ struct SidebarView: View {
                 selection = .library(.installed)
             }
         }
+        .onChange(of: showTaps) { _, shown in
+            if !shown, !ContentView.showsTapBadges(on: selection) {
+                selection = .library(.installed)
+            }
+        }
     }
 
     // MARK: - Rows
 
-    static let libraryRows: [SidebarSelection] = [.library(.installed), .library(.updates), .library(.taps)]
+    static func libraryRows(showTaps: Bool) -> [SidebarSelection] {
+        [.library(.installed), .library(.updates)] + (showTaps ? [.library(.taps)] : [])
+    }
 
     static func manageRows(showAdopt: Bool) -> [SidebarSelection] {
         [.shelfSetup] + (showAdopt ? [.library(.adopt)] : [])
