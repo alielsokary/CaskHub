@@ -23,6 +23,7 @@
 		CA7AB3A9F99766591C19FAC9 /* TapChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */; };
 		CA7A082722C6593FFB7E9750 /* CaskCatalogViewModel+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */; };
 		CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A74921CE28363941C4016 /* TapCatalogTests.swift */; };
+		4271DD0E5E3B5A1AFB889D4C /* PinnedCaskCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64414447B54083C899561E0E /* PinnedCaskCatalogTests.swift */; };
 		CA7ADC9358525B7E28FD1AFD /* LocalHomebrewService+Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */; };
 		23FBAEBAE2160A11BD4EB0BE /* LocalHomebrewService+Pins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C8409C316DB2D33245DE72 /* LocalHomebrewService+Pins.swift */; };
 		CA7AEFFEF3658BDE98E28FB4 /* TapRemovalPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */; };
@@ -264,6 +265,7 @@
 		CA7A397095B2A9A16BD0D0B7 /* TapChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapChip.swift; sourceTree = "<group>"; };
 		CA7AF9684A4D41339F4A2C52 /* CaskCatalogViewModel+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CaskCatalogViewModel+Taps.swift"; sourceTree = "<group>"; };
 		CA7A74921CE28363941C4016 /* TapCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCatalogTests.swift; sourceTree = "<group>"; };
+		64414447B54083C899561E0E /* PinnedCaskCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedCaskCatalogTests.swift; sourceTree = "<group>"; };
 		CA7A00BF1A133828FABF5834 /* LocalHomebrewService+Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Taps.swift"; sourceTree = "<group>"; };
 		60C8409C316DB2D33245DE72 /* LocalHomebrewService+Pins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LocalHomebrewService+Pins.swift"; sourceTree = "<group>"; };
 		CA7A0D3BCB9C47760810B2C7 /* TapRemovalPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapRemovalPreview.swift; sourceTree = "<group>"; };
@@ -992,6 +994,7 @@
 				CA2510000000000000000003 /* RetiredCaskCatalogTests.swift */,
 				CB0222000000000000000001 /* FontCatalogTests.swift */,
 				CA7A74921CE28363941C4016 /* TapCatalogTests.swift */,
+				64414447B54083C899561E0E /* PinnedCaskCatalogTests.swift */,
 				CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */,
 			);
 			path = Catalog;
@@ -1500,6 +1503,7 @@
 				CA7AAC0AC254A9430C1606D8 /* HomebrewTapLoaderTests.swift in Sources */,
 				CA7AD2973B80DD4448424D2C /* TapWorkflowTests.swift in Sources */,
 				CA7A26339BAA78C31EF8F0F9 /* TapCatalogTests.swift in Sources */,
+				4271DD0E5E3B5A1AFB889D4C /* PinnedCaskCatalogTests.swift in Sources */,
 				CA7AAD492A2AA6A009BF06D4 /* TapsViewTests.swift in Sources */,
 				CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */,
 				CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */,
