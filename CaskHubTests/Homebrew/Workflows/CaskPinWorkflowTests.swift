@@ -67,6 +67,10 @@ final class CaskPinWorkflowTests: XCTestCase {
             XCTAssertTrue(error is LocalHomebrewError)
         }
         XCTAssertTrue(service.pinChangesInFlight.isEmpty)
+        XCTAssertEqual(service.pinFailureMessage?.isEmpty, false)
+
+        try? await service.setPinned(true, reference: "zed")
+        XCTAssertNil(service.pinFailureMessage, "a later successful pin clears the failure")
     }
 
     func test_pin_is_ignored_while_the_cask_has_an_active_operation() async throws {

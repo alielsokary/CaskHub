@@ -9,8 +9,8 @@ import SwiftUI
 
 struct ShelfSetupView: View {
     let viewModel: CaskCatalogViewModel
+    @Binding var picker: ShelfSetupPicker?
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @State private var showsIgnorePicker = false
     @State private var exportNote: BrewfileNote?
     @State private var importNote: BrewfileNote?
     @State private var importPlan: BrewfileImportPlan?
@@ -19,7 +19,7 @@ struct ShelfSetupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 brewfileCard
-                PinnedUpdatesCard(viewModel: viewModel)
+                PinnedUpdatesCard(viewModel: viewModel, picker: $picker)
                 ignoreCard
             }
             .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
@@ -30,9 +30,6 @@ struct ShelfSetupView: View {
         .toolbarScrollEdge()
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
-        .sheet(isPresented: $showsIgnorePicker) {
-            AdoptIgnorePickerSheet(viewModel: viewModel)
-        }
         .sheet(item: $importPlan) { plan in
             BrewfileImportSheet(plan: plan, addTap: { try await viewModel.addTap($0) })
         }
@@ -208,7 +205,7 @@ struct ShelfSetupView: View {
                     border: .chHairlineStrong,
                     foreground: .chTextNav
                 ) {
-                    showsIgnorePicker = true
+                    picker = .adoptIgnore
                 }
             }
             Text(String(localized: .shelfSetupIgnoreDescription))
@@ -299,7 +296,7 @@ struct AdoptIgnorePickerSheet: View {
                     }
                 }
             }
-            .frame(maxHeight: 300)
+            .frame(height: 300)
 
             HStack {
                 Spacer()
@@ -350,7 +347,7 @@ struct AdoptIgnorePickerSheet: View {
         categoryService: categories,
         recentlyAdded: recent,
         localHomebrew: homebrew
-    ))
+    ), picker: .constant(nil))
     .environment(homebrew)
     .environment(ImageCacheService())
     .frame(width: 1100, height: 600)

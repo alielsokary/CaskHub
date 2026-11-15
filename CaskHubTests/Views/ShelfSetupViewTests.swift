@@ -98,7 +98,7 @@ final class ShelfSetupViewTests: XCTestCase {
         )
         homebrew.setAdoptIgnored("slack", true)
 
-        render(ShelfSetupView(viewModel: vm)
+        render(ShelfSetupView(viewModel: vm, picker: .constant(nil))
             .environment(homebrew)
             .environment(ImageCacheService()), width: 1100, height: 600)
     }
@@ -111,7 +111,7 @@ final class ShelfSetupViewTests: XCTestCase {
         )
         let (vm, _) = await makeSUT(casks: [], localHomebrew: homebrew)
 
-        render(ShelfSetupView(viewModel: vm)
+        render(ShelfSetupView(viewModel: vm, picker: .constant(nil))
             .environment(homebrew)
             .environment(ImageCacheService()), width: 1100, height: 600)
     }
@@ -139,7 +139,7 @@ final class ShelfSetupViewTests: XCTestCase {
     func test_pinned_card_labels_pins_and_self_updating_casks() async {
         let vm = await makePinnedSUT()
         updateInstallationSnapshot(of: vm.localHomebrew) { $0.pinnedVersions = ["zed": "1.0", "onyx": "2.1,77"] }
-        let card = PinnedUpdatesCard(viewModel: vm)
+        let card = PinnedUpdatesCard(viewModel: vm, picker: .constant(nil))
 
         XCTAssertEqual(vm.pinnedCasks.map(\.token), ["onyx", "zed"])
         XCTAssertEqual(card.pinnedLabel(for: vm.pinnedCasks[1]), "pinned at 1.0")
@@ -151,7 +151,7 @@ final class ShelfSetupViewTests: XCTestCase {
         XCTAssertFalse(card.isBusy(vm.pinnedCasks[1]))
         vm.localHomebrew.operationStore.send(.enqueue(.updating), for: "onyx")
         XCTAssertTrue(card.isBusy(vm.pinnedCasks[0]))
-        render(ShelfSetupView(viewModel: vm)
+        render(ShelfSetupView(viewModel: vm, picker: .constant(nil))
             .environment(vm.localHomebrew)
             .environment(ImageCacheService()), width: 1100, height: 800)
     }
@@ -163,15 +163,15 @@ final class ShelfSetupViewTests: XCTestCase {
         XCTAssertTrue(vm.pinnedCasks.isEmpty)
         XCTAssertEqual(String(localized: .shelfSetupPinEmpty), "No pinned apps.")
         XCTAssertEqual(String(localized: .shelfSetupPinAddButton), "Pin an app")
-        render(PinnedUpdatesCard(viewModel: vm).environment(vm.localHomebrew), width: 1100, height: 300)
+        render(PinnedUpdatesCard(viewModel: vm, picker: .constant(nil)).environment(vm.localHomebrew), width: 1100, height: 300)
     }
 
     @MainActor
     func test_pinned_card_hides_pinning_on_old_homebrew() async {
         let vm = await makePinnedSUT(brewVersion: "5.1.11")
 
-        XCTAssertFalse(PinnedUpdatesCard(viewModel: vm).canPin)
-        render(PinnedUpdatesCard(viewModel: vm).environment(vm.localHomebrew), width: 1100, height: 300)
+        XCTAssertFalse(PinnedUpdatesCard(viewModel: vm, picker: .constant(nil)).canPin)
+        render(PinnedUpdatesCard(viewModel: vm, picker: .constant(nil)).environment(vm.localHomebrew), width: 1100, height: 300)
     }
 
     @MainActor
@@ -184,7 +184,7 @@ final class ShelfSetupViewTests: XCTestCase {
                 homebrewApplications: ["onyx": makeDetectedApplication("OnyX.app", version: "2.0.1")]
             )
         }
-        let picker = PinPickerSheet(viewModel: vm, note: nil, pin: { _ in })
+        let picker = PinPickerSheet(viewModel: vm)
         let casks = vm.pinnableCasks(matching: "")
 
         XCTAssertEqual(PinPickerSheet.emptyMessage(query: ""), "No installed apps to pin.")
@@ -192,9 +192,9 @@ final class ShelfSetupViewTests: XCTestCase {
         XCTAssertEqual(casks.map(\.token), ["onyx", "zed"])
         XCTAssertEqual(picker.installedVersion(for: casks[0]), "2.0.1")
         XCTAssertEqual(picker.installedVersion(for: casks[1]), "1.0")
-        let failure = BrewfileNote(message: "Error: zed is not installed", isFailure: true)
-        XCTAssertEqual(PinPickerSheet(viewModel: vm, note: failure, pin: { _ in }).note?.message, failure.message)
-        render(PinPickerSheet(viewModel: vm, note: failure, pin: { _ in })
+        XCTAssertEqual(ShelfSetupPicker.pin.id, "pin")
+        XCTAssertEqual(ShelfSetupPicker.adoptIgnore.id, "adoptIgnore")
+        render(PinPickerSheet(viewModel: vm)
             .environment(vm.localHomebrew)
             .environment(ImageCacheService()), width: 400, height: 500)
     }
@@ -213,7 +213,7 @@ final class ShelfSetupViewTests: XCTestCase {
             localHomebrew: homebrew
         )
 
-        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["homebrew/cask/google-chrome", "raycast", "mystery-app"],
             taps: []
@@ -245,7 +245,7 @@ final class ShelfSetupViewTests: XCTestCase {
             updateInstalledCask(installation(token, version: "1.0"), in: homebrew)
         }
 
-        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["qbittorrent", "gone-app", "chromium", "legacy-app", "raycast"],
             taps: []
@@ -273,7 +273,7 @@ final class ShelfSetupViewTests: XCTestCase {
             trust: TapTrust(taps: [], casks: [])
         )
 
-        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
             fileName: "~/Brewfile",
             tokens: ["sill", "saffsanity/sill/sill"],
             taps: [
@@ -300,7 +300,7 @@ final class ShelfSetupViewTests: XCTestCase {
             in: homebrew
         )
 
-        let plan = ShelfSetupView(viewModel: vm).makeImportPlan(
+        let plan = ShelfSetupView(viewModel: vm, picker: .constant(nil)).makeImportPlan(
             fileName: "~/Brewfile", tokens: ["foo", "Homebrew/Cask/bar"], taps: []
         )
 
@@ -456,7 +456,7 @@ final class ShelfSetupViewTests: XCTestCase {
         for style in AppStyle.allCases {
             AppStyle.current = style
             let pages = [
-                AnyView(ShelfSetupView(viewModel: vm).environment(homebrew).environment(imageCache)),
+                AnyView(ShelfSetupView(viewModel: vm, picker: .constant(nil)).environment(homebrew).environment(imageCache)),
                 AnyView(MaintenanceView(model: model).environment(imageCache))
             ]
             for (index, page) in pages.enumerated() {

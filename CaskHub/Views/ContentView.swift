@@ -30,16 +30,12 @@ struct ContentView: View {
     @State private var isRefreshingUpdates = false
     @State var isRefreshingTaps = false
     @State var tapDialog: TapDialog?
+    @State private var shelfSetupPicker: ShelfSetupPicker?
 
     @State private var detailWidth: CGFloat = CHSize.contentWidth + 2 * CHSize.catalogInset
 
     var catalogWidth: CGFloat {
         CHSize.catalogWidth(availableWidth: detailWidth - 2 * CHSize.catalogInset)
-    }
-
-    var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: CHSize.minimumCardWidth, maximum: CHSize.maximumCardWidth),
-                  spacing: CHSpace.gridGap)]
     }
 
     var body: some View {
@@ -98,6 +94,7 @@ struct ContentView: View {
             ))
         }
         .modifier(TapPresentation(dialog: $tapDialog, viewModel: viewModel))
+        .modifier(ShelfSetupPresentation(picker: $shelfSetupPicker, viewModel: viewModel))
         .overlay {
             Button("") { searchFocused = true }
                 .keyboardShortcut("f", modifiers: .command)
@@ -238,7 +235,7 @@ struct ContentView: View {
     private var detailContent: some View {
         switch selectedSidebar {
         case .shelfSetup:
-            ShelfSetupView(viewModel: viewModel)
+            ShelfSetupView(viewModel: viewModel, picker: $shelfSetupPicker)
         case .maintenance:
             MaintenanceView(model: maintenance)
         default:

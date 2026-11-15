@@ -29,7 +29,13 @@ extension LocalHomebrewService {
         guard canChangePin(for: reference) else { return }
         pinChangesInFlight.insert(reference)
         defer { pinChangesInFlight.remove(reference) }
-        try await pinCommands.run(pinned: pinned, reference: reference)
+        pinFailureMessage = nil
+        do {
+            try await pinCommands.run(pinned: pinned, reference: reference)
+        } catch {
+            pinFailureMessage = error.localizedDescription
+            throw error
+        }
         await refresh()
         await refreshHomebrewOutdated()
     }

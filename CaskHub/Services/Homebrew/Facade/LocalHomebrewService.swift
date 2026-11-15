@@ -47,6 +47,7 @@ final class LocalHomebrewService {
     @ObservationIgnored let mutationCoordinator: HomebrewMutationCoordinator
     @ObservationIgnored let pinCommands: HomebrewPinCommands
     var pinChangesInFlight: Set<String> = []
+    var pinFailureMessage: String?
     @ObservationIgnored let softwareScanner: any InstalledSoftwareScanning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let caskPlatformProvider: () async -> CaskPlatform?

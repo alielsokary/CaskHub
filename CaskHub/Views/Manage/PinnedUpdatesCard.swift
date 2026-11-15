@@ -9,8 +9,7 @@ import SwiftUI
 
 struct PinnedUpdatesCard: View {
     let viewModel: CaskCatalogViewModel
-    @State private var showsPicker = false
-    @State private var note: BrewfileNote?
+    @Binding var picker: ShelfSetupPicker?
 
     private var localHomebrew: LocalHomebrewService {
         viewModel.localHomebrew
@@ -44,7 +43,7 @@ struct PinnedUpdatesCard: View {
                         border: .chHairlineStrong,
                         foreground: .chTextNav
                     ) {
-                        showsPicker = true
+                        picker = .pin
                     }
                 }
             }
@@ -58,8 +57,8 @@ struct PinnedUpdatesCard: View {
                     .foregroundStyle(Color.chTextMuted)
                     .padding(.top, 2)
             }
-            if let note {
-                Text(note.message)
+            if let failure = localHomebrew.pinFailureMessage {
+                Text(failure)
                     .font(CHType.bodySm)
                     .foregroundStyle(Color.chActionUpdateFg)
                     .padding(.top, 2)
@@ -81,9 +80,6 @@ struct PinnedUpdatesCard: View {
         }
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
-        .sheet(isPresented: $showsPicker) {
-            PinPickerSheet(viewModel: viewModel, note: note) { setPinned(true, cask: $0) }
-        }
     }
 
     private func pinnedRow(_ cask: Cask) -> some View {
@@ -110,7 +106,7 @@ struct PinnedUpdatesCard: View {
                     border: .chActionDoneBorder,
                     foreground: .chActionDoneFg
                 ) {
-                    setPinned(false, cask: cask)
+                    Task { try? await localHomebrew.setPinned(false, reference: cask.reference) }
                 }
                 .disabled(isBusy(cask))
                 .opacity(isBusy(cask) ? 0.5 : 1)
@@ -128,23 +124,10 @@ struct PinnedUpdatesCard: View {
     func isBusy(_ cask: Cask) -> Bool {
         !localHomebrew.canChangePin(for: cask.reference)
     }
-
-    private func setPinned(_ pinned: Bool, cask: Cask) {
-        Task {
-            do {
-                try await localHomebrew.setPinned(pinned, reference: cask.reference)
-                note = nil
-            } catch {
-                note = BrewfileNote(message: error.localizedDescription, isFailure: true)
-            }
-        }
-    }
 }
 
 struct PinPickerSheet: View {
     let viewModel: CaskCatalogViewModel
-    let note: BrewfileNote?
-    let pin: (Cask) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
 
@@ -169,8 +152,8 @@ struct PinPickerSheet: View {
             Text(String(localized: .shelfSetupPinPickerSubtitle))
                 .font(CHType.bodySm)
                 .foregroundStyle(Color.chTextBody)
-            if let note {
-                Text(note.message)
+            if let failure = viewModel.localHomebrew.pinFailureMessage {
+                Text(failure)
                     .font(CHType.bodySm)
                     .foregroundStyle(Color.chActionUpdateFg)
             }
@@ -192,7 +175,7 @@ struct PinPickerSheet: View {
                     }
                 }
             }
-            .frame(maxHeight: 300)
+            .frame(height: 300)
 
             HStack {
                 Spacer()
@@ -208,7 +191,7 @@ struct PinPickerSheet: View {
             .padding(.top, 6)
         }
         .padding(22)
-        .frame(width: 400)
+        .frame(width: 460)
         .background(Color.chSurfaceHero)
     }
 
@@ -233,7 +216,7 @@ struct PinPickerSheet: View {
                 border: .chActionUpdateBorder,
                 foreground: .chActionUpdateFg
             ) {
-                pin(cask)
+                Task { try? await viewModel.localHomebrew.setPinned(true, reference: cask.reference) }
             }
             .disabled(!viewModel.localHomebrew.canChangePin(for: cask.reference))
             .opacity(viewModel.localHomebrew.canChangePin(for: cask.reference) ? 1 : 0.5)
