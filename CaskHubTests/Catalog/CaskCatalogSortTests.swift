@@ -74,6 +74,7 @@ final class CaskCatalogSortTests: XCTestCase {
                     secondary: []
                 )
             ],
+            officialTwins: [],
             adoptIgnoredTokens: []
         )
 
