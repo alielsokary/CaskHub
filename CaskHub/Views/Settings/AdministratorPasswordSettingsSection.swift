@@ -33,9 +33,9 @@ struct AdministratorPasswordSettingsSection: View {
 
     private func turnOn() async {
         var message = String(localized: "Enter your login password to save it in the Keychain.")
-        while let response = AdministratorPasswordDialog.present(
+        while let response = AdministratorPasswordPrompt(
             message: message, offerRemember: false, rememberChecked: false
-        ) {
+        ).run() {
             switch await model.enable(password: response.password) {
             case .enabled: return
             case .rejected: message = String(localized: "The password was not accepted. Try again.")

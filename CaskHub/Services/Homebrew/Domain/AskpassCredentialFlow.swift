@@ -31,8 +31,7 @@ nonisolated enum AskpassCredentialFlow {
         return .dialog(offerRemember: storeAvailable, rememberChecked: storeAvailable && result != .notFound)
     }
 
-    static func storeAction(remember: Bool, passwordSaved: Bool, storeAvailable: Bool) -> AskpassStoreAction {
-        guard storeAvailable else { return .none }
+    static func storeAction(remember: Bool, passwordSaved: Bool) -> AskpassStoreAction {
         if remember { return .save }
         return passwordSaved ? .delete : .none
     }

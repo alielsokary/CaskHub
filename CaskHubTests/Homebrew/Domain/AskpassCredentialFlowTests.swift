@@ -68,10 +68,9 @@ final class AskpassCredentialFlowTests: XCTestCase {
     }
 
     func test_store_actions() {
-        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: true, passwordSaved: false, storeAvailable: true), .save)
-        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: true, passwordSaved: true, storeAvailable: true), .save)
-        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: false, passwordSaved: true, storeAvailable: true), .delete)
-        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: false, passwordSaved: false, storeAvailable: true), .none)
-        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: false, passwordSaved: true, storeAvailable: false), .none)
+        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: true, passwordSaved: false), .save)
+        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: true, passwordSaved: true), .save)
+        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: false, passwordSaved: true), .delete)
+        XCTAssertEqual(AskpassCredentialFlow.storeAction(remember: false, passwordSaved: false), .none)
     }
 }

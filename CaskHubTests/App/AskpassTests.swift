@@ -216,14 +216,13 @@ private final class FakePasswordStore: AdministratorPasswordStoring, @unchecked 
     }
 }
 
-final class AskpassUnreachableStepTests: XCTestCase {
-    func test_dialog_request_falls_back_to_dialog_for_any_non_password_step() {
+final class AskpassDialogRequestTests: XCTestCase {
+    func test_only_dialog_steps_present_a_dialog() {
+        XCTAssertNil(Askpass.dialogRequest(for: .touchID, token: "zoom", attempt: 1))
+        XCTAssertNil(Askpass.dialogRequest(for: .emit("pw"), token: "zoom", attempt: 1))
         XCTAssertEqual(
-            Askpass.dialogRequest(for: .touchID, token: "zoom", attempt: 1, storeAvailable: true, touchIDEnabled: true),
-            AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: true, previousAttemptRejected: false)
-        )
-        XCTAssertNil(
-            Askpass.dialogRequest(for: .emit("pw"), token: "zoom", attempt: 1, storeAvailable: true, touchIDEnabled: true)
+            Askpass.dialogRequest(for: .dialog(offerRemember: true, rememberChecked: false), token: "zoom", attempt: 2),
+            AskpassDialogRequest(token: "zoom", offerRemember: true, rememberChecked: false, previousAttemptRejected: true)
         )
     }
 }
