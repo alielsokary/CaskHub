@@ -159,24 +159,8 @@ final class CaskCatalogSortTests: XCTestCase {
             [.recentlyInstalled, .mostPopular, .nameAZ, .nameZA]
         )
 
-        let now = Date()
         let local = await makePlatformResolvedHomebrew(defaults: makeScratchDefaults("library-sort-defaults"))
-        updateInstallationSnapshot(of: local) {
-            $0.installedCasks = [
-                "alpha": LocalCaskInstallation(
-                    token: "alpha",
-                    installedVersion: "1.0",
-                    installedAt: now.addingTimeInterval(-86_400),
-                    appBundleNames: [], tap: "homebrew/cask"
-                ),
-                "zulu": LocalCaskInstallation(
-                    token: "zulu",
-                    installedVersion: "1.0",
-                    installedAt: now,
-                    appBundleNames: [], tap: "homebrew/cask"
-                )
-            ]
-        }
+        seedAlphaInstalledBeforeZulu(in: local)
         let (vm, _) = await makeSUT(
             casks: [
                 makeCask("alpha", version: "2.0"),
@@ -208,6 +192,27 @@ final class CaskCatalogSortTests: XCTestCase {
         XCTAssertEqual(vm.sortOption, .nameAZ)
         await vm.projectionsSettled()
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["able", "bravo"])
+    }
+
+    @MainActor
+    private func seedAlphaInstalledBeforeZulu(in local: LocalHomebrewService) {
+        let now = Date()
+        updateInstallationSnapshot(of: local) {
+            $0.installedCasks = [
+                "alpha": LocalCaskInstallation(
+                    token: "alpha",
+                    installedVersion: "1.0",
+                    installedAt: now.addingTimeInterval(-86_400),
+                    appBundleNames: [], tap: "homebrew/cask"
+                ),
+                "zulu": LocalCaskInstallation(
+                    token: "zulu",
+                    installedVersion: "1.0",
+                    installedAt: now,
+                    appBundleNames: [], tap: "homebrew/cask"
+                )
+            ]
+        }
     }
 
     @MainActor

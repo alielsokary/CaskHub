@@ -155,17 +155,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
         report: HomebrewOutdatedReport? = HomebrewOutdatedReport(upgradable: [], pinned: []), appVersion: String? = nil,
         configureDependencies: (inout LocalHomebrewDependencies) -> Void = { _ in }
     ) async throws -> Context {
-        var payload: [String: Any] = [
-            "token": "onyx", "name": ["OnyX"], "homepage": "https://example.com", "version": "5.1.0",
-            "url": "https://example.com/27/OnyX.dmg", "outdated": false, "deprecated": false, "disabled": false,
-            "auto_updates": NSNull(), "artifacts": [["app": ["OnyX.app"]]],
-            "supported_platforms": ["sequoia", "arm64_sequoia", "tahoe", "arm64_tahoe", "golden_gate", "arm64_golden_gate"],
-            "variations": [
-                "sequoia": ["version": "4.8.5"], "arm64_sequoia": ["version": "4.8.5"],
-                "tahoe": ["version": "5.0.5"], "arm64_tahoe": ["version": "5.0.5"]
-            ]
-        ]
-        payload.merge(overrides) { _, replacement in replacement }
+        let payload = onyxPayload().merging(overrides) { _, replacement in replacement }
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [PlatformCatalogProtocol.self]
         config.httpAdditionalHeaders = ["X-Test-Catalog": try JSONSerialization.data(withJSONObject: [payload]).base64EncodedString()]
@@ -179,18 +169,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
             configureDependencies(&$0)
         }
         updateInstalledCask(installation("onyx", version: receipt), in: service)
-        if let appVersion {
-            updateInstallationSnapshot(of: service) { snapshot in
-                snapshot.installationIndex = CaskInstallationIndex(
-                    catalogTokens: ["onyx"], macAppStoreApplications: [:], externalCLIPaths: [:],
-                    homebrewApplications: ["onyx": DetectedApplication(
-                        url: URL(fileURLWithPath: "/Applications/OnyX.app"), bundleName: "OnyX.app",
-                        bundleIdentifier: "com.titanium.OnyX", version: appVersion, shortVersion: appVersion, buildVersion: nil,
-                        isMacAppStore: false, isDirectlyInApplicationDirectory: true
-                    )]
-                )
-            }
-        }
+        if let appVersion { stampOnyxApp(version: appVersion, in: service) }
         let vm = CaskCatalogViewModel(
             apiClient: BrewAPIClient(session: session), categoryService: CategoryService(), recentlyAdded: RecentlyAddedService(),
             localHomebrew: service, defaults: makeScratchDefaults("platform-vm-\(UUID().uuidString)")
@@ -202,6 +181,32 @@ final class CaskPlatformUpdateTests: XCTestCase {
         _ = try XCTUnwrap(vm.casks.first)
         vm.selectedSidebar = .library(.updates)
         return Context(vm: vm, service: service, session: session)
+    }
+
+    private func onyxPayload() -> [String: Any] {
+        [
+            "token": "onyx", "name": ["OnyX"], "homepage": "https://example.com", "version": "5.1.0",
+            "url": "https://example.com/27/OnyX.dmg", "outdated": false, "deprecated": false, "disabled": false,
+            "auto_updates": NSNull(), "artifacts": [["app": ["OnyX.app"]]],
+            "supported_platforms": ["sequoia", "arm64_sequoia", "tahoe", "arm64_tahoe", "golden_gate", "arm64_golden_gate"],
+            "variations": [
+                "sequoia": ["version": "4.8.5"], "arm64_sequoia": ["version": "4.8.5"],
+                "tahoe": ["version": "5.0.5"], "arm64_tahoe": ["version": "5.0.5"]
+            ]
+        ]
+    }
+
+    private func stampOnyxApp(version: String, in service: LocalHomebrewService) {
+        updateInstallationSnapshot(of: service) { snapshot in
+            snapshot.installationIndex = CaskInstallationIndex(
+                catalogTokens: ["onyx"], macAppStoreApplications: [:], externalCLIPaths: [:],
+                homebrewApplications: ["onyx": DetectedApplication(
+                    url: URL(fileURLWithPath: "/Applications/OnyX.app"), bundleName: "OnyX.app",
+                    bundleIdentifier: "com.titanium.OnyX", version: version, shortVersion: version, buildVersion: nil,
+                    isMacAppStore: false, isDirectlyInApplicationDirectory: true
+                )]
+            )
+        }
     }
 }
 

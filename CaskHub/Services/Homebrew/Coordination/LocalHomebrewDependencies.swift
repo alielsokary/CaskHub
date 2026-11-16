@@ -114,4 +114,52 @@ struct LocalHomebrewDependencies {
                 processRunner: processRunner ?? SystemBrewProcessRunner()
             )
     }
+
+    func resolvedApplicationDirectories() -> [URL] {
+        applicationDirectories ?? ApplicationDiscovery.defaultDirectories(fileManager: fileManager)
+    }
+
+    func resolvedApplicationLauncher() -> any ApplicationLaunching {
+        applicationLauncher ?? WorkspaceApplicationLauncher()
+    }
+
+    func resolvedSoftwareScanner() -> any InstalledSoftwareScanning {
+        softwareScanner ?? HomebrewInstallationScanner()
+    }
+
+    func resolvedCaskPlatformProvider() -> () async -> CaskPlatform? {
+        let brewBinary = brewBinaryProvider
+        return caskPlatformProvider ?? { await HomebrewPlatformLoader().load(from: brewBinary()) }
+    }
+
+    func resolvedHomebrewOutdatedProvider() -> () async -> HomebrewOutdatedReport? {
+        let brewBinary = brewBinaryProvider
+        return homebrewOutdatedProvider ?? { await HomebrewOutdatedLoader().load(from: brewBinary()) }
+    }
+
+    func resolvedTapIndexProvider() -> () async -> TapIndex? {
+        let tapBrew = tapBrewProvider
+        return tapIndexProvider ?? { await HomebrewTapLoader().load(from: tapBrew()) }
+    }
+
+    func resolvedInstalledFormulaeProvider() -> (String) async -> [String] {
+        let tapBrew = tapBrewProvider
+        return installedFormulaeProvider ?? { await HomebrewTapLoader().installedFormulae(in: $0, from: tapBrew()) }
+    }
+
+    func resolvedTapTrustProvider() -> () async -> TapTrust {
+        let tapBrew = tapBrewProvider
+        return tapTrustProvider ?? { await HomebrewTapLoader().trust(from: tapBrew()) }
+    }
+
+    func resolvedTapUpdateProvider() -> () async -> Void {
+        let tapBrew = tapBrewProvider
+        return tapUpdateProvider ?? { await HomebrewTapLoader().update(from: tapBrew()) }
+    }
+
+    // The test host app must never run real tap or trust queries; tests inject their own.
+    private var tapBrewProvider: () -> URL? {
+        let brewBinary = brewBinaryProvider
+        return { CrashReporter.isRunningTests ? nil : brewBinary() }
+    }
 }
