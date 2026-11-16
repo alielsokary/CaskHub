@@ -715,24 +715,13 @@ h2 {
   position: absolute;
   inset: 50% auto auto 50%;
   display: grid;
-  place-items: center;
-  width: 76px;
-  height: 76px;
   translate: -50% -50%;
-  border-radius: 999px;
-  color: #fff;
-  background: var(--action);
-  box-shadow: 0 8px 30px #00000066;
-  transition: background 0.18s, scale 0.18s;
-}
-
-.play-button svg {
-  margin-left: 4px;
+  filter: drop-shadow(0 6px 18px #00000059);
+  transition: scale 0.18s;
 }
 
 .video-poster:hover .play-button {
-  background: var(--action-hover);
-  scale: 1.06;
+  scale: 1.08;
 }
 
 .video-credit {
@@ -1213,9 +1202,9 @@ footer {
     width: 15px;
   }
 
-  .play-button {
-    width: 60px;
-    height: 60px;
+  .play-button svg {
+    width: 56px;
+    height: 40px;
   }
 
   .foot-links {
