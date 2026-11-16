@@ -437,16 +437,17 @@ final class AdoptionViewRenderTests: XCTestCase {
             "Adopt Existing App",
             "Replace with Homebrew Version",
             "Repair & Reinstall",
+            "Force Update",
             "Update Homebrew",
             "Force Uninstall",
             "Open System Settings",
             "Open System Settings",
             "OK"
         ])
-        XCTAssertEqual(actions.count, 8)
+        XCTAssertEqual(actions.count, 9)
 
         // Every action except the two Open System Settings (launch the real app) and OK.
-        for action in actions[0...4] {
+        for action in actions[0...5] {
             action()
             try? await Task.sleep(for: .milliseconds(150))
         }

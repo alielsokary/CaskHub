@@ -243,7 +243,7 @@ final class ZombieDetectionTests: XCTestCase {
     }
 
     @MainActor
-    func test_moved_app_on_upgrade_offers_repair_but_broken_staging_does_not() {
+    func test_moved_app_on_upgrade_offers_force_update_but_broken_staging_does_not() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("moved-app"))
         let movedApp = LocalHomebrewError.brewCommandFailed(
             args: ["upgrade", "--cask", "proton-mail"], exitCode: 1,
@@ -251,10 +251,8 @@ final class ZombieDetectionTests: XCTestCase {
                 + "'/Applications/Proton Mail.app' is not there."
         )
         service.noteFailure(token: "proton-mail", error: movedApp)
-        XCTAssertTrue(
-            service.operationStore.state(for: "proton-mail")?.failure?
-                .recoveries.contains(.repairAndReinstall) == true
-        )
+        XCTAssertEqual(service.operationStore.state(for: "proton-mail")?.failure?.recoveries, [.forceUpgrade])
+        XCTAssertTrue(movedApp.errorDescription?.contains("Force Update") == true)
 
         let brokenStaging = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "macpar-deluxe", "--adopt"], exitCode: 1,
@@ -262,10 +260,7 @@ final class ZombieDetectionTests: XCTestCase {
                 + "macpar-deluxe/5.1.1/MacPAR deLuxe.app' is not there."
         )
         service.noteFailure(token: "macpar-deluxe", error: brokenStaging)
-        XCTAssertFalse(
-            service.operationStore.state(for: "macpar-deluxe")?.failure?
-                .recoveries.contains(.repairAndReinstall) == true
-        )
+        XCTAssertEqual(service.operationStore.state(for: "macpar-deluxe")?.failure?.recoveries, [])
     }
 
     func test_dependency_refusal_names_the_dependent_cask() {

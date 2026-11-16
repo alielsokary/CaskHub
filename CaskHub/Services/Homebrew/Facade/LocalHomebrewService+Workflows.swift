@@ -202,8 +202,19 @@ extension LocalHomebrewService {
         token: String,
         origin: CaskActionOrigin = .individual
     ) async throws {
+        try await upgrade(token: token, origin: origin, force: false)
+    }
+
+    /// `--force` skips backing up an app that vanished since install (self-renamed or deleted)
+    /// and overwrites whatever sits at the new version's target.
+    func forceUpgrade(token: String) async throws {
+        try await upgrade(token: token, origin: .repair, force: true)
+    }
+
+    private func upgrade(token: String, origin: CaskActionOrigin, force: Bool) async throws {
         let args = ["upgrade", "--cask", token]
             + (greedyUpdates ? ["--greedy"] : [])
+            + (force ? ["--force"] : [])
         try await runMutationSequence(
             .updating,
             token: token,
