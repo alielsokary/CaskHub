@@ -4,8 +4,8 @@
         <title>CaskHub</title>
         <item>
             <title>0.10.0</title>
-            <pubDate>Mon, 16 Nov 2026 20:37:02 +0000</pubDate>
-            <sparkle:version>1037</sparkle:version>
+            <pubDate>Mon, 16 Nov 2026 21:34:29 +0000</pubDate>
+            <sparkle:version>1045</sparkle:version>
             <sparkle:shortVersionString>0.10.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[## 0.10.0
@@ -84,7 +84,7 @@
 - Fixed Excel and similar apps disappearing from Installed after updating themselves
 
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.10.0/CaskHub-0.10.0.zip" length="8636959" type="application/octet-stream" sparkle:edSignature="6ccIcFjEZzUOcSAWeo/N1HxQ+7RfLA0MppQKfvhdrGf7ycxbdwEJNinPaAAn7r6K7fFmIT6O7wbKJG01Pf18DA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.10.0/CaskHub-0.10.0.zip" length="8636761" type="application/octet-stream" sparkle:edSignature="leHkGxyWS1P4Ib4N12tHnY20754pr4Egw5R6vWrEMwaFGvx1lDYd4sVsDOGR8leRvtvLpuvZl20tYnk3NwWmCA=="/>
         </item>
     </channel>
 </rss>
