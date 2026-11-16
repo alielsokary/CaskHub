@@ -110,10 +110,6 @@ img {
   max-width: 100%;
 }
 
-[hidden] {
-  display: none !important;
-}
-
 .wrap {
   width: min(1200px, 100%);
   margin-inline: auto;
@@ -267,7 +263,7 @@ nav {
   color: var(--action);
 }
 
-.hero p.lede {
+.hero .lede {
   max-width: 720px;
   margin: 0 auto;
   font-size: 18px;
@@ -423,22 +419,18 @@ nav {
   box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
 }
 
+/* Frame the app window while retaining the original recording's pixels. */
 .app-shot {
   display: block;
-  width: 100%;
-  height: auto;
-}
-
-/* Frame the app window while retaining the original recording's pixels. */
-video.app-shot {
   position: absolute;
   max-width: none;
   width: 108.2111%;
+  height: auto;
   left: -4.1056%;
   top: -4.2889%;
 }
 
-section:not(.hero) {
+main > :not(.hero) {
   padding-top: 116px;
 }
 
@@ -466,7 +458,7 @@ h2 {
   margin-bottom: 42px;
 }
 
-.section-head > p:not(.kicker) {
+.section-head > h2 ~ p {
   font-size: 16px;
   line-height: 1.7;
 }
@@ -617,7 +609,7 @@ h2 {
   transition: color 0.25s;
 }
 
-.segmented button[aria-pressed="true"] {
+.segmented [aria-pressed="true"] {
   color: var(--cream);
 }
 
@@ -653,7 +645,7 @@ h2 {
     transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.screenshot-button img.is-visible {
+.screenshot-button .is-visible {
   opacity: 1;
   transform: none;
 }
@@ -860,6 +852,10 @@ h2 {
   margin-top: 6px;
 }
 
+.carousel-controls[hidden] {
+  display: none;
+}
+
 .carousel-arrow {
   display: grid;
   place-items: center;
@@ -1049,7 +1045,7 @@ footer {
     gap: 18px;
   }
 
-  .nav-links a[href="#how"] {
+  .nav-links [href="#how"] {
     display: none;
   }
 
@@ -1096,7 +1092,7 @@ footer {
     height: 32px;
   }
 
-  .nav-links a:not(.nav-download) {
+  .nav-links > [href]:not(.nav-download) {
     display: none;
   }
 
@@ -1109,7 +1105,7 @@ footer {
     font-size: clamp(38px, 10.5vw, 60px);
   }
 
-  .hero p.lede {
+  .hero .lede {
     font-size: 16px;
     line-height: 1.65;
   }
@@ -1139,7 +1135,7 @@ footer {
     margin-top: 34px;
   }
 
-  section:not(.hero) {
+  main > :not(.hero) {
     padding-top: 74px;
   }
 
@@ -1227,10 +1223,17 @@ footer {
     scroll-behavior: auto;
   }
 
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
+  .btn,
+  .copy-btn,
+  .segmented::before,
+  .segmented button,
+  .screenshot-button img,
+  .video-poster img,
+  .play-button,
+  .quote-track,
+  .quote,
+  .carousel-arrow,
+  .carousel-dots button::before {
+    transition: none;
   }
 }
