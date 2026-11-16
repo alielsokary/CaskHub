@@ -294,7 +294,7 @@ private extension ContentView {
 // MARK: - Search
 
 // searchText is read only below, so a keystroke never re-renders ContentView and its cards.
-private struct SearchResultsHeader: View {
+struct SearchResultsHeader: View {
     let viewModel: CaskCatalogViewModel
     let maxWidth: CGFloat
 
