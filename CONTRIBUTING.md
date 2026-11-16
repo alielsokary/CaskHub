@@ -57,7 +57,11 @@ Notes:
 
 Common type prefixes: `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `ci`, `style`.
 
-Keep commits focused — one logical change per commit.
+### Commits
+
+- **Prefer small, atomic commits.** One logical change per commit is easier to review, bisect, and revert than a single large commit.
+- **Author your commits yourself.** Commit under your own name and email, so the history shows who to ask about a change.
+- **Know what you push.** You should be able to explain what each commit changes and why. If you can't yet, that's a good sign to take another look before pushing. This applies to code written with AI tools too.
 
 ## Code Style
 
