@@ -126,7 +126,8 @@ struct CaskLocalStateResolver {
                 installationSource: source,
                 installedVersion: externalVersion,
                 homebrewVersion: cask.displayVersion,
-                installedCaskTokens: Set(snapshot.installedCasks.keys),
+                // Dictionary keys answer contains in O(1); a Set here was rebuilt for every catalog cask.
+                installedCaskTokens: snapshot.installedCasks.keys,
                 conflictingCaskTokens: cask.conflictsWith?.caskTokens ?? []
             ),
             externalCLIPath: source == .externalExecutable ? externalCLIPath(cask) : nil,
