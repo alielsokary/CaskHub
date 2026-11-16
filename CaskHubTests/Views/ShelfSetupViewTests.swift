@@ -46,6 +46,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         homebrew.setAdoptIgnored("google-chrome", true)
 
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.adoptableCasks.map(\.token), ["slack"])
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["slack"])
         XCTAssertEqual(vm.adoptIgnoredCasks.map(\.token), ["google-chrome"])
@@ -66,10 +67,12 @@ final class ShelfSetupViewTests: XCTestCase {
             localHomebrew: homebrew
         )
         homebrew.setAdoptIgnored("slack", true)
+        await vm.projectionsSettled()
         XCTAssertTrue(vm.adoptableCasks.isEmpty)
 
         homebrew.setAdoptIgnored("slack", false)
 
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.adoptableCasks.map(\.token), ["slack"])
         XCTAssertTrue(vm.adoptIgnoredCasks.isEmpty)
         XCTAssertTrue(LocalHomebrewService(defaults: defaults).adoptIgnoredDates.isEmpty)
@@ -328,6 +331,7 @@ final class ShelfSetupViewTests: XCTestCase {
 
         homebrew.setAdoptIgnored("google-chrome", true)
         homebrew.setAdoptIgnored("slack", true)
+        await vm.projectionsSettled()
         XCTAssertTrue(vm.adoptableCasks.isEmpty)
 
         render(AdoptIgnorePickerSheet(viewModel: vm)

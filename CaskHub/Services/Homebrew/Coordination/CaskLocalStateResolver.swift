@@ -7,14 +7,15 @@
 
 import Foundation
 
-struct CaskLocalStateResolver {
+nonisolated struct CaskLocalStateResolver: Sendable {
     let snapshot: InstallationSnapshot
     let hasRegisteredApplicationCatalog: Bool
     let greedyUpdates: Bool
     let homebrewOutdated: HomebrewOutdatedReport?
     let platform: CaskPlatform?
     let applicationDirectories: [URL]
-    let fileManager: FileManager
+    /// Only launch-URL lookups touch it; FileManager is documented thread-safe for those reads.
+    nonisolated(unsafe) let fileManager: FileManager
 
     private let applicationDiscovery = ApplicationDiscovery()
 
@@ -281,14 +282,14 @@ struct CaskLocalStateResolver {
     }
 }
 
-extension CaskLocalStateResolver {
+nonisolated extension CaskLocalStateResolver {
     func installationDates(for cask: Cask) -> CaskInstallationDates? {
         guard snapshot.foreignInstallationSource(for: cask.reference) == nil else { return nil }
         return snapshot.installationDatesByToken[cask.token]
     }
 }
 
-private extension CaskLocalStateResolver {
+nonisolated private extension CaskLocalStateResolver {
     /// Tap casks never claim apps installed outside Homebrew.
     func detectsExternalInstalls(_ cask: Cask) -> Bool {
         CaskReference.isOfficial(tap: cask.tap)

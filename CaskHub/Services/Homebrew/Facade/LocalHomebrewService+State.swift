@@ -20,11 +20,9 @@ extension LocalHomebrewService {
         makeLocalStateResolver().localState(for: cask)
     }
 
-    func localStates(for casks: [Cask]) -> [String: CaskLocalState] {
-        let resolver = makeLocalStateResolver()
-        return casks.reduce(into: [:]) { result, cask in
-            result[cask.reference] = resolver.localState(for: cask)
-        }
+    /// A value copy of the current inputs, safe to resolve the whole catalog off the main actor.
+    func localStateResolver() -> CaskLocalStateResolver {
+        makeLocalStateResolver()
     }
 
     func open(_ cask: Cask) {

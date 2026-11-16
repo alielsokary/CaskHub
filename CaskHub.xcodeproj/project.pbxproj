@@ -10,6 +10,7 @@
 		CA7AE72541265EB408E4152C /* ImageCacheService+Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A5F72D8D7D814389270C4 /* ImageCacheService+Categories.swift */; };
 		CA7A51F8BB8721ED85B44DCB /* TapCatalogData.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */; };
 		CA7A0F0E5E1C4A2B9D3E7F62 /* HousePickTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A0F0E5E1C4A2B9D3E7F61 /* HousePickTests.swift */; };
+		CA7B1D3E9F2A4C6B8E0D2F42 /* CatalogDerivedDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7B1D3E9F2A4C6B8E0D2F41 /* CatalogDerivedDataTests.swift */; };
 		CA7A782E69C0F90CB6ECB56E /* TapCategoryDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */; };
 		CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */; };
 		CA7A5CD058F854D2619AABB4 /* TapRepositoryChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7A44159691ED8160723F41 /* TapRepositoryChecker.swift */; };
@@ -260,6 +261,7 @@
 		CA7A5F72D8D7D814389270C4 /* ImageCacheService+Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ImageCacheService+Categories.swift"; sourceTree = "<group>"; };
 		CA7AEA531DAE81D3C54934F3 /* TapCatalogData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCatalogData.swift; sourceTree = "<group>"; };
 		CA7A0F0E5E1C4A2B9D3E7F61 /* HousePickTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HousePickTests.swift; sourceTree = "<group>"; };
+		CA7B1D3E9F2A4C6B8E0D2F41 /* CatalogDerivedDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogDerivedDataTests.swift; sourceTree = "<group>"; };
 		CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCategoryDataTests.swift; sourceTree = "<group>"; };
 		CA7AFE94CD81DDC15880306D /* TapCaskIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapCaskIconTests.swift; sourceTree = "<group>"; };
 		CA7A44159691ED8160723F41 /* TapRepositoryChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapRepositoryChecker.swift; sourceTree = "<group>"; };
@@ -1015,6 +1017,7 @@
 				CA7A74921CE28363941C4016 /* TapCatalogTests.swift */,
 				64414447B54083C899561E0E /* PinnedCaskCatalogTests.swift */,
 				CA7A0F0E5E1C4A2B9D3E7F61 /* HousePickTests.swift */,
+				CA7B1D3E9F2A4C6B8E0D2F41 /* CatalogDerivedDataTests.swift */,
 				CA7A95D4D5BDD8AF7832D583 /* TapCategoryDataTests.swift */,
 			);
 			path = Catalog;
@@ -1539,6 +1542,7 @@
 				CA7A2E6A94E9F82E4CBA6FC5 /* AddTapSheetTests.swift in Sources */,
 				CA7A3E72DCE46F86AE5175F1 /* TapCaskIconTests.swift in Sources */,
 				CA7A0F0E5E1C4A2B9D3E7F62 /* HousePickTests.swift in Sources */,
+				CA7B1D3E9F2A4C6B8E0D2F42 /* CatalogDerivedDataTests.swift in Sources */,
 				CA7A782E69C0F90CB6ECB56E /* TapCategoryDataTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -34,6 +34,7 @@ final class PinnedUpdatesCardTests: XCTestCase {
         let vm = await makePinnedSUT()
         updateInstallationSnapshot(of: vm.localHomebrew) { $0.pinnedVersions = ["zed": "1.0", "onyx": "2.1,77"] }
         let card = PinnedUpdatesCard(viewModel: vm, picker: .constant(nil))
+        await vm.projectionsSettled()
 
         XCTAssertEqual(vm.pinnedCasks.map(\.token), ["onyx", "zed"])
         XCTAssertEqual(card.pinnedLabel(for: vm.pinnedCasks[1]), "pinned at 1.0")
@@ -90,6 +91,7 @@ final class PinnedUpdatesCardTests: XCTestCase {
             )
         }
         let picker = PinPickerSheet(viewModel: vm)
+        await vm.projectionsSettled()
         let casks = vm.pinnableCasks(matching: "")
 
         XCTAssertEqual(PinPickerSheet.emptyMessage(query: ""), "No installed apps to pin.")

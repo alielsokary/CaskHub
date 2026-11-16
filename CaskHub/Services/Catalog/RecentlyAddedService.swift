@@ -8,7 +8,7 @@
 import Foundation
 import Observation
 
-enum RecentlyAddedWindow: Int, CaseIterable, Identifiable {
+nonisolated enum RecentlyAddedWindow: Int, CaseIterable, Identifiable, Sendable {
     case days30 = 30
     case days60 = 60
     case days90 = 90

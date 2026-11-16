@@ -283,6 +283,7 @@ final class ExternalInstallationTests: XCTestCase {
         }
 
         vm.selectedSidebar = .library(.installed)
+        await vm.projectionsSettled()
         XCTAssertTrue(vm.filteredCasks.isEmpty)
         XCTAssertEqual(Set(vm.filteredExternallyManagedCasks.map(\.token)), [store.token, package.token])
         XCTAssertEqual(vm.installedCount, 2)
