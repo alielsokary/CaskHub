@@ -14,15 +14,16 @@
 </p>
 
 <p align="center">
-  <img width="850" height="250" alt="caskHub-banner-dark" src="https://github.com/user-attachments/assets/ffc0a56b-1f20-4709-91f3-fbd29fca4fb9" />
-
+  <img width="850" height="250" alt="caskHub-banner-dark" src="https://github.com/user-attachments/assets/6ffcaa74-7015-4c66-94d6-814813a09c04" />
 </p>
 
 **A native macOS app store for Homebrew casks.** Browse, search, install, update, and uninstall thousands of Mac apps distributed through [Homebrew](https://brew.sh) - with original app icons extracted from the source, categories, popularity charts, and one-click actions, all in a clean SwiftUI interface.
 
 CaskHub is 100% free and open source, no subscription, no premium tier, no ads, nothing.
 
-<img width="1476" height="998" alt="caskhub-dark" src="https://github.com/user-attachments/assets/75577218-85dc-42b7-886b-0d6e26587212" />
+<p align="center">
+  <img width="49.5%" alt="CaskHub in the Standard look" src=".github/assets/caskhub-standard.png" /> <img width="49.5%" alt="CaskHub in the Classic look" src=".github/assets/caskhub-classic.png" />
+</p>
 
 ## Install
 
@@ -38,29 +39,32 @@ brew install --cask caskhub
 
 ### Discover
 
-- **Browse** - curated shelves and a rotating hero pick, organized by category
+- **Browse** - curated shelves under a hand-picked House Pick
 - **Featured** - the top 100 casks ranked by install popularity
 - **Top Charts** - most-installed casks with a 30 / 90 / 365-day analytics window
 - **Recently Added** - casks newly published to Homebrew in the last 30-90 days
-- **Categories** - every cask classified into browsable categories (Developer Tools, Productivity, Design, and more)
-- **Search** - instant search (⌘F) across names, tokens, and descriptions
+- **Categories** - every cask classified into browsable categories, including Fonts
+- **Search** - instant search (⌘F) across names, tokens, and descriptions, including deprecated and disabled casks
+- **Third-party taps** - add taps and browse their casks next to Homebrew's own
 
 ### Manage
 
-- **Install / Update / Uninstall** with live progress states and cancellable downloads
+- **Install / Update / Uninstall** with live progress, up to three downloads at once, cancellable while queued or downloading
+- **Pin casks** to skip their updates
 - **Adopt Apps** - bring apps you installed outside Homebrew (a downloaded DMG, another store) under brew management with one click, keeping the app in place
 - **Guided Homebrew setup** - walks you through installing Homebrew if it's missing, supports custom installation paths, and picks the native prefix on both Apple Silicon and Intel
-- **Smart update detection** - skips self-updating apps and normalizes packaging-suffix version differences, so the Updates badge only shows updates that matter
-- **Installed library** - detects what's already in your Caskroom, including apps installed from the command line
-- **Native password prompts** - pkg-based casks that need admin rights get a native macOS dialog instead of a terminal prompt
-- **Rich metadata** - original app icons, download sizes, install counts, homepages, and version info
+- **Smart update detection** - matches what `brew outdated` reports, with Greedy mode for self-updating apps
+- **Installed library** - everything in your Caskroom, including command-line installs, apps managed outside Homebrew, and retired casks
+- **Shelf Setup** - export your casks to a Brewfile, or import one on a new Mac
+- **Health** - checks your Homebrew and Command Line Tools setup and shows disk usage
+- **Native password prompts** - admin rights through a native macOS dialog, with optional Touch ID
 
 ### Polish
 
-- Grid and list view modes, flexible sorting, light/dark/system themes
-- A custom design system with bundled typography
-- Bundled category data ships with the app, so browsing never blocks on the network
-- **Built-in app updates** - CaskHub keeps itself up to date via [Sparkle](https://sparkle-project.org)
+- Standard look with native surfaces and Liquid Glass controls, or Classic
+- Grid and list views, flexible sorting, light/dark/system themes
+- Bundled category data, so browsing never blocks on the network
+- **Built-in app updates** via [Sparkle](https://sparkle-project.org)
 
 ## How It Works
 
@@ -80,8 +84,8 @@ Categories, first-seen dates, and original app icons are produced by the compani
 ## Architecture
 
 - **SwiftUI + MVVM** with `@Observable` view models and `@MainActor` isolation
-- **Protocol-based networking layer** for testability (`BrewAPIClientProtocol`, `NetworkServiceProtocol`) with dependency injection throughout
-- **Two-tier icon caching** (memory + disk) and HTTP-header-based download-size resolution
+- **Layered Homebrew services** - immutable domain values, coordinators for state, and infrastructure behind protocols at real I/O seams, injected for tests
+- **Two-tier icon caching** (memory + disk)
 - **Minimal dependencies** - three focused packages: [Sparkle](https://sparkle-project.org) for app updates, [Sentry](https://sentry.io) for crash reporting and usage metrics, and [TelemetryDeck](https://telemetrydeck.com) for session and acquisition analytics
 
 ## Building from Source
@@ -91,6 +95,7 @@ Prefer building it yourself? You'll need Xcode 26 or later:
 ```bash
 git clone https://github.com/alielsokary/CaskHub.git
 cd CaskHub
+brew install swiftlint
 open CaskHub.xcodeproj
 ```
 
@@ -120,21 +125,13 @@ Want CaskHub in your language? Translations live in a single [String Catalog](Ca
 
 ## Privacy & Analytics
 
-CaskHub sends anonymous usage metrics through [Sentry](https://sentry.io). [TelemetryDeck](https://telemetrydeck.com) receives only anonymous session and new-install signals used for acquisition and retention reporting.
-
-CaskHub also sends crash reports and technical diagnostics through [Sentry](https://sentry.io) to help diagnose and fix stability issues.
+CaskHub sends anonymous usage metrics, crash reports, and technical diagnostics through [Sentry](https://sentry.io) to find and fix stability issues. [TelemetryDeck](https://telemetrydeck.com) receives only anonymous session and new-install signals for acquisition and retention reporting.
 
 You can opt out of everything at any time in **Settings → Privacy**.
 
 ## Contributing
 
-Interested in contributing to CaskHub? We welcome contributions of all kinds!
-
-- **Code contributions**: Bug fixes, features, improvements
-- **Bug reports**: [Found an issue? Let us know](https://github.com/alielsokary/CaskHub/issues/new/choose)
-- **Feature requests**: [Have an idea? We'd love to hear it](https://github.com/alielsokary/CaskHub/issues/new/choose)
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request - note that all PRs target the `develop` branch.
+Bug fixes, features, translations, and [bug reports or ideas](https://github.com/alielsokary/CaskHub/issues/new/choose) are all welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request; all PRs target `develop`.
 
 ## Acknowledgements
 
