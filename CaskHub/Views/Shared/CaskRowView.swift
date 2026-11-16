@@ -26,6 +26,20 @@ struct CaskRowView: View {
     private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let eyebrow {
+                Text(eyebrow)
+                    .font(CHType.labelSm)
+                    .kerning(CHType.trackingLabel)
+                    .foregroundStyle(Color.chTextBrand)
+                    .padding(.bottom, 6)
+            }
+            row
+        }
+        .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
+    }
+
+    private var row: some View {
         HStack(spacing: 12) {
             HStack(alignment: .iconTitleTop, spacing: 12) {
                 CaskIconView(cask: cask, size: 40)
@@ -39,20 +53,12 @@ struct CaskRowView: View {
                 .frame(width: 24)
         }
         .padding(.vertical, 4)
-        .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }
 
     // MARK: - App Info
 
     private var appInfo: some View {
         VStack(alignment: .leading, spacing: 2) {
-            if let eyebrow {
-                Text(eyebrow)
-                    .font(CHType.labelSm)
-                    .kerning(CHType.trackingLabel)
-                    .foregroundStyle(Color.chTextBrand)
-                    .padding(.bottom, 4)
-            }
             Text(cask.displayName)
                 .font(typography.title)
                 .foregroundStyle(Color.chTextTitle)

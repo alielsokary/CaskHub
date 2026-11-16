@@ -10,7 +10,6 @@ import SwiftUI
 enum CHRadius {
     static var hero: CGFloat { CHType.isNative ? 18 : 20 }
     static var card: CGFloat { CHType.isNative ? 14 : 18 }
-    static var iconLg: CGFloat { CHType.isNative ? 24 : 26 } // hero app icon well
     static let keycap: CGFloat = 5
     // fields, pills and buttons are capsules
 }
