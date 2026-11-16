@@ -85,7 +85,6 @@ final class PackageProductIdentityTests: XCTestCase {
     }
 
     func test_autoupdate_receipts_keep_exact_identity_path_and_review_requirements() {
-        let file = "Microsoft Excel.app/Contents/Info.plist"
         for mode in ["valid", "unreviewed", "ambiguous", "store", "duplicate-app", "other-location", "other-volume",
                      "wrong-id", "wrong-app-path", "missing-receipt", "missing-files", "helper-only", "absolute-path", "parent-path"] {
             let signature = PackageCaskSignature(
@@ -93,17 +92,8 @@ final class PackageProductIdentityTests: XCTestCase {
                 appNameCandidates: [excel.bundleName], verifiedBundleIdentifiersByName: [:], receiptCandidates: [excel],
                 productIdentities: mode == "unreviewed" ? nil : [excel]
             )
-            let files = ["missing-files": "", "helper-only": "Microsoft Excel.app/Contents/Frameworks/Helper.app/Contents/Info.plist",
-                         "absolute-path": "/" + file, "parent-path": "../" + file][mode] ?? file
-            let receipt = PackageReceiptResolver.Receipt(files: files, location: .init(
-                volume: URL(fileURLWithPath: mode == "other-volume" ? "/Volumes/Other" : "/"),
-                installLocation: mode == "other-location" ? "Library/Unrelated" : autoUpdateLocation
-            ))
-            let app = makeDetectedApplication(
-                excel.bundleName, id: mode == "wrong-id" ? "org.example.other" : excel.bundleIdentifier,
-                isMacAppStore: mode == "store",
-                url: URL(fileURLWithPath: mode == "wrong-app-path" ? "/Applications/Other/Microsoft Excel.app" : excel.installedPath)
-            )
+            let receipt = autoUpdateReceipt(mode)
+            let app = autoUpdateApp(mode)
             let variant = PackageCaskSignature(
                 token: "excel-variant", displayName: "Excel Variant", receiptPatterns: [excel.packageIdentifier],
                 appNameCandidates: [excel.bundleName], verifiedBundleIdentifiersByName: [:],
@@ -116,6 +106,24 @@ final class PackageProductIdentityTests: XCTestCase {
             )
             XCTAssertEqual(Set(result.keys), mode == "valid" ? ["microsoft-excel"] : [], mode)
         }
+    }
+
+    private func autoUpdateReceipt(_ mode: String) -> PackageReceiptResolver.Receipt {
+        let file = "Microsoft Excel.app/Contents/Info.plist"
+        let files = ["missing-files": "", "helper-only": "Microsoft Excel.app/Contents/Frameworks/Helper.app/Contents/Info.plist",
+                     "absolute-path": "/" + file, "parent-path": "../" + file][mode] ?? file
+        return PackageReceiptResolver.Receipt(files: files, location: .init(
+            volume: URL(fileURLWithPath: mode == "other-volume" ? "/Volumes/Other" : "/"),
+            installLocation: mode == "other-location" ? "Library/Unrelated" : autoUpdateLocation
+        ))
+    }
+
+    private func autoUpdateApp(_ mode: String) -> DetectedApplication {
+        makeDetectedApplication(
+            excel.bundleName, id: mode == "wrong-id" ? "org.example.other" : excel.bundleIdentifier,
+            isMacAppStore: mode == "store",
+            url: URL(fileURLWithPath: mode == "wrong-app-path" ? "/Applications/Other/Microsoft Excel.app" : excel.installedPath)
+        )
     }
 
     func test_reviewed_product_flows_through_scanning_projection_version_and_open() async throws {

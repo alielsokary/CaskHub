@@ -136,12 +136,8 @@ final class LocalHomebrewService {
         fileManager = dependencies.fileManager
         notificationCenter = dependencies.notificationCenter
         self.defaults = defaults
-        baseApplicationDirectories = dependencies.applicationDirectories
-            ?? ApplicationDiscovery.defaultDirectories(
-                fileManager: dependencies.fileManager
-            )
-        applicationLauncher = dependencies.applicationLauncher
-            ?? WorkspaceApplicationLauncher()
+        baseApplicationDirectories = dependencies.resolvedApplicationDirectories()
+        applicationLauncher = dependencies.resolvedApplicationLauncher()
         self.operationStore = operationStore
         let commandExecutor = dependencies.resolvedCommandExecutor()
         mutationCoordinator = HomebrewMutationCoordinator(
@@ -156,22 +152,15 @@ final class LocalHomebrewService {
             commandExecutor: commandExecutor,
             brewBinaryProvider: dependencies.brewBinaryProvider
         )
-        softwareScanner = dependencies.softwareScanner
-            ?? HomebrewInstallationScanner()
+        softwareScanner = dependencies.resolvedSoftwareScanner()
         brewBinaryProvider = dependencies.brewBinaryProvider
         brewVersionProvider = dependencies.brewVersionProvider
-        let brewBinary = dependencies.brewBinaryProvider
-        caskPlatformProvider = dependencies.caskPlatformProvider
-            ?? { await HomebrewPlatformLoader().load(from: brewBinary()) }
-        homebrewOutdatedProvider = dependencies.homebrewOutdatedProvider
-            ?? { await HomebrewOutdatedLoader().load(from: brewBinary()) }
-        // The test host app must never run real tap or trust queries; tests inject their own.
-        let tapBrew = { CrashReporter.isRunningTests ? nil : brewBinary() }
-        tapIndexProvider = dependencies.tapIndexProvider ?? { await HomebrewTapLoader().load(from: tapBrew()) }
-        installedFormulaeProvider = dependencies.installedFormulaeProvider
-            ?? { await HomebrewTapLoader().installedFormulae(in: $0, from: tapBrew()) }
-        tapTrustProvider = dependencies.tapTrustProvider ?? { await HomebrewTapLoader().trust(from: tapBrew()) }
-        tapUpdateProvider = dependencies.tapUpdateProvider ?? { await HomebrewTapLoader().update(from: tapBrew()) }
+        caskPlatformProvider = dependencies.resolvedCaskPlatformProvider()
+        homebrewOutdatedProvider = dependencies.resolvedHomebrewOutdatedProvider()
+        tapIndexProvider = dependencies.resolvedTapIndexProvider()
+        installedFormulaeProvider = dependencies.resolvedInstalledFormulaeProvider()
+        tapTrustProvider = dependencies.resolvedTapTrustProvider()
+        tapUpdateProvider = dependencies.resolvedTapUpdateProvider()
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]

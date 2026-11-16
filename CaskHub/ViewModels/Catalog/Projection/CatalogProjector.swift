@@ -218,26 +218,11 @@ nonisolated enum CatalogProjector {
         _ input: CatalogFilteredProjectionInput
     ) -> [Cask] {
         switch input.selectedSidebar {
-        case .discover(.browse):
-            return input.searchText.isEmpty ? input.casks : input.casks + input.tapCasks
-        case .discover(.featured):
-            return Array(sortedByDownloads(
-                input.casks.filter { !$0.isFont },
-                using: input.downloadCounts
-            ).prefix(100))
-        case .discover(.topCharts):
-            return input.casks.filter { !$0.isFont }
-        case .discover(.recentlyAdded):
-            return input.casks.filter {
-                !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
-            }
-        case .library(.installed):
-            return input.library.homebrewInstalledCasks
-        case .library(.updates):
-            return input.library.updatableCasks
-        case .library(.adopt):
-            return input.library.adoptableCasks
-        case .library(.taps), .shelfSetup, .maintenance:
+        case let .discover(item):
+            return discoverCasks(item, input: input)
+        case let .library(item):
+            return libraryCasks(item, input: input)
+        case .shelfSetup, .maintenance:
             return []
         case let .tap(name):
             return input.tapCasks.filter { $0.tap == name }
@@ -339,6 +324,45 @@ nonisolated enum CatalogProjector {
     ) -> [Cask] {
         casks.sorted {
             (addedDates[$0.token] ?? "9999") > (addedDates[$1.token] ?? "9999")
+        }
+    }
+}
+
+extension CatalogProjector {
+    private static func discoverCasks(
+        _ item: DiscoverItem,
+        input: CatalogFilteredProjectionInput
+    ) -> [Cask] {
+        switch item {
+        case .browse:
+            return input.searchText.isEmpty ? input.casks : input.casks + input.tapCasks
+        case .featured:
+            return Array(sortedByDownloads(
+                input.casks.filter { !$0.isFont },
+                using: input.downloadCounts
+            ).prefix(100))
+        case .topCharts:
+            return input.casks.filter { !$0.isFont }
+        case .recentlyAdded:
+            return input.casks.filter {
+                !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
+            }
+        }
+    }
+
+    private static func libraryCasks(
+        _ item: LibraryItem,
+        input: CatalogFilteredProjectionInput
+    ) -> [Cask] {
+        switch item {
+        case .installed:
+            return input.library.homebrewInstalledCasks
+        case .updates:
+            return input.library.updatableCasks
+        case .adopt:
+            return input.library.adoptableCasks
+        case .taps:
+            return []
         }
     }
 }
