@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-11-14",
-  "totalCasks": 4988,
+  "generatedDate": "2026-11-16",
+  "totalCasks": 4994,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -8220,6 +8220,10 @@
         "securityPrivacy"
       ]
     },
+    "hora-calendar": {
+      "primary": "productivity",
+      "secondary": []
+    },
     "horos": {
       "primary": "designGraphics",
       "secondary": []
@@ -8349,6 +8353,12 @@
     "hyperconnect": {
       "primary": "utilities",
       "secondary": []
+    },
+    "hyperframes": {
+      "primary": "videoMedia",
+      "secondary": [
+        "ai"
+      ]
     },
     "hyperkey": {
       "primary": "utilities",
@@ -13530,6 +13540,10 @@
         "ai"
       ]
     },
+    "open-screen-sharing": {
+      "primary": "utilities",
+      "secondary": []
+    },
     "open-video-downloader": {
       "primary": "videoMedia",
       "secondary": []
@@ -14210,6 +14224,12 @@
     "pairpods": {
       "primary": "audioMusic",
       "secondary": []
+    },
+    "pake-app": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
     },
     "pale-moon": {
       "primary": "browsers",
@@ -16215,6 +16235,10 @@
       "secondary": []
     },
     "realforce": {
+      "primary": "utilities",
+      "secondary": []
+    },
+    "realtek-rtl815x-ethernet": {
       "primary": "utilities",
       "secondary": []
     },
@@ -19146,6 +19170,12 @@
       "primary": "developerTools",
       "secondary": [
         "ai"
+      ]
+    },
+    "tab-finder": {
+      "primary": "productivity",
+      "secondary": [
+        "menuBar"
       ]
     },
     "tabby": {
@@ -31337,6 +31367,12 @@
         "bundleIdentifier": "com.hoptodesk.hoptodesk"
       }
     ],
+    "hora-calendar": [
+      {
+        "bundleName": "hora Calendar.app",
+        "bundleIdentifier": "szamowski.Hora-direct"
+      }
+    ],
     "horos": [
       {
         "bundleName": "Horos.app",
@@ -31481,6 +31517,12 @@
       {
         "bundleName": "小米互联服务.app",
         "bundleIdentifier": "com.xiaomi.hyperConnect"
+      }
+    ],
+    "hyperframes": [
+      {
+        "bundleName": "HyperFrames.app",
+        "bundleIdentifier": "dev.hyperframes.desktop"
       }
     ],
     "hyperkey": [
@@ -36911,6 +36953,14 @@
         "bundleIdentifier": "com.aipoch.open-science"
       }
     ],
+    "open-screen-sharing": [
+      {
+        "bundleName": "Open Screen Sharing.app",
+        "bundleIdentifier": "io.nekohasekai.screensharing",
+        "packageIdentifier": "io.nekohasekai.screensharing",
+        "installedPath": "/Applications/Open Screen Sharing.app"
+      }
+    ],
     "open-video-downloader": [
       {
         "bundleName": "Open Video Downloader.app",
@@ -37567,6 +37617,12 @@
       {
         "bundleName": "PairPods.app",
         "bundleIdentifier": "com.wozniakpawel.PairPods"
+      }
+    ],
+    "pake-app": [
+      {
+        "bundleName": "Pake.app",
+        "bundleIdentifier": "com.tw93.Pake"
       }
     ],
     "paletro": [
@@ -42749,6 +42805,12 @@
         "bundleIdentifier": "com.t3tools.t3code"
       }
     ],
+    "tab-finder": [
+      {
+        "bundleName": "Tab Finder 2.app",
+        "bundleIdentifier": "com.macplus-software.com.Tab-Finder-2-Direct"
+      }
+    ],
     "tabby": [
       {
         "bundleName": "Tabby.app",
@@ -46550,7 +46612,7 @@
       }
     ]
   },
-  "metadataUpdatedAt": "2026-11-16T14:43:13.322037+00:00",
+  "metadataUpdatedAt": "2026-11-16T21:09:13.377660+00:00",
   "releaseTag": "caskflow-v2026.11.16",
   "cliTokens": [
     "aptible",
@@ -48216,6 +48278,7 @@
     "hoppscotch",
     "hoppscotch-selfhost",
     "hoptodesk",
+    "hora-calendar",
     "horos",
     "hostsx",
     "hot",
@@ -48241,6 +48304,7 @@
     "hyper",
     "hyperbackupexplorer",
     "hyperconnect",
+    "hyperframes",
     "hyperkey",
     "hyperwhisper",
     "hytale",
@@ -49296,6 +49360,7 @@
     "open-eid",
     "open-island",
     "open-science",
+    "open-screen-sharing",
     "open-video-downloader",
     "open-webui",
     "openaudible",
@@ -49431,6 +49496,7 @@
     "paintbrush",
     "paintcode",
     "pairpods",
+    "pake-app",
     "pale-moon",
     "paletro",
     "pallotron-yubiswitch",
@@ -49829,6 +49895,7 @@
     "readmoreading",
     "readwise-ibooks",
     "readyapi",
+    "realtek-rtl815x-ethernet",
     "realvnc-connect",
     "realvnc-connect-viewer",
     "reamp",
@@ -50426,6 +50493,7 @@
     "systhist",
     "t3-code",
     "t3-code@nightly",
+    "tab-finder",
     "tabby",
     "table-tool",
     "tableau",
@@ -51513,6 +51581,14 @@
         "bundleIdentifier": "com.electron.pritunl",
         "packageIdentifier": "com.pritunl.pkg.Pritunl",
         "installedPath": "/Applications/Pritunl.app"
+      }
+    ],
+    "realtek-rtl815x-ethernet": [
+      {
+        "bundleName": "RTL815xEthernetApp.app",
+        "bundleIdentifier": "com.realtek.app.RTL815xEthernet",
+        "packageIdentifier": "com.realtek.app.RTL815xEthernet",
+        "installedPath": "/Applications/RTL815xEthernetApp.app"
       }
     ],
     "redquits": [
