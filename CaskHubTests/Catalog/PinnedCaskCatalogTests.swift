@@ -30,6 +30,7 @@ final class PinnedCaskCatalogTests: XCTestCase {
                 homebrewApplications: [:], verifiedZombieTokens: verifiedZombies
             )
         }
+        await vm.projectionsSettled()
         return vm
     }
 

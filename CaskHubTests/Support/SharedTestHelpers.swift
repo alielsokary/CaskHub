@@ -339,6 +339,7 @@ func makeSUT(
         localHomebrew: localHomebrew
     )
     await vm.fetchCasks()
+    await vm.projectionsSettled()
     return (vm, api)
 }
 

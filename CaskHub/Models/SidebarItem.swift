@@ -72,7 +72,7 @@ enum LibraryItem: String, CaseIterable, Identifiable {
 
 // MARK: - Sidebar Selection
 
-enum SidebarSelection: Hashable, Identifiable {
+nonisolated enum SidebarSelection: Hashable, Identifiable, Sendable {
     case discover(DiscoverItem)
     case library(LibraryItem)
     case shelfSetup

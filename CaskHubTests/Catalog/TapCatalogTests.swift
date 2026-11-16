@@ -156,6 +156,7 @@ final class TapCatalogTests: XCTestCase {
         await service.refreshHomebrewOutdated()
         await vm.fetchCasks()
         await vm.refreshTaps()
+        await vm.projectionsSettled()
         return vm
     }
 

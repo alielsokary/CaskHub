@@ -75,7 +75,7 @@ nonisolated struct CaskRetirementFields: Hashable, Sendable {
     }
 }
 
-extension Cask {
+nonisolated extension Cask {
     var retirementFields: CaskRetirementFields {
         CaskRetirementFields(
             deprecated: deprecated,

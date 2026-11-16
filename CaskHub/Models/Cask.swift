@@ -362,7 +362,7 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     }
 }
 
-extension Cask {
+nonisolated extension Cask {
     /// A cask known only from local data, without Homebrew API metadata.
     static func localOnly(
         token: String, tap: String?, name: String, version: String, provenance: CaskProvenance,

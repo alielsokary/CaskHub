@@ -140,6 +140,7 @@ final class TapCaskIdentityTests: XCTestCase {
         await service.refresh()
         await service.refreshHomebrewOutdated()
         await vm.fetchCasks()
+        await vm.projectionsSettled()
         return (vm, service)
     }
 

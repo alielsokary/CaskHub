@@ -13,6 +13,7 @@ final class ExternallyManagedCasksTests: XCTestCase {
     func test_installed_separates_external_apps_and_counts_only_visible_sources() async {
         let (model, local) = await makeCatalog()
 
+        await model.projectionsSettled()
         XCTAssertEqual(model.filteredCasks.map(\.token), ["current", "managed"])
         XCTAssertEqual(model.updatableCasks.map(\.token), ["managed"])
         XCTAssertEqual(model.updatesCount, 1)
@@ -22,11 +23,13 @@ final class ExternallyManagedCasksTests: XCTestCase {
         XCTAssertEqual(model.filteredCasks.count + model.filteredExternallyManagedCasks.count, 6)
 
         local.setAdoptIgnored("manual", true)
+        await model.projectionsSettled()
         XCTAssertFalse(model.adoptableCasks.contains { $0.token == "manual" })
         XCTAssertTrue(model.filteredExternallyManagedCasks.contains { $0.token == "manual" })
 
         // Adopting an app moves it out of the external section on the next snapshot.
         updateInstalledCask(installation("manual", version: "1.0"), in: local)
+        await model.projectionsSettled()
         XCTAssertEqual(model.filteredExternallyManagedCasks.map(\.token), ["store", "command", "package"])
         XCTAssertEqual(model.filteredCasks.map(\.token), ["manual", "current", "managed"])
         XCTAssertEqual(model.installedCount(includingExternallyManaged: true), 6)
@@ -37,6 +40,7 @@ final class ExternallyManagedCasksTests: XCTestCase {
             $0.externalPackageInstallations = [:]
             $0.externalPackageApplicationOwners = [:]
         }
+        await model.projectionsSettled()
         XCTAssertEqual(model.filteredExternallyManagedCasks.map(\.token), ["store", "command"])
         XCTAssertEqual(model.installedCount(includingExternallyManaged: true), 5)
 
@@ -97,6 +101,7 @@ final class ExternallyManagedCasksTests: XCTestCase {
             $0.externalBinaryPaths = ["command": URL(fileURLWithPath: "/external/bin/command")]
         }
         model.selectedSidebar = .library(.installed)
+        await model.projectionsSettled()
         return (model, local)
     }
 }

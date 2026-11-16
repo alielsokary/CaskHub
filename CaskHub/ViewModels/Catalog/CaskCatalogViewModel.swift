@@ -8,7 +8,7 @@
 import Foundation
 import Observation
 
-struct BrowseSection: Identifiable {
+nonisolated struct BrowseSection: Identifiable, Sendable {
     let title: String
     let destination: SidebarSelection
     let casks: [Cask]
@@ -66,8 +66,10 @@ final class CaskCatalogViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:] {
-        didSet { catalogRevision &+= 1 }
+        didSet { analyticsRevision &+= 1 }
     }
+    /// Download counts only feed popularity sorts, so they never rebuild the library or category data.
+    private(set) var analyticsRevision = 0
     private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     private var analyticsRequestID = UUID()
     private(set) var catalogRevision = 0
@@ -91,20 +93,16 @@ final class CaskCatalogViewModel {
     @ObservationIgnored var searchDebounceInterval: Duration = .milliseconds(200)
     @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
 
-    @ObservationIgnored let libraryCache =
-        BoundedMemoizedValues<CatalogLibraryCacheKey, CatalogLibrarySnapshot>(capacity: 1)
+    /// Read through `currentDerived`, which schedules the off-main rebuild when inputs moved on.
+    var derived = CatalogDerivedData.empty
+    @ObservationIgnored var requestedDerivedKey: CatalogDerivedKey?
+    @ObservationIgnored var derivedTask: Task<Void, Never>?
     @ObservationIgnored let filteredCache =
         BoundedMemoizedValues<FilteredCatalogCacheKey, [Cask]>(capacity: 16)
     @ObservationIgnored let externallyManagedCache =
         BoundedMemoizedValues<FilteredCatalogCacheKey, [Cask]>(capacity: 1)
-    @ObservationIgnored let browseCache =
-        BoundedMemoizedValues<BrowseCatalogCacheKey, [BrowseSection]>(capacity: 1)
-    @ObservationIgnored let searchKeysCache = BoundedMemoizedValues<Int, [String: String]>(capacity: 1)
     @ObservationIgnored let categoryMappingsCache =
         BoundedMemoizedValues<CategoryPresentationCacheKey, [String: TokenCategoryMapping]>(capacity: 1)
-    @ObservationIgnored let nameRankCache = BoundedMemoizedValues<Int, [String: Int]>(capacity: 1)
-    @ObservationIgnored let categoryPresentationCache =
-        BoundedMemoizedValues<CategoryPresentationCacheKey, [String: CaskCategoryPresentation]>(capacity: 1)
 
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"
