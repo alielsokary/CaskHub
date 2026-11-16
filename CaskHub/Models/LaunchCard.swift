@@ -17,24 +17,24 @@ struct WhatsNewRelease {
     let version: String
     let features: [Feature]
 
-    static let latest = WhatsNewRelease(version: "0.9.0", features: [
+    static let latest = WhatsNewRelease(version: "0.10.0", features: [
         Feature(
-            symbol: "paintbrush",
+            symbol: "spigot",
             title: .WhatsNew.feature1Title,
             detail: .WhatsNew.feature1Detail
         ),
         Feature(
-            symbol: "arrow.down.circle",
+            symbol: "touchid",
             title: .WhatsNew.feature2Title,
             detail: .WhatsNew.feature2Detail
         ),
         Feature(
-            symbol: "arrow.triangle.2.circlepath",
+            symbol: "pin",
             title: .WhatsNew.feature3Title,
             detail: .WhatsNew.feature3Detail
         ),
         Feature(
-            symbol: "tray.2",
+            symbol: "textformat",
             title: .WhatsNew.feature4Title,
             detail: .WhatsNew.feature4Detail
         )

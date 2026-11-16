@@ -5,6 +5,30 @@ release body, and the five most recent entries become the Sparkle update dialog
 notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.10.0 — 2026-11-16
+
+### What's New
+
+- Added third-party taps. Add a developer's own Homebrew tap from the new Taps page to browse, install and update its apps next to the rest
+- Added Touch ID for the administrator password. Turn it on in Settings, General
+- Added pinning, so a pinned app stays at its installed version and is never offered an update. Manage pins in Shelf Setup
+- Added a Fonts category that lists every Homebrew font like an app
+- Added an Application Directory setting in Settings, Homebrew, Paths for installing apps outside /Applications
+- Added deprecated, disabled and removed casks to Installed and search, with a status that explains why Homebrew retired them
+
+### Improvements
+
+- Improved launch time, scrolling and typing in search, with fewer freezes
+- Improved hints, which now open instantly as popovers when you hover
+- Improved the Browse House Pick so it no longer changes with the sort order
+
+### Bug Fixes
+
+- Fixed updates failing when an app was renamed or moved after install, with a new Force Update option
+- Fixed pasting into the administrator password prompt, and the prompt closing silently when Allow was clicked with an empty field
+- Fixed the search clear button leaving old results on the page
+- Fixed CaskHub retrying old queued analytics calls after Share anonymous usage analytics was turned off
+
 ## 0.9.3 — 2026-10-13
 
 ### Improvements
