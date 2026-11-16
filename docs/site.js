@@ -200,6 +200,27 @@ if (carousel) {
   schedule();
 }
 
+const themeToggle = document.querySelector(".theme-toggle");
+const applyTheme = (theme) => {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.setAttribute(
+    "aria-label",
+    `Switch to ${theme === "dark" ? "light" : "dark"} theme`,
+  );
+  // Show the app screenshots in the same appearance as the page.
+  document.querySelector(`.segmented button[data-mode="${theme}"]`)?.click();
+};
+themeToggle.addEventListener("click", () => {
+  const theme =
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  try {
+    localStorage.setItem("theme", theme);
+  } catch {
+    // Private browsing can block storage; the toggle still works for this visit.
+  }
+  applyTheme(theme);
+});
+
 const copyButton = document.getElementById("copy");
 let copyFeedbackTimer;
 copyButton.addEventListener("click", async () => {
@@ -331,3 +352,5 @@ screenshotDialog.addEventListener("click", (event) => {
     screenshotDialog.close();
   }
 });
+
+applyTheme(document.documentElement.dataset.theme);

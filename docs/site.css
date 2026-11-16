@@ -1,20 +1,22 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --bg: #18181a;
-  --bg-deep: #101012;
-  --surface: #222225;
-  --line: #ffffff16;
-  --cream: #f5f3ef;
-  --coral: #e58b70;
-  --coral-bright: #efa086;
+  --bg: #f7f5f2;
+  --bg-deep: #ece8e3;
+  --surface: #ffffff;
+  --line: #1d1b1914;
+  --cream: #1d1b19;
+  --coral: #b5553b;
+  --coral-bright: #a14a32;
   --action: #bd583f;
   --action-hover: #ad4e38;
-  --gold: #e5c17e;
-  --text: #b8b6b4;
-  --text-dim: #a3a09d;
+  --gold: #8f5f0f;
+  --text: #4a4643;
+  --text-dim: #6b6661;
+  --thumb: #ffffff;
+  --backdrop: #f7f5f2d9;
   --radius: 15px;
-  --card-shadow: 0 2px 4px #00000026, 0 12px 28px #00000020;
+  --card-shadow: 0 1px 3px #1d1b1912, 0 10px 26px #1d1b190f;
   --display:
     -apple-system, blinkmacsystemfont, "SF Pro Display", system-ui,
     "Helvetica Neue", sans-serif;
@@ -24,6 +26,24 @@
   --brand: "Baloo 2", system-ui, sans-serif;
   --mono:
     "JetBrains Mono", ui-monospace, "SFMono-Regular", menlo, consolas, monospace;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #18181a;
+  --bg-deep: #101012;
+  --surface: #222225;
+  --line: #ffffff16;
+  --cream: #f5f3ef;
+  --coral: #e58b70;
+  --coral-bright: #efa086;
+  --gold: #e5c17e;
+  --text: #b8b6b4;
+  --text-dim: #a3a09d;
+  --thumb: #3a3837;
+  --backdrop: #181716c9;
+  --card-shadow: 0 2px 4px #00000026, 0 12px 28px #00000020;
 }
 
 * {
@@ -182,6 +202,30 @@ nav {
   color: var(--cream);
 }
 
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--cream);
+}
+
+.theme-toggle:hover {
+  color: var(--coral);
+}
+
+.theme-toggle .sun,
+:root[data-theme="dark"] .theme-toggle .moon {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .sun {
+  display: block;
+}
+
 .nav-links .nav-download {
   color: var(--bg-deep);
   background: var(--cream);
@@ -305,8 +349,8 @@ nav {
   max-width: 100%;
   margin: 38px auto 0;
   text-align: left;
-  background: var(--bg-deep);
-  border: 1px solid var(--line);
+  background: #101012;
+  border: 1px solid #ffffff16;
   border-radius: 999px;
   padding: 15px 26px;
   box-shadow: 0 24px 60px #00000045;
@@ -314,13 +358,13 @@ nav {
 }
 
 .terminal .prompt {
-  color: var(--coral);
+  color: #e58b70;
   user-select: none;
 }
 
 .terminal code {
   min-width: 0;
-  color: var(--cream);
+  color: #f5f3ef;
   overflow-x: auto;
   white-space: nowrap;
   scrollbar-width: none;
@@ -333,7 +377,7 @@ nav {
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: var(--gold);
+  color: #e5c17e;
   background: none;
   border: 0;
   border-radius: 999px;
@@ -343,7 +387,7 @@ nav {
 }
 
 .copy-btn:hover {
-  color: var(--cream);
+  color: #f5f3ef;
   transform: scale(1.1);
 }
 
@@ -550,7 +594,8 @@ h2 {
   inset: 4px auto 4px 4px;
   width: calc((100% - 8px) / 2);
   border-radius: 999px;
-  background: #3a3837;
+  background: var(--thumb);
+  box-shadow: 0 1px 3px #0000001f;
   transform: translateX(100%);
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -970,7 +1015,7 @@ footer {
 }
 
 .screenshot-dialog::backdrop {
-  background: #181716c9;
+  background: var(--backdrop);
   backdrop-filter: blur(8px);
 }
 
