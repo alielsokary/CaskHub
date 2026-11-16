@@ -193,6 +193,14 @@ nonisolated struct CaskConflicts: Decodable, Hashable, Sendable {
     }
 }
 
+nonisolated enum CaskProvenance: Hashable, Sendable {
+    case homebrewAPI
+    /// Built from an install receipt: the API no longer lists the token, or another tap installed it.
+    case installedReceipt
+    case tapSource
+    case tapInfo
+}
+
 nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     let token: String
     let fullToken: String?
@@ -212,6 +220,14 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     let variations: [String: CaskUpdateVariation]?
     let supportedPlatforms: Set<String>?
     let conflictsWith: CaskConflicts?
+    let deprecationDate: String?
+    let deprecationReason: String?
+    let deprecationReplacementCask: String?
+    let deprecationReplacementFormula: String?
+    let disableDate: String?
+    let disableReason: String?
+    let disableReplacementCask: String?
+    let disableReplacementFormula: String?
     var artifacts: [ArtifactStanza]?
     /// Verified identities supplied by CaskFlow, scoped to this cask's app artifacts.
     var catalogBundleIdentifiers: [String]?
@@ -223,6 +239,25 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     var catalogPackageProducts: [PackageApplicationIdentity]?
     /// CaskFlow-curated: a command-line tool that Homebrew ships as an app or package.
     var catalogIsCLI: Bool?
+    var provenance: CaskProvenance = .homebrewAPI
+
+    private enum CodingKeys: String, CodingKey {
+        case token, fullToken, tap, name, desc, homepage, url, sha256, version
+        case bundleVersion, bundleShortVersion, outdated, deprecated, disabled, autoUpdates
+        case variations, supportedPlatforms, conflictsWith, artifacts
+        case deprecationDate, deprecationReason, deprecationReplacementCask, deprecationReplacementFormula
+        case disableDate, disableReason, disableReplacementCask, disableReplacementFormula
+    }
+
+    /// Discover pages list current, non-variant casks, fonts included.
+    var isBrowsable: Bool {
+        !deprecated && !disabled && !token.contains("@")
+    }
+
+    /// Homebrew ships every font as a `font-` cask, and no other cask installs fonts.
+    var isFont: Bool {
+        token.hasPrefix("font-")
+    }
 
     var storeAppNames: [String] {
         catalogPackageProducts?.map(\.bundleName) ?? (appArtifactNames + packageAppNameCandidates)
@@ -236,9 +271,10 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
         catalogPackageAppIdentifiers?.keys.sorted() ?? []
     }
 
-    var id: String {
-        token
-    }
+    var id: String { reference }
+
+    /// `token` for official casks, `user/repo/token` for tap casks.
+    var reference: String { CaskReference.make(token: token, tap: tap) }
 
     /// Bundle names this cask installs into /Applications (e.g. "Google Chrome.app").
     var appArtifactNames: [String] {
@@ -304,7 +340,13 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     }
 
     var displayVersion: String {
-        let base = version.split(separator: ",", maxSplits: 1).first.map(String.init) ?? version
+        Self.displayVersion(of: version)
+    }
+
+    /// `2026.1.2.10,quail2,AI-261` → `2026.1.2.10`
+    static func displayVersion(of version: String) -> String {
+        let raw = version.split(separator: ",", maxSplits: 1).first.map(String.init) ?? version
+        let base = raw.first == "v" && raw.dropFirst().first?.isNumber == true ? String(raw.dropFirst()) : raw
 
         let numeric = String(base.prefix(while: { $0.isNumber || $0 == "." }))
             .trimmingCharacters(in: CharacterSet(charactersIn: "."))
@@ -320,6 +362,38 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
     }
 }
 
+nonisolated extension Cask {
+    /// A cask known only from local data, without Homebrew API metadata.
+    static func localOnly(
+        token: String, tap: String?, name: String, version: String, provenance: CaskProvenance,
+        fullToken: String? = nil, desc: String? = nil, homepage: String = ""
+    ) -> Cask {
+        var cask = Cask(
+            token: token, fullToken: fullToken, tap: tap, name: [name], desc: desc, homepage: homepage,
+            url: nil, sha256: nil, version: version, bundleVersion: nil, bundleShortVersion: nil,
+            outdated: false, deprecated: false, disabled: false,
+            autoUpdates: nil, variations: nil, supportedPlatforms: nil, conflictsWith: nil,
+            deprecationDate: nil, deprecationReason: nil,
+            deprecationReplacementCask: nil, deprecationReplacementFormula: nil,
+            disableDate: nil, disableReason: nil,
+            disableReplacementCask: nil, disableReplacementFormula: nil
+        )
+        cask.provenance = provenance
+        return cask
+    }
+
+    static func receiptRow(for installation: LocalCaskInstallation) -> Cask {
+        let appName = installation.appBundleNames.first.map {
+            $0.hasSuffix(".app") ? String($0.dropLast(4)) : $0
+        }
+        return localOnly(
+            token: installation.token, tap: installation.tap,
+            name: appName ?? installation.token, version: installation.installedVersion,
+            provenance: .installedReceipt
+        )
+    }
+}
+
 #if DEBUG
     extension Cask {
         static func preview(
@@ -331,6 +405,11 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
             sha256: String? = nil,
             deprecated: Bool = false,
             disabled: Bool = false,
+            deprecationDate: String? = nil,
+            deprecationReason: String? = nil,
+            deprecationReplacementCask: String? = nil,
+            disableDate: String? = nil,
+            disableReason: String? = nil,
             autoUpdates: Bool? = nil,
             conflictingCaskTokens: [String] = []
         ) -> Cask {
@@ -354,7 +433,15 @@ nonisolated struct Cask: Decodable, Identifiable, Hashable, Sendable {
                 supportedPlatforms: nil,
                 conflictsWith: conflictingCaskTokens.isEmpty
                     ? nil
-                    : CaskConflicts(cask: conflictingCaskTokens)
+                    : CaskConflicts(cask: conflictingCaskTokens),
+                deprecationDate: deprecationDate,
+                deprecationReason: deprecationReason,
+                deprecationReplacementCask: deprecationReplacementCask,
+                deprecationReplacementFormula: nil,
+                disableDate: disableDate,
+                disableReason: disableReason,
+                disableReplacementCask: nil,
+                disableReplacementFormula: nil
             )
         }
     }

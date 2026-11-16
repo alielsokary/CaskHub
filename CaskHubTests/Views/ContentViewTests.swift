@@ -113,6 +113,22 @@ final class ContentViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_click_on_search_field_clear_button_keeps_focus() {
+        let probe = FocusProbe()
+        let window = makeWindow(probe: probe)
+        let searchField = NSSearchField(frame: NSRect(x: 10, y: 80, width: 180, height: 22))
+        searchField.stringValue = "zed"
+        window.contentView!.addSubview(searchField)
+        let cancelRect = searchField.rectForCancelButton(whenCentered: false)
+        let point = searchField.convert(NSPoint(x: cancelRect.midX, y: cancelRect.midY), to: nil)
+
+        click(at: point, in: window)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+
+        XCTAssertEqual(probe.resignCount, 0)
+    }
+
+    @MainActor
     func test_deferred_resign_rechecks_focus() {
         let probe = FocusProbe()
         let window = makeWindow(probe: probe)
@@ -233,16 +249,31 @@ final class ContentViewTests: XCTestCase {
 final class SidebarViewTests: XCTestCase {
     @MainActor
     private final class SelectionProbe {
-        var selection: SidebarSelection = .library(.adopt)
+        var selection: SidebarSelection
+
+        init(_ selection: SidebarSelection) {
+            self.selection = selection
+        }
     }
 
     @MainActor
     func test_hiding_adopt_apps_moves_adopt_selection_to_installed() {
-        let defaults = UserDefaults.standard
-        defaults.set(true, forKey: SidebarView.showAdoptKey)
-        addTeardownBlock { defaults.removeObject(forKey: SidebarView.showAdoptKey) }
+        assertHiding(SidebarView.showAdoptKey, movesToInstalledFrom: .library(.adopt))
+    }
 
-        let probe = SelectionProbe()
+    @MainActor
+    func test_hiding_taps_moves_tap_selections_to_installed() {
+        assertHiding(SidebarView.showTapsKey, movesToInstalledFrom: .library(.taps))
+        assertHiding(SidebarView.showTapsKey, movesToInstalledFrom: .tap("user/tap"))
+    }
+
+    @MainActor
+    private func assertHiding(_ key: String, movesToInstalledFrom start: SidebarSelection, line: UInt = #line) {
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: key)
+        defer { defaults.removeObject(forKey: key) }
+
+        let probe = SelectionProbe(start)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 226, height: 700),
             styleMask: .borderless,
@@ -253,18 +284,19 @@ final class SidebarViewTests: XCTestCase {
         window.contentView = NSHostingView(rootView: SidebarView(
             selection: Binding(get: { probe.selection }, set: { probe.selection = $0 }),
             categoryService: CategoryService(),
-            adoptableCount: 3
+            adoptableCount: 3,
+            tapsCount: 0
         ))
         window.orderFrontRegardless()
         RunLoop.main.run(until: Date().addingTimeInterval(0.1))
 
-        defaults.set(false, forKey: SidebarView.showAdoptKey)
+        defaults.set(false, forKey: key)
         let deadline = Date().addingTimeInterval(2)
-        while probe.selection == .library(.adopt), Date() < deadline {
+        while probe.selection == start, Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.02))
         }
 
-        XCTAssertEqual(probe.selection, .library(.installed))
+        XCTAssertEqual(probe.selection, .library(.installed), line: line)
         window.contentView = NSView()
         window.close()
     }
@@ -382,26 +414,7 @@ final class TopBarViewTests: XCTestCase {
 
         // Tall enough that every browse shelf — and any sentinel wrongly attached
         // to one — materializes inside the lazy containers.
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 3000),
-            styleMask: .borderless,
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
-            .environment(categories)
-            .environment(local)
-            .environment(ImageCacheService())
-            .environment(MaintenanceViewModel(
-                localHomebrew: local,
-                catalog: vm,
-                clearImageCache: {},
-                probe: RecordingMaintenanceProbe(),
-                defaults: makeScratchDefaults("maintenance-browse-render")
-            )))
-        window.orderFrontRegardless()
-
+        renderInWindow(vm, categories: categories, local: local, width: 900, height: 3000)
         let deadline = Date().addingTimeInterval(2)
         while Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
@@ -409,9 +422,6 @@ final class TopBarViewTests: XCTestCase {
 
         addTeardownBlock { @MainActor in
             UserDefaults.standard.set(storedViewMode, forKey: "viewMode")
-            window.contentView = NSView()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            window.close()
         }
 
         XCTAssertEqual(
@@ -533,6 +543,27 @@ final class TopBarViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_search_typing_and_clearing_render_with_the_results_header() async {
+        let api = MockBrewAPIClient()
+        api.casks = (0 ..< 12).map { makeCask("cask-\($0)") }
+        let categories = CategoryService()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("search-render"))
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await vm.fetchCasks()
+
+        let window = renderInWindow(vm, categories: categories, local: local)
+        vm.searchText = "cask-1"
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertEqual(vm.searchText, "cask-1")
+        vm.searchText = ""
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertEqual(vm.appliedSearchText, "")
+        window.close()
+
+        render(SearchResultsHeader(viewModel: vm, maxWidth: 800))
+    }
+
+    @MainActor
     func test_error_state_renders_retry_view() async {
         let api = MockBrewAPIClient()
         api.casksError = URLError(.notConnectedToInternet)
@@ -543,42 +574,5 @@ final class TopBarViewTests: XCTestCase {
         XCTAssertNotNil(vm.errorMessage)
 
         renderInWindow(vm, categories: categories, local: local)
-    }
-
-    @MainActor
-    @discardableResult
-    private func renderInWindow(
-        _ vm: CaskCatalogViewModel,
-        categories: CategoryService,
-        local: LocalHomebrewService,
-        width: CGFloat = 1200
-    ) -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: width, height: 550),
-            styleMask: .borderless,
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
-            .environment(categories)
-            .environment(local)
-            .environment(ImageCacheService())
-            .environment(MaintenanceViewModel(
-                localHomebrew: local,
-                catalog: vm,
-                clearImageCache: {},
-                probe: RecordingMaintenanceProbe(),
-                defaults: makeScratchDefaults("maintenance-harness-render")
-            )))
-        window.orderFrontRegardless()
-        RunLoop.main.run(until: Date().addingTimeInterval(0.25))
-
-        addTeardownBlock { @MainActor in
-            window.contentView = NSView()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            window.close()
-        }
-        return window
     }
 }

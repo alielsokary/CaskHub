@@ -7,10 +7,17 @@
 
 import SwiftUI
 
+enum ShelfSetupPicker: String, Identifiable {
+    case adoptIgnore
+    case pin
+
+    var id: String { rawValue }
+}
+
 struct ShelfSetupView: View {
     let viewModel: CaskCatalogViewModel
+    @State private var picker: ShelfSetupPicker?
     @Environment(LocalHomebrewService.self) private var localHomebrew
-    @State private var showsIgnorePicker = false
     @State private var exportNote: BrewfileNote?
     @State private var importNote: BrewfileNote?
     @State private var importPlan: BrewfileImportPlan?
@@ -19,6 +26,7 @@ struct ShelfSetupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 brewfileCard
+                PinnedUpdatesCard(viewModel: viewModel, picker: $picker)
                 ignoreCard
             }
             .frame(maxWidth: CHSize.contentWidth, alignment: .leading)
@@ -29,11 +37,14 @@ struct ShelfSetupView: View {
         .toolbarScrollEdge()
         .contentMargins(.bottom, 44, for: .scrollContent)
         .scrollContentBackground(.hidden)
-        .sheet(isPresented: $showsIgnorePicker) {
-            AdoptIgnorePickerSheet(viewModel: viewModel)
+        .sheet(item: $picker) { picker in
+            switch picker {
+            case .adoptIgnore: AdoptIgnorePickerSheet(viewModel: viewModel)
+            case .pin: PinPickerSheet(viewModel: viewModel)
+            }
         }
         .sheet(item: $importPlan) { plan in
-            BrewfileImportSheet(plan: plan)
+            BrewfileImportSheet(plan: plan, addTap: { try await viewModel.addTap($0) })
         }
     }
 
@@ -114,9 +125,9 @@ struct ShelfSetupView: View {
         panel.showsHiddenFiles = true
         let response = CrashReporter.withHangTrackingPaused { panel.runModal() }
         guard response == .OK, let url = panel.url else { return }
-        let tokens = viewModel.installedCasks.map(\.token)
+        let tokens = viewModel.installedCasks.map(\.reference)
         do {
-            try Brewfile.contents(forCaskTokens: tokens)
+            try Brewfile.contents(forCaskReferences: tokens)
                 .write(to: url, atomically: true, encoding: .utf8)
             exportNote = BrewfileNote(
                 message: String(localized: .shelfSetupBrewfileExportSaved(
@@ -154,32 +165,8 @@ struct ShelfSetupView: View {
         importNote = nil
         importPlan = makeImportPlan(
             fileName: (url.path as NSString).abbreviatingWithTildeInPath,
-            tokens: tokens
-        )
-    }
-
-    func makeImportPlan(
-        fileName: String,
-        tokens: [String]
-    ) -> BrewfileImportPlan {
-        let byToken = Dictionary(viewModel.casks.map { ($0.token, $0) }) { first, _ in first }
-        var skippedEntries: [BrewfileImportPlan.Entry] = []
-        var newEntries: [BrewfileImportPlan.Entry] = []
-        for token in tokens {
-            // Brewfiles may tap-qualify tokens; the catalog keys bare ones.
-            let bare = token.split(separator: "/").last.map(String.init) ?? token
-            let cask = byToken[bare]
-            let entry = BrewfileImportPlan.Entry(token: token, cask: cask)
-            if let cask, viewModel.localState(for: cask).isPresent {
-                skippedEntries.append(entry)
-            } else {
-                newEntries.append(entry)
-            }
-        }
-        return BrewfileImportPlan(
-            fileName: fileName,
-            skippedEntries: skippedEntries,
-            newEntries: newEntries
+            tokens: tokens,
+            taps: Brewfile.taps(in: contents)
         )
     }
 
@@ -198,7 +185,7 @@ struct ShelfSetupView: View {
                     border: .chHairlineStrong,
                     foreground: .chTextNav
                 ) {
-                    showsIgnorePicker = true
+                    picker = .adoptIgnore
                 }
             }
             Text(String(localized: .shelfSetupIgnoreDescription))
@@ -217,9 +204,11 @@ struct ShelfSetupView: View {
             } else {
                 ForEach(viewModel.adoptIgnoredCasks) { cask in
                     ignoredRow(cask)
+                        .transition(.opacity)
                 }
             }
         }
+        .animation(.snappy, value: viewModel.adoptIgnoredCasks.map(\.reference))
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 8, trailing: 20))
         .glassPanel()
     }
@@ -257,6 +246,49 @@ struct ShelfSetupView: View {
     }
 }
 
+extension ShelfSetupView {
+    func makeImportPlan(
+        fileName: String,
+        tokens: [String],
+        taps: BrewfileTaps
+    ) -> BrewfileImportPlan {
+        let snapshot = viewModel.localHomebrew.installationSnapshot
+        let existingTaps = Set(viewModel.localHomebrew.tapIndex.taps.map(\.name))
+        // A tap already on this Mac keeps its own remote, so its casks stay installable.
+        let unsupportedTaps = taps.unsupported.filter { !existingTaps.contains($0) }
+        var skippedEntries: [BrewfileImportPlan.Entry] = []
+        var newEntries: [BrewfileImportPlan.Entry] = []
+        var unavailableEntries: [BrewfileImportPlan.Entry] = []
+        var unsupportedTapEntries: [BrewfileImportPlan.Entry] = []
+        for token in tokens {
+            let entry = BrewfileImportPlan.Entry(token: token, cask: viewModel.catalogCask(for: CaskReference.normalized(token)))
+            let state = entry.cask.map(viewModel.localState(for:))
+            // Any install of this token, including a same-token twin, owns the Caskroom entry.
+            if state?.isPresent == true || snapshot.installedCasks[CaskReference.bareToken(entry.reference)] != nil {
+                skippedEntries.append(entry)
+            } else if let tap = entry.tap, unsupportedTaps.contains(tap) || (try? TapAddInput.parse(tap).get()) == nil {
+                // brew would auto-tap an unparsable tap from GitHub on install, so it never reaches brew.
+                unsupportedTapEntries.append(entry)
+            } else if state?.retirement?.blocksInstall == true {
+                unavailableEntries.append(entry)
+            } else {
+                newEntries.append(entry)
+            }
+        }
+        let impliedTaps = newEntries.compactMap { $0.tap.flatMap { try? TapAddInput.parse($0).get() } }
+        var seen: Set<String> = []
+        return BrewfileImportPlan(
+            fileName: fileName,
+            skippedEntries: skippedEntries,
+            newEntries: newEntries,
+            unavailableEntries: unavailableEntries,
+            unsupportedTapEntries: unsupportedTapEntries,
+            tapsToAdd: (taps.toAdd + impliedTaps).filter { !existingTaps.contains($0.tapName) && seen.insert($0.tapName).inserted },
+            unsupportedTaps: unsupportedTaps
+        )
+    }
+}
+
 // MARK: - Picker Sheet
 
 struct AdoptIgnorePickerSheet: View {
@@ -285,11 +317,13 @@ struct AdoptIgnorePickerSheet: View {
                     } else {
                         ForEach(viewModel.adoptableCasks) { cask in
                             adoptableRow(cask)
+                                .transition(.opacity)
                         }
                     }
                 }
+                .animation(.snappy, value: viewModel.adoptableCasks.map(\.reference))
             }
-            .frame(maxHeight: 300)
+            .frame(height: 300)
 
             HStack {
                 Spacer()

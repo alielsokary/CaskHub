@@ -50,7 +50,7 @@ nonisolated struct CaskAdoptionPlan: Equatable, Sendable {
         installationSource: CaskInstallationSource?,
         installedVersion: String?,
         homebrewVersion: String,
-        installedCaskTokens: Set<String>,
+        installedCaskTokens: some Collection<String>,
         conflictingCaskTokens: [String]
     ) -> CaskAdoptionPlan? {
         guard let artifact = artifact(for: installationSource) else { return nil }

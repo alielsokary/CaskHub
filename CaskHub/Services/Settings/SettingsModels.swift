@@ -123,9 +123,77 @@ nonisolated enum HomebrewLocationChoice: Hashable, Sendable {
 protocol HomebrewSettingsApplying: AnyObject {
     var customBrewPrefix: String? { get }
     func setCustomBrewPrefix(_ prefix: String?) async
+    var applicationDirectoryOverride: URL? { get }
+    func setApplicationDirectory(_ directory: URL?) async
 }
 
 extension LocalHomebrewService: HomebrewSettingsApplying {}
+
+@MainActor
+@Observable
+final class ApplicationDirectorySettingsModel {
+    var field = ""
+    private(set) var isInvalid = false
+    private(set) var isOverridden = false
+
+    private let settings: any HomebrewSettingsApplying
+    private let fileManager: FileManager
+
+    init(settings: any HomebrewSettingsApplying, fileManager: FileManager = .default) {
+        self.settings = settings
+        self.fileManager = fileManager
+        synchronize()
+    }
+
+    func synchronize() {
+        let override = settings.applicationDirectoryOverride
+        field = override?.path ?? LocalHomebrewService.defaultApplicationDirectoryPath
+        isOverridden = override != nil
+        isInvalid = false
+    }
+
+    func validate() {
+        isInvalid = validatedDirectory() == nil
+    }
+
+    func applyTypedPath() async {
+        guard let directory = validatedDirectory() else {
+            isInvalid = true
+            return
+        }
+        let current = settings.applicationDirectoryOverride?.path ?? LocalHomebrewService.defaultApplicationDirectoryPath
+        if directory.path != current {
+            await settings.setApplicationDirectory(directory)
+        }
+        synchronize()
+    }
+
+    func applyOnFocusLoss() async {
+        guard validatedDirectory() != nil else { return synchronize() }
+        await applyTypedPath()
+    }
+
+    func applySelection(_ directory: URL) async {
+        field = directory.path
+        await applyTypedPath()
+    }
+
+    func reset() async {
+        await settings.setApplicationDirectory(nil)
+        synchronize()
+    }
+
+    private func validatedDirectory() -> URL? {
+        let path = NSString(string: field.trimmingCharacters(in: .whitespacesAndNewlines))
+            .expandingTildeInPath
+        var isDirectory: ObjCBool = false
+        guard path.hasPrefix("/"),
+              fileManager.fileExists(atPath: path, isDirectory: &isDirectory),
+              isDirectory.boolValue
+        else { return nil }
+        return URL(fileURLWithPath: path).standardizedFileURL
+    }
+}
 
 @MainActor
 @Observable
@@ -235,5 +303,68 @@ final class HomebrewLocationSettingsModel {
         case nil:
             return machineIsAppleSilicon ? .appleSilicon : .intel
         }
+    }
+}
+
+@MainActor
+@Observable
+final class AdministratorPasswordSettingsModel {
+    enum EnableResult: Equatable {
+        case enabled
+        case rejected
+        case failed
+    }
+
+    private(set) var isAvailable = false
+    private(set) var isEnabled = false
+
+    private let store: any AdministratorPasswordStoring
+    private let passwordAccepted: @Sendable (String) -> Bool
+
+    init(
+        store: any AdministratorPasswordStoring = KeychainAdministratorPasswordStore(),
+        passwordAccepted: @escaping @Sendable (String) -> Bool = LoginPasswordVerifier.accepts
+    ) {
+        self.store = store
+        self.passwordAccepted = passwordAccepted
+    }
+
+    func refresh() async {
+        let state = await Self.state(of: store)
+        isEnabled = state.access && store.touchID.isEnabled
+        isAvailable = state.touchID || isEnabled
+    }
+
+    func enable(password: String) async -> EnableResult {
+        let result = await Self.save(password, to: store, accepted: passwordAccepted)
+        if result == .enabled {
+            store.touchID.setEnabled(true)
+            isEnabled = true
+        }
+        return result
+    }
+
+    func disable() async {
+        isEnabled = false
+        store.touchID.setEnabled(false)
+        await Self.delete(from: store)
+    }
+
+    @concurrent
+    private static func state(of store: any AdministratorPasswordStoring) async -> (access: Bool, touchID: Bool) {
+        (store.hasKeychainAccess, store.isAvailable)
+    }
+
+    @concurrent
+    private static func save(
+        _ password: String, to store: any AdministratorPasswordStoring, accepted: @Sendable (String) -> Bool
+    ) async -> EnableResult {
+        guard accepted(password) else { return .rejected }
+        return (try? store.save(password)) == nil ? .failed : .enabled
+    }
+
+    @concurrent
+    private static func delete(from store: any AdministratorPasswordStoring) async {
+        store.delete()
     }
 }

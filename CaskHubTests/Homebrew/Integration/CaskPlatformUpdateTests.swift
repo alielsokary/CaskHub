@@ -18,11 +18,12 @@ final class CaskPlatformUpdateTests: XCTestCase {
                     receipt: receipt, report: HomebrewOutdatedReport(upgradable: ["onyx"], pinned: [])
                 )
                 defer { context.session.invalidateAndCancel() }
-                assertUpdates(context, off: false, greedy: false)
+                await assertUpdates(context, off: false, greedy: false)
                 let cask = try XCTUnwrap(context.vm.casks.first)
                 XCTAssertFalse(context.service.localState(for: cask).isOutdated)
                 XCTAssertEqual(cask.version, "5.1.0", "Display metadata stays unchanged")
                 XCTAssertEqual(cask.url, "https://example.com/27/OnyX.dmg")
+                await context.vm.projectionsSettled()
                 XCTAssertEqual(context.vm.installedCount, 1)
             }
         }
@@ -34,10 +35,10 @@ final class CaskPlatformUpdateTests: XCTestCase {
                 platform: CaskPlatform(tag: tag), receipt: "4.8.4"
             )
             defer { context.session.invalidateAndCancel() }
-            assertUpdates(context, off: true, greedy: true)
+            await assertUpdates(context, off: true, greedy: true)
             updateInstalledCask(installation("onyx", version: "4.8.5"), in: context.service)
             await context.service.refresh()
-            assertUpdates(context, off: false, greedy: false)
+            await assertUpdates(context, off: false, greedy: false)
         }
     }
 
@@ -45,7 +46,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
         let context = try await makeContext(platform: sequoia, receipt: "4.8.5", report: nil)
         defer { context.session.invalidateAndCancel() }
         XCTAssertNil(context.service.homebrewOutdated)
-        assertUpdates(context, off: false, greedy: false)
+        await assertUpdates(context, off: false, greedy: false)
     }
 
     func test_explicitly_unsupported_platform_wins_over_homebrew_listing() async throws {
@@ -55,7 +56,8 @@ final class CaskPlatformUpdateTests: XCTestCase {
             report: HomebrewOutdatedReport(upgradable: ["onyx"], pinned: [])
         )
         defer { context.session.invalidateAndCancel() }
-        assertUpdates(context, off: false, greedy: false)
+        await assertUpdates(context, off: false, greedy: false)
+        await context.vm.projectionsSettled()
         XCTAssertEqual(context.vm.installedCount, 1, "Keep installed apps visible and manageable")
         let cask = try XCTUnwrap(context.vm.casks.first)
         XCTAssertEqual(context.service.localState(for: cask).uninstallAvailability, .available)
@@ -69,7 +71,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
                 receipt: receipt, overrides: overrides
             )
             defer { context.session.invalidateAndCancel() }
-            assertUpdates(context, off: false, greedy: false)
+            await assertUpdates(context, off: false, greedy: false)
         }
     }
 
@@ -86,7 +88,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
             Scenario(variant: ["auto_updates": false], off: true, greedy: true),
             Scenario(variant: ["version": NSNull(), "auto_updates": false], off: false, greedy: false),
             Scenario(variant: ["version": "4.8.5", "disabled": true], off: false, greedy: false),
-            Scenario(variant: ["version": "4.8.5", "deprecated": true], off: false, greedy: false)
+            Scenario(variant: ["version": "4.8.5", "deprecated": true], off: false, greedy: true)
         ]
         for scenario in scenarios {
             let context = try await makeContext(
@@ -94,7 +96,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
                 overrides: ["auto_updates": true, "variations": ["arm64_sequoia": scenario.variant]]
             )
             defer { context.session.invalidateAndCancel() }
-            assertUpdates(context, off: scenario.off, greedy: scenario.greedy)
+            await assertUpdates(context, off: scenario.off, greedy: scenario.greedy)
         }
     }
 
@@ -104,7 +106,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
             report: HomebrewOutdatedReport(upgradable: ["onyx"], pinned: []), appVersion: "4.8.5"
         )
         defer { context.session.invalidateAndCancel() }
-        assertUpdates(context, off: false, greedy: false)
+        await assertUpdates(context, off: false, greedy: false)
     }
 
     func test_pinned_compatible_update_stays_excluded() async throws {
@@ -114,8 +116,18 @@ final class CaskPlatformUpdateTests: XCTestCase {
         defer { context.session.invalidateAndCancel() }
         for greedy in [false, true] {
             context.service.setGreedyUpdates(greedy)
+            await context.vm.projectionsSettled()
             XCTAssertEqual(context.vm.updatesCount, 0)
         }
+    }
+
+    func test_scanned_pin_hides_update_that_brew_outdated_omits() async throws {
+        let context = try await makeContext(platform: sequoia, receipt: "4.8.4", overrides: ["auto_updates": true])
+        defer { context.session.invalidateAndCancel() }
+        await assertUpdates(context, off: false, greedy: true)
+
+        updateInstallationSnapshot(of: context.service) { $0.pinnedVersions = ["onyx": "4.8.4"] }
+        await assertUpdates(context, off: false, greedy: false)
     }
 
     private let sequoia = CaskPlatform(tag: "arm64_sequoia")
@@ -126,11 +138,12 @@ final class CaskPlatformUpdateTests: XCTestCase {
         let session: URLSession
     }
 
-    private func assertUpdates(_ context: Context, off: Bool, greedy: Bool, file: StaticString = #filePath, line: UInt = #line) {
+    private func assertUpdates(_ context: Context, off: Bool, greedy: Bool, file: StaticString = #filePath, line: UInt = #line) async {
         for (enabled, expected) in [(false, off), (true, greedy)] {
             context.service.setGreedyUpdates(enabled)
             let cask = context.vm.casks[0]
             XCTAssertEqual(context.service.localState(for: cask).hasAvailableUpdate, expected, file: file, line: line)
+            await context.vm.projectionsSettled()
             XCTAssertEqual(context.vm.updatesCount, expected ? 1 : 0, file: file, line: line)
             XCTAssertEqual(context.vm.filteredCasks.map(\.token), expected ? ["onyx"] : [], file: file, line: line)
             XCTAssertEqual(context.vm.updatableCasks.map(\.token), expected ? ["onyx"] : [], file: file, line: line)
@@ -207,10 +220,10 @@ extension CaskPlatformUpdateTests {
             }
             defer { context.session.invalidateAndCancel() }
             XCTAssertEqual(context.service.caskPlatform?.tag, tag)
-            assertUpdates(context, off: false, greedy: false)
+            await assertUpdates(context, off: false, greedy: false)
             updateInstalledCask(installation("onyx", version: "4.8.4"), in: context.service)
             await context.service.refresh()
-            assertUpdates(context, off: true, greedy: true)
+            await assertUpdates(context, off: true, greedy: true)
         }
     }
 
@@ -220,7 +233,7 @@ extension CaskPlatformUpdateTests {
             report: HomebrewOutdatedReport(upgradable: ["onyx"], pinned: [])
         )
         defer { context.session.invalidateAndCancel() }
-        assertUpdates(context, off: false, greedy: false)
+        await assertUpdates(context, off: false, greedy: false)
     }
 
     func test_platform_query_failures_never_use_the_generic_catalog_version() async throws {
@@ -240,7 +253,7 @@ extension CaskPlatformUpdateTests {
             }
             defer { context.session.invalidateAndCancel() }
             XCTAssertNil(context.service.caskPlatform, "Output: \(output), status: \(status)")
-            assertUpdates(context, off: false, greedy: false)
+            await assertUpdates(context, off: false, greedy: false)
         }
     }
 
@@ -249,7 +262,7 @@ extension CaskPlatformUpdateTests {
             $0.caskPlatformProvider = nil
         }
         defer { context.session.invalidateAndCancel() }
-        assertUpdates(context, off: false, greedy: false)
+        await assertUpdates(context, off: false, greedy: false)
     }
 
     func test_platform_refresh_caches_invalidates_and_recovers_update_eligibility() async throws {
@@ -263,7 +276,7 @@ extension CaskPlatformUpdateTests {
         }
         defer { context.session.invalidateAndCancel() }
         XCTAssertEqual(queries, 1)
-        assertUpdates(context, off: false, greedy: false)
+        await assertUpdates(context, off: false, greedy: false)
 
         for nextPlatform in [sequoia, nil, sequoia] {
             let previousRevision = context.service.catalogStateRevision
@@ -272,7 +285,7 @@ extension CaskPlatformUpdateTests {
             XCTAssertGreaterThan(context.service.catalogStateRevision, previousRevision)
             let queryCount = queries
             for _ in 0 ..< 10 {
-                assertUpdates(context, off: platform != nil, greedy: platform != nil)
+                await assertUpdates(context, off: platform != nil, greedy: platform != nil)
             }
             XCTAssertEqual(queries, queryCount, "Reading catalog state must use the cached platform")
             XCTAssertEqual(context.service.caskPlatform, platform)
@@ -280,10 +293,79 @@ extension CaskPlatformUpdateTests {
         XCTAssertEqual(queries, 4)
         context.service.invalidateBrewVersion()
         XCTAssertNil(context.service.caskPlatform)
-        assertUpdates(context, off: false, greedy: false)
+        await assertUpdates(context, off: false, greedy: false)
         await context.service.refresh()
-        assertUpdates(context, off: true, greedy: true)
+        await assertUpdates(context, off: true, greedy: true)
         XCTAssertEqual(queries, 5)
+    }
+
+    func test_retirement_resolves_reason_date_and_replacement_per_platform() async throws {
+        let casks = try await decodeCatalog([
+            ["token": "tomatobar", "disabled": true, "disable_date": "2026-09-01",
+             "disable_reason": "fails_gatekeeper_check"],
+            ["token": "codex-app", "deprecated": true, "deprecation_date": "2026-07-12",
+             "deprecation_reason": "discontinued", "deprecation_replacement_cask": "chatgpt"],
+            ["token": "active-trader-pro", "deprecated": true, "deprecation_date": "2025-12-17",
+             "deprecation_reason": "discontinued", "disable_date": "2026-12-17", "disable_reason": NSNull()],
+            ["token": "both-flags", "deprecated": true, "deprecation_date": "2025-06-11",
+             "deprecation_reason": "unmaintained", "disabled": true, "disable_date": "2026-06-11",
+             "disable_reason": "unmaintained", "disable_replacement_formula": "op"],
+            ["token": "adrive", "variations": ["golden_gate": [
+                "disabled": true, "disable_date": "2026-09-01", "disable_reason": "fails_gatekeeper_check"
+            ]]],
+            ["token": "explicit-null", "deprecated": true, "deprecation_date": "2026-01-02",
+             "deprecation_replacement_cask": "chatgpt",
+             "variations": ["arm64_tahoe": ["deprecation_replacement_cask": NSNull()]]],
+            ["token": "live"]
+        ])
+        let arm = CaskPlatform(tag: "arm64_golden_gate")
+
+        XCTAssertEqual(casks["tomatobar"]?.retirement(for: arm), .disabled(
+            reason: "fails_gatekeeper_check", disabledOn: try day("2026-09-01"), replacement: nil
+        ))
+        XCTAssertEqual(casks["codex-app"]?.retirement(for: nil), .deprecated(
+            reason: "discontinued", deprecatedOn: try day("2026-07-12"),
+            plannedDisableDate: try day("2027-07-12"), replacement: .cask("chatgpt")
+        ))
+        XCTAssertEqual(casks["active-trader-pro"]?.retirement(for: arm), .deprecated(
+            reason: "discontinued", deprecatedOn: try day("2025-12-17"),
+            plannedDisableDate: try day("2026-12-17"), replacement: nil
+        ))
+        XCTAssertEqual(casks["both-flags"]?.retirement(for: arm), .disabled(
+            reason: "unmaintained", disabledOn: try day("2026-06-11"), replacement: .formula("op")
+        ))
+        XCTAssertEqual(casks["adrive"]?.retirement(for: CaskPlatform(tag: "golden_gate")), .disabled(
+            reason: "fails_gatekeeper_check", disabledOn: try day("2026-09-01"), replacement: nil
+        ))
+        XCTAssertNil(casks["adrive"]?.retirement(for: arm))
+        XCTAssertEqual(casks["explicit-null"]?.retirement(for: CaskPlatform(tag: "arm64_tahoe")), .deprecated(
+            reason: nil, deprecatedOn: try day("2026-01-02"), plannedDisableDate: try day("2027-01-02"), replacement: nil
+        ))
+        XCTAssertNil(casks["live"]?.retirement(for: arm))
+        XCTAssertEqual(casks["tomatobar"]?.retirement(for: arm)?.blocksInstall, true)
+        XCTAssertEqual(casks["codex-app"]?.retirement(for: arm)?.blocksInstall, false)
+    }
+
+    private func day(_ iso: String) throws -> Date {
+        try Date(iso, strategy: Date.ISO8601FormatStyle().year().month().day())
+    }
+
+    private func decodeCatalog(_ overrides: [[String: Any]]) async throws -> [String: Cask] {
+        let payloads = overrides.map { override in
+            var payload: [String: Any] = [
+                "name": ["App"], "homepage": "https://example.com", "version": "1.0",
+                "outdated": false, "deprecated": false, "disabled": false
+            ]
+            payload.merge(override) { _, replacement in replacement }
+            return payload
+        }
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [PlatformCatalogProtocol.self]
+        config.httpAdditionalHeaders = ["X-Test-Catalog": try JSONSerialization.data(withJSONObject: payloads).base64EncodedString()]
+        let session = URLSession(configuration: config)
+        defer { session.invalidateAndCancel() }
+        let casks = try await BrewAPIClient(session: session).fetchAllCasks()
+        return Dictionary(uniqueKeysWithValues: casks.map { ($0.token, $0) })
     }
 
     private func makePlatformBrew(in root: URL, output: String, status: Int = 0) throws -> URL {

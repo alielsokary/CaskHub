@@ -219,6 +219,12 @@ extension LocalHomebrewError {
                 return "The app's uninstall helper is missing, which blocks the "
                     + "update. Repair & Reinstall clears it and installs the new "
                     + "version fresh — your settings and data are kept."
+            case .missingArtifactSource where args.first == "upgrade" && !trimmed.contains("Caskroom"):
+                return String(localized: """
+                The installed app was renamed, moved, or deleted since Homebrew installed it, which blocks \
+                the update. Force Update installs the new version and replaces any app already at its \
+                location. Your settings and data are kept.
+                """)
             case .missingUninstallScript:
                 return "The app's uninstall helper is missing, so Homebrew can't run "
                     + "its normal cleanup. Force Uninstall removes the app anyway."

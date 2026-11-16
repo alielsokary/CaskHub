@@ -86,8 +86,8 @@ enum CaskOperationFailureFactory {
             }
         case .missingArtifactSource
             where arguments.first == "upgrade" && !stderr.contains("Caskroom"):
-            // A missing Caskroom staging path is a broken download; reinstall can't help.
-            return [.repairAndReinstall]
+            // A missing Caskroom staging path is a broken download; forcing can't help.
+            return [.forceUpgrade]
         case .homebrewRuntimeIncompatible:
             return [.updateHomebrew]
         case .fullDiskAccessRequired:

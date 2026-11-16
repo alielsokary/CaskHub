@@ -81,6 +81,22 @@ final class ZombieDetectionTests: XCTestCase {
         XCTAssertEqual(scan()["chrome"]?.isZombie, false)
     }
 
+    func test_renamed_cask_symlink_is_not_scanned_as_a_second_install() throws {
+        try makeEntry("chatgpt", receiptApps: ["ChatGPT.app"])
+        try fm.createDirectory(
+            at: appsDir.appendingPathComponent("ChatGPT.app"), withIntermediateDirectories: true
+        )
+        try fm.createSymbolicLink(
+            atPath: caskroom.appendingPathComponent("codex-app").path,
+            withDestinationPath: "chatgpt"
+        )
+
+        let installations = scan()
+
+        XCTAssertEqual(Set(installations.keys), ["chatgpt"])
+        XCTAssertEqual(installations["chatgpt"]?.isZombie, false)
+    }
+
     func test_real_app_parked_inside_caskroom_is_not_zombie() throws {
         let versionDir = try makeEntry("tabby", receiptApps: ["Tabby.app"])
         try fm.createDirectory(
@@ -227,7 +243,7 @@ final class ZombieDetectionTests: XCTestCase {
     }
 
     @MainActor
-    func test_moved_app_on_upgrade_offers_repair_but_broken_staging_does_not() {
+    func test_moved_app_on_upgrade_offers_force_update_but_broken_staging_does_not() {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("moved-app"))
         let movedApp = LocalHomebrewError.brewCommandFailed(
             args: ["upgrade", "--cask", "proton-mail"], exitCode: 1,
@@ -235,10 +251,8 @@ final class ZombieDetectionTests: XCTestCase {
                 + "'/Applications/Proton Mail.app' is not there."
         )
         service.noteFailure(token: "proton-mail", error: movedApp)
-        XCTAssertTrue(
-            service.operationStore.state(for: "proton-mail")?.failure?
-                .recoveries.contains(.repairAndReinstall) == true
-        )
+        XCTAssertEqual(service.operationStore.state(for: "proton-mail")?.failure?.recoveries, [.forceUpgrade])
+        XCTAssertTrue(movedApp.errorDescription?.contains("Force Update") == true)
 
         let brokenStaging = LocalHomebrewError.brewCommandFailed(
             args: ["install", "--cask", "macpar-deluxe", "--adopt"], exitCode: 1,
@@ -246,10 +260,7 @@ final class ZombieDetectionTests: XCTestCase {
                 + "macpar-deluxe/5.1.1/MacPAR deLuxe.app' is not there."
         )
         service.noteFailure(token: "macpar-deluxe", error: brokenStaging)
-        XCTAssertFalse(
-            service.operationStore.state(for: "macpar-deluxe")?.failure?
-                .recoveries.contains(.repairAndReinstall) == true
-        )
+        XCTAssertEqual(service.operationStore.state(for: "macpar-deluxe")?.failure?.recoveries, [])
     }
 
     func test_dependency_refusal_names_the_dependent_cask() {
@@ -372,7 +383,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
-            appBundleNames: ["Codex.app"], isZombie: true
+            appBundleNames: ["Codex.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         let cask = makeCask("chatgpt", appNames: ["ChatGPT.app"])
         await service.updatePackageCatalog([cask])
@@ -388,7 +400,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mole.app"], isZombie: true
+            appBundleNames: ["Mole.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         let cask = makeCask("mole-app", appNames: ["Mole.app"])
         await service.updatePackageCatalog([cask])
@@ -404,7 +417,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "mystery", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mystery.app"], isZombie: true
+            appBundleNames: ["Mystery.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         XCTAssertFalse(
             service.localState(for: makeCask("mystery")).isZombie,
@@ -426,7 +440,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "chatgpt", installedVersion: "26.623", installedAt: nil,
-            appBundleNames: ["Codex.app"], isZombie: true
+            appBundleNames: ["Codex.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         service.open(makeCask("chatgpt", appNames: ["ChatGPT.app"]))
         XCTAssertNil(
@@ -449,7 +464,8 @@ final class ZombieDetectionTests: XCTestCase {
         }
         updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mole.app"], isZombie: true
+            appBundleNames: ["Mole.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         try? await service.uninstall(token: "mole-app")
         XCTAssertEqual(
@@ -459,7 +475,8 @@ final class ZombieDetectionTests: XCTestCase {
 
         updateInstalledCask(LocalCaskInstallation(
             token: "chrome", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Chrome.app"], isZombie: false
+            appBundleNames: ["Chrome.app"], isZombie: false,
+            tap: "homebrew/cask"
         ), in: service)
         try? await service.uninstall(token: "chrome")
         XCTAssertEqual(
@@ -473,7 +490,8 @@ final class ZombieDetectionTests: XCTestCase {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("zombie-updates"))
         updateInstalledCask(LocalCaskInstallation(
             token: "mole-app", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Mole.app"], isZombie: true
+            appBundleNames: ["Mole.app"], isZombie: true,
+            tap: "homebrew/cask"
         ), in: service)
         XCTAssertFalse(
             service.localState(for: makeCask(

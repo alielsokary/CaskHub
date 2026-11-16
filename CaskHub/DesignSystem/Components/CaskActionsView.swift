@@ -77,17 +77,25 @@ struct CaskActionsView: View {
             }
         } else if let externalPath = state.externalCLIPath {
             ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
-                .help(
+                .hoverHint(
                     state.uninstallAvailability.unavailableReason
                         ?? "Installed outside Homebrew at \(externalPath.path)."
                 )
+        } else if let source = presentation.blockingInstallSource {
+            ActionCapsuleLabel(action: .install, fullWidth: fullWidth)
+                .opacity(0.45)
+                .hoverHint(String(localized: "Installed from \(source)"))
         } else {
+            // Homebrew refuses to install a disabled cask; the retirement badge explains why.
+            let installBlocked = state.retirement?.blocksInstall == true
             ActionCapsuleButton(action: .install, fullWidth: fullWidth) {
                 localHomebrew.send(.install(cask))
             }
             .disabledDuringHomebrewUpdate(
                 presentation.isHomebrewMutationBlocked
             )
+            .disabled(installBlocked)
+            .opacity(installBlocked ? 0.45 : 1)
         }
     }
 
@@ -98,7 +106,7 @@ struct CaskActionsView: View {
     ) -> some View {
         if state.isZombie {
             ActionCapsuleButton(action: .cleanup, fullWidth: fullWidth) {
-                localHomebrew.send(.repair(token: cask.token))
+                localHomebrew.send(.repair(token: cask.reference))
             }
             .help(String(localized: .actionCleanupZombieHelp(cask.displayName)))
             .disabledDuringHomebrewUpdate(mutationBlocked)
@@ -116,7 +124,7 @@ struct CaskActionsView: View {
             if state.canOpen {
                 openButton(
                     fullWidth: fullWidth && !state.hasAvailableUpdate,
-                    isPairedWithUpdate: state.hasAvailableUpdate
+                    isPaired: state.hasAvailableUpdate
                 ) {
                     localHomebrew.send(.open(cask))
                 }
@@ -126,10 +134,9 @@ struct CaskActionsView: View {
                     fullWidth: fullWidth,
                     mutationBlocked: mutationBlocked
                 ) {
-                    localHomebrew.send(.update(token: cask.token))
+                    localHomebrew.send(.update(token: cask.reference))
                 }
-            }
-            if !state.canOpen && !state.hasAvailableUpdate {
+            } else if !state.canOpen {
                 ActionCapsuleLabel(action: .installed, fullWidth: fullWidth)
             }
             if let onUninstall {
@@ -152,10 +159,10 @@ struct CaskActionsView: View {
     @ViewBuilder
     private func openButton(
         fullWidth: Bool,
-        isPairedWithUpdate: Bool = false,
+        isPaired: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
-        if usesIconOnlyOpenAndUpdate && isPairedWithUpdate {
+        if usesIconOnlyOpenAndUpdate && isPaired {
             ActionCapsuleIconButton(action: .open, onTap: action)
         } else {
             ActionCapsuleButton(action: .open, fullWidth: fullWidth, onTap: action)
@@ -181,7 +188,7 @@ struct CaskActionsView: View {
         for action: CaskAction,
         presentation: CaskActionPresentation
     ) -> some View {
-        let token = cask.token
+        let token = cask.reference
 
         return CaskOperationCapsule(
             action: action,
@@ -200,20 +207,15 @@ private extension View {
         if disabled {
             self
                 .disabled(true)
-                .help(String(localized: "Wait for the current action to finish."))
+                .hoverHint(String(localized: "Wait for the current action to finish."))
         } else {
             self
         }
     }
 }
 
-/// SwiftUI's native `.help` tooltip is dismissed by a click even while the
-/// pointer remains over the view. This hint follows hover state directly, so it
-/// stays visible until the pointer actually leaves the disabled control.
 private struct DisabledUninstallControl: View {
     let message: String
-
-    @State private var isHovering = false
 
     var body: some View {
         Image(systemName: "trash")
@@ -223,32 +225,7 @@ private struct DisabledUninstallControl: View {
             .background(Circle().fill(Color.chSurfaceField.opacity(0.5)))
             .overlay(Circle().strokeBorder(Color.chHairline, lineWidth: 1))
             .contentShape(Circle())
-            .onHover { isHovering = $0 }
-            .overlay(alignment: .topTrailing) {
-                if isHovering {
-                    Text(message)
-                        .font(CHType.bodySm)
-                        .foregroundStyle(Color.chTextTitle)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(width: 220, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.chSurfaceToolbar)
-                                .shadow(color: Color.chShadowCard, radius: 8, y: 3)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color.chHairlineStrong, lineWidth: 1)
-                        )
-                        .offset(y: -48)
-                        .allowsHitTesting(false)
-                }
-            }
-            .zIndex(isHovering ? 10 : 0)
+            .hoverHint(message)
             .accessibilityLabel("Uninstall")
-            .accessibilityHint(message)
     }
 }

@@ -7,10 +7,34 @@
 
 import Foundation
 
+/// Every API cask, split once per fetch so Discover pages keep reading only browsable ones.
+nonisolated struct CatalogPartition: Equatable {
+    let all: [Cask]
+    let browsable: [Cask]
+    /// Deprecated or disabled main casks: found by search, never listed.
+    let retired: [Cask]
+    /// Third-party tap casks: searchable and manageable, never on Discover pages or in categories.
+    let tapCasks: [Cask]
+    let byReference: [String: Cask]
+
+    init(_ all: [Cask], tapCasks: [Cask]) {
+        self.all = all
+        browsable = all.filter(\.isBrowsable)
+        retired = all.filter { ($0.deprecated || $0.disabled) && !$0.token.contains("@") }
+        self.tapCasks = tapCasks
+        byReference = Dictionary((all + tapCasks).map { ($0.reference, $0) }) { first, _ in first }
+    }
+}
+
 nonisolated struct CatalogLibraryProjectionInput {
     let casks: [Cask]
+    /// Installed casks Discover pages never list: retired, font, `@` variants, and receipt-built rows.
+    let installedOnlyCasks: [Cask]
+    let retiredCasks: [Cask]
     let localStates: [String: CaskLocalState]
     let categoryMappings: [String: TokenCategoryMapping]
+    /// Tap casks CaskFlow matched to an official cask; that cask already stands for them on category pages.
+    let officialTwins: Set<String>
     let adoptIgnoredTokens: Set<String>
 }
 
@@ -25,6 +49,8 @@ nonisolated struct CatalogBrowseProjectionInput {
 
 nonisolated struct CatalogFilteredProjectionInput {
     let casks: [Cask]
+    let tapCasks: [Cask]
+    let retiredCasks: [Cask]
     let library: CatalogLibrarySnapshot
     let selectedSidebar: SidebarSelection
     let searchText: String
@@ -37,46 +63,78 @@ nonisolated struct CatalogFilteredProjectionInput {
     let nameRanks: [String: Int]
 }
 
+private nonisolated struct LibraryMembership {
+    var updatable: [Cask] = []
+    var installed: [Cask] = []
+    var homebrewInstalled: [Cask] = []
+
+    mutating func add(_ cask: Cask, _ state: CaskLocalState) {
+        if state.hasAvailableUpdate { updatable.append(cask) }
+        if state.isPresent { installed.append(cask) }
+        if state.isHomebrewInstalled { homebrewInstalled.append(cask) }
+    }
+}
+
 nonisolated enum CatalogProjector {
     static func makeLibrary(
         from input: CatalogLibraryProjectionInput
     ) -> CatalogLibrarySnapshot {
-        var updatableCasks: [Cask] = []
-        var installedCasks: [Cask] = []
-        var homebrewInstalledCasks: [Cask] = []
+        var library = LibraryMembership()
         var adoptableCasks: [Cask] = []
         var casksByCategory: [String: [Cask]] = [:]
 
         for cask in input.casks {
-            guard let localState = input.localStates[cask.token] else { continue }
-            if localState.hasAvailableUpdate {
-                updatableCasks.append(cask)
-            }
-            if localState.isPresent {
-                installedCasks.append(cask)
-            }
-            if localState.isHomebrewInstalled {
-                homebrewInstalledCasks.append(cask)
-            }
+            guard let localState = input.localStates[cask.reference] else { continue }
+            library.add(cask, localState)
             if localState.isAdoptable, !input.adoptIgnoredTokens.contains(cask.token) {
                 adoptableCasks.append(cask)
             }
-            if let mapping = input.categoryMappings[cask.token] {
+            // An uninstalled twin would list the official cask's app twice.
+            if let mapping = input.categoryMappings[cask.reference],
+               !input.officialTwins.contains(cask.reference) || localState.isHomebrewInstalled {
                 forEachUniqueCategory(in: mapping) { categoryID in
                     casksByCategory[categoryID, default: []].append(cask)
                 }
             }
         }
 
+        for cask in input.installedOnlyCasks {
+            guard let localState = input.localStates[cask.reference] else { continue }
+            library.add(cask, localState)
+        }
+        var retiredCasksByCategory: [String: [Cask]] = [:]
+        for cask in input.retiredCasks {
+            guard let mapping = input.categoryMappings[cask.reference] else { continue }
+            forEachUniqueCategory(in: mapping) { categoryID in
+                retiredCasksByCategory[categoryID, default: []].append(cask)
+            }
+        }
+
         return CatalogLibrarySnapshot(
-            updatableCasks: updatableCasks,
-            installedCasks: installedCasks,
-            homebrewInstalledCasks: homebrewInstalledCasks,
+            updatableCasks: library.updatable,
+            installedCasks: library.installed,
+            homebrewInstalledCasks: library.homebrewInstalled,
             adoptableCasks: adoptableCasks,
             casksByCategory: casksByCategory,
             categoryCounts: casksByCategory.mapValues(\.count),
+            retiredCasksByCategory: retiredCasksByCategory,
             localStates: input.localStates
         )
+    }
+
+    /// Without the API catalog every installed token would look removed from Homebrew.
+    static func installedOnlyCasks(
+        installations: [String: LocalCaskInstallation],
+        partition: CatalogPartition
+    ) -> [Cask] {
+        guard !partition.all.isEmpty else { return [] }
+        return installations.values.sorted { $0.token < $1.token }.compactMap { installation in
+            let reference = CaskReference.make(token: installation.token, tap: installation.tap)
+            guard let cask = partition.byReference[reference] else {
+                return Cask.receiptRow(for: installation)
+            }
+            return cask.isBrowsable ? nil : cask
+        }
     }
 
     static func makeBrowseSections(
@@ -89,7 +147,7 @@ nonisolated enum CatalogProjector {
         )
         var casksByCategory: [String: [Cask]] = [:]
         for cask in popularityOrder {
-            guard let mapping = input.categoryMappings[cask.token] else { continue }
+            guard let mapping = input.categoryMappings[cask.reference] else { continue }
             forEachUniqueCategory(in: mapping) { categoryID in
                 if casksByCategory[categoryID, default: []].count < sectionSize {
                     casksByCategory[categoryID, default: []].append(cask)
@@ -101,14 +159,14 @@ nonisolated enum CatalogProjector {
             BrowseSection(
                 title: String(localized: "Most Popular"),
                 destination: .discover(.topCharts),
-                casks: Array(popularityOrder.prefix(sectionSize))
+                casks: Array(popularityOrder.lazy.filter { !$0.isFont }.prefix(sectionSize))
             ),
             BrowseSection(
                 title: String(localized: "Recently Added"),
                 destination: .discover(.recentlyAdded),
                 casks: Array(sortedByNewest(
                     input.casks.filter {
-                        isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
+                        !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
                     },
                     addedDates: input.addedDates
                 ).prefix(sectionSize))
@@ -129,14 +187,27 @@ nonisolated enum CatalogProjector {
     ) -> [Cask] {
         let filtered = applySidebarFilter(input)
         let searched = applySearch(input.searchText, to: filtered, keys: input.searchKeys)
-        return applySort(input.sortOption, to: searched, input: input)
+        let installable = applySort(input.sortOption, to: searched, input: input)
+        guard !input.searchText.isEmpty else { return installable }
+        // Retired matches always follow installable ones, whatever the sort.
+        let retired = applySearch(input.searchText, to: retiredSearchPool(input), keys: input.searchKeys)
+        return installable + applySort(input.sortOption, to: retired, input: input)
+    }
+
+    private static func retiredSearchPool(_ input: CatalogFilteredProjectionInput) -> [Cask] {
+        switch input.selectedSidebar {
+        case .discover(.browse): input.retiredCasks
+        case .discover: input.retiredCasks.filter { !$0.isFont }
+        case let .category(categoryID): input.library.retiredCasksByCategory[categoryID] ?? []
+        case .library, .shelfSetup, .maintenance, .tap: []
+        }
     }
 
     static func makeExternallyManaged(
         from input: CatalogFilteredProjectionInput
     ) -> [Cask] {
         let external = input.library.installedCasks.filter { cask in
-            guard let state = input.library.localStates[cask.token] else { return false }
+            guard let state = input.library.localStates[cask.reference] else { return false }
             return !state.isHomebrewInstalled
         }
         let searched = applySearch(input.searchText, to: external, keys: input.searchKeys)
@@ -148,17 +219,17 @@ nonisolated enum CatalogProjector {
     ) -> [Cask] {
         switch input.selectedSidebar {
         case .discover(.browse):
-            return input.casks
+            return input.searchText.isEmpty ? input.casks : input.casks + input.tapCasks
         case .discover(.featured):
             return Array(sortedByDownloads(
-                input.casks,
+                input.casks.filter { !$0.isFont },
                 using: input.downloadCounts
             ).prefix(100))
         case .discover(.topCharts):
-            return input.casks
+            return input.casks.filter { !$0.isFont }
         case .discover(.recentlyAdded):
             return input.casks.filter {
-                isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
+                !$0.isFont && isRecent($0.token, in: input.recentTokens, addedDates: input.addedDates)
             }
         case .library(.installed):
             return input.library.homebrewInstalledCasks
@@ -166,8 +237,10 @@ nonisolated enum CatalogProjector {
             return input.library.updatableCasks
         case .library(.adopt):
             return input.library.adoptableCasks
-        case .shelfSetup, .maintenance:
+        case .library(.taps), .shelfSetup, .maintenance:
             return []
+        case let .tap(name):
+            return input.tapCasks.filter { $0.tap == name }
         case let .category(categoryID):
             return input.library.casksByCategory[categoryID] ?? []
         }
@@ -181,7 +254,7 @@ nonisolated enum CatalogProjector {
         guard !searchText.isEmpty else { return casks }
         let query = searchText.lowercased()
         return casks.filter { cask in
-            (keys[cask.token] ?? cask.searchKey).contains(query)
+            (keys[cask.reference] ?? cask.searchKey).contains(query)
         }
     }
 
@@ -223,7 +296,7 @@ nonisolated enum CatalogProjector {
         _ rhs: Cask,
         ranks: [String: Int]
     ) -> Bool {
-        if let lhsRank = ranks[lhs.token], let rhsRank = ranks[rhs.token] {
+        if let lhsRank = ranks[lhs.reference], let rhsRank = ranks[rhs.reference] {
             return lhsRank < rhsRank
         }
         return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
@@ -246,7 +319,7 @@ nonisolated enum CatalogProjector {
         _ casks: [Cask],
         using counts: [String: Int]
     ) -> [Cask] {
-        casks.sorted { (counts[$0.token] ?? 0) > (counts[$1.token] ?? 0) }
+        casks.sorted { (counts[$0.reference] ?? 0) > (counts[$1.reference] ?? 0) }
     }
 
     // Catalog tokens absent from the mined dates postdate the last mine, so they

@@ -141,7 +141,8 @@ final class AdoptionSurfaceTests: XCTestCase {
 
         updateInstalledCask(LocalCaskInstallation(
             token: "ghost", installedVersion: "1", installedAt: nil,
-            appBundleNames: ["CaskHubTestNoSuchApp.app"]
+            appBundleNames: ["CaskHubTestNoSuchApp.app"],
+            tap: "homebrew/cask"
         ), in: service)
         service.open(makeCask("ghost"))
         XCTAssertNotNil(

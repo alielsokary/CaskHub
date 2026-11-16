@@ -137,7 +137,8 @@ final class AdoptionViewRenderTests: XCTestCase {
                     token: "managed",
                     installedVersion: "1.0",
                     installedAt: nil,
-                    appBundleNames: ["Managed.app"]
+                    appBundleNames: ["Managed.app"],
+                    tap: "homebrew/cask"
                 )
             ]
             $0.externalAppNames = ["Chrome.app"]
@@ -206,7 +207,8 @@ final class AdoptionViewRenderTests: XCTestCase {
             width: 420, height: 400)
 
         updateInstalledCask(LocalCaskInstallation(
-            token: "known", installedVersion: "3.1", installedAt: .now, appBundleNames: []
+            token: "known", installedVersion: "3.1", installedAt: .now, appBundleNames: [],
+            tap: "homebrew/cask"
         ), in: service)
         render(CaskInfoPopover(cask: makeCask("known"), category: nil).environment(service), width: 420, height: 400)
     }
@@ -435,16 +437,17 @@ final class AdoptionViewRenderTests: XCTestCase {
             "Adopt Existing App",
             "Replace with Homebrew Version",
             "Repair & Reinstall",
+            "Force Update",
             "Update Homebrew",
             "Force Uninstall",
             "Open System Settings",
             "Open System Settings",
             "OK"
         ])
-        XCTAssertEqual(actions.count, 8)
+        XCTAssertEqual(actions.count, 9)
 
         // Every action except the two Open System Settings (launch the real app) and OK.
-        for action in actions[0...4] {
+        for action in actions[0...5] {
             action()
             try? await Task.sleep(for: .milliseconds(150))
         }

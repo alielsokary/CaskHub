@@ -39,7 +39,10 @@ extension CaskActionAlertFactory {
         } else {
             alert.informativeText = "This will run:"
         }
-        let arguments = service.uninstallArguments(token: cask.token, removingData: removingData)
+        if service.localState(for: cask).retirement?.blocksInstall == true {
+            alert.informativeText = String(localized: .alertUninstallNotReinstallable) + "\n\n" + alert.informativeText
+        }
+        let arguments = service.uninstallArguments(token: cask.reference, removingData: removingData)
         let command = NSHostingView(
             rootView: CommandBlock(command: (["brew"] + arguments).joined(separator: " "))
         )
@@ -51,7 +54,7 @@ extension CaskActionAlertFactory {
         uninstall.hasDestructiveAction = true
         uninstall.keyEquivalent = ""
         var actions: [() -> Void] = [{
-            service.send(keepsData ? .uninstallKeepingData(token: cask.token) : .uninstall(token: cask.token))
+            service.send(keepsData ? .uninstallKeepingData(token: cask.reference) : .uninstall(token: cask.reference))
         }]
         if keepsData {
             alert.addButton(withTitle: String(localized: "Open System Settings"))
@@ -60,6 +63,22 @@ extension CaskActionAlertFactory {
         alert.addButton(withTitle: "Cancel")
         actions.append {}
         return (alert, actions)
+    }
+}
+
+extension CaskActionAlertFactory {
+    /// Homebrew refuses to install a disabled or removed cask, so recoveries that reinstall it would only fail.
+    static func withoutReinstallRecoveries(
+        _ failure: CaskOperationFailure, cask: Cask, service: LocalHomebrewService
+    ) -> CaskOperationFailure {
+        guard service.localState(for: cask).retirement?.blocksInstall == true else { return failure }
+        return CaskOperationFailure(
+            kind: failure.kind,
+            message: failure.message,
+            title: failure.title,
+            recoveries: failure.recoveries.subtracting([.adoptExisting, .replaceWithHomebrew, .repairAndReinstall]),
+            conflictingApplication: failure.conflictingApplication
+        )
     }
 }
 

@@ -17,7 +17,7 @@ struct ContentView: View {
     @Bindable var viewModel: CaskCatalogViewModel
     @Environment(ImageCacheService.self) private var imageCache
     @Environment(CategoryService.self) private var categoryService
-    @Environment(LocalHomebrewService.self) private var localHomebrew
+    @Environment(LocalHomebrewService.self) var localHomebrew
     @Environment(MaintenanceViewModel.self) private var maintenance
     @AppStorage("catalogTextSize") private var catalogTextSize: CatalogTextSize = .standard
     @AppStorage("viewMode") var viewMode: ViewMode = .grid
@@ -28,16 +28,13 @@ struct ContentView: View {
     @State private var searchSignalTask: Task<Void, Never>?
     @State private var isScrolledUnderToolbar = false
     @State private var isRefreshingUpdates = false
+    @State var isRefreshingTaps = false
+    @State var tapDialog: TapDialog?
 
     @State private var detailWidth: CGFloat = CHSize.contentWidth + 2 * CHSize.catalogInset
 
     var catalogWidth: CGFloat {
         CHSize.catalogWidth(availableWidth: detailWidth - 2 * CHSize.catalogInset)
-    }
-
-    var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: CHSize.minimumCardWidth, maximum: CHSize.maximumCardWidth),
-                  spacing: CHSpace.gridGap)]
     }
 
     var body: some View {
@@ -51,23 +48,19 @@ struct ContentView: View {
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount(includingExternallyManaged: showExternallyManagedApps),
                 adoptableCount: viewModel.adoptableCasks.count,
+                tapsCount: localHomebrew.tapIndex.tapsWithCasks.count,
                 categoryCounts: viewModel.categoryCounts
             )
             .navigationSplitViewColumnWidth(min: 245, ideal: 245, max: 300)
         } detail: {
             VStack(spacing: 0) {
                 if showsResultsHeader {
-                    Text("Results for “\(viewModel.searchText)”")
-                        .font(CHType.section)
-                        .foregroundStyle(Color.chTextTitle)
-                        .frame(maxWidth: catalogWidth, alignment: .leading)
-                        .padding(.horizontal, CHSize.catalogInset)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, CHSpace.s4)
+                    SearchResultsHeader(viewModel: viewModel, maxWidth: catalogWidth)
                 }
 
                 detailContent
                     .environment(\.isAdoptPage, selectedSidebar == .library(.adopt))
+                    .environment(\.showsTapBadges, !isTapsPage)
             }
             .onGeometryChange(for: CGFloat.self) { proxy in
                 proxy.size.width
@@ -83,16 +76,20 @@ struct ContentView: View {
                     catalogToolbar
                 }
             }
-            .modifier(CatalogSearch(
-                isEnabled: !isUtilityPage,
-                text: $viewModel.searchText,
-                isFocused: $searchFocused,
-                onSubmit: {
-                    searchFocused = false
-                    showsResultsHeader = !viewModel.searchText.isEmpty
-                }
-            ))
+            // On an empty background: search state changes per keystroke stay out of the catalog's environment.
+            .background {
+                Color.clear.modifier(CatalogSearch(
+                    isEnabled: !isUtilityPage,
+                    viewModel: viewModel,
+                    isFocused: $searchFocused,
+                    onSubmit: {
+                        searchFocused = false
+                        showsResultsHeader = !viewModel.searchText.isEmpty
+                    }
+                ))
+            }
         }
+        .modifier(TapPresentation(dialog: $tapDialog, viewModel: viewModel))
         .overlay {
             Button("") { searchFocused = true }
                 .keyboardShortcut("f", modifiers: .command)
@@ -139,20 +136,12 @@ struct ContentView: View {
         .onChange(of: viewMode) { _, newValue in
             Analytics.viewModeChanged(newValue)
         }
-        .onChange(of: viewModel.searchText) { _, newValue in
-            searchSignalTask?.cancel()
-            if !newValue.isEmpty {
-                searchSignalTask = Task {
-                    try? await Task.sleep(for: .seconds(2))
-                    guard !Task.isCancelled else { return }
-                    Analytics.searchPerformed(results: viewModel.filteredCasks.count)
-                }
-            }
-            if newValue.isEmpty {
-                if showsResultsHeader { searchFocused = false }
-                showsResultsHeader = false
-            }
-        }
+        .modifier(SearchTextObserver(
+            viewModel: viewModel,
+            showsResultsHeader: $showsResultsHeader,
+            searchSignalTask: $searchSignalTask,
+            searchFocused: $searchFocused
+        ))
         .task {
             // The toolbar search field is the window's first key view.
             try? await Task.sleep(for: .milliseconds(300))
@@ -183,7 +172,7 @@ struct ContentView: View {
             },
             onUpdateAll: selectedSidebar == .library(.updates) && viewModel.updatesCount > 0
                 ? {
-                    let tokens = viewModel.updatableCasks.map(\.token)
+                    let tokens = viewModel.updatableCasks.map(\.reference)
                     Analytics.updateAllTapped(count: tokens.count)
                     localHomebrew.send(.updateAll(tokens: tokens))
                 }
@@ -199,12 +188,19 @@ struct ContentView: View {
                 localHomebrew.setGreedyUpdates(enabled)
             },
             showsSort: selectedSidebar != .discover(.featured) && !showsBrowseSections
+                && selectedSidebar != .library(.taps),
+            onRefreshTaps: isTapsPage ? { refreshTaps() } : nil,
+            isRefreshingTaps: isRefreshingTaps,
+            onAddTap: isTapsPage ? { tapDialog = .add } : nil
         )
     }
 
     private var topBarSummary: String? {
         let externalCount = showsExternallyManagedSection ? viewModel.filteredExternallyManagedCasks.count : 0
-        return isUtilityPage ? utilitySummary : String(localized: "\(viewModel.filteredCasks.count + externalCount) casks")
+        if selectedSidebar == .library(.taps) { return tapsSummary }
+        // Unsearched Browse lists every browsable cask; counting it needs no filter or sort pass.
+        let count = showsBrowseSections ? viewModel.casks.count : viewModel.filteredCasks.count
+        return isUtilityPage ? utilitySummary : String(localized: "\(count + externalCount) casks")
     }
 
     private var utilitySummary: String? {
@@ -252,6 +248,7 @@ struct ContentView: View {
         case .shelfSetup: return String(localized: .sidebarShelfSetup)
         case .maintenance: return String(localized: .sidebarHealth)
         case let .category(categoryID): return categoryService.displayName(for: categoryID)
+        case let .tap(name): return name
         }
     }
 
@@ -261,7 +258,7 @@ struct ContentView: View {
 
     var heroCask: Cask? {
         guard showsBrowseSections else { return nil }
-        return viewModel.filteredCasks.first
+        return viewModel.heroCask
     }
 
     // Raw searchText would swap layout before results apply and flash a stale grid.
@@ -270,7 +267,13 @@ struct ContentView: View {
             && viewModel.appliedSearchText.isEmpty
     }
 
-    private var sortOptions: [SortOption] {
+    func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
+        viewModel.categoryPresentation(for: cask)
+    }
+}
+
+private extension ContentView {
+    var sortOptions: [SortOption] {
         switch selectedSidebar {
         case .library(.installed):
             return SortOption.installed
@@ -281,12 +284,6 @@ struct ContentView: View {
         }
     }
 
-    func categoryInfo(for cask: Cask) -> CaskCategoryPresentation? {
-        viewModel.categoryPresentation(for: cask)
-    }
-}
-
-private extension ContentView {
     func refreshUpdates() {
         isRefreshingUpdates = true
         Task {
@@ -298,16 +295,57 @@ private extension ContentView {
 
 // MARK: - Search
 
+// searchText is read only below, so a keystroke never re-renders ContentView and its cards.
+struct SearchResultsHeader: View {
+    let viewModel: CaskCatalogViewModel
+    let maxWidth: CGFloat
+
+    var body: some View {
+        Text("Results for “\(viewModel.searchText)”")
+            .font(CHType.section)
+            .foregroundStyle(Color.chTextTitle)
+            .frame(maxWidth: maxWidth, alignment: .leading)
+            .padding(.horizontal, CHSize.catalogInset)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, CHSpace.s4)
+    }
+}
+
+private struct SearchTextObserver: ViewModifier {
+    let viewModel: CaskCatalogViewModel
+    @Binding var showsResultsHeader: Bool
+    @Binding var searchSignalTask: Task<Void, Never>?
+    var searchFocused: FocusState<Bool>.Binding
+
+    func body(content: Content) -> some View {
+        content.onChange(of: viewModel.searchText) { _, newValue in
+            searchSignalTask?.cancel()
+            if !newValue.isEmpty {
+                searchSignalTask = Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    guard !Task.isCancelled else { return }
+                    Analytics.searchPerformed(results: viewModel.filteredCasks.count)
+                }
+            }
+            if newValue.isEmpty {
+                if showsResultsHeader { searchFocused.wrappedValue = false }
+                showsResultsHeader = false
+            }
+        }
+    }
+}
+
+// Bindable, not a Binding: a Binding's value change would re-run this body on every keystroke.
 private struct CatalogSearch: ViewModifier {
     let isEnabled: Bool
-    @Binding var text: String
+    @Bindable var viewModel: CaskCatalogViewModel
     var isFocused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
 
     func body(content: Content) -> some View {
         if isEnabled {
             content
-                .searchable(text: $text, placement: .toolbar, prompt: Text("Search apps…"))
+                .searchable(text: $viewModel.searchText, placement: .toolbar, prompt: Text("Search apps…"))
                 .searchFocused(isFocused)
                 .onSubmit(of: .search, onSubmit)
         } else {
@@ -329,7 +367,7 @@ struct ResignFocusOnOutsideClick: ViewModifier {
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
                     if isFocused(),
                        let frameView = event.window?.contentView?.superview,
-                       !(frameView.hitTest(event.locationInWindow) is NSTextView) {
+                       !Self.isSearchInput(frameView.hitTest(event.locationInWindow)) {
                         DispatchQueue.main.async {
                             guard isFocused() else { return }
                             resign()
@@ -342,6 +380,12 @@ struct ResignFocusOnOutsideClick: ViewModifier {
                 if let monitor { NSEvent.removeMonitor(monitor) }
                 monitor = nil
             }
+    }
+
+    // Resigning mid-click on the clear button commits the old text before the field empties.
+    private static func isSearchInput(_ view: NSView?) -> Bool {
+        sequence(first: view, next: { $0?.superview })
+            .contains { $0 is NSTextView || $0 is NSSearchField }
     }
 }
 

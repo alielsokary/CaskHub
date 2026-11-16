@@ -34,7 +34,7 @@ private struct CaskActionAlerts: ViewModifier {
     }
 
     private var actionAlert: CaskActionAlert? {
-        localHomebrew.actionAlert(for: cask.token)
+        localHomebrew.actionAlert(for: cask.reference)
     }
 
     private var hasBrewMissingError: Binding<Bool> {
@@ -44,7 +44,7 @@ private struct CaskActionAlerts: ViewModifier {
                 return true
             },
             set: {
-                if !$0 { localHomebrew.send(.dismissFailure(token: cask.token)) }
+                if !$0 { localHomebrew.send(.dismissFailure(token: cask.reference)) }
             }
         )
     }
@@ -59,7 +59,7 @@ private struct CaskActionAlerts: ViewModifier {
             get: { adoptionRequest != nil },
             set: {
                 if !$0 {
-                    localHomebrew.send(.cancelAdoption(token: cask.token))
+                    localHomebrew.send(.cancelAdoption(token: cask.reference))
                 }
             }
         )
@@ -79,7 +79,7 @@ private extension View {
             isPresented: isPresented
         ) {
             Button("Cancel", role: .cancel) {
-                service.send(.cancelAdoption(token: cask.token))
+                service.send(.cancelAdoption(token: cask.reference))
             }
             if let request {
                 Button(
@@ -118,7 +118,7 @@ private extension View {
                 AppManagementPermission.openSystemSettings()
             }
             Button("Cancel", role: .cancel) {
-                service.send(.cancelPermission(token: cask.token))
+                service.send(.cancelPermission(token: cask.reference))
             }
         } message: {
             Text(.alertAppManagementNeeded(cask.displayName))
@@ -169,14 +169,14 @@ private extension View {
         for cask: Cask,
         service: LocalHomebrewService
     ) -> Bool {
-        service.actionAlert(for: cask.token) == .permission
+        service.actionAlert(for: cask.reference) == .permission
     }
 
     private func failure(
         for cask: Cask,
         service: LocalHomebrewService
     ) -> CaskOperationFailure? {
-        guard case let .failure(failure) = service.actionAlert(for: cask.token) else {
+        guard case let .failure(failure) = service.actionAlert(for: cask.reference) else {
             return nil
         }
         return failure
@@ -200,7 +200,7 @@ enum CaskActionAlertFactory {
         let (alert, actions) = errorAlert(for: cask, failure: failure, service: service)
         alert.beginSheetModal(for: window) { response in
             let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
-            service.send(.dismissFailure(token: cask.token))
+            service.send(.dismissFailure(token: cask.reference))
             if actions.indices.contains(index) { actions[index]() }
         }
     }
@@ -210,7 +210,9 @@ enum CaskActionAlertFactory {
         failure: CaskOperationFailure,
         service: LocalHomebrewService
     ) -> (alert: NSAlert, actions: [() -> Void]) {
-        let failure = failureForPresentation(failure, cask: cask, service: service)
+        let failure = withoutReinstallRecoveries(
+            failureForPresentation(failure, cask: cask, service: service), cask: cask, service: service
+        )
         let alert = NSAlert()
         alert.messageText = failure.kind == .installationPreflight
             ? String(localized: .alertInstallConflictTitle(cask.displayName))
@@ -289,13 +291,15 @@ private extension CaskRecoveryAction {
         case .openAppManagementSettings, .openFullDiskAccessSettings:
             true
         case .adoptExisting, .replaceWithHomebrew:
-            service.operationStore.canBeginOperation(.adopting, for: cask.token)
+            service.operationStore.canBeginOperation(.adopting, for: cask.reference)
         case .repairAndReinstall:
-            service.operationStore.canBeginOperation(.repairing, for: cask.token)
+            service.operationStore.canBeginOperation(.repairing, for: cask.reference)
+        case .forceUpgrade:
+            service.operationStore.canBeginOperation(.updating, for: cask.reference)
         case .updateHomebrew:
-            service.operationStore.canBeginOperation(.updatingHomebrew, for: cask.token)
+            service.operationStore.canBeginOperation(.updatingHomebrew, for: cask.reference)
         case .forceUninstall:
-            service.operationStore.canBeginOperation(.uninstalling, for: cask.token)
+            service.operationStore.canBeginOperation(.uninstalling, for: cask.reference)
         }
     }
 
@@ -304,6 +308,7 @@ private extension CaskRecoveryAction {
         case .adoptExisting: "Adopt Existing App"
         case .replaceWithHomebrew: "Replace with Homebrew Version"
         case .repairAndReinstall: "Repair & Reinstall"
+        case .forceUpgrade: String(localized: "Force Update")
         case .updateHomebrew: String(localized: "Update Homebrew")
         case .forceUninstall: "Force Uninstall"
         case .openAppManagementSettings, .openFullDiskAccessSettings: "Open System Settings"
@@ -318,11 +323,13 @@ private extension CaskRecoveryAction {
         case .replaceWithHomebrew:
             service.send(.requestReplacementAdoption(cask))
         case .repairAndReinstall:
-            service.send(.repairAndReinstall(token: cask.token))
+            service.send(.repairAndReinstall(token: cask.reference))
+        case .forceUpgrade:
+            service.send(.forceUpgrade(token: cask.reference))
         case .updateHomebrew:
-            service.send(.updateHomebrew(token: cask.token))
+            service.send(.updateHomebrew(token: cask.reference))
         case .forceUninstall:
-            service.send(.repair(token: cask.token))
+            service.send(.repair(token: cask.reference))
         case .openAppManagementSettings:
             AppManagementPermission.openSystemSettings()
         case .openFullDiskAccessSettings:

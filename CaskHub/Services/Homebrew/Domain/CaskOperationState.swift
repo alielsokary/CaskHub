@@ -12,6 +12,7 @@ nonisolated enum CaskRecoveryAction: CaseIterable, Hashable, Sendable {
     case adoptExisting
     case replaceWithHomebrew
     case repairAndReinstall
+    case forceUpgrade
     case updateHomebrew
     case forceUninstall
     case openAppManagementSettings

@@ -55,7 +55,7 @@ nonisolated enum AskpassScriptManager {
         guard let executablePath = executableURL?.path else {
             throw AskpassScriptError.executableUnavailable
         }
-        let safeToken = token.filter { $0.isLetter || $0.isNumber || "-_+@.".contains($0) }
+        let safeToken = sanitizedToken(token)
         let fileManager = FileManager.default
         let destinationDirectory: URL
         if let directory {
@@ -76,7 +76,8 @@ nonisolated enum AskpassScriptManager {
         let script = script(
             executablePath: executablePath,
             token: safeToken,
-            marker: cancellationMarker(for: url)
+            marker: cancellationMarker(for: url),
+            attemptMarker: attemptMarker(for: url)
         )
         do {
             try fileManager.createDirectory(
@@ -107,10 +108,19 @@ nonisolated enum AskpassScriptManager {
     static func remove(at url: URL) async {
         try? FileManager.default.removeItem(at: url)
         try? FileManager.default.removeItem(at: cancellationMarker(for: url))
+        try? FileManager.default.removeItem(at: attemptMarker(for: url))
+    }
+
+    static func sanitizedToken(_ token: String) -> String {
+        token.filter { $0.isLetter || $0.isNumber || "-_+@.".contains($0) }
     }
 
     static func cancellationMarker(for scriptURL: URL) -> URL {
         scriptURL.appendingPathExtension("cancelled")
+    }
+
+    static func attemptMarker(for scriptURL: URL) -> URL {
+        scriptURL.appendingPathExtension("attempts")
     }
 
     static func localError(for error: Error) -> LocalHomebrewError {
@@ -129,12 +139,14 @@ nonisolated enum AskpassScriptManager {
     private static func script(
         executablePath: String,
         token: String,
-        marker: URL
+        marker: URL,
+        attemptMarker: URL
     ) -> String {
         """
         #!/bin/sh
         exec \(shellQuoted(executablePath)) --askpass \(shellQuoted(token)) \
-          --askpass-cancel-marker \(shellQuoted(marker.path))
+          --askpass-cancel-marker \(shellQuoted(marker.path)) \
+          --askpass-attempt-marker \(shellQuoted(attemptMarker.path))
         """
     }
 
