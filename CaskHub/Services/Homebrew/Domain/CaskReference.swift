@@ -13,7 +13,8 @@ nonisolated enum CaskReference {
 
     static func isOfficial(tap: String?) -> Bool {
         guard let tap else { return true }
-        return tap.lowercased().hasPrefix("homebrew/")
+        // Every `Cask.reference` read lands here; the API's lowercase taps skip the allocating lowercased().
+        return tap.hasPrefix("homebrew/") || tap.lowercased().hasPrefix("homebrew/")
     }
 
     static func make(token: String, tap: String?) -> String {
@@ -21,8 +22,10 @@ nonisolated enum CaskReference {
         return "\(tap)/\(token)"
     }
 
+    /// Called several times per cask on every library rebuild, so official tokens return without allocating.
     static func bareToken(_ reference: String) -> String {
-        reference.split(separator: "/").last.map(String.init) ?? reference
+        guard let slash = reference.utf8.lastIndex(of: UInt8(ascii: "/")) else { return reference }
+        return String(reference[reference.utf8.index(after: slash)...])
     }
 
     static func tap(of reference: String) -> String? {
