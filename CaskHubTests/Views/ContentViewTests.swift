@@ -543,6 +543,27 @@ final class TopBarViewTests: XCTestCase {
     }
 
     @MainActor
+    func test_search_typing_and_clearing_render_with_the_results_header() async {
+        let api = MockBrewAPIClient()
+        api.casks = (0 ..< 12).map { makeCask("cask-\($0)") }
+        let categories = CategoryService()
+        let local = LocalHomebrewService(defaults: makeScratchDefaults("search-render"))
+        let vm = makeViewModel(api: api, categories: categories, localHomebrew: local)
+        await vm.fetchCasks()
+
+        let window = renderInWindow(vm, categories: categories, local: local)
+        vm.searchText = "cask-1"
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertEqual(vm.searchText, "cask-1")
+        vm.searchText = ""
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertEqual(vm.appliedSearchText, "")
+        window.close()
+
+        render(SearchResultsHeader(viewModel: vm, maxWidth: 800))
+    }
+
+    @MainActor
     func test_error_state_renders_retry_view() async {
         let api = MockBrewAPIClient()
         api.casksError = URLError(.notConnectedToInternet)

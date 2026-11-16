@@ -49,23 +49,28 @@ extension ContentView {
     }
 
     var gridContent: some View {
-        VStack(alignment: .leading, spacing: CHSpace.s4) {
-            if let hero = heroCask {
-                HeroCard(
-                    cask: hero,
-                    downloads: viewModel.formattedDownloads(for: hero.reference),
-                    categoryName: categoryInfo(for: hero)?.mainName,
-                    localState: viewModel.localState(for: hero)
-                )
-            }
+        Group {
             if showsBrowseSections {
-                ForEach(viewModel.browseSections) { section in
-                    browseSectionView(section)
+                // Lazy so off-screen shelves aren't built and measured on launch or when search clears.
+                LazyVStack(alignment: .leading, spacing: CHSpace.s4) {
+                    if let hero = heroCask {
+                        HeroCard(
+                            cask: hero,
+                            downloads: viewModel.formattedDownloads(for: hero.reference),
+                            categoryName: categoryInfo(for: hero)?.mainName,
+                            localState: viewModel.localState(for: hero)
+                        )
+                    }
+                    ForEach(viewModel.browseSections) { section in
+                        browseSectionView(section)
+                    }
                 }
             } else {
-                caskGrid(viewModel.displayedCasks, showsReveal: true)
-                if showsExternallyManagedSection {
-                    externallyManagedSection
+                VStack(alignment: .leading, spacing: CHSpace.s4) {
+                    caskGrid(viewModel.displayedCasks, showsReveal: true)
+                    if showsExternallyManagedSection {
+                        externallyManagedSection
+                    }
                 }
             }
         }
@@ -77,7 +82,7 @@ extension ContentView {
     @ViewBuilder
     var listContent: some View {
         if showsBrowseSections {
-            VStack(alignment: .leading, spacing: CHSpace.s4) {
+            LazyVStack(alignment: .leading, spacing: CHSpace.s4) {
                 if let hero = heroCask {
                     VStack(spacing: 0) {
                         CaskRowView(
