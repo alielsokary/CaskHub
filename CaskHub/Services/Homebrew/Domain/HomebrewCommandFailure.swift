@@ -20,6 +20,7 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case brewBusy = "brew-busy"
     case brewLockCleanupRace = "brew-lock-cleanup-race"
     case caskConflict = "cask-conflict"
+    case caskDisabled = "cask-disabled"
     case caskDependency = "cask-dependency"
     case checksumMismatch = "checksum-mismatch"
     case dmgMountBusy = "dmg-mount-busy"
@@ -186,7 +187,7 @@ nonisolated extension HomebrewCommandFailure {
         guard arguments.first == "install",
               let token = arguments.drop(while: { $0 != "--cask" }).dropFirst().first
         else { return nil }
-        let summary = "\(token.lowercased()) was successfully installed!"
+        let summary = "\(CaskReference.bareToken(token).lowercased()) was successfully installed!"
         // Match the requested cask, never a dependency that succeeded before it failed.
         let succeeded = text.components(separatedBy: .newlines).contains {
             $0 == summary || $0.hasSuffix("  \(summary)")
@@ -309,7 +310,8 @@ nonisolated extension HomebrewCommandFailure {
             ),
             Match(fragments: ["reports different checksum"], kind: .checksumMismatch),
             Match(fragments: ["sha256 mismatch"], kind: .checksumMismatch),
-            Match(fragments: ["was not quarantined properly"], kind: .quarantineInvalid)
+            Match(fragments: ["was not quarantined properly"], kind: .quarantineInvalid),
+            Match(fragments: ["has been disabled"], kind: .caskDisabled)
         ])
     }
 

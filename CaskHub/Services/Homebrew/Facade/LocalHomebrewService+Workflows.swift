@@ -14,7 +14,7 @@ extension LocalHomebrewService {
         }) {
             Analytics.caskActionFailed(
                 .installing,
-                token: cask.token,
+                token: cask.reference,
                 failureKind: .caskConflict
             )
             operationStore.send(
@@ -25,20 +25,29 @@ extension LocalHomebrewService {
                         installedCask: conflict
                     )
                 )),
-                for: cask.token
+                for: cask.reference
             )
             return
         }
-        try await install(token: cask.token)
+        try await install(token: cask.reference)
     }
 
     func install(token: String) async throws {
+        if let source = installationSnapshot.foreignInstallationSource(for: token) {
+            operationStore.send(.fail(CaskOperationFailure(
+                kind: .installationPreflight,
+                message: String(localized: "\(CaskReference.bareToken(token)) is already installed from \(source).")
+            )), for: token)
+            return
+        }
         try await runMutationSequence(
             .installing,
             token: token,
-            steps: [
-                .fetch(token: token, cancellation: .untilPerforming),
-                .exclusive(["install", "--cask", token], cancellation: .untilPerforming)
+            steps: fetchSteps(token, cancellation: .untilPerforming) + [
+                .exclusive(
+                    ["install", "--cask", token] + appdirArguments(keeping: []),
+                    cancellation: .untilPerforming
+                )
             ],
             origin: .individual
         )
@@ -66,8 +75,9 @@ extension LocalHomebrewService {
     }
 
     func uninstallArguments(token: String, removingData: Bool) -> [String] {
-        // Brew rejects plain uninstall for caskfile-less zombies and stranded apps; --force works.
-        let force = installedCasks[token]?.isZombie == true || hasStrandedInstalledApp(token: token)
+        // Brew rejects plain uninstall for caskfile-less zombies, stranded apps and pins; --force works and unpins.
+        let force = installationSnapshot.installation(for: token)?.isZombie == true || hasStrandedInstalledApp(token: token)
+            || pinnedVersion(for: token) != nil
         // Without Full Disk Access brew aborts a zap after the app is already gone.
         let zap = removingData && fullDiskAccessProbe() != .denied
         return ["uninstall", "--cask", token]
@@ -146,15 +156,14 @@ extension LocalHomebrewService {
             customPrefix: customBrewPrefix,
             fileManager: fileManager
         )?
-            .appendingPathComponent(token)
-        let appBundleNames = installedCasks[token]?.appBundleNames
+            .appendingPathComponent(CaskReference.bareToken(token))
+        let appBundleNames = installationSnapshot.installation(for: token)?.appBundleNames
             ?? installationSnapshot.externalPackageInstallations[token]?.appBundleNames
             ?? []
         try await runMutationSequence(
             action,
             token: token,
-            steps: [
-                .fetch(token: token, cancellation: .never),
+            steps: fetchSteps(token, cancellation: .never) + [
                 HomebrewMutationStep(
                     arguments: ["uninstall", "--cask", token, "--force"],
                     environmentOverrides: ["HOMEBREW_NO_AUTOREMOVE": "1"],
@@ -169,24 +178,47 @@ extension LocalHomebrewService {
                     },
                     recoveryBehavior: .continueSequence
                 ),
-                .exclusive(["install", "--cask", token], cancellation: .never)
+                .exclusive(
+                    ["install", "--cask", token] + appdirArguments(keeping: appBundleNames),
+                    cancellation: .never
+                )
             ],
             origin: origin,
             context: context
         )
     }
 
+    /// Existing bundles keep their folder, so adopt finds them and reinstall never moves them.
+    func appdirArguments(keeping bundleNames: [String]) -> [String] {
+        let existingPath = existingBundleURL(named: bundleNames)?
+            .deletingLastPathComponent().standardizedFileURL.path
+        let path = existingPath.flatMap { applicationDirectories.map(\.path).contains($0) ? $0 : nil }
+            ?? applicationDirectoryOverride?.path
+        guard let path, path != Self.defaultApplicationDirectoryPath else { return [] }
+        return ["--appdir=\(path)"]
+    }
+
     func upgrade(
         token: String,
         origin: CaskActionOrigin = .individual
     ) async throws {
+        try await upgrade(token: token, origin: origin, force: false)
+    }
+
+    /// `--force` skips backing up an app that vanished since install (self-renamed or deleted)
+    /// and overwrites whatever sits at the new version's target.
+    func forceUpgrade(token: String) async throws {
+        try await upgrade(token: token, origin: .repair, force: true)
+    }
+
+    private func upgrade(token: String, origin: CaskActionOrigin, force: Bool) async throws {
         let args = ["upgrade", "--cask", token]
             + (greedyUpdates ? ["--greedy"] : [])
+            + (force ? ["--force"] : [])
         try await runMutationSequence(
             .updating,
             token: token,
-            steps: [
-                .fetch(token: token, cancellation: .untilPerforming),
+            steps: fetchSteps(token, cancellation: .untilPerforming) + [
                 .exclusive(args, cancellation: .whileQueued)
             ],
             origin: origin
@@ -239,6 +271,12 @@ extension LocalHomebrewService {
 
     var statusBarOperation: CaskOperationStatus? {
         operationStore.status
+    }
+
+    /// brew refuses `fetch` for an untrusted tap cask and its trust changes behind CaskHub's back
+    /// (uninstall drops it), so tap casks skip the separate download; install and upgrade fetch themselves.
+    private func fetchSteps(_ token: String, cancellation: HomebrewStepCancellation) -> [HomebrewMutationStep] {
+        CaskReference.tap(of: token) == nil ? [.fetch(token: token, cancellation: cancellation)] : []
     }
 
     func displayName(for token: String) -> String {

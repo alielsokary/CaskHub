@@ -9,6 +9,7 @@
 import Foundation
 import Synchronization
 import SwiftUI
+import XCTest
 
 internal nonisolated func makeDetectedApplication(
     _ bundleName: String,
@@ -186,4 +187,66 @@ func makeMaintenanceModel(
         latestReleaseTag: latestReleaseTag,
         defaults: defaults
     )
+}
+
+@MainActor
+func makeTapIndex(
+    _ taps: [String: [String]],
+    remote: (String) -> String? = { _ in nil },
+    source: (String) -> String = { _ in "" },
+    trustedCasks: Set<String> = []
+) -> TapIndex {
+    let names = taps.keys.sorted()
+    return TapIndex(
+        taps: names.map { name in
+            TapSummary(
+                name: name, remote: remote(name), official: false, trusted: false, customRemote: false,
+                caskTokens: taps[name, default: []].map { "\(name)/\($0)" }, formulaNames: [], caskFiles: []
+            )
+        },
+        casks: names.flatMap { name in
+            taps[name, default: []].map { CaskFileTextParser.cask(fromSource: source($0), token: $0, tap: name) }
+        },
+        trust: TapTrust(taps: [], casks: trustedCasks)
+    )
+}
+
+extension XCTestCase {
+    @MainActor
+    @discardableResult
+    func renderInWindow(
+        _ vm: CaskCatalogViewModel,
+        categories: CategoryService,
+        local: LocalHomebrewService,
+        width: CGFloat = 1200,
+        height: CGFloat = 550
+    ) -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: width, height: height),
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: ContentView(viewModel: vm)
+            .environment(categories)
+            .environment(local)
+            .environment(ImageCacheService())
+            .environment(MaintenanceViewModel(
+                localHomebrew: local,
+                catalog: vm,
+                clearImageCache: {},
+                probe: RecordingMaintenanceProbe(),
+                defaults: makeScratchDefaults("maintenance-harness-render")
+            )))
+        window.orderFrontRegardless()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.25))
+
+        addTeardownBlock { @MainActor in
+            window.contentView = NSView()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            window.close()
+        }
+        return window
+    }
 }

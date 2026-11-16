@@ -205,7 +205,7 @@ extension ArtifactIdentityTests {
         let state = local.localState(for: enriched)
         XCTAssertEqual(state.installationSource == .packageInstaller, accepted, mode)
         XCTAssertEqual(state.isAdoptable, accepted, mode)
-        try assertSuiteDoesNotClaimComponent(viewModel, local: local, launcher: launcher, accepted: accepted, mode: mode)
+        try await assertSuiteDoesNotClaimComponent(viewModel, local: local, launcher: launcher, accepted: accepted, mode: mode)
         if accepted {
             XCTAssertTrue(state.canOpen, mode)
             local.open(enriched)
@@ -216,7 +216,7 @@ extension ArtifactIdentityTests {
     private func assertSuiteDoesNotClaimComponent(
         _ viewModel: CaskCatalogViewModel, local: LocalHomebrewService,
         launcher: RecordingApplicationLauncher, accepted: Bool, mode: String
-    ) throws {
+    ) async throws {
         // Mac App Store matching has its own policy; this regression exercises
         // package-receipt ownership and must not change that separate behavior.
         guard mode != "store" else { return }
@@ -227,6 +227,7 @@ extension ArtifactIdentityTests {
         XCTAssertFalse(state.canOpen, mode)
         XCTAssertNil(state.adoptionPlan, mode)
         viewModel.selectedSidebar = .library(.installed)
+        await viewModel.projectionsSettled()
         XCTAssertTrue(viewModel.filteredCasks.isEmpty, mode)
         XCTAssertEqual(viewModel.filteredExternallyManagedCasks.map(\.token), accepted ? ["optional"] : [], mode)
         viewModel.selectedSidebar = .library(.adopt)

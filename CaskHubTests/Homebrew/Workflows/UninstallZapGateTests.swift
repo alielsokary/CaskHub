@@ -47,7 +47,8 @@ final class UninstallZapGateTests: XCTestCase {
         service.fullDiskAccessProbe = { .granted }
         updateInstalledCask(LocalCaskInstallation(
             token: "zed", installedVersion: "1.0", installedAt: nil,
-            appBundleNames: ["Zed.app"]
+            appBundleNames: ["Zed.app"],
+            tap: "homebrew/cask"
         ), in: service)
         return service
     }
@@ -104,6 +105,17 @@ final class UninstallZapGateTests: XCTestCase {
         service.fullDiskAccessProbe = { .denied }
 
         XCTAssertFalse(service.zapBlockedByFullDiskAccess)
+    }
+
+    func test_uninstall_forces_a_pinned_cask_so_brew_unpins_it() {
+        let service = makeService(runner: StubBrewProcessRunner())
+        updateInstallationSnapshot(of: service) { $0.pinnedVersions = ["zed": "1.0"] }
+
+        XCTAssertEqual(service.uninstallArguments(token: "zed", removingData: false), ["uninstall", "--cask", "zed", "--force"])
+        XCTAssertEqual(
+            service.uninstallArguments(token: "zed", removingData: true),
+            ["uninstall", "--cask", "zed", "--force", "--zap"]
+        )
     }
 
     func test_uninstall_stays_plain_when_the_caskroom_only_keeps_an_undeclared_helper_app() throws {

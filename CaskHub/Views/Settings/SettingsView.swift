@@ -174,7 +174,9 @@ struct GeneralSettingsView: View {
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @State private var settingsModel = GeneralSettingsModel()
     @State private var fullDiskAccess = FullDiskAccessPermission.Status.unknown
+    @State private var touchIDModel = AdministratorPasswordSettingsModel()
     @AppStorage(SidebarView.showAdoptKey) private var showAdoptApps = true
+    @AppStorage(SidebarView.showTapsKey) private var showTaps = true
     @AppStorage(ContentView.showExternallyManagedAppsKey) private var showExternallyManagedApps = true
 
     var body: some View {
@@ -191,6 +193,10 @@ struct GeneralSettingsView: View {
             Section("Sidebar") {
                 Toggle("Show Adopt Apps", isOn: $showAdoptApps)
                 Text("Adopt Apps lists installed apps that Homebrew can start managing for you.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Toggle("Show Taps", isOn: $showTaps)
+                Text("Taps lists the third-party Homebrew taps you added and their casks.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -214,6 +220,7 @@ struct GeneralSettingsView: View {
             } header: {
                 Text(.settingsUninstallTitle)
             }
+            AdministratorPasswordSettingsSection(model: touchIDModel)
             Section("Permissions") {
                 LabeledContent("App Management") {
                     HStack(spacing: 10) {
@@ -257,6 +264,7 @@ struct GeneralSettingsView: View {
     private func refreshPermissions() async {
         fullDiskAccess = localHomebrew.fullDiskAccessProbe()
         await settingsModel.refreshAppManagement()
+        await touchIDModel.refresh()
     }
 
     @ViewBuilder
@@ -372,6 +380,7 @@ private struct HomebrewSettingsContent: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                ApplicationDirectorySettingsRow(localHomebrew: localHomebrew)
             }
             Section("Library") {
                 LabeledContent("Installed Casks", value: "\(localHomebrew.installedCaskCount)")
@@ -384,6 +393,8 @@ private struct HomebrewSettingsContent: View {
         }
         .formStyle(.grouped)
         .padding()
+        .contentShape(Rectangle())
+        .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
         .onAppear { locationModel.synchronize() }
         .onChange(of: localHomebrew.customBrewPrefix) {
             locationModel.synchronize()

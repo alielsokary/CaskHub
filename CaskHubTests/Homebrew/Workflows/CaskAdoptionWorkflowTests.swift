@@ -96,7 +96,7 @@ final class CaskAdoptionWorkflowTests: XCTestCase {
             token: cask.token,
             installedVersion: cask.version,
             installedAt: nil,
-            appBundleNames: ["OneDrive.app"]
+            appBundleNames: ["OneDrive.app"], tap: "homebrew/cask"
         )
         let scanner = MutableInstalledSoftwareScanner()
         let service = makeMutationService(

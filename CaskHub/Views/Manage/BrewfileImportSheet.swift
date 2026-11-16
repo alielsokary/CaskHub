@@ -20,15 +20,49 @@ nonisolated struct BrewfileImportPlan: Identifiable {
         let cask: Cask?
 
         var id: String { token }
-        var displayName: String { cask?.displayName ?? token }
+        var displayName: String { cask?.displayName ?? CaskReference.bareToken(token) }
+        var reference: String { CaskReference.normalized(token) }
+        /// Canonical, as brew names it, so `User/homebrew-X` matches the `user/x` tap line; raw when CaskHub can't parse it.
+        var tap: String? { CaskReference.tap(of: reference).map { (try? TapAddInput.parse($0).get().tapName) ?? $0 } }
     }
 
     let id = UUID()
     let fileName: String
     let skippedEntries: [Entry]
     let newEntries: [Entry]
+    /// Homebrew refuses to install these: disabled, or removed for this platform.
+    let unavailableEntries: [Entry]
+    /// Casks from `unsupportedTaps`, never installed.
+    let unsupportedTapEntries: [Entry]
+    /// Taps from `tap` lines and tap-qualified casks that this Mac doesn't have yet.
+    let tapsToAdd: [TapAddRequest]
+    /// Taps whose remote CaskHub won't pass to brew.
+    let unsupportedTaps: [String]
 
-    var listedCount: Int { skippedEntries.count + newEntries.count }
+    var listedCount: Int {
+        skippedEntries.count + newEntries.count + unavailableEntries.count + unsupportedTapEntries.count
+    }
+
+    var tapsToAddText: String {
+        tapsToAdd.map { $0.remoteURL == nil ? $0.tapName : "\($0.tapName) (from \($0.sourceText))" }
+            .joined(separator: ", ")
+    }
+
+    /// Adds taps first so their casks resolve; confirming the import is the trust consent, so installs never prompt.
+    /// A cask whose tap failed to add counts as failed instead of reaching brew.
+    @MainActor
+    func run(
+        selected: [Entry],
+        addTap: (TapAddRequest) async throws -> Void,
+        installAll: ([String]) async -> Int
+    ) async -> Int {
+        var failedTaps: Set<String> = []
+        for tap in tapsToAdd {
+            do { try await addTap(tap) } catch { failedTaps.insert(tap.tapName) }
+        }
+        let installable = selected.filter { $0.tap.map { !failedTaps.contains($0) } ?? true }
+        return selected.count - installable.count + (await installAll(installable.map(\.reference)))
+    }
 }
 
 nonisolated enum BrewfileImportPhase: Equatable {
@@ -39,13 +73,19 @@ nonisolated enum BrewfileImportPhase: Equatable {
 
 struct BrewfileImportSheet: View {
     let plan: BrewfileImportPlan
+    let addTap: (TapAddRequest) async throws -> Void
     @Environment(LocalHomebrewService.self) private var localHomebrew
     @Environment(\.dismiss) private var dismiss
     @State private var phase: BrewfileImportPhase
     @State private var selectedTokens: Set<String>
 
-    init(plan: BrewfileImportPlan, phase: BrewfileImportPhase = .preview) {
+    init(
+        plan: BrewfileImportPlan,
+        phase: BrewfileImportPhase = .preview,
+        addTap: @escaping (TapAddRequest) async throws -> Void
+    ) {
         self.plan = plan
+        self.addTap = addTap
         _phase = State(initialValue: phase)
         _selectedTokens = State(initialValue: Set(plan.newEntries.map(\.token)))
     }
@@ -67,6 +107,7 @@ struct BrewfileImportSheet: View {
 
             switch phase {
             case .preview:
+                tapNotice
                 preview
             case let .running(completedCount):
                 progress(completedCount: completedCount)
@@ -100,6 +141,21 @@ struct BrewfileImportSheet: View {
                 LazyVStack(spacing: 0) {
                     ForEach(plan.newEntries) { entry in
                         BrewfileEntryRow(entry: entry, isSelected: selectionBinding(entry))
+                    }
+                    if !plan.unavailableEntries.isEmpty {
+                        unavailableHeader(String(localized: .shelfSetupBrewfileSheetUnavailable(plan.unavailableEntries.count)))
+                        ForEach(plan.unavailableEntries) { entry in
+                            BrewfileEntryRow(entry: entry)
+                                .hoverHint(entry.cask.flatMap {
+                                    localHomebrew.localState(for: $0).retirement?.summary(isInstalled: false)
+                                })
+                        }
+                    }
+                    if !plan.unsupportedTapEntries.isEmpty {
+                        unavailableHeader(String(localized: .shelfSetupBrewfileSheetUnsupportedTap(plan.unsupportedTapEntries.count)))
+                        ForEach(plan.unsupportedTapEntries) { entry in
+                            BrewfileEntryRow(entry: entry)
+                        }
                     }
                     if !plan.skippedEntries.isEmpty {
                         skippedHeader
@@ -170,19 +226,6 @@ struct BrewfileImportSheet: View {
         .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 
-    private var skippedHeader: some View {
-        HStack(spacing: 8) {
-            BrewfileDoneMark(size: 16)
-            Text(String(localized: .shelfSetupBrewfileSheetSkipped(
-                plan.skippedEntries.count
-            )))
-            .font(CHType.bodySm)
-            .foregroundStyle(Color.chTextBody)
-        }
-        .padding(.vertical, 8)
-        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
-    }
-
     private func progress(completedCount: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             GeometryReader { geo in
@@ -247,11 +290,62 @@ struct BrewfileImportSheet: View {
         guard case .preview = phase, !selectedEntries.isEmpty else { return }
         phase = .running(completedCount: 0)
         Task {
-            let failedCount = await localHomebrew.installAll(tokens: selectedEntries.map(\.token)) {
-                phase = .running(completedCount: $0)
+            let selected = selectedEntries
+            let failedCount = await plan.run(selected: selected, addTap: addTap) { references in
+                let skipped = selected.count - references.count
+                return await localHomebrew.installAll(tokens: references) {
+                    phase = .running(completedCount: skipped + $0)
+                }
             }
             phase = .done(failedCount: failedCount)
         }
+    }
+}
+
+private extension BrewfileImportSheet {
+    @ViewBuilder var tapNotice: some View {
+        if !plan.tapsToAdd.isEmpty {
+            Text(verbatim: String(localized: "Taps to add: \(plan.tapsToAddText)"))
+                .font(CHType.statusMono)
+                .foregroundStyle(Color.chTextBody)
+        }
+        if !plan.unsupportedTaps.isEmpty {
+            Text(verbatim: String(localized: "Not added, address not supported: \(plan.unsupportedTaps.joined(separator: ", "))"))
+                .font(CHType.statusMono)
+                .foregroundStyle(Color.chTextBody)
+        }
+        if selectedEntries.contains(where: { $0.tap != nil }) {
+            Text("Importing installs apps from these taps. They can run code on this Mac.")
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextMuted)
+        }
+    }
+
+    var skippedHeader: some View {
+        HStack(spacing: 8) {
+            BrewfileDoneMark(size: 16)
+            Text(String(localized: .shelfSetupBrewfileSheetSkipped(
+                plan.skippedEntries.count
+            )))
+            .font(CHType.bodySm)
+            .foregroundStyle(Color.chTextBody)
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
+    }
+
+    func unavailableHeader(_ text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.red)
+                .frame(width: 16, height: 16)
+            Text(verbatim: text)
+                .font(CHType.bodySm)
+                .foregroundStyle(Color.chTextBody)
+        }
+        .padding(.vertical, 8)
+        .overlay(alignment: .top) { Color.chHairline.frame(height: 1) }
     }
 }
 
@@ -280,6 +374,9 @@ private struct BrewfileEntryRow: View {
                 .font(CHType.cardTitle)
                 .foregroundStyle(Color.chTextTitle)
                 .lineLimit(1)
+            if let tap = entry.tap {
+                TapChip(tap: tap)
+            }
             Spacer(minLength: 10)
             if let cask = entry.cask {
                 Text(verbatim: "v\(cask.displayVersion)")

@@ -45,11 +45,25 @@ final class LocalHomebrewService {
 
     @ObservationIgnored let applicationLauncher: any ApplicationLaunching
     @ObservationIgnored let mutationCoordinator: HomebrewMutationCoordinator
+    @ObservationIgnored let pinCommands: HomebrewPinCommands
+    var pinChangesInFlight: Set<String> = []
+    var pinFailureMessage: String?
     @ObservationIgnored let softwareScanner: any InstalledSoftwareScanning
     @ObservationIgnored let brewBinaryProvider: () -> URL?
     @ObservationIgnored private let caskPlatformProvider: () async -> CaskPlatform?
     @ObservationIgnored private let brewVersionProvider: () async -> String?
     @ObservationIgnored private let homebrewOutdatedProvider: () async -> HomebrewOutdatedReport?
+    @ObservationIgnored let tapIndexProvider: () async -> TapIndex?
+    @ObservationIgnored let installedFormulaeProvider: (String) async -> [String]
+    @ObservationIgnored let tapUpdateProvider: () async -> Void
+    @ObservationIgnored let tapTrustProvider: () async -> TapTrust
+
+    /// Third-party taps; replaced only by a complete, successful load.
+    var tapIndex = TapIndex.empty
+    /// A first install from a tap waiting for the user's trust confirmation.
+    var pendingTrustInstall: Cask?
+    @ObservationIgnored var cancelledTapAdds: Set<String> = []
+    @ObservationIgnored let lanes: HomebrewLaneLimiter
 
     var isUpdatingAll: Bool {
         operationStore.isUpdatingAll
@@ -84,18 +98,30 @@ final class LocalHomebrewService {
 
     private(set) var zapOnUninstall: Bool
 
+    /// Where new casks install; nil keeps Homebrew's default `/Applications`.
+    private(set) var applicationDirectoryOverride: URL?
+
     /// Tokens the user excluded from Adopt Apps, mapped to when they ignored them.
     private(set) var adoptIgnoredDates: [String: Date] {
         didSet { catalogStateRevision &+= 1 }
     }
 
     let fileManager: FileManager
-    private let defaults: UserDefaults
-    let applicationDirectories: [URL]
+    let defaults: UserDefaults
+    private let baseApplicationDirectories: [URL]
+
+    var applicationDirectories: [URL] {
+        guard let applicationDirectoryOverride,
+              !baseApplicationDirectories.map(\.path).contains(applicationDirectoryOverride.path)
+        else { return baseApplicationDirectories }
+        return baseApplicationDirectories + [applicationDirectoryOverride]
+    }
 
     private static let zapOnUninstallKey = "zapOnUninstall"
     private static let greedyKey = "greedyUpdates"
     private static let adoptIgnoredKey = "adoptIgnoredDates"
+    private static let applicationDirectoryKey = "caskApplicationDirectory"
+    static let defaultApplicationDirectoryPath = "/Applications"
 
     init(
         defaults: UserDefaults = .standard,
@@ -104,38 +130,43 @@ final class LocalHomebrewService {
         var dependencies = LocalHomebrewDependencies()
         configureDependencies(&dependencies)
         let operationStore = CaskOperationStore()
+        let lanes = dependencies.laneLimiter ?? .shared
+        self.lanes = lanes
 
         fileManager = dependencies.fileManager
         notificationCenter = dependencies.notificationCenter
         self.defaults = defaults
-        applicationDirectories = dependencies.applicationDirectories
-            ?? ApplicationDiscovery.defaultDirectories(
-                fileManager: dependencies.fileManager
-            )
-        applicationLauncher = dependencies.applicationLauncher
-            ?? WorkspaceApplicationLauncher()
+        baseApplicationDirectories = dependencies.resolvedApplicationDirectories()
+        applicationLauncher = dependencies.resolvedApplicationLauncher()
         self.operationStore = operationStore
+        let commandExecutor = dependencies.resolvedCommandExecutor()
         mutationCoordinator = HomebrewMutationCoordinator(
             operationStore: operationStore,
-            commandExecutor: dependencies.resolvedCommandExecutor(),
+            commandExecutor: commandExecutor,
             brewBinaryProvider: dependencies.brewBinaryProvider,
             askpassProvider: dependencies.askpassProvider,
             fileManager: dependencies.fileManager,
-            lanes: dependencies.laneLimiter ?? .shared
+            lanes: lanes
         )
-        softwareScanner = dependencies.softwareScanner
-            ?? HomebrewInstallationScanner()
+        pinCommands = HomebrewPinCommands(
+            commandExecutor: commandExecutor,
+            brewBinaryProvider: dependencies.brewBinaryProvider
+        )
+        softwareScanner = dependencies.resolvedSoftwareScanner()
         brewBinaryProvider = dependencies.brewBinaryProvider
         brewVersionProvider = dependencies.brewVersionProvider
-        let brewBinary = dependencies.brewBinaryProvider
-        caskPlatformProvider = dependencies.caskPlatformProvider
-            ?? { await HomebrewPlatformLoader().load(from: brewBinary()) }
-        homebrewOutdatedProvider = dependencies.homebrewOutdatedProvider
-            ?? { await HomebrewOutdatedLoader().load(from: brewBinary()) }
+        caskPlatformProvider = dependencies.resolvedCaskPlatformProvider()
+        homebrewOutdatedProvider = dependencies.resolvedHomebrewOutdatedProvider()
+        tapIndexProvider = dependencies.resolvedTapIndexProvider()
+        installedFormulaeProvider = dependencies.resolvedInstalledFormulaeProvider()
+        tapTrustProvider = dependencies.resolvedTapTrustProvider()
+        tapUpdateProvider = dependencies.resolvedTapUpdateProvider()
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]
         customBrewPrefix = defaults.string(forKey: HomebrewLocator.customPrefixKey)
+        applicationDirectoryOverride = defaults.string(forKey: Self.applicationDirectoryKey)
+            .map { URL(fileURLWithPath: $0) }
         observeApplicationActivation()
     }
 
@@ -171,6 +202,19 @@ final class LocalHomebrewService {
     func setGreedyUpdates(_ enabled: Bool) {
         greedyUpdates = enabled
         defaults.set(enabled, forKey: Self.greedyKey)
+    }
+
+    func setApplicationDirectory(_ directory: URL?) async {
+        let path = directory?.standardizedFileURL.path
+        applicationDirectoryOverride = path.flatMap {
+            $0 == Self.defaultApplicationDirectoryPath ? nil : URL(fileURLWithPath: $0)
+        }
+        if let applicationDirectoryOverride {
+            defaults.set(applicationDirectoryOverride.path, forKey: Self.applicationDirectoryKey)
+        } else {
+            defaults.removeObject(forKey: Self.applicationDirectoryKey)
+        }
+        await refresh()
     }
 
     func setAdoptIgnored(_ token: String, _ ignored: Bool) {

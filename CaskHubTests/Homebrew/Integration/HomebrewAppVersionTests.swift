@@ -53,6 +53,7 @@ final class HomebrewAppVersionTests: XCTestCase {
                 XCTAssertEqual(values[String(localized: "Outdated")],
                                expectedOutdated ? String(localized: "Yes") : String(localized: "No"))
                 XCTAssertEqual(service.localState(for: cask).hasAvailableUpdate, greedy && expectedOutdated)
+                await vm.projectionsSettled()
                 XCTAssertEqual(vm.updatesCount, greedy && expectedOutdated ? 1 : 0)
                 XCTAssertEqual(vm.filteredCasks.map(\.token), greedy && expectedOutdated ? ["antinote"] : [])
                 XCTAssertEqual(service.installationSnapshot.installedCasks["antinote"]?.installedVersion, "1.1.7")
@@ -93,6 +94,7 @@ final class HomebrewAppVersionTests: XCTestCase {
                 XCTAssertEqual(values[String(localized: "Outdated")],
                                expectedOutdated ? String(localized: "Yes") : String(localized: "No"))
                 XCTAssertEqual(service.localState(for: cask).hasAvailableUpdate, greedy && expectedOutdated)
+                await vm.projectionsSettled()
                 XCTAssertEqual(vm.updatesCount, greedy && expectedOutdated ? 1 : 0)
                 XCTAssertEqual(vm.filteredCasks.map(\.token), greedy && expectedOutdated ? [cask.token] : [])
             }
@@ -130,6 +132,7 @@ final class HomebrewAppVersionTests: XCTestCase {
             XCTAssertEqual(infoValues(for: cask, service: service)[String(localized: "Outdated")],
                            scenario.expected ? String(localized: "Yes") : String(localized: "No"), label)
             XCTAssertEqual(service.localState(for: cask).hasAvailableUpdate, scenario.expected, label)
+            await vm.projectionsSettled()
             XCTAssertEqual(vm.updatesCount, scenario.expected ? 1 : 0, label)
         }
     }
@@ -163,6 +166,7 @@ final class HomebrewAppVersionTests: XCTestCase {
             for (greedy, expected) in [(false, scenario.off), (true, scenario.greedy)] {
                 service.setGreedyUpdates(greedy)
                 XCTAssertEqual(service.localState(for: cask).hasAvailableUpdate, expected, "scenario \(index) greedy \(greedy)")
+                await vm.projectionsSettled()
                 XCTAssertEqual(vm.updatesCount, expected ? 1 : 0, "scenario \(index) greedy \(greedy)")
             }
         }
@@ -211,6 +215,7 @@ final class HomebrewAppVersionTests: XCTestCase {
         for greedy in [false, true] {
             service.setGreedyUpdates(greedy)
             XCTAssertFalse(service.localState(for: cask).hasAvailableUpdate, "self-updated, greedy \(greedy)")
+            await vm.projectionsSettled()
             XCTAssertEqual(vm.updatesCount, 0, "self-updated, greedy \(greedy)")
         }
 
@@ -226,6 +231,7 @@ final class HomebrewAppVersionTests: XCTestCase {
         for greedy in [false, true] {
             service.setGreedyUpdates(greedy)
             XCTAssertFalse(service.localState(for: cask).hasAvailableUpdate, "upgraded past the catalog, greedy \(greedy)")
+            await vm.projectionsSettled()
             XCTAssertEqual(vm.updatesCount, 0, "upgraded past the catalog, greedy \(greedy)")
         }
     }

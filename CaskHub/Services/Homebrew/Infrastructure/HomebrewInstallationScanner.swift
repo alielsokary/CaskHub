@@ -35,6 +35,7 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
         let installedCasks: [String: LocalCaskInstallation]
         let binaryPaths: [String: URL]
         let packages: [String: ExternalPackageInstallation]
+        let pinnedVersions: [String: String]
     }
 
     init(packageReceiptResolver: PackageReceiptResolver = PackageReceiptResolver()) {
@@ -57,6 +58,9 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
                     applicationDirectories: request.applicationDirectories
                 )
             } ?? [:]
+            let pinnedVersions = request.caskroomURL.map {
+                Self.scanPinnedCasks(caskroomURL: $0, fileManager: fileManager)
+            } ?? [:]
             let binaryPaths = Self.scanBinaryDirectories(
                 fileManager: fileManager
             )
@@ -70,7 +74,8 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
                 applications: applications,
                 installedCasks: installedCasks,
                 binaryPaths: binaryPaths,
-                packages: packages
+                packages: packages,
+                pinnedVersions: pinnedVersions
             )
             return makeSnapshot(
                 request: request,
@@ -103,7 +108,8 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
                 applications: applications,
                 installedCasks: current.installedCasks,
                 binaryPaths: current.externalBinaryPaths,
-                packages: packages
+                packages: packages,
+                pinnedVersions: current.pinnedVersions
             )
             return makeSnapshot(
                 request: request,
@@ -158,12 +164,31 @@ nonisolated struct HomebrewInstallationScanner: InstalledSoftwareScanning {
             externalPackageInstallations: components.packages,
             installationIndex: index,
             installationDatesByToken: installationDatesByToken,
+            pinnedVersions: components.pinnedVersions,
             scannedAt: current?.scannedAt ?? .now
         )
     }
 }
 
 extension HomebrewInstallationScanner {
+    /// `brew pin --cask` links `var/homebrew/pinned_casks/<token>` to the pinned Caskroom version.
+    static func scanPinnedCasks(caskroomURL: URL, fileManager: FileManager) -> [String: String] {
+        let directory = caskroomURL.deletingLastPathComponent()
+            .appendingPathComponent("var/homebrew/pinned_casks")
+        guard let entries = try? fileManager.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]
+        ) else { return [:] }
+        var result: [String: String] = [:]
+        for entry in entries {
+            let target = entry.resolvingSymlinksInPath()
+            var isDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: target.path, isDirectory: &isDirectory),
+                  isDirectory.boolValue else { continue }
+            result[entry.lastPathComponent] = target.lastPathComponent
+        }
+        return result
+    }
+
     static func scanCaskroom(
         at caskroomURL: URL,
         fileManager: FileManager,
@@ -313,7 +338,8 @@ extension HomebrewInstallationScanner {
             installedAt: installedAt,
             lastUpdatedAt: receipt?.lastUpdatedAt ?? versionModifiedAt,
             appBundleNames: receipt?.appBundleNames ?? [],
-            isZombie: isZombie
+            isZombie: isZombie,
+            tap: receipt?.tap
         )
     }
 

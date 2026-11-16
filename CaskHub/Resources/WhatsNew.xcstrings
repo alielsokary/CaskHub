@@ -8,7 +8,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A cleaner, native theme joins Classic. Switch between them any time in Settings, Appearance."
+            "value" : "Add a developer's own Homebrew tap to browse and install its apps alongside the rest."
           }
         }
       }
@@ -20,7 +20,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A New Standard Look"
+            "value" : "Third-Party Taps"
           }
         }
       }
@@ -32,7 +32,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apps now download in parallel, and any download can be canceled while it is in progress."
+            "value" : "When Homebrew asks for your administrator password, approve it with Touch ID instead of typing it."
           }
         }
       }
@@ -44,7 +44,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simultaneous Downloads"
+            "value" : "Touch ID for Passwords"
           }
         }
       }
@@ -56,7 +56,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The list now matches what Homebrew will upgrade. Refresh it any time from the toolbar."
+            "value" : "Pin an app to keep it at its installed version. Manage pins in Shelf Setup."
           }
         }
       }
@@ -68,7 +68,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Updates You Can Trust"
+            "value" : "Pinned Apps"
           }
         }
       }
@@ -80,7 +80,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apps managed outside Homebrew now appear in their own section. You can hide it in Settings, General."
+            "value" : "Browse and install fonts from the new Fonts category, listed just like apps."
           }
         }
       }
@@ -92,7 +92,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A Clearer Installed List"
+            "value" : "Fonts"
           }
         }
       }

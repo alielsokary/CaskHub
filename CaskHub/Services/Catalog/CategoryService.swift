@@ -43,6 +43,10 @@ nonisolated struct CaskAppIdentity: Decodable, Hashable, Sendable {
     }
 }
 
+nonisolated struct HousePick: Decodable, Hashable {
+    let token: String
+}
+
 nonisolated struct CaskCategoryData: Decodable {
     let version: Int
     let generatedDate: String
@@ -58,6 +62,7 @@ nonisolated struct CaskCategoryData: Decodable {
     var packageAppCandidates: [String: [PackageApplicationIdentity]]?
     var packageProductIdentities: [String: [PackageApplicationIdentity]]?
     var metadataUpdatedAt: String?
+    var housePick: HousePick?
 }
 
 @MainActor
@@ -74,6 +79,7 @@ final class CategoryService {
     private(set) var packageAppCandidates: [String: [PackageApplicationIdentity]] = [:]
     private(set) var packageProductIdentities: [String: [PackageApplicationIdentity]] = [:]
     private(set) var metadataUpdatedAt: String?
+    private(set) var housePick: HousePick?
     private(set) var catalogStateRevision = 0
 
     var orderedCategories: [(id: CategoryID, definition: CategoryDefinition)] {
@@ -155,8 +161,13 @@ final class CategoryService {
         }
     }
 
+    /// Fonts are identified by token, so CaskHub supplies this category itself.
+    static let fontsCategoryID: CategoryID = "fonts"
+
     func applyData(_ catalog: CaskCategoryData) {
-        categoryDefinitions = catalog.categories
+        categoryDefinitions = catalog.categories.merging(
+            [Self.fontsCategoryID: CategoryDefinition(displayName: "Fonts", icon: "textformat")]
+        ) { pipeline, _ in pipeline }
         tokenMappings = catalog.tokenToCategory
 
         version = catalog.version
@@ -169,11 +180,49 @@ final class CategoryService {
         packageAppCandidates = catalog.packageAppCandidates ?? [:]
         packageProductIdentities = catalog.packageProductIdentities ?? [:]
         if let updatedAt = catalog.metadataUpdatedAt { metadataUpdatedAt = updatedAt }
+        housePick = catalog.housePick
         catalogStateRevision &+= 1
     }
 
     func category(for token: String) -> CategoryID? {
         tokenMappings[token]?.primary
+    }
+
+    // MARK: - Tap casks
+
+    private var tapMappings: [String: TokenCategoryMapping] = [:]
+    private var tapAliases: [String: String] = [:]
+    private(set) var tapIconRefs: Set<String> = []
+    /// Bumped only by tap data, so tap cask icons reload without reloading every official icon.
+    private(set) var tapDataRevision = 0
+
+    func refreshTapsFromRemote() async {
+        guard let remote = await CaskFlowReleases.fetch(TapCatalogData.self, asset: "tap-categories.json") else { return }
+        applyTapData(remote)
+    }
+
+    func applyTapData(_ data: TapCatalogData) {
+        guard data.version == 1 else { return }
+        tapMappings = data.casks
+        tapAliases = data.sameAs
+        tapIconRefs = Set(data.iconCasks ?? [])
+        tapDataRevision &+= 1
+        catalogStateRevision &+= 1
+    }
+
+    func officialAlias(for reference: String) -> String? {
+        tapAliases[reference]
+    }
+
+    /// Official token, tap reference, or a tap cask aliased to an official one; unknown category ids are dropped.
+    func mapping(for reference: String) -> TokenCategoryMapping? {
+        if let official = tokenMappings[reference] { return official }
+        if let alias = tapAliases[reference] { return tokenMappings[alias] }
+        guard let mapping = tapMappings[reference], categoryDefinitions[mapping.primary] != nil else { return nil }
+        return TokenCategoryMapping(
+            primary: mapping.primary,
+            secondary: mapping.secondary.filter { categoryDefinitions[$0] != nil }
+        )
     }
 
     func displayName(for categoryID: CategoryID) -> String {

@@ -28,14 +28,12 @@ private struct GlassPanelModifier: ViewModifier {
                     .fill(surface)
                     .background(.ultraThinMaterial, in: shape)
                     .overlay {
-                        shape.strokeBorder(
-                            LinearGradient(
-                                colors: [Color.chHairlineStrong, Color.chHairline.opacity(0.35)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 1
+                        LinearGradient(
+                            colors: [Color.chHairlineStrong, Color.chHairline.opacity(0.35)],
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
+                        .mask(shape.strokeBorder(lineWidth: 1))
                     }
                     .shadow(color: shadow, radius: 11, y: 4)
             }
@@ -80,15 +78,14 @@ private struct NativeCardSurface: View {
     var body: some View {
         shape
             .fill(fill)
+            // A gradient-styled stroke rasterizes on the CPU per card; a masked gradient view composites on the GPU.
             .overlay {
-                shape.strokeBorder(
-                    LinearGradient(
-                        colors: [Color.chNativeCardHighlight, .clear],
-                        startPoint: .top,
-                        endPoint: UnitPoint(x: 0.5, y: 0.08)
-                    ),
-                    lineWidth: 1
+                LinearGradient(
+                    colors: [Color.chNativeCardHighlight, .clear],
+                    startPoint: .top,
+                    endPoint: UnitPoint(x: 0.5, y: 0.08)
                 )
+                .mask(shape.strokeBorder(lineWidth: 1))
             }
             .overlay { shape.stroke(Color.chNativeCardEdge, lineWidth: 0.5) }
             .shadow(color: Color.chNativeCardShadow, radius: 1.5, y: 1)

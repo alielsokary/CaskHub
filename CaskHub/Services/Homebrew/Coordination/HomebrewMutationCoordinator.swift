@@ -194,13 +194,7 @@ extension HomebrewMutationCoordinator {
     }
 
     private func validateBrewLocation() throws -> URL {
-        guard let brewURL = brewBinaryProvider() else {
-            throw LocalHomebrewError.brewBinaryNotFound
-        }
-        guard HomebrewLocator.isCompatible(brewURL: brewURL) else {
-            throw LocalHomebrewError.incompatibleBrewPath
-        }
-        return brewURL
+        try HomebrewLocator.validatedBrewURL(brewBinaryProvider())
     }
 
     private func preflightBrewLocation(
@@ -431,7 +425,7 @@ extension HomebrewMutationCoordinator {
     ) -> [String: String] {
         var tags = request.context.telemetryTags
         tags["brew.action"] = request.action.identifier
-        tags["brew.cask"] = request.token
+        tags["brew.cask"] = CaskReference.analyticsName(request.token)
         tags["brew.origin"] = request.origin.rawValue
         if operationStore.state(for: request.token)?.cancellationRequested == true {
             tags["brew.cancellation_requested"] = "true"

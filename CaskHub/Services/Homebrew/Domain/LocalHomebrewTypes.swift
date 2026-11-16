@@ -237,6 +237,9 @@ nonisolated struct CaskLocalState: Equatable, Sendable {
     let isOutdated: Bool
     let isZombie: Bool
     let canOpen: Bool
+    let retirement: CaskRetirement?
+    /// Set when a same-token twin from another source owns the Caskroom entry.
+    let foreignInstallationSource: String?
 
     var isPresent: Bool {
         installationSource != nil
@@ -266,6 +269,8 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
     /// Brew still lists this cask, but its app was removed outside Homebrew
     /// (or its install receipt is gone) — opens and upgrades are doomed.
     let isZombie: Bool
+    /// The receipt's source tap; nil for receipts that predate it.
+    let tap: String?
 
     nonisolated init(
         token: String,
@@ -273,7 +278,8 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
         installedAt: Date?,
         lastUpdatedAt: Date? = nil,
         appBundleNames: [String],
-        isZombie: Bool = false
+        isZombie: Bool = false,
+        tap: String?
     ) {
         self.token = token
         self.installedVersion = installedVersion
@@ -281,6 +287,7 @@ nonisolated struct LocalCaskInstallation: Hashable, Identifiable, Sendable {
         self.lastUpdatedAt = lastUpdatedAt
         self.appBundleNames = appBundleNames
         self.isZombie = isZombie
+        self.tap = tap
     }
 
     var id: String {
@@ -318,6 +325,8 @@ nonisolated enum CaskAction: Equatable, Sendable {
     case uninstalling
     case repairing
     case queued
+    case addingTap
+    case removingTap
 
     var inProgressLabel: String {
         switch self {
@@ -329,6 +338,8 @@ nonisolated enum CaskAction: Equatable, Sendable {
         case .uninstalling: return String(localized: "Uninstalling…")
         case .repairing: return String(localized: "Repairing…")
         case .queued: return String(localized: "Queued…")
+        case .addingTap: return String(localized: "Adding Tap…")
+        case .removingTap: return String(localized: "Removing Tap…")
         }
     }
 
@@ -344,6 +355,8 @@ nonisolated enum CaskAction: Equatable, Sendable {
         case .uninstalling: return "uninstalling"
         case .repairing: return "repairing"
         case .queued: return "queued"
+        case .addingTap: return "adding-tap"
+        case .removingTap: return "removing-tap"
         }
     }
 }

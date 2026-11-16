@@ -369,7 +369,7 @@ final class SentryProvider: CrashReporterProvider {
     }
 
     func capture(_ error: Error, tags: [String: String]) {
-        SentrySDK.capture(error: Self.sanitized(error)) { scope in
+        SentrySDK.capture(error: Self.sanitizedForReporting(error)) { scope in
             if let fingerprint = Self.fingerprint(for: error) {
                 scope.setFingerprint(fingerprint)
             }
@@ -391,7 +391,10 @@ final class SentryProvider: CrashReporterProvider {
             }
         }
     }
-    private static func sanitized(_ error: Error) -> any Error {
+    static func sanitizedForReporting(_ error: Error) -> any Error {
+        if case let LocalHomebrewError.appBundleNotFound(token) = error {
+            return LocalHomebrewError.appBundleNotFound(token: CaskReference.analyticsName(token))
+        }
         guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
             return error
         }

@@ -42,7 +42,9 @@ final class CaskCatalogSortTests: XCTestCase {
             hasAvailableUpdate: hasAvailableUpdate,
             isOutdated: hasAvailableUpdate,
             isZombie: false,
-            canOpen: true
+            canOpen: true,
+            retirement: nil,
+            foreignInstallationSource: nil
         )
     }
 
@@ -52,6 +54,8 @@ final class CaskCatalogSortTests: XCTestCase {
         let adoptable = makeCask("adoptable")
         let input = CatalogLibraryProjectionInput(
             casks: [installed, adoptable],
+            installedOnlyCasks: [],
+            retiredCasks: [],
             localStates: [
                 installed.token: localState(
                     source: .homebrew,
@@ -70,12 +74,15 @@ final class CaskCatalogSortTests: XCTestCase {
                     secondary: []
                 )
             ],
+            officialTwins: [],
             adoptIgnoredTokens: []
         )
 
         let library = CatalogProjector.makeLibrary(from: input)
         let filtered = CatalogProjector.makeFiltered(from: CatalogFilteredProjectionInput(
             casks: input.casks,
+            tapCasks: [],
+            retiredCasks: [],
             library: library,
             selectedSidebar: .library(.updates),
             searchText: "",
@@ -152,24 +159,8 @@ final class CaskCatalogSortTests: XCTestCase {
             [.recentlyInstalled, .mostPopular, .nameAZ, .nameZA]
         )
 
-        let now = Date()
         let local = await makePlatformResolvedHomebrew(defaults: makeScratchDefaults("library-sort-defaults"))
-        updateInstallationSnapshot(of: local) {
-            $0.installedCasks = [
-                "alpha": LocalCaskInstallation(
-                    token: "alpha",
-                    installedVersion: "1.0",
-                    installedAt: now.addingTimeInterval(-86_400),
-                    appBundleNames: []
-                ),
-                "zulu": LocalCaskInstallation(
-                    token: "zulu",
-                    installedVersion: "1.0",
-                    installedAt: now,
-                    appBundleNames: []
-                )
-            ]
-        }
+        seedAlphaInstalledBeforeZulu(in: local)
         let (vm, _) = await makeSUT(
             casks: [
                 makeCask("alpha", version: "2.0"),
@@ -188,16 +179,40 @@ final class CaskCatalogSortTests: XCTestCase {
 
         vm.selectedSidebar = .library(.installed)
         XCTAssertEqual(vm.sortOption, .recentlyInstalled)
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["zulu", "alpha"])
         XCTAssertEqual(vm.filteredExternallyManagedCasks.map(\.token), ["able", "bravo"])
 
         vm.selectedSidebar = .library(.updates)
         XCTAssertEqual(vm.sortOption, .nameAZ)
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["alpha", "zulu"])
 
         vm.selectedSidebar = .library(.adopt)
         XCTAssertEqual(vm.sortOption, .nameAZ)
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.filteredCasks.map(\.token), ["able", "bravo"])
+    }
+
+    @MainActor
+    private func seedAlphaInstalledBeforeZulu(in local: LocalHomebrewService) {
+        let now = Date()
+        updateInstallationSnapshot(of: local) {
+            $0.installedCasks = [
+                "alpha": LocalCaskInstallation(
+                    token: "alpha",
+                    installedVersion: "1.0",
+                    installedAt: now.addingTimeInterval(-86_400),
+                    appBundleNames: [], tap: "homebrew/cask"
+                ),
+                "zulu": LocalCaskInstallation(
+                    token: "zulu",
+                    installedVersion: "1.0",
+                    installedAt: now,
+                    appBundleNames: [], tap: "homebrew/cask"
+                )
+            ]
+        }
     }
 
     @MainActor
@@ -297,14 +312,17 @@ final class CaskCatalogSortTests: XCTestCase {
             localHomebrew: local
         )
 
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.installedCount, 0)
         updateInstalledCask(installation(cask.token, version: "1.0"), in: local)
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.installedCount, 1)
         XCTAssertEqual(vm.updatesCount, 1)
 
         vm.selectedSidebar = .discover(.recentlyAdded)
         XCTAssertTrue(vm.filteredCasks.isEmpty)
         recentlyAdded.addedDates[cask.token] = dateString(daysAgo: 1)
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.filteredCasks.map(\.token), [cask.token])
 
         vm.selectedSidebar = .category("utilities")
@@ -321,6 +339,7 @@ final class CaskCatalogSortTests: XCTestCase {
             ],
             iconTokens: nil
         ))
+        await vm.projectionsSettled()
         XCTAssertEqual(vm.filteredCasks.map(\.token), [cask.token])
         XCTAssertEqual(vm.categoryCounts["utilities"], 1)
     }

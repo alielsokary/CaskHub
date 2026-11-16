@@ -21,10 +21,25 @@ struct CaskRowView: View {
     @State private var showingInfo = false
 
     @Environment(\.catalogTextScale) private var textScale
+    @Environment(\.showsTapBadges) private var showsTapBadges
 
     private var typography: CHType.Catalog { CHType.Catalog(scale: textScale) }
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let eyebrow {
+                Text(eyebrow)
+                    .font(CHType.labelSm)
+                    .kerning(CHType.trackingLabel)
+                    .foregroundStyle(Color.chTextBrand)
+                    .padding(.bottom, 6)
+            }
+            row
+        }
+        .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
+    }
+
+    private var row: some View {
         HStack(spacing: 12) {
             HStack(alignment: .iconTitleTop, spacing: 12) {
                 CaskIconView(cask: cask, size: 40)
@@ -38,20 +53,12 @@ struct CaskRowView: View {
                 .frame(width: 24)
         }
         .padding(.vertical, 4)
-        .caskActionAlerts(for: cask, showUninstallConfirmation: $showDeleteConfirmation)
     }
 
     // MARK: - App Info
 
     private var appInfo: some View {
         VStack(alignment: .leading, spacing: 2) {
-            if let eyebrow {
-                Text(eyebrow)
-                    .font(CHType.labelSm)
-                    .kerning(CHType.trackingLabel)
-                    .foregroundStyle(Color.chTextBrand)
-                    .padding(.bottom, 4)
-            }
             Text(cask.displayName)
                 .font(typography.title)
                 .foregroundStyle(Color.chTextTitle)
@@ -96,6 +103,21 @@ struct CaskRowView: View {
     // MARK: - Metadata
 
     private var metadata: some View {
+        HStack(spacing: 6) {
+            if let retirement = actionPresentation.localState.retirement {
+                RetirementBadge(
+                    retirement: retirement,
+                    isInstalled: actionPresentation.localState.isHomebrewInstalled
+                )
+            }
+            if showsTapBadges, let tap = cask.thirdPartyTap {
+                TapBadge(tap: tap)
+            }
+            metaText
+        }
+    }
+
+    private var metaText: some View {
         Text(cask.metaLine(downloads: downloads))
             .font(typography.status)
             .foregroundStyle(Color.chTextMuted)
@@ -130,7 +152,7 @@ struct CaskRowView: View {
                 }
             },
             onUpdate: {
-                localHomebrew.send(.update(token: cask.token))
+                localHomebrew.send(.update(token: cask.reference))
             },
             onUninstall: {
                 showDeleteConfirmation = true

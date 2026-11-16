@@ -33,6 +33,195 @@ fetch("https://api.github.com/repos/alielsokary/CaskHub")
     // Keep the static star count when GitHub is unavailable or rate-limits us.
   });
 
+document.querySelectorAll(".video-poster").forEach((poster) => {
+  poster.addEventListener("click", (event) => {
+    event.preventDefault();
+    const frame = document.createElement("iframe");
+    frame.src = `https://www.youtube-nocookie.com/embed/${poster.dataset.videoId}?autoplay=1&rel=0`;
+    frame.title = poster.dataset.videoTitle;
+    frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = "strict-origin-when-cross-origin";
+    poster.replaceWith(frame);
+    frame.focus();
+  });
+});
+
+const carousel = document.querySelector(".quote-carousel");
+if (carousel) {
+  const viewport = carousel.querySelector(".quote-viewport");
+  const track = carousel.querySelector(".quote-track");
+  const slides = [...track.children];
+  const controls = carousel.querySelector(".carousel-controls");
+  const dots = slides.map((_, index) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.setAttribute("aria-label", `Show quote ${index + 1} of ${slides.length}`);
+    dot.addEventListener("click", () => step(index - current));
+    carousel.querySelector(".carousel-dots").append(dot);
+    return dot;
+  });
+  let current = 0;
+  let timer;
+  let engaged = false;
+
+  const offsetOf = (index) => slides[0].offsetLeft - slides.at(index).offsetLeft;
+  const show = (index) => {
+    current = (index + slides.length) % slides.length;
+    track.style.transform = `translateX(${offsetOf(current)}px)`;
+    slides.forEach((slide, i) => {
+      slide.classList.toggle("is-active", i === current);
+      slide.toggleAttribute("inert", i !== current);
+    });
+    dots.forEach((dot, i) =>
+      dot.setAttribute("aria-current", String(i === current)),
+    );
+  };
+  const schedule = () => {
+    clearInterval(timer);
+    if (!engaged && !motionPreference.matches && !document.hidden)
+      timer = setInterval(() => show(current + 1), 4000);
+  };
+  const step = (delta) => {
+    show(current + delta);
+    schedule();
+  };
+
+  slides.forEach((slide, index) => {
+    slide.setAttribute("aria-label", `${index + 1} of ${slides.length}`);
+  });
+  controls.querySelectorAll("[data-step]").forEach((button) => {
+    button.addEventListener("click", () => step(Number(button.dataset.step)));
+  });
+
+  // Drag follows the pointer, then settles on the nearest neighbour.
+  let drag = null;
+  let swiped = false;
+  viewport.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    drag = { x: event.clientX, moved: false };
+    swiped = false;
+  });
+  viewport.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const distance = event.clientX - drag.x;
+    if (!drag.moved) {
+      if (Math.abs(distance) < 6) return;
+      drag.moved = true;
+      viewport.setPointerCapture(event.pointerId);
+      viewport.classList.add("is-dragging");
+    }
+    track.style.transform = `translateX(${offsetOf(current) + distance}px)`;
+  });
+  const endDrag = (event) => {
+    if (!drag) return;
+    const distance = event.clientX - drag.x;
+    const moved = drag.moved;
+    drag = null;
+    viewport.classList.remove("is-dragging");
+    if (!moved) return;
+    swiped = true;
+    if (Math.abs(distance) > 60) step(distance < 0 ? 1 : -1);
+    else show(current);
+  };
+  viewport.addEventListener("pointerup", endDrag);
+  viewport.addEventListener("pointercancel", endDrag);
+  viewport.addEventListener("dragstart", (event) => event.preventDefault());
+
+  // Trackpad and Magic Mouse swipes arrive as wheel events followed by momentum.
+  // One step per gesture; a reversal or a fresh burst during momentum starts a new one.
+  let gestureX = 0;
+  let gestureY = 0;
+  let lockedDirection = 0;
+  let lastMagnitude = 0;
+  let wheelQuiet;
+  const resetGesture = () => {
+    gestureX = 0;
+    gestureY = 0;
+    lockedDirection = 0;
+    lastMagnitude = 0;
+  };
+  viewport.addEventListener(
+    "wheel",
+    (event) => {
+      const { deltaX, deltaY } = event;
+      if (Math.abs(deltaX) > Math.abs(deltaY)) event.preventDefault();
+      clearTimeout(wheelQuiet);
+      wheelQuiet = setTimeout(resetGesture, 150);
+      const magnitude = Math.abs(deltaX);
+      if (lockedDirection) {
+        const reversed = Math.sign(deltaX) === -lockedDirection && magnitude > 2;
+        const renewed =
+          Math.sign(deltaX) === lockedDirection &&
+          magnitude > 8 &&
+          magnitude > lastMagnitude * 2;
+        lastMagnitude = magnitude;
+        if (!reversed && !renewed) return;
+        resetGesture();
+      }
+      lastMagnitude = magnitude;
+      gestureX += deltaX;
+      gestureY += deltaY;
+      if (Math.abs(gestureX) > 30 && Math.abs(gestureX) > Math.abs(gestureY)) {
+        lockedDirection = Math.sign(gestureX);
+        step(lockedDirection);
+      }
+    },
+    { passive: false },
+  );
+  // Faded neighbours are inert, so their clicks land on the viewport.
+  viewport.addEventListener("click", (event) => {
+    if (swiped) return;
+    const { left, right } = slides.at(current).getBoundingClientRect();
+    if (event.clientX < left) step(-1);
+    else if (event.clientX > right) step(1);
+  });
+
+  const engage = (value) => () => {
+    engaged = value;
+    schedule();
+  };
+  carousel.addEventListener("pointerenter", engage(true));
+  carousel.addEventListener("pointerleave", engage(false));
+  carousel.addEventListener("focusin", engage(true));
+  carousel.addEventListener("focusout", (event) => {
+    if (!carousel.contains(event.relatedTarget)) engage(false)();
+  });
+  document.addEventListener("visibilitychange", schedule);
+  motionPreference.addEventListener("change", schedule);
+  addEventListener("resize", () => show(current));
+
+  controls.hidden = false;
+  carousel.classList.add("is-ready");
+  track.style.transition = "none";
+  const start = slides.findIndex((slide) => slide.hasAttribute("data-start"));
+  show(start === -1 ? Math.floor(slides.length / 2) : start);
+  track.getBoundingClientRect();
+  track.style.transition = "";
+  schedule();
+}
+
+const themeToggle = document.querySelector(".theme-toggle");
+const applyTheme = (theme) => {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.setAttribute(
+    "aria-label",
+    `Switch to ${theme === "dark" ? "light" : "dark"} theme`,
+  );
+  // Show the app screenshots in the same appearance as the page.
+  document.querySelector(`.segmented button[data-mode="${theme}"]`)?.click();
+};
+themeToggle.addEventListener("click", () => {
+  const theme =
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  try {
+    localStorage.setItem("theme", theme);
+  } catch {
+    // Private browsing can block storage; the toggle still works for this visit.
+  }
+  applyTheme(theme);
+});
+
 const copyButton = document.getElementById("copy");
 let copyFeedbackTimer;
 copyButton.addEventListener("click", async () => {
@@ -164,3 +353,5 @@ screenshotDialog.addEventListener("click", (event) => {
     screenshotDialog.close();
   }
 });
+
+applyTheme(document.documentElement.dataset.theme);

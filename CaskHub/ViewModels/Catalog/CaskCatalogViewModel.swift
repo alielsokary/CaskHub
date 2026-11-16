@@ -8,7 +8,7 @@
 import Foundation
 import Observation
 
-struct BrowseSection: Identifiable {
+nonisolated struct BrowseSection: Identifiable, Sendable {
     let title: String
     let destination: SidebarSelection
     let casks: [Cask]
@@ -50,14 +50,26 @@ enum SortOption: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CaskCatalogViewModel {
-    private(set) var casks: [Cask] = [] {
+    private(set) var catalog = CatalogPartition([], tapCasks: []) {
         didSet { catalogRevision &+= 1 }
+    }
+    var casks: [Cask] {
+        catalog.browsable
+    }
+    var retiredCasks: [Cask] {
+        catalog.retired
+    }
+
+    func catalogCask(for reference: String) -> Cask? {
+        catalog.byReference[reference]
     }
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     var analyticsByPeriod: [AnalyticsPeriod: [String: Int]] = [:] {
-        didSet { catalogRevision &+= 1 }
+        didSet { analyticsRevision &+= 1 }
     }
+    /// Download counts only feed popularity sorts, so they never rebuild the library or category data.
+    private(set) var analyticsRevision = 0
     private(set) var analyticsPeriod: AnalyticsPeriod = .days365
     private var analyticsRequestID = UUID()
     private(set) var catalogRevision = 0
@@ -81,18 +93,16 @@ final class CaskCatalogViewModel {
     @ObservationIgnored var searchDebounceInterval: Duration = .milliseconds(200)
     @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
 
-    @ObservationIgnored let libraryCache =
-        BoundedMemoizedValues<CatalogLibraryCacheKey, CatalogLibrarySnapshot>(capacity: 1)
+    /// Read through `currentDerived`, which schedules the off-main rebuild when inputs moved on.
+    var derived = CatalogDerivedData.empty
+    @ObservationIgnored var requestedDerivedKey: CatalogDerivedKey?
+    @ObservationIgnored var derivedTask: Task<Void, Never>?
     @ObservationIgnored let filteredCache =
         BoundedMemoizedValues<FilteredCatalogCacheKey, [Cask]>(capacity: 16)
     @ObservationIgnored let externallyManagedCache =
         BoundedMemoizedValues<FilteredCatalogCacheKey, [Cask]>(capacity: 1)
-    @ObservationIgnored let browseCache =
-        BoundedMemoizedValues<BrowseCatalogCacheKey, [BrowseSection]>(capacity: 1)
-    @ObservationIgnored let searchKeysCache = BoundedMemoizedValues<Int, [String: String]>(capacity: 1)
-    @ObservationIgnored let nameRankCache = BoundedMemoizedValues<Int, [String: Int]>(capacity: 1)
-    @ObservationIgnored let categoryPresentationCache =
-        BoundedMemoizedValues<CategoryPresentationCacheKey, [String: CaskCategoryPresentation]>(capacity: 1)
+    @ObservationIgnored let categoryMappingsCache =
+        BoundedMemoizedValues<CategoryPresentationCacheKey, [String: TokenCategoryMapping]>(capacity: 1)
 
     private static let periodKey = "analyticsPeriod"
     private static let windowKey = "recentlyAddedWindow"
@@ -116,7 +126,7 @@ final class CaskCatalogViewModel {
             switch selectedSidebar {
             case .library(.installed):
                 sortOption = .recentlyInstalled
-            case .library(.updates), .library(.adopt):
+            case .library(.updates), .library(.adopt), .library(.taps), .tap:
                 sortOption = .nameAZ
             case .discover(.recentlyAdded):
                 sortOption = .newest
@@ -165,17 +175,40 @@ final class CaskCatalogViewModel {
     func load() async {
         // Stamped up front so activations during a load don't start another.
         lastLoadedAt = .now
-        async let catalog: Void = fetchCasks()
+        async let catalogFetch: Void = fetchCasks()
         async let local: Void = localHomebrew.refresh()
         async let homebrewOutdated: Void = localHomebrew.refreshHomebrewOutdated()
         async let categories: Void = categoryService.refreshFromRemote()
         async let addedDates: Void = recentlyAdded.refreshFromRemote()
-        _ = await (catalog, local, homebrewOutdated, categories, addedDates)
-        let enriched = categoryService.addingAppIdentities(to: casks)
-        if enriched != casks {
-            casks = enriched
-            await localHomebrew.updatePackageCatalog(casks)
+        async let taps: Void = localHomebrew.refreshTaps()
+        async let tapCategories: Void = categoryService.refreshTapsFromRemote()
+        _ = await (catalogFetch, local, homebrewOutdated, categories, addedDates, taps, tapCategories)
+        let enriched = categoryService.addingAppIdentities(to: catalog.all)
+        if enriched != catalog.all {
+            catalog = CatalogPartition(enriched, tapCasks: catalog.tapCasks)
+            await localHomebrew.updatePackageCatalog(catalog.all)
         }
+        applyTapIndex()
+        await updateTaps(maxAge: Self.tapUpdateInterval)
+    }
+
+    static let tapUpdateInterval: TimeInterval = 3 * 3600
+
+    func refreshTaps() async {
+        await localHomebrew.refreshTaps()
+        applyTapIndex()
+    }
+
+    /// `maxAge: 0` is the Taps page's Refresh button.
+    func updateTaps(maxAge: TimeInterval) async {
+        await localHomebrew.updateTapsIfStale(now: .now, maxAge: maxAge)
+        applyTapIndex()
+    }
+
+    func applyTapIndex() {
+        let tapCasks = localHomebrew.tapIndex.casks
+        guard tapCasks != catalog.tapCasks else { return }
+        catalog = CatalogPartition(catalog.all, tapCasks: tapCasks)
     }
 
     func refreshIfStale(maxAge: TimeInterval = 3600) async {
@@ -197,13 +230,8 @@ final class CaskCatalogViewModel {
 
             let allCasks = try await caskRequest
             await categoryService.loadBundledCategoriesAsync()
-            casks = categoryService.addingAppIdentities(to: allCasks.filter { cask in
-                !cask.deprecated
-                    && !cask.disabled
-                    && !cask.token.contains("@")
-                    && !cask.token.hasPrefix("font-")
-            })
-            await localHomebrew.updatePackageCatalog(casks)
+            catalog = CatalogPartition(categoryService.addingAppIdentities(to: allCasks), tapCasks: localHomebrew.tapIndex.casks)
+            await localHomebrew.updatePackageCatalog(catalog.all)
 
             if let analytics = try? await analyticsRequest {
                 analyticsByPeriod[.days365] = Self.countsByToken(from: analytics)
@@ -274,8 +302,8 @@ final class CaskCatalogViewModel {
         .notation(.compactName)
         .locale(Locale(identifier: "en_US"))
 
-    func formattedDownloads(for token: String) -> String? {
-        guard let count = downloadCounts[token], count > 0 else { return nil }
+    func formattedDownloads(for reference: String) -> String? {
+        guard let count = downloadCounts[reference], count > 0 else { return nil }
         return count.formatted(Self.downloadsStyle)
     }
 }

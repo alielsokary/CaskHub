@@ -98,7 +98,7 @@ func analyticsResponse(_ counts: [(String, String)]) -> CaskAnalyticsResponse {
 
 @MainActor
 func installation(_ token: String, version: String) -> LocalCaskInstallation {
-    LocalCaskInstallation(token: token, installedVersion: version, installedAt: nil, appBundleNames: [])
+    LocalCaskInstallation(token: token, installedVersion: version, installedAt: nil, appBundleNames: [], tap: "homebrew/cask")
 }
 
 @MainActor
@@ -114,6 +114,7 @@ struct InstallationSnapshotFixture {
     var externalPackageInstallations: [String: ExternalPackageInstallation]
     var installationIndex: CaskInstallationIndex
     var installationDatesByToken: [String: CaskInstallationDates]
+    var pinnedVersions: [String: String]
     var scannedAt: Date?
 
     init(snapshot: InstallationSnapshot) {
@@ -128,6 +129,7 @@ struct InstallationSnapshotFixture {
         externalPackageInstallations = snapshot.externalPackageInstallations
         installationIndex = snapshot.installationIndex
         installationDatesByToken = snapshot.installationDatesByToken
+        pinnedVersions = snapshot.pinnedVersions
         scannedAt = snapshot.scannedAt
     }
 
@@ -146,6 +148,7 @@ struct InstallationSnapshotFixture {
             externalPackageInstallations: externalPackageInstallations,
             installationIndex: installationIndex,
             installationDatesByToken: installationDatesByToken,
+            pinnedVersions: pinnedVersions,
             scannedAt: scannedAt
         )
     }
@@ -336,6 +339,7 @@ func makeSUT(
         localHomebrew: localHomebrew
     )
     await vm.fetchCasks()
+    await vm.projectionsSettled()
     return (vm, api)
 }
 

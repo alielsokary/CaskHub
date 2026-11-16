@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Release pipeline: archive → Developer ID export → notarize → staple → zip →
-# appcast → GitHub release. Requires: Developer ID cert in Keychain, notarytool
+# appcast → GitHub release. Requires: Developer ID cert in Keychain, the "CaskHub"
+# Developer ID provisioning profile installed, notarytool
 # keychain profile "caskhub-notary", gh CLI authenticated.
 #
 # CI (.github/workflows/release.yml) overrides the Keychain-based credentials:
@@ -15,6 +16,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="$REPO_ROOT/.build/release"
 NOTARY_PROFILE="caskhub-notary"
 TEAM_ID="USYCM7BRK3"
+PROFILE_NAME="CaskHub"
 SPARKLE_VERSION="2.9.4"
 NOTES_HISTORY=5
 DOWNLOAD_URL_PREFIX="https://github.com/alielsokary/CaskHub/releases/download/$VERSION/"
@@ -62,6 +64,7 @@ xcodebuild -project CaskHub.xcodeproj -scheme CaskHub -configuration Release \
     -derivedDataPath "$WORK/DerivedData" \
     MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
     CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application" \
+    CASKHUB_RELEASE_PROFILE="$PROFILE_NAME" \
     DEVELOPMENT_TEAM="$TEAM_ID" \
     | tail -5
 
@@ -75,7 +78,14 @@ cat > "$WORK/ExportOptions.plist" <<PLIST
 	<key>teamID</key>
 	<string>$TEAM_ID</string>
 	<key>signingStyle</key>
-	<string>automatic</string>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>Developer ID Application</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.mag.caskhub</key>
+		<string>$PROFILE_NAME</string>
+	</dict>
 </dict>
 </plist>
 PLIST

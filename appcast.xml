@@ -3,12 +3,36 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.9.3</title>
-            <pubDate>Tue, 13 Oct 2026 08:25:30 +0000</pubDate>
-            <sparkle:version>851</sparkle:version>
-            <sparkle:shortVersionString>0.9.3</sparkle:shortVersionString>
+            <title>0.10.0</title>
+            <pubDate>Mon, 16 Nov 2026 21:34:29 +0000</pubDate>
+            <sparkle:version>1045</sparkle:version>
+            <sparkle:shortVersionString>0.10.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## 0.9.3
+            <description sparkle:format="markdown"><![CDATA[## 0.10.0
+
+### What's New
+
+- Added third-party taps. Add a developer's own Homebrew tap from the new Taps page to browse, install and update its apps next to the rest
+- Added Touch ID for the administrator password. Turn it on in Settings, General
+- Added pinning, so a pinned app stays at its installed version and is never offered an update. Manage pins in Shelf Setup
+- Added a Fonts category that lists every Homebrew font like an app
+- Added an Application Directory setting in Settings, Homebrew, Paths for installing apps outside /Applications
+- Added deprecated, disabled and removed casks to Installed and search, with a status that explains why Homebrew retired them
+
+### Improvements
+
+- Improved launch time, scrolling and typing in search, with fewer freezes
+- Improved hints, which now open instantly as popovers when you hover
+- Improved the Browse House Pick so it no longer changes with the sort order
+
+### Bug Fixes
+
+- Fixed updates failing when an app was renamed or moved after install, with a new Force Update option
+- Fixed pasting into the administrator password prompt, and the prompt closing silently when Allow was clicked with an empty field
+- Fixed the search clear button leaving old results on the page
+- Fixed CaskHub retrying old queued analytics calls after Share anonymous usage analytics was turned off
+
+## 0.9.3
 
 ### Improvements
 
@@ -59,29 +83,8 @@
 - Fixed standalone Microsoft apps such as Teams and OneDrive being claimed by the Office suite
 - Fixed Excel and similar apps disappearing from Installed after updating themselves
 
-## 0.8.3
-
-### What's New
-
-- Added Russian and Traditional Chinese, contributed by @gavrilyak201360-pixel and @koala1023
-- Added a GitHub Discussions link in About for questions and ideas, next to the bug report link
-
-### Improvements
-
-- Cask icons now share a consistent size with softer frames, and changed icons refresh on their own
-- Installed versions now follow apps that update themselves, so up-to-date apps no longer show in Updates
-
-### Bug Fixes
-
-- Fixed cancelled installs being reported as failures
-- Fixed installs that finished but hit an unrelated cleanup error being reported as failures
-- Fixed apps installed through packages or under a different bundle name not being detected as installed
-- Fixed Adopt and Replace recovery failing quietly when another app occupied the destination
-- Fixed an unaccepted Xcode license during upgrade showing as an unknown failure, now explained with next steps
-- Fixed the sidebar logo sitting too close to the top on macOS 27
-
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.9.3/CaskHub-0.9.3.zip" length="7896081" type="application/octet-stream" sparkle:edSignature="/dE1hPJPz/qStMVNLK2z0xTPi0d0cjKlrDNOCuinw4N1L0asNr5a5JGfOTl56+geYJvw+mCWn2K9JkWRMZbpCg=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.10.0/CaskHub-0.10.0.zip" length="8636761" type="application/octet-stream" sparkle:edSignature="leHkGxyWS1P4Ib4N12tHnY20754pr4Egw5R6vWrEMwaFGvx1lDYd4sVsDOGR8leRvtvLpuvZl20tYnk3NwWmCA=="/>
         </item>
     </channel>
 </rss>

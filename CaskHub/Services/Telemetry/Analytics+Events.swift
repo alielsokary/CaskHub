@@ -31,7 +31,7 @@ extension Analytics {
         origin: CaskActionOrigin = .individual
     ) {
         guard let verb = action.analyticsVerb else { return }
-        send("Cask.\(verb.past)", parameters: ["cask": token, "origin": origin.rawValue])
+        send("Cask.\(verb.past)", parameters: ["cask": CaskReference.analyticsName(token), "origin": origin.rawValue])
     }
 
     static func caskActionFailed(
@@ -70,7 +70,7 @@ extension Analytics {
         token: String,
         origin: CaskActionOrigin
     ) -> [String: String] {
-        ["action": verb, "cask": token, "origin": origin.rawValue]
+        ["action": verb, "cask": CaskReference.analyticsName(token), "origin": origin.rawValue]
     }
 
     // MARK: - Navigation
@@ -166,6 +166,8 @@ extension Analytics {
             return ["page": "maintenance"]
         case let .category(categoryID):
             return ["page": "category", "category": categoryID]
+        case .tap:
+            return ["page": "tap"]
         }
     }
 }
@@ -187,6 +189,8 @@ private extension CaskAction {
         case .uninstalling: return ("uninstall", "uninstalled")
         case .updating: return ("update", "updated")
         case .repairing: return ("repair", "repaired")
+        case .addingTap: return ("addTap", "tapAdded")
+        case .removingTap: return ("removeTap", "tapRemoved")
         case .opening, .updatingHomebrew, .queued: return nil
         }
     }
