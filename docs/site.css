@@ -38,6 +38,7 @@ html {
 }
 
 body {
+  overflow-x: clip;
   font-family: var(--body);
   background: var(--bg);
   color: var(--text);
@@ -696,6 +697,189 @@ h2 {
   color: var(--text-dim);
 }
 
+/* One quote in focus; neighbours peek in faded so the row reads as browsable. */
+.quote-carousel {
+  --slide: min(680px, 84vw);
+  --slide-speed: 1.2s;
+}
+
+.quote-viewport {
+  margin-inline: calc(50% - 50vw);
+  overflow: hidden;
+  touch-action: pan-y;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+
+.quote-track {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 8px calc((100vw - var(--slide)) / 2) 26px;
+  transition: transform var(--slide-speed) cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.quote {
+  flex: 0 0 var(--slide);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 34px 40px 28px;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  transition:
+    opacity var(--slide-speed) ease,
+    transform var(--slide-speed) cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.quote-carousel.is-ready .quote:not(.is-active) {
+  opacity: 0.35;
+  transform: scale(0.92);
+}
+
+.quote-viewport {
+  cursor: grab;
+}
+
+.quote-viewport.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.quote-viewport.is-dragging .quote-track {
+  transition: none;
+}
+
+.quote blockquote p::before {
+  content: "\201C";
+}
+
+.quote blockquote p::after {
+  content: "\201D";
+}
+
+.quote blockquote p {
+  font-family: var(--display);
+  font-size: clamp(17px, 1.8vw, 20px);
+  font-weight: 450;
+  line-height: 1.6;
+  letter-spacing: -0.012em;
+  color: var(--cream);
+  text-wrap: pretty;
+}
+
+.quote-translation {
+  margin-top: -10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.quote figcaption {
+  margin-top: auto;
+  align-self: flex-end;
+}
+
+.quote-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-align: right;
+  color: var(--text);
+}
+
+.quote-source:hover {
+  color: var(--cream);
+}
+
+.quote-source svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--cream);
+}
+
+.quote-source .brand-reddit {
+  fill: #ff4500;
+}
+
+.quote-source > span {
+  display: grid;
+  line-height: 1.35;
+}
+
+.quote-source cite {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--cream);
+}
+
+.quote-source cite + span {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.carousel-arrow {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--cream);
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+
+.carousel-arrow:hover {
+  background: var(--action);
+  border-color: transparent;
+}
+
+.carousel-dots {
+  display: flex;
+  align-items: center;
+}
+
+.carousel-dots button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 28px;
+  border: 0;
+  background: none;
+}
+
+.carousel-dots button::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--coral);
+  opacity: 0.3;
+  transition:
+    width 0.3s,
+    opacity 0.3s;
+}
+
+.carousel-dots button:hover::before {
+  opacity: 0.6;
+}
+
+.carousel-dots button[aria-current="true"]::before {
+  width: 16px;
+  opacity: 1;
+}
+
 .trust {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -964,6 +1148,25 @@ footer {
     padding: 24px;
   }
 
+  .quote-track {
+    gap: 14px;
+  }
+
+  .quote-viewport {
+    mask-image: none;
+  }
+
+  .quote {
+    padding: 26px 24px 22px;
+  }
+
+  .carousel-controls {
+    gap: 2px;
+  }
+
+  .carousel-dots button {
+    width: 15px;
+  }
 
   .play-button {
     width: 60px;
