@@ -43,6 +43,10 @@ nonisolated struct CaskAppIdentity: Decodable, Hashable, Sendable {
     }
 }
 
+nonisolated struct HousePick: Decodable, Hashable {
+    let token: String
+}
+
 nonisolated struct CaskCategoryData: Decodable {
     let version: Int
     let generatedDate: String
@@ -58,6 +62,7 @@ nonisolated struct CaskCategoryData: Decodable {
     var packageAppCandidates: [String: [PackageApplicationIdentity]]?
     var packageProductIdentities: [String: [PackageApplicationIdentity]]?
     var metadataUpdatedAt: String?
+    var housePick: HousePick?
 }
 
 @MainActor
@@ -74,6 +79,7 @@ final class CategoryService {
     private(set) var packageAppCandidates: [String: [PackageApplicationIdentity]] = [:]
     private(set) var packageProductIdentities: [String: [PackageApplicationIdentity]] = [:]
     private(set) var metadataUpdatedAt: String?
+    private(set) var housePick: HousePick?
     private(set) var catalogStateRevision = 0
 
     var orderedCategories: [(id: CategoryID, definition: CategoryDefinition)] {
@@ -174,6 +180,7 @@ final class CategoryService {
         packageAppCandidates = catalog.packageAppCandidates ?? [:]
         packageProductIdentities = catalog.packageProductIdentities ?? [:]
         if let updatedAt = catalog.metadataUpdatedAt { metadataUpdatedAt = updatedAt }
+        housePick = catalog.housePick
         catalogStateRevision &+= 1
     }
 

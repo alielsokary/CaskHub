@@ -189,6 +189,17 @@ extension CaskCatalogViewModel {
         }
     }
 
+    /// The CaskFlow house pick, else the Most Popular shelf head; never the current sort.
+    var heroCask: Cask? {
+        if let token = categoryService.housePick?.token,
+           let pick = catalogCask(for: token), pick.isBrowsable, !pick.isFont {
+            return pick
+        }
+        // Without counts the shelf is in catalog (alphabetical) order.
+        guard analyticsByPeriod[.days365]?.isEmpty == false else { return nil }
+        return browseSections.first { $0.destination == .discover(.topCharts) }?.casks.first
+    }
+
     // MARK: - Filtered Casks
 
     private var searchKeys: [String: String] {

@@ -267,7 +267,7 @@ struct ContentView: View {
 
     var heroCask: Cask? {
         guard showsBrowseSections else { return nil }
-        return viewModel.filteredCasks.first
+        return viewModel.heroCask
     }
 
     // Raw searchText would swap layout before results apply and flash a stale grid.
