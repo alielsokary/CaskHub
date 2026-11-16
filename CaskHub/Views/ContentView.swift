@@ -55,13 +55,7 @@ struct ContentView: View {
         } detail: {
             VStack(spacing: 0) {
                 if showsResultsHeader {
-                    Text("Results for “\(viewModel.searchText)”")
-                        .font(CHType.section)
-                        .foregroundStyle(Color.chTextTitle)
-                        .frame(maxWidth: catalogWidth, alignment: .leading)
-                        .padding(.horizontal, CHSize.catalogInset)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, CHSpace.s4)
+                    SearchResultsHeader(viewModel: viewModel, maxWidth: catalogWidth)
                 }
 
                 detailContent
@@ -82,15 +76,18 @@ struct ContentView: View {
                     catalogToolbar
                 }
             }
-            .modifier(CatalogSearch(
-                isEnabled: !isUtilityPage,
-                text: $viewModel.searchText,
-                isFocused: $searchFocused,
-                onSubmit: {
-                    searchFocused = false
-                    showsResultsHeader = !viewModel.searchText.isEmpty
-                }
-            ))
+            // On an empty background: search state changes per keystroke stay out of the catalog's environment.
+            .background {
+                Color.clear.modifier(CatalogSearch(
+                    isEnabled: !isUtilityPage,
+                    viewModel: viewModel,
+                    isFocused: $searchFocused,
+                    onSubmit: {
+                        searchFocused = false
+                        showsResultsHeader = !viewModel.searchText.isEmpty
+                    }
+                ))
+            }
         }
         .modifier(TapPresentation(dialog: $tapDialog, viewModel: viewModel))
         .overlay {
@@ -139,20 +136,12 @@ struct ContentView: View {
         .onChange(of: viewMode) { _, newValue in
             Analytics.viewModeChanged(newValue)
         }
-        .onChange(of: viewModel.searchText) { _, newValue in
-            searchSignalTask?.cancel()
-            if !newValue.isEmpty {
-                searchSignalTask = Task {
-                    try? await Task.sleep(for: .seconds(2))
-                    guard !Task.isCancelled else { return }
-                    Analytics.searchPerformed(results: viewModel.filteredCasks.count)
-                }
-            }
-            if newValue.isEmpty {
-                if showsResultsHeader { searchFocused = false }
-                showsResultsHeader = false
-            }
-        }
+        .modifier(SearchTextObserver(
+            viewModel: viewModel,
+            showsResultsHeader: $showsResultsHeader,
+            searchSignalTask: $searchSignalTask,
+            searchFocused: $searchFocused
+        ))
         .task {
             // The toolbar search field is the window's first key view.
             try? await Task.sleep(for: .milliseconds(300))
@@ -304,16 +293,57 @@ private extension ContentView {
 
 // MARK: - Search
 
+// searchText is read only below, so a keystroke never re-renders ContentView and its cards.
+private struct SearchResultsHeader: View {
+    let viewModel: CaskCatalogViewModel
+    let maxWidth: CGFloat
+
+    var body: some View {
+        Text("Results for “\(viewModel.searchText)”")
+            .font(CHType.section)
+            .foregroundStyle(Color.chTextTitle)
+            .frame(maxWidth: maxWidth, alignment: .leading)
+            .padding(.horizontal, CHSize.catalogInset)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, CHSpace.s4)
+    }
+}
+
+private struct SearchTextObserver: ViewModifier {
+    let viewModel: CaskCatalogViewModel
+    @Binding var showsResultsHeader: Bool
+    @Binding var searchSignalTask: Task<Void, Never>?
+    var searchFocused: FocusState<Bool>.Binding
+
+    func body(content: Content) -> some View {
+        content.onChange(of: viewModel.searchText) { _, newValue in
+            searchSignalTask?.cancel()
+            if !newValue.isEmpty {
+                searchSignalTask = Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    guard !Task.isCancelled else { return }
+                    Analytics.searchPerformed(results: viewModel.filteredCasks.count)
+                }
+            }
+            if newValue.isEmpty {
+                if showsResultsHeader { searchFocused.wrappedValue = false }
+                showsResultsHeader = false
+            }
+        }
+    }
+}
+
+// Bindable, not a Binding: a Binding's value change would re-run this body on every keystroke.
 private struct CatalogSearch: ViewModifier {
     let isEnabled: Bool
-    @Binding var text: String
+    @Bindable var viewModel: CaskCatalogViewModel
     var isFocused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
 
     func body(content: Content) -> some View {
         if isEnabled {
             content
-                .searchable(text: $text, placement: .toolbar, prompt: Text("Search apps…"))
+                .searchable(text: $viewModel.searchText, placement: .toolbar, prompt: Text("Search apps…"))
                 .searchFocused(isFocused)
                 .onSubmit(of: .search, onSubmit)
         } else {
