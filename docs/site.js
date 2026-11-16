@@ -65,7 +65,7 @@ if (carousel) {
   let timer;
   let engaged = false;
 
-  const offsetOf = (index) => slides[0].offsetLeft - slides[index].offsetLeft;
+  const offsetOf = (index) => slides[0].offsetLeft - slides.at(index).offsetLeft;
   const show = (index) => {
     current = (index + slides.length) % slides.length;
     track.style.transform = `translateX(${offsetOf(current)}px)`;
@@ -172,7 +172,7 @@ if (carousel) {
   // Faded neighbours are inert, so their clicks land on the viewport.
   viewport.addEventListener("click", (event) => {
     if (swiped) return;
-    const { left, right } = slides[current].getBoundingClientRect();
+    const { left, right } = slides.at(current).getBoundingClientRect();
     if (event.clientX < left) step(-1);
     else if (event.clientX > right) step(1);
   });

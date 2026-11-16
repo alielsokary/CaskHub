@@ -1,22 +1,22 @@
 :root {
   color-scheme: light;
 
-  --bg: #f7f5f2;
-  --bg-deep: #ece8e3;
-  --surface: #ffffff;
-  --line: #1d1b1914;
-  --cream: #1d1b19;
-  --coral: #b5553b;
-  --coral-bright: #a14a32;
-  --action: #bd583f;
-  --action-hover: #ad4e38;
-  --gold: #8f5f0f;
-  --text: #4a4643;
-  --text-dim: #6b6661;
-  --thumb: #ffffff;
-  --backdrop: #f7f5f2d9;
+  --bg: rgb(247 245 242);
+  --bg-deep: rgb(236 232 227);
+  --surface: rgb(255 255 255);
+  --line: rgb(29 27 25 / 8%);
+  --cream: rgb(29 27 25);
+  --coral: rgb(181 85 59);
+  --coral-bright: rgb(161 74 50);
+  --action: rgb(189 88 63);
+  --action-hover: rgb(173 78 56);
+  --gold: rgb(143 95 15);
+  --text: rgb(74 70 67);
+  --text-dim: rgb(107 102 97);
+  --thumb: rgb(255 255 255);
+  --backdrop: rgb(247 245 242 / 85%);
   --radius: 15px;
-  --card-shadow: 0 1px 3px #1d1b1912, 0 10px 26px #1d1b190f;
+  --card-shadow: 0 1px 3px rgb(29 27 25 / 7%), 0 10px 26px rgb(29 27 25 / 6%);
   --display:
     -apple-system, blinkmacsystemfont, "SF Pro Display", system-ui,
     "Helvetica Neue", sans-serif;
@@ -31,19 +31,19 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #18181a;
-  --bg-deep: #101012;
-  --surface: #222225;
-  --line: #ffffff16;
-  --cream: #f5f3ef;
-  --coral: #e58b70;
-  --coral-bright: #efa086;
-  --gold: #e5c17e;
-  --text: #b8b6b4;
-  --text-dim: #a3a09d;
-  --thumb: #3a3837;
-  --backdrop: #181716c9;
-  --card-shadow: 0 2px 4px #00000026, 0 12px 28px #00000020;
+  --bg: rgb(24 24 26);
+  --bg-deep: rgb(16 16 18);
+  --surface: rgb(34 34 37);
+  --line: rgb(255 255 255 / 9%);
+  --cream: rgb(245 243 239);
+  --coral: rgb(229 139 112);
+  --coral-bright: rgb(239 160 134);
+  --gold: rgb(229 193 126);
+  --text: rgb(184 182 180);
+  --text-dim: rgb(163 160 157);
+  --thumb: rgb(58 56 55);
+  --backdrop: rgb(24 23 22 / 79%);
+  --card-shadow: 0 2px 4px rgb(0 0 0 / 15%), 0 12px 28px rgb(0 0 0 / 13%);
 }
 
 * {
@@ -247,7 +247,7 @@ nav {
   width: 128px;
   height: 128px;
   border-radius: 30px;
-  box-shadow: 0 6px 16px #37261615;
+  box-shadow: 0 6px 16px rgb(55 38 22 / 8%);
 }
 
 .hero h1 {
@@ -303,13 +303,13 @@ nav {
 }
 
 .btn-primary {
-  color: #fff;
+  color: rgb(255 255 255);
   background: var(--action);
-  box-shadow: 0 4px 18px #00000012;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 7%);
 }
 
 .btn-primary:hover {
-  color: #fff;
+  color: rgb(255 255 255);
   background: var(--action-hover);
   transform: translateY(-1px);
 }
@@ -349,22 +349,22 @@ nav {
   max-width: 100%;
   margin: 38px auto 0;
   text-align: left;
-  background: #101012;
-  border: 1px solid #ffffff16;
+  background: rgb(16 16 18);
+  border: 1px solid rgb(255 255 255 / 9%);
   border-radius: 999px;
   padding: 15px 26px;
-  box-shadow: 0 24px 60px #00000045;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 27%);
   font: 500 16px var(--mono);
 }
 
 .terminal .prompt {
-  color: #e58b70;
+  color: rgb(229 139 112);
   user-select: none;
 }
 
 .terminal code {
   min-width: 0;
-  color: #f5f3ef;
+  color: rgb(245 243 239);
   overflow-x: auto;
   white-space: nowrap;
   scrollbar-width: none;
@@ -377,7 +377,7 @@ nav {
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: #e5c17e;
+  color: rgb(229 193 126);
   background: none;
   border: 0;
   border-radius: 999px;
@@ -387,13 +387,13 @@ nav {
 }
 
 .copy-btn:hover {
-  color: #f5f3ef;
+  color: rgb(245 243 239);
   transform: scale(1.1);
 }
 
 .copy-btn .check {
   display: none;
-  color: #8fcea8;
+  color: rgb(143 206 168);
 }
 
 .copy-btn.copied .check {
@@ -420,7 +420,7 @@ nav {
   margin: 60px 3.8% 0;
   overflow: hidden;
   border-radius: var(--radius);
-  box-shadow: 0 8px 24px #0000004d;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
 }
 
 .app-shot {
@@ -595,7 +595,7 @@ h2 {
   width: calc((100% - 8px) / 2);
   border-radius: 999px;
   background: var(--thumb);
-  box-shadow: 0 1px 3px #0000001f;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
   transform: translateX(100%);
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -687,7 +687,7 @@ h2 {
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--bg-deep);
-  box-shadow: 0 8px 24px #0000004d;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
 }
 
 .video-poster,
@@ -716,7 +716,7 @@ h2 {
   inset: 50% auto auto 50%;
   display: grid;
   translate: -50% -50%;
-  filter: drop-shadow(0 6px 18px #00000059);
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 35%));
   transition: scale 0.18s;
 }
 
@@ -741,7 +741,7 @@ h2 {
   margin-inline: calc(50% - 50vw);
   overflow: hidden;
   touch-action: pan-y;
-  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(90deg, transparent, rgb(0 0 0) 18%, rgb(0 0 0) 82%, transparent);
 }
 
 .quote-track {
@@ -832,7 +832,7 @@ h2 {
 }
 
 .quote-source .brand-reddit {
-  fill: #ff4500;
+  fill: rgb(255 69 0);
 }
 
 .quote-source > span {
