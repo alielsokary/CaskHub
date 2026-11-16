@@ -33,6 +33,20 @@ fetch("https://api.github.com/repos/alielsokary/CaskHub")
     // Keep the static star count when GitHub is unavailable or rate-limits us.
   });
 
+document.querySelectorAll(".video-poster").forEach((poster) => {
+  poster.addEventListener("click", (event) => {
+    event.preventDefault();
+    const frame = document.createElement("iframe");
+    frame.src = `https://www.youtube-nocookie.com/embed/${poster.dataset.videoId}?autoplay=1&rel=0`;
+    frame.title = poster.dataset.videoTitle;
+    frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = "strict-origin-when-cross-origin";
+    poster.replaceWith(frame);
+    frame.focus();
+  });
+});
+
 const copyButton = document.getElementById("copy");
 let copyFeedbackTimer;
 copyButton.addEventListener("click", async () => {
