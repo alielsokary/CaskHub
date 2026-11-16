@@ -294,6 +294,8 @@ private extension CaskRecoveryAction {
             service.operationStore.canBeginOperation(.adopting, for: cask.reference)
         case .repairAndReinstall:
             service.operationStore.canBeginOperation(.repairing, for: cask.reference)
+        case .forceUpgrade:
+            service.operationStore.canBeginOperation(.updating, for: cask.reference)
         case .updateHomebrew:
             service.operationStore.canBeginOperation(.updatingHomebrew, for: cask.reference)
         case .forceUninstall:
@@ -306,6 +308,7 @@ private extension CaskRecoveryAction {
         case .adoptExisting: "Adopt Existing App"
         case .replaceWithHomebrew: "Replace with Homebrew Version"
         case .repairAndReinstall: "Repair & Reinstall"
+        case .forceUpgrade: String(localized: "Force Update")
         case .updateHomebrew: String(localized: "Update Homebrew")
         case .forceUninstall: "Force Uninstall"
         case .openAppManagementSettings, .openFullDiskAccessSettings: "Open System Settings"
@@ -321,6 +324,8 @@ private extension CaskRecoveryAction {
             service.send(.requestReplacementAdoption(cask))
         case .repairAndReinstall:
             service.send(.repairAndReinstall(token: cask.reference))
+        case .forceUpgrade:
+            service.send(.forceUpgrade(token: cask.reference))
         case .updateHomebrew:
             service.send(.updateHomebrew(token: cask.reference))
         case .forceUninstall:

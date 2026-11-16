@@ -48,6 +48,7 @@
 		CB0222000000000000000002 /* FontCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0222000000000000000001 /* FontCatalogTests.swift */; };
 		A49100000000000000000001 /* PackageProductIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A49100000000000000000002 /* PackageProductIdentityTests.swift */; };
 		D24400000000000000000002 /* AppConflictRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24400000000000000000001 /* AppConflictRecoveryTests.swift */; };
+		F0CE00000000000000000002 /* ForceUpgradeRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0CE00000000000000000001 /* ForceUpgradeRecoveryTests.swift */; };
 		B23300000000000000000002 /* HomebrewAppVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23300000000000000000001 /* HomebrewAppVersionTests.swift */; };
 		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
 		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
@@ -297,6 +298,7 @@
 		CB0222000000000000000001 /* FontCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontCatalogTests.swift; sourceTree = "<group>"; };
 		A49100000000000000000002 /* PackageProductIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackageProductIdentityTests.swift; sourceTree = "<group>"; };
 		D24400000000000000000001 /* AppConflictRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConflictRecoveryTests.swift; sourceTree = "<group>"; };
+		F0CE00000000000000000001 /* ForceUpgradeRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpgradeRecoveryTests.swift; sourceTree = "<group>"; };
 		B23300000000000000000001 /* HomebrewAppVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewAppVersionTests.swift; sourceTree = "<group>"; };
 		41AD10042F68A00400BEABB8 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
 		41AD10132F68B00400BEABB8 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
@@ -1146,6 +1148,7 @@
 			isa = PBXGroup;
 			children = (
 				D24400000000000000000001 /* AppConflictRecoveryTests.swift */,
+				F0CE00000000000000000001 /* ForceUpgradeRecoveryTests.swift */,
 				A49000000000000000000002 /* ArtifactIdentityTests.swift */,
 				A49100000000000000000002 /* PackageProductIdentityTests.swift */,
 				B23300000000000000000001 /* HomebrewAppVersionTests.swift */,
@@ -1499,6 +1502,7 @@
 				F29000000000000000000007 /* CaskOperationStoreTests.swift in Sources */,
 				F2900000000000000000000B /* InstallationSnapshotTests.swift in Sources */,
 				D24400000000000000000002 /* AppConflictRecoveryTests.swift in Sources */,
+				F0CE00000000000000000002 /* ForceUpgradeRecoveryTests.swift in Sources */,
 				B23300000000000000000002 /* HomebrewAppVersionTests.swift in Sources */,
 				CA2150000000000000000004 /* CaskPlatformUpdateTests.swift in Sources */,
 				F29000000000000000000013 /* HomebrewCommandExecutorTests.swift in Sources */,

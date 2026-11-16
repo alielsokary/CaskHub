@@ -955,6 +955,34 @@
         }
       }
     },
+    "Force Update" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Принудительно обновить"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Примусово оновити"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "强制更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "強制更新"
+          }
+        }
+      }
+    },
     "formula" : {
       "localizations" : {
         "ru" : {
@@ -1623,6 +1651,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將加入的 Tap：%@"
+          }
+        }
+      }
+    },
+    "The installed app was renamed, moved, or deleted since Homebrew installed it, which blocks the update. Force Update installs the new version and replaces any app already at its location. Your settings and data are kept." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установленное приложение было переименовано, перемещено или удалено после установки через Homebrew, что блокирует обновление. «Принудительно обновить» устанавливает новую версию и заменяет приложение, которое уже находится на её месте. Ваши настройки и данные сохраняются."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановлений застосунок було перейменовано, переміщено або видалено після встановлення через Homebrew, що блокує оновлення. «Примусово оновити» встановлює нову версію та замінює застосунок, який уже є на її місці. Ваші налаштування та дані зберігаються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装的应用在 Homebrew 安装后被重命名、移动或删除，导致无法更新。“强制更新”会安装新版本，并替换该位置上已有的应用。你的设置和数据会被保留。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安裝的 App 在 Homebrew 安裝後被重新命名、移動或刪除，導致無法更新。「強制更新」會安裝新版本，並取代該位置上已有的 App。你的設定和資料會保留。"
           }
         }
       }
