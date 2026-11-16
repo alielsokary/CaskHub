@@ -106,7 +106,9 @@ extension CaskCatalogViewModel {
             catalogRevision: catalogRevision,
             categoryRevision: categoryService.catalogStateRevision
         )
-        return categoryPresentationCache.value(for: key) { [casks = casks + retiredCasks, categoryService] in
+        // Capture lists run on every call, cache hit or not; concatenate only inside the miss.
+        return categoryPresentationCache.value(for: key) { [catalog, categoryService] in
+            let casks = catalog.browsable + catalog.retired
             var result = [String: CaskCategoryPresentation](minimumCapacity: casks.count)
             for cask in casks {
                 result[cask.token] = CaskCategoryProjector.make(
@@ -203,14 +205,16 @@ extension CaskCatalogViewModel {
     // MARK: - Filtered Casks
 
     private var searchKeys: [String: String] {
-        searchKeysCache.value(for: catalogRevision) { [casks = casks + retiredCasks + catalog.tapCasks] in
-            Dictionary(casks.map { ($0.reference, $0.searchKey) }) { first, _ in first }
+        searchKeysCache.value(for: catalogRevision) { [catalog] in
+            let casks = catalog.browsable + catalog.retired + catalog.tapCasks
+            return Dictionary(casks.map { ($0.reference, $0.searchKey) }) { first, _ in first }
         }
     }
 
     /// Collation-equal names share a rank so descending sorts keep ties stable.
     private var nameRanks: [String: Int] {
-        nameRankCache.value(for: catalogRevision) { [casks = casks + retiredCasks + catalog.tapCasks] in
+        nameRankCache.value(for: catalogRevision) { [catalog] in
+            let casks = catalog.browsable + catalog.retired + catalog.tapCasks
             let sorted = casks.sorted {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
                     == .orderedAscending
