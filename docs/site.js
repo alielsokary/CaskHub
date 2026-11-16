@@ -194,7 +194,8 @@ if (carousel) {
   controls.hidden = false;
   carousel.classList.add("is-ready");
   track.style.transition = "none";
-  show(Math.floor(slides.length / 2));
+  const start = slides.findIndex((slide) => slide.hasAttribute("data-start"));
+  show(start === -1 ? Math.floor(slides.length / 2) : start);
   track.getBoundingClientRect();
   track.style.transition = "";
   schedule();
