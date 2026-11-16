@@ -909,7 +909,7 @@ h2 {
   opacity: 0.6;
 }
 
-.carousel-dots button[aria-current="true"]::before {
+.carousel-dots [aria-current="true"]::before {
   width: 16px;
   opacity: 1;
 }
