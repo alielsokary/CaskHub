@@ -905,7 +905,7 @@ h2 {
     opacity 0.3s;
 }
 
-.carousel-dots button:hover::before {
+.carousel-dots [aria-current="false"]:hover::before {
   opacity: 0.6;
 }
 
