@@ -209,7 +209,9 @@ struct ContentView: View {
     private var topBarSummary: String? {
         let externalCount = showsExternallyManagedSection ? viewModel.filteredExternallyManagedCasks.count : 0
         if selectedSidebar == .library(.taps) { return tapsSummary }
-        return isUtilityPage ? utilitySummary : String(localized: "\(viewModel.filteredCasks.count + externalCount) casks")
+        // Unsearched Browse lists every browsable cask; counting it needs no filter or sort pass.
+        let count = showsBrowseSections ? viewModel.casks.count : viewModel.filteredCasks.count
+        return isUtilityPage ? utilitySummary : String(localized: "\(count + externalCount) casks")
     }
 
     private var utilitySummary: String? {
