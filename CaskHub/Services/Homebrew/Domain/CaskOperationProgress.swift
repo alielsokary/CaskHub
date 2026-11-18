@@ -10,6 +10,7 @@ import Foundation
 nonisolated enum CaskOperationPhase: Equatable, Sendable {
     case queued
     case preparing
+    case connecting
     case checkingDownload
     case downloading
     case usingCachedDownload
@@ -23,6 +24,8 @@ nonisolated enum CaskOperationPhase: Equatable, Sendable {
             return String(localized: "Queued")
         case .preparing:
             return String(localized: "Preparing")
+        case .connecting:
+            return String(localized: "Connecting")
         case .checkingDownload:
             return String(localized: "Checking download")
         case .downloading:
@@ -46,6 +49,8 @@ nonisolated enum CaskOperationPhase: Equatable, Sendable {
             return "queued"
         case .preparing:
             return "preparing"
+        case .connecting:
+            return "connecting"
         case .checkingDownload:
             return "checking-download"
         case .downloading:
@@ -63,7 +68,7 @@ nonisolated enum CaskOperationPhase: Equatable, Sendable {
 
     var isDownloadActivity: Bool {
         switch self {
-        case .checkingDownload, .downloading, .usingCachedDownload:
+        case .connecting, .checkingDownload, .downloading, .usingCachedDownload:
             return true
         default:
             return false
@@ -243,7 +248,7 @@ nonisolated struct CaskOperationStatus: Equatable, Sendable {
             counts[identifier, default: (count: 0, label: label)].count += 1
         }
         let phaseOrder = [
-            "downloading", "checking-download", "using-cache", "verifying", "installing",
+            "downloading", "connecting", "checking-download", "using-cache", "verifying", "installing",
             "updating", "updating-homebrew", "adopting", "uninstalling", "repairing", "preparing",
             "canceling", "queued"
         ]
@@ -263,6 +268,8 @@ nonisolated enum BrewProgressParser {
 
     private static let progressRegex =
         #/Downloading\s+([0-9]+(?:\.[0-9]+)?)\s*(B|KB|MB|GB)\s*\/\s*([0-9]+(?:\.[0-9]+)?)\s*(B|KB|MB|GB)/#
+    /// `brew fetch` prints this, then stays silent while it resolves the download URL.
+    private static let fetchHeadingRegex = #/==> Fetching \S+ from /#
 
     static func parse(_ output: String) -> Update {
         let progressMatch = output.matches(of: progressRegex).last
@@ -277,12 +284,16 @@ nonisolated enum BrewProgressParser {
         if let progressMatch {
             events.append((progressMatch.range.lowerBound, .downloading))
         }
+        if let fetchHeading = output.matches(of: fetchHeadingRegex).last {
+            events.append((fetchHeading.range.lowerBound, .connecting))
+        }
 
         let markers: [(String, CaskOperationPhase)] = [
             ("==> Downloading ", .checkingDownload),
             ("Already downloaded:", .usingCachedDownload),
             (" Verifying ", .verifying),
             ("Verifying checksum", .verifying),
+            ("==> Fetching downloads for:", .verifying),
             ("==> Installing Cask", .performing),
             ("==> Upgrading ", .performing)
         ]
