@@ -4,10 +4,12 @@ const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
 
 if (demo) {
   const respectMotionPreference = () => {
-    if (motionPreference.matches) demo.pause();
-    else
+    if (motionPreference.matches) {
+      demo.pause();
+      demo.controls = true;
+    } else
       demo.play().catch(() => {
-        // Keep the poster visible when the browser blocks automatic playback.
+        demo.controls = true;
       });
   };
   motionPreference.addEventListener("change", respectMotionPreference);
