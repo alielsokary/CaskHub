@@ -412,22 +412,17 @@ nav {
 
 .demo-stage {
   position: relative;
-  aspect-ratio: 2728 / 1772;
+  aspect-ratio: 16 / 9;
   margin: 60px 3.8% 0;
   overflow: hidden;
   border-radius: var(--radius);
   box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
 }
 
-/* Frame the app window while retaining the original recording's pixels. */
 .app-shot {
   display: block;
-  position: absolute;
-  max-width: none;
-  width: 108.2111%;
-  height: auto;
-  left: -4.1056%;
-  top: -4.2889%;
+  width: 100%;
+  height: 100%;
 }
 
 main > :not(.hero) {
