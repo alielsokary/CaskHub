@@ -66,6 +66,8 @@ struct FilteredCatalogCacheKey: Equatable {
     let selectedSidebar: SidebarSelection
     let searchText: String
     let sortOption: SortOption
+    /// Empty off the Saved page, so toggling a save never invalidates other pages' results.
+    let savedReferences: Set<String>
 }
 
 nonisolated struct CategoryPresentationCacheKey: Equatable, Sendable {
