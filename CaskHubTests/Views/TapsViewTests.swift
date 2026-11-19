@@ -13,8 +13,9 @@ import XCTest
 @MainActor
 final class TapsViewTests: XCTestCase {
     func test_sidebar_puts_taps_in_library_and_adopt_under_manage() {
-        XCTAssertEqual(SidebarView.libraryRows(showTaps: true), [.library(.installed), .library(.updates), .library(.taps)])
-        XCTAssertEqual(SidebarView.libraryRows(showTaps: false), [.library(.installed), .library(.updates)])
+        let base: [SidebarSelection] = [.library(.installed), .library(.updates), .library(.saved)]
+        XCTAssertEqual(SidebarView.libraryRows(showTaps: true), base + [.library(.taps)])
+        XCTAssertEqual(SidebarView.libraryRows(showTaps: false), base)
         XCTAssertEqual(SidebarView.manageRows(showAdopt: true), [.shelfSetup, .library(.adopt)])
         XCTAssertEqual(SidebarView.manageRows(showAdopt: false), [.shelfSetup])
     }

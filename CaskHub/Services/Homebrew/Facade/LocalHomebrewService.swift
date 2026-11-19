@@ -106,6 +106,9 @@ final class LocalHomebrewService {
         didSet { catalogStateRevision &+= 1 }
     }
 
+    /// References of the casks the user saved to come back to; independent of install state.
+    private(set) var savedReferences: Set<String>
+
     let fileManager: FileManager
     let defaults: UserDefaults
     private let baseApplicationDirectories: [URL]
@@ -120,6 +123,7 @@ final class LocalHomebrewService {
     private static let zapOnUninstallKey = "zapOnUninstall"
     private static let greedyKey = "greedyUpdates"
     private static let adoptIgnoredKey = "adoptIgnoredDates"
+    private static let savedKey = "savedCaskReferences"
     private static let applicationDirectoryKey = "caskApplicationDirectory"
     static let defaultApplicationDirectoryPath = "/Applications"
 
@@ -164,6 +168,7 @@ final class LocalHomebrewService {
         zapOnUninstall = defaults.bool(forKey: Self.zapOnUninstallKey)
         greedyUpdates = defaults.bool(forKey: Self.greedyKey)
         adoptIgnoredDates = defaults.dictionary(forKey: Self.adoptIgnoredKey) as? [String: Date] ?? [:]
+        savedReferences = Set(defaults.stringArray(forKey: Self.savedKey) ?? [])
         customBrewPrefix = defaults.string(forKey: HomebrewLocator.customPrefixKey)
         applicationDirectoryOverride = defaults.string(forKey: Self.applicationDirectoryKey)
             .map { URL(fileURLWithPath: $0) }
@@ -224,6 +229,15 @@ final class LocalHomebrewService {
             adoptIgnoredDates.removeValue(forKey: token)
         }
         defaults.set(adoptIgnoredDates, forKey: Self.adoptIgnoredKey)
+    }
+
+    func setSaved(_ reference: String, _ saved: Bool) {
+        if saved {
+            savedReferences.insert(reference)
+        } else {
+            savedReferences.remove(reference)
+        }
+        defaults.set(savedReferences.sorted(), forKey: Self.savedKey)
     }
 
     func commitInstallationSnapshot(_ snapshot: InstallationSnapshot) {

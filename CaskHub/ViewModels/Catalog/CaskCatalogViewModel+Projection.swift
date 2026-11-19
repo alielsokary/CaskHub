@@ -48,6 +48,13 @@ extension CaskCatalogViewModel {
             }
     }
 
+    /// Saved casks still in the catalog, in a stable order so equal sort keys never reshuffle.
+    var savedCasks: [Cask] {
+        localHomebrew.savedReferences
+            .compactMap { catalog.byReference[$0] }
+            .sorted { $0.reference < $1.reference }
+    }
+
     var pinnedCasks: [Cask] {
         Self.sortedByName(librarySnapshot.homebrewInstalledCasks.filter {
             localHomebrew.pinnedVersion(for: $0.reference) != nil
@@ -276,8 +283,13 @@ extension CaskCatalogViewModel {
             recentlyAddedWindow: recentlyAddedWindow,
             selectedSidebar: selectedSidebar,
             searchText: appliedSearchText,
-            sortOption: sortOption
+            sortOption: sortOption,
+            savedReferences: showsSaved ? localHomebrew.savedReferences : []
         )
+    }
+
+    private var showsSaved: Bool {
+        selectedSidebar == .library(.saved)
     }
 
     private var filteredProjectionInput: CatalogFilteredProjectionInput {
@@ -297,7 +309,8 @@ extension CaskCatalogViewModel {
             installedDates: localHomebrew.installationSnapshot.installedCasks
                 .compactMapValues(\.installedAt),
             searchKeys: appliedSearchText.isEmpty ? [:] : searchKeys,
-            nameRanks: sortUsesNameRanks ? nameRanks : [:]
+            nameRanks: sortUsesNameRanks ? nameRanks : [:],
+            savedCasks: showsSaved ? savedCasks : []
         )
     }
 }

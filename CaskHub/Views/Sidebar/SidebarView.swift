@@ -18,6 +18,7 @@ struct SidebarView: View {
     var updatesCount: Int = 0
     var installedCount: Int = 0
     var adoptableCount: Int = 0
+    var savedCount: Int = 0
     let tapsCount: Int
     var categoryCounts: [String: Int] = [:]
 
@@ -92,7 +93,7 @@ struct SidebarView: View {
     // MARK: - Rows
 
     static func libraryRows(showTaps: Bool) -> [SidebarSelection] {
-        [.library(.installed), .library(.updates)] + (showTaps ? [.library(.taps)] : [])
+        [.library(.installed), .library(.updates), .library(.saved)] + (showTaps ? [.library(.taps)] : [])
     }
 
     static func manageRows(showAdopt: Bool) -> [SidebarSelection] {
@@ -106,6 +107,8 @@ struct SidebarView: View {
             row(selection, title: LibraryItem.installed.title, icon: LibraryItem.installed.icon, count: installedCount)
         case .library(.updates):
             row(selection, title: LibraryItem.updates.title, icon: LibraryItem.updates.icon, badge: updatesCount)
+        case .library(.saved):
+            row(selection, title: LibraryItem.saved.title, icon: LibraryItem.saved.icon, count: savedCount)
         case .library(.taps):
             row(selection, title: LibraryItem.taps.title, icon: LibraryItem.taps.icon, count: tapsCount)
         case .library(.adopt):

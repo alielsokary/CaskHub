@@ -49,6 +49,8 @@ struct CaskRowView: View {
             metadata
             actionsControl
                 .frame(width: CHSize.listActionWidth, alignment: .trailing)
+            SaveCaskButton(cask: cask)
+                .frame(width: 24)
             menuSlot
                 .frame(width: 24)
         }

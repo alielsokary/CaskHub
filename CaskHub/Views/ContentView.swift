@@ -48,6 +48,7 @@ struct ContentView: View {
                 updatesCount: viewModel.updatesCount,
                 installedCount: viewModel.installedCount(includingExternallyManaged: showExternallyManagedApps),
                 adoptableCount: viewModel.adoptableCasks.count,
+                savedCount: viewModel.savedCasks.count,
                 tapsCount: localHomebrew.tapIndex.tapsWithCasks.count,
                 categoryCounts: viewModel.categoryCounts
             )
