@@ -127,9 +127,9 @@ final class TapCaskIdentityTests: XCTestCase {
     func test_diagnostic_headline_is_scrubbed_and_only_sent_for_unknown_failures() {
         let unknown = HomebrewCommandFailure(
             arguments: ["install", "--cask", "acme"], exitCode: 1,
-            diagnostic: "Error: acme 2.1 failed at /Users/alice/Downloads/x.dmg from https://acme.example/x"
+            diagnostic: "Error: acme 2.1 needs bob/tools/dep via git@github.com:carol/repo, token ghp_abcdefghijklmnopqrstuvwxyz"
         )
-        XCTAssertEqual(unknown.diagnosticHeadline, "error: <cask> <number> failed at <path>")
+        XCTAssertEqual(unknown.diagnosticHeadline, "error: <name> <number> needs <redacted> via <redacted> token <redacted>")
 
         let classified = HomebrewCommandFailure(arguments: ["untap", "a/b"], exitCode: 130, diagnostic: "")
         XCTAssertNil(classified.diagnosticHeadline)

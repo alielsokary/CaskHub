@@ -47,10 +47,15 @@ nonisolated enum HomebrewDiagnosticRedactor {
     }
 
     /// Brew's error line, scrubbed, so an unknown failure shows what brew said.
-    static func headline(_ diagnostic: String, token: String?) -> String? {
+    static func headline(_ diagnostic: String, arguments: [String]) -> String? {
         let lines = diagnostic.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        guard let line = lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first else { return nil }
-        return String(normalized(line, token: token).prefix(200))
+        guard var line = lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first else { return nil }
+        let names = arguments.dropFirst().filter { !$0.hasPrefix("-") }.flatMap { [$0, CaskReference.bareToken($0)] }
+        for name in names where !name.isEmpty {
+            line = line.replacingOccurrences(of: name, with: "<name>", options: .caseInsensitive)
+        }
+        line = line.replacingOccurrences(of: #"\S*/\S*|[A-Za-z0-9_+=-]{24,}"#, with: "<redacted>", options: .regularExpression)
+        return String(normalized(line, token: nil).prefix(200))
     }
 
     static func bucket(_ diagnostic: String, token: String?) -> String {
