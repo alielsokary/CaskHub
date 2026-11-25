@@ -127,6 +127,35 @@ final class HomebrewTapLoaderTests: XCTestCase {
         XCTAssertLessThan(Date().timeIntervalSince(start), 10)
     }
 
+    func test_load_survives_a_trusted_tap_larger_than_the_process_argument_limit() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("big-tap-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let tokens = (0..<5000).map { "\"user/big/app\($0)\"" }.joined(separator: ",")
+        try """
+        [{"name": "user/big", "path": "/x", "official": false, "trusted": true, "formula_names": [],
+          "cask_tokens": [\(tokens)], "cask_files": [], "remote": "https://github.com/user/homebrew-big"}]
+        """.write(to: dir.appendingPathComponent("tap-info.json"), atomically: true, encoding: .utf8)
+        let brew = dir.appendingPathComponent("brew")
+        try """
+        #!/bin/sh
+        case "$1" in
+        tap-info) cat "\(dir.path)/tap-info.json" ;;
+        trust) echo '{"taps": ["user/big"], "casks": []}' ;;
+        info) echo "$#" >> "\(dir.path)/info-arg-counts"; echo '{"casks": []}' ;;
+        esac
+        """.write(to: brew, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: brew.path)
+
+        let index = await HomebrewTapLoader().load(from: brew)
+
+        XCTAssertEqual(index?.casks.count, 5000)
+        let counts = try String(contentsOf: dir.appendingPathComponent("info-arg-counts"), encoding: .utf8)
+            .split(separator: "\n").compactMap { Int($0) }
+        XCTAssertEqual(counts.reduce(0) { $0 + $1 - 3 }, 5000, "every trusted cask goes through brew info")
+        XCTAssertLessThan(counts.max() ?? .max, 4096)
+    }
+
     private func tapInfoCask(_ token: String, tap: String, version: String) throws -> Cask {
         let json = """
         {"token": "\(token)", "full_token": "\(tap)/\(token)", "tap": "\(tap)", "name": ["\(token)"],

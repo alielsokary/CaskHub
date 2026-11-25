@@ -20,9 +20,13 @@ nonisolated struct HomebrewTapLoader: Sendable {
         let trust = Self.trustOrNone(Self.run(brewURL, ["trust", "--json=v1"]))
         let provisional = TapIndex(taps: taps, casks: [], trust: trust)
         let trustedReferences = taps.flatMap(\.caskTokens).filter(provisional.trusts)
-        let trustedCasks = trustedReferences.isEmpty ? [] : Self.run(
-            brewURL, ["info", "--cask", "--json=v2"] + trustedReferences
-        ).flatMap(Self.infoCasks)
+        // Process raises an uncaught exception past 4096 arguments, so big trusted taps go in batches.
+        let batches = stride(from: 0, to: trustedReferences.count, by: 1000).map {
+            Array(trustedReferences[$0..<min($0 + 1000, trustedReferences.count)])
+        }
+        let trustedCasks = batches.flatMap {
+            Self.run(brewURL, ["info", "--cask", "--json=v2"] + $0).flatMap(Self.infoCasks) ?? []
+        }
         return Self.makeIndex(taps: taps, trust: trust, trustedCasks: trustedCasks) {
             try? String(contentsOfFile: $0, encoding: .utf8)
         }
