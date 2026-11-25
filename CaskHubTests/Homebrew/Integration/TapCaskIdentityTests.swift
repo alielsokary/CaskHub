@@ -127,9 +127,14 @@ final class TapCaskIdentityTests: XCTestCase {
     func test_diagnostic_headline_is_scrubbed_and_only_sent_for_unknown_failures() {
         let unknown = HomebrewCommandFailure(
             arguments: ["install", "--cask", "acme"], exitCode: 1,
-            diagnostic: "Error: acme 2.1 needs bob/tools/dep via git@github.com:carol/repo, token ghp_abcdefghijklmnopqrstuvwxyz"
+            diagnostic: "Error: acme 2.1 token ghp_abcdefghijklmnopqrstuvwxyz needs bob/tools/dep"
         )
-        XCTAssertEqual(unknown.diagnosticHeadline, "error: <name> <number> needs <redacted> via <redacted> token <redacted>")
+        XCTAssertEqual(unknown.diagnosticHeadline, "error: <name> <number> token <redacted> needs <redacted>")
+        let spacedPath = HomebrewCommandFailure(
+            arguments: ["install", "--cask", "acme"], exitCode: 1,
+            diagnostic: "Error: cannot write '/Users/alice/My Apps/Secret Project.app' via git@github.com:carol/repo"
+        )
+        XCTAssertEqual(spacedPath.diagnosticHeadline, "error: cannot write <redacted>")
 
         let classified = HomebrewCommandFailure(arguments: ["untap", "a/b"], exitCode: 130, diagnostic: "")
         XCTAssertNil(classified.diagnosticHeadline)

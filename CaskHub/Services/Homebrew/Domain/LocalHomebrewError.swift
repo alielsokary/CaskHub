@@ -54,7 +54,7 @@ nonisolated enum HomebrewDiagnosticRedactor {
         for name in names where !name.isEmpty {
             line = line.replacingOccurrences(of: name, with: "<name>", options: .caseInsensitive)
         }
-        line = line.replacingOccurrences(of: #"\S*/\S*|[A-Za-z0-9_+=-]{24,}"#, with: "<redacted>", options: .regularExpression)
+        line = line.replacingOccurrences(of: #"\S*/[^\r\n]*|[A-Za-z0-9_+=-]{24,}"#, with: "<redacted>", options: .regularExpression)
         return String(normalized(line, token: nil).prefix(200))
     }
 
