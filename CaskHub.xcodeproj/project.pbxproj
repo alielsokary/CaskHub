@@ -55,6 +55,7 @@
 		41AD10032F68A00300BEABB8 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10022F68A00200BEABB8 /* TelemetryDeck */; };
 		41AD10122F68B00300BEABB8 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 41AD10112F68B00200BEABB8 /* Sentry */; };
 		41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10132F68B00400BEABB8 /* CrashReporter.swift */; };
+		B7E50000000000000000000B /* AppHangEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E50000000000000000000A /* AppHangEventProcessor.swift */; };
 		41AD10162F68B00700BEABB8 /* CrashReporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */; };
 		41EA00023005200100C45A51 /* AppHangReportingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41EA00013005200100C45A51 /* AppHangReportingTests.swift */; };
 		9F811AFFA71B25E827C7822E /* FailureTelemetryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4BD65221B8C6B54FF856D7 /* FailureTelemetryTests.swift */; };
@@ -311,6 +312,7 @@
 		B23300000000000000000001 /* HomebrewAppVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewAppVersionTests.swift; sourceTree = "<group>"; };
 		41AD10042F68A00400BEABB8 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Shared.xcconfig; path = Configs/Shared.xcconfig; sourceTree = "<group>"; };
 		41AD10132F68B00400BEABB8 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
+		B7E50000000000000000000A /* AppHangEventProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHangEventProcessor.swift; sourceTree = "<group>"; };
 		41AD10152F68B00600BEABB8 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
 		41EA00013005200100C45A51 /* AppHangReportingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHangReportingTests.swift; sourceTree = "<group>"; };
 		7A4BD65221B8C6B54FF856D7 /* FailureTelemetryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailureTelemetryTests.swift; sourceTree = "<group>"; };
@@ -815,6 +817,7 @@
 				41DFD46B30028F7D00608C7A /* Analytics.swift */,
 				41DFD46C30028F7D00608C7A /* Analytics+Events.swift */,
 				41AD10132F68B00400BEABB8 /* CrashReporter.swift */,
+				B7E50000000000000000000A /* AppHangEventProcessor.swift */,
 			);
 			path = Telemetry;
 			sourceTree = "<group>";
@@ -1366,6 +1369,7 @@
 				41DFD49C30028F7D00608C7A /* SidebarItem.swift in Sources */,
 				41DFD49D30028F7D00608C7A /* Analytics.swift in Sources */,
 				41AD10142F68B00500BEABB8 /* CrashReporter.swift in Sources */,
+				B7E50000000000000000000B /* AppHangEventProcessor.swift in Sources */,
 				41DFD49E30028F7D00608C7A /* Analytics+Events.swift in Sources */,
 				41DFD49F30028F7D00608C7A /* BrewAPIClient.swift in Sources */,
 				41DFD4A030028F7D00608C7A /* CaskFlowReleases.swift in Sources */,
