@@ -10,6 +10,12 @@
             "state" : "translated",
             "value" : "Add a developer's own Homebrew tap to browse and install its apps alongside the rest."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrega el tap de Homebrew de un desarrollador para explorar e instalar sus apps junto con las demás."
+          }
         }
       }
     },
@@ -21,6 +27,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Third-Party Taps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taps de terceros"
           }
         }
       }
@@ -34,6 +46,12 @@
             "state" : "translated",
             "value" : "When Homebrew asks for your administrator password, approve it with Touch ID instead of typing it."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuando Homebrew te pida la contraseña de administrador, apruébala con Touch ID en lugar de escribirla."
+          }
         }
       }
     },
@@ -45,6 +63,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Touch ID for Passwords"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID para contraseñas"
           }
         }
       }
@@ -58,6 +82,12 @@
             "state" : "translated",
             "value" : "Pin an app to keep it at its installed version. Manage pins in Shelf Setup."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fija una app para mantenerla en la versión instalada. Gestiona las apps fijadas en Configuración de la colección."
+          }
         }
       }
     },
@@ -69,6 +99,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pinned Apps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps fijadas"
           }
         }
       }
@@ -82,6 +118,12 @@
             "state" : "translated",
             "value" : "Browse and install fonts from the new Fonts category, listed just like apps."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explora e instala tipografías desde la nueva categoría Tipografías, con el mismo formato que las apps."
+          }
         }
       }
     },
@@ -93,6 +135,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fonts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipografías"
           }
         }
       }
