@@ -52,7 +52,7 @@ final class HomebrewMutationCoordinator {
         ) else { return }
         try preflightBrewLocation(
             request: request,
-            strandedCopyExists: callbacks.strandedCopyExists()
+            strandedCopyExists: callbacks.strandedCopyExists
         )
         beginOperation(
             request.action,
@@ -202,7 +202,7 @@ extension HomebrewMutationCoordinator {
 
     private func preflightBrewLocation(
         request: HomebrewMutationSequenceRequest,
-        strandedCopyExists: Bool
+        strandedCopyExists: () -> Bool
     ) throws {
         do {
             _ = try validateBrewLocation()
@@ -210,7 +210,7 @@ extension HomebrewMutationCoordinator {
             recordFailure(
                 token: request.token,
                 error: error,
-                strandedCopyExists: strandedCopyExists
+                strandedCopyExists: strandedCopyExists()
             )
             recordUnrecoveredFailure(error, request: request, span: nil)
             throw error
