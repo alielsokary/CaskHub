@@ -105,39 +105,46 @@ final class TapCaskIdentityTests: XCTestCase {
         XCTAssertFalse((sanitized as? LocalizedError)?.errorDescription?.contains("saffsanity") ?? true)
     }
 
-    func test_untap_failures_group_by_message_not_by_tap() throws {
+    func test_untap_failures_group_by_message_and_report_brews_own_words() throws {
         func refusal(_ tap: String) -> HomebrewCommandFailure {
             HomebrewCommandFailure(arguments: ["untap", tap], exitCode: 1, diagnostic: """
-            ==> Would untap \(tap) after uninstalling the following formulae:
-            \(tap)/tool
             Error: Refusing to untap \(tap) because it contains the following installed formulae:
+            \(tap)/tool
+            ==> Would untap \(tap) after uninstalling the following formulae:
             \(tap)/tool
             """)
         }
         let first = refusal("alice/tools")
-        let second = refusal("bob/stuff")
 
-        XCTAssertEqual(first.diagnosticBucket, second.diagnosticBucket)
-        let headline = try XCTUnwrap(first.diagnosticHeadline)
-        XCTAssertEqual(headline, second.diagnosticHeadline)
-        XCTAssertTrue(headline.hasPrefix("error: refusing to untap"), headline)
-        XCTAssertFalse(headline.contains("alice"), headline)
+        XCTAssertEqual(first.diagnosticBucket, refusal("bob/stuff").diagnosticBucket)
+        let report = try XCTUnwrap(first.diagnosticReport)
+        XCTAssertEqual(
+            report.headline,
+            "Error: Refusing to untap alice/tools because it contains the following installed formulae:"
+        )
+        XCTAssertTrue(report.text.contains("\nalice/tools/tool\n==> Would untap alice/tools"), report.text)
     }
 
-    func test_diagnostic_headline_is_scrubbed_and_only_sent_for_unknown_failures() {
-        let unknown = HomebrewCommandFailure(
-            arguments: ["install", "--cask", "acme"], exitCode: 1,
-            diagnostic: "Error: acme 2.1 token ghp_abcdefghijklmnopqrstuvwxyz needs bob/tools/dep"
-        )
-        XCTAssertEqual(unknown.diagnosticHeadline, "error: <name> <number> token <redacted> needs <redacted>")
-        let spacedPath = HomebrewCommandFailure(
-            arguments: ["install", "--cask", "acme"], exitCode: 1,
-            diagnostic: "Error: cannot write '/Users/alice/My Apps/Secret Project.app' via git@github.com:carol/repo"
-        )
-        XCTAssertEqual(spacedPath.diagnosticHeadline, "error: cannot write <redacted>")
+    func test_diagnostic_report_keeps_names_and_strips_private_parts() throws {
+        let failure = HomebrewCommandFailure(arguments: ["tap", "probe/none"], exitCode: 1, diagnostic: """
+        Cloning into '/opt/homebrew/Library/Taps/probe/homebrew-none'...
+        Error: Failure while executing; `git clone https://user:s3cret@example.com/probe/homebrew-none.git` exited with 128.
+        Could not write '/Users/alice/My Apps/Thing.app' for alice@example.com via git@github.com:carol/repo
+        GET https://cdn.example.com/a.dmg?sig=abc&se=2026 with ghp_abcdefghijklmnopqrstuvwxyz0123
+        """)
+        let report = try XCTUnwrap(failure.diagnosticReport)
 
-        let classified = HomebrewCommandFailure(arguments: ["untap", "a/b"], exitCode: 130, diagnostic: "")
-        XCTAssertNil(classified.diagnosticHeadline)
+        XCTAssertEqual(
+            report.headline,
+            "Error: Failure while executing; `git clone https://<credentials>@example.com/probe/homebrew-none.git` exited with 128."
+        )
+        XCTAssertEqual(report.text, """
+        Cloning into '/opt/homebrew/Library/Taps/probe/homebrew-none'...
+        Error: Failure while executing; `git clone https://<credentials>@example.com/probe/homebrew-none.git` exited with 128.
+        Could not write '/Users/<user>/My Apps/Thing.app' for <email> via git@github.com:carol/repo
+        GET https://cdn.example.com/a.dmg?<query> with <token>
+        """)
+        XCTAssertNil(HomebrewCommandFailure(arguments: ["untap", "a/b"], exitCode: 130, diagnostic: "").diagnosticReport)
     }
 
     func test_presentation_shows_installed_from_source_disabled() async throws {

@@ -46,16 +46,18 @@ nonisolated enum HomebrewDiagnosticRedactor {
             .joined(separator: " ")
     }
 
-    /// Brew's error line, scrubbed, so an unknown failure shows what brew said.
-    static func headline(_ diagnostic: String, arguments: [String]) -> String? {
-        let lines = diagnostic.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        guard var line = lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first else { return nil }
-        let names = arguments.dropFirst().filter { !$0.hasPrefix("-") }.flatMap { [$0, CaskReference.bareToken($0)] }
-        for name in names where !name.isEmpty {
-            line = line.replacingOccurrences(of: name, with: "<name>", options: .caseInsensitive)
-        }
-        line = line.replacingOccurrences(of: #"\S*/[^\r\n]*|[A-Za-z0-9_+=-]{24,}"#, with: "<redacted>", options: .regularExpression)
-        return String(normalized(line, token: nil).prefix(200))
+    /// Brew's own words, names and remotes kept; credentials, URL queries, home folder names, emails and tokens removed.
+    static func report(_ diagnostic: String) -> (headline: String, text: String)? {
+        let text = [
+            (#"(\w+://)(?!git@)[^/\s@'"]+@"#, "$1<credentials>@"),
+            (#"(\w+://[^\s?'"]+)\?[^\s'"`]*"#, "$1?<query>"),
+            (#"/Users/[^/\s'"`]+"#, "/Users/<user>"),
+            (#"(?<![\w.%+-])(?!git@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#, "<email>"),
+            (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, "<token>")
+        ].reduce(diagnostic) { $0.replacingOccurrences(of: $1.0, with: $1.1, options: .regularExpression) }
+        let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard let line = lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first else { return nil }
+        return (String(line.prefix(200)), String(text.suffix(8000)))
     }
 
     static func bucket(_ diagnostic: String, token: String?) -> String {
