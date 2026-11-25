@@ -15,7 +15,8 @@ struct HomebrewFailureReporter {
     func record(
         _ error: Error,
         request: HomebrewMutationSequenceRequest,
-        span: CrashSpan?
+        span: CrashSpan?,
+        strandedCopyExists: Bool
     ) {
         span?.finish(error: error)
         let localError = error as? LocalHomebrewError
@@ -25,12 +26,21 @@ struct HomebrewFailureReporter {
             origin: request.origin,
             failureKind: localError?.failureKind
         )
+        var tags = tags(for: request)
+        // A failure about an existing stranded copy did not create it.
+        if strandedCopyExists, localError?.failureKind != .strandedCaskroomApp {
+            tags["brew.left_stranded_copy"] = "true"
+            CrashReporter.capture(StrandedCopyDetected(
+                subcommand: localError?.commandFailure?.subcommand ?? "missing",
+                failureKind: localError?.failureKind
+            ), tags: tags)
+        }
         guard HomebrewIssuePolicy.shouldCapture(
             error,
             action: request.action,
             context: request.context
         ) else { return }
-        CrashReporter.capture(error, tags: tags(for: request))
+        CrashReporter.capture(error, tags: tags)
     }
 
     private func tags(for request: HomebrewMutationSequenceRequest) -> [String: String] {

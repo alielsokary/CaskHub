@@ -214,7 +214,7 @@ extension HomebrewMutationCoordinator {
                 error: error,
                 strandedCopyExists: strandedCopyExists()
             )
-            failureReporter.record(error, request: request, span: nil)
+            failureReporter.record(error, request: request, span: nil, strandedCopyExists: false)
             throw error
         }
     }
@@ -386,11 +386,12 @@ extension HomebrewMutationCoordinator {
             }
         }
 
-        failureReporter.record(error, request: request, span: span)
+        let strandedCopyExists = callbacks.strandedCopyExists()
+        failureReporter.record(error, request: request, span: span, strandedCopyExists: strandedCopyExists)
         recordFailure(
             token: request.token,
             error: error,
-            strandedCopyExists: callbacks.strandedCopyExists(),
+            strandedCopyExists: strandedCopyExists,
             title: request.action == .updatingHomebrew ? String(localized: "Homebrew Update Failed") : nil
         )
         // A staged replacement may already have removed the Homebrew receipt.

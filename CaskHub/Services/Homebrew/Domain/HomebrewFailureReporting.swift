@@ -74,3 +74,14 @@ nonisolated extension HomebrewCommandFailure {
         arguments.first == "untap" ? arguments.last : arguments.drop(while: { $0 != "--cask" }).dropFirst().first
     }
 }
+
+/// Sent when a failed operation leaves the app's own copy in the Caskroom, which blocks later updates.
+nonisolated struct StrandedCopyDetected: CustomNSError {
+    let subcommand: String
+    let failureKind: HomebrewFailureKind?
+
+    static let errorDomain = "Homebrew.StrandedCopyDetected"
+    var errorUserInfo: [String: Any] {
+        [NSDebugDescriptionErrorKey: "\(subcommand) · \(failureKind?.rawValue ?? "unknown")"]
+    }
+}

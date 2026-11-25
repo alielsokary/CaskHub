@@ -312,6 +312,7 @@ final class SentryProvider: CrashReporterProvider {
             for (key, value) in tags {
                 scope.setTag(value: value, key: key)
             }
+            if error is StrandedCopyDetected { scope.setLevel(.warning) }
             guard let localError = error as? LocalHomebrewError else { return }
             if let kind = localError.failureKind {
                 scope.setTag(value: kind.rawValue, key: "brew.failure_class")
@@ -341,6 +342,9 @@ final class SentryProvider: CrashReporterProvider {
     }
 
     static func fingerprint(for error: Error) -> [String]? {
+        if let stranded = error as? StrandedCopyDetected {
+            return [StrandedCopyDetected.errorDomain, stranded.subcommand, stranded.failureKind?.rawValue ?? "unknown"]
+        }
         guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
             return nil
         }
