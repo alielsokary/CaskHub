@@ -99,6 +99,44 @@ final class ConcurrentDownloadTests: XCTestCase {
         }
     }
 
+    func test_fetch_stuck_connecting_gives_up_as_a_network_failure() async {
+        let executor = ControlledHomebrewCommandExecutor()
+        let service = makeService(executor, fetchStallTimeout: .milliseconds(50))
+        let install = Task { try? await service.install(token: "mole-app") }
+        await executor.waitForRequests(1)
+        service.mutationCoordinator.consumeBrewOutput("==> Fetching mole-app from homebrew/cask\n", token: "mole-app")
+        await service.mutationCoordinator.awaitPendingOutput()
+
+        await settle { executor.cancelledTokens == ["mole-app"] }
+        XCTAssertEqual(executor.cancelledTokens, ["mole-app"])
+        executor.finish("mole-app", exitCode: 130)
+        await install.value
+
+        let unreachable = HomebrewCommandFailure(arguments: [], exitCode: 130, diagnostic: "", kind: .networkFailure)
+        XCTAssertEqual(
+            service.operationStore.state(for: "mole-app")?.failure?.message,
+            LocalHomebrewError.brewCommandFailed(unreachable).errorDescription
+        )
+        XCTAssertEqual(executor.requests.map(\.arguments), [["fetch", "--cask", "mole-app"]])
+    }
+
+    func test_fetch_that_starts_downloading_in_time_is_left_alone() async {
+        let executor = ControlledHomebrewCommandExecutor()
+        let service = makeService(executor, fetchStallTimeout: .milliseconds(50))
+        let install = Task { try? await service.install(token: "mole-app") }
+        await executor.waitForRequests(1)
+        service.mutationCoordinator.consumeBrewOutput(
+            "==> Fetching mole-app from homebrew/cask\nCask mole-app    ##    Downloading    1.0MB/26.5MB\n",
+            token: "mole-app"
+        )
+        await service.mutationCoordinator.awaitPendingOutput()
+
+        try? await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(executor.cancelledTokens, [])
+        await finishEverything(executor, [install])
+        XCTAssertNil(service.operationStore.state(for: "mole-app"))
+    }
+
     func test_cancel_while_queued_needs_no_process_and_frees_the_turn() async {
         let executor = ControlledHomebrewCommandExecutor()
         let service = makeService(executor)
@@ -270,10 +308,13 @@ final class ConcurrentDownloadTests: XCTestCase {
     }
 
     private func makeService(
-        _ executor: ControlledHomebrewCommandExecutor, sharingLanesWithMaintenance: Bool = false
+        _ executor: ControlledHomebrewCommandExecutor,
+        sharingLanesWithMaintenance: Bool = false,
+        fetchStallTimeout: Duration = .seconds(50)
     ) -> LocalHomebrewService {
         LocalHomebrewService(defaults: makeScratchDefaults("concurrent-\(UUID().uuidString)")) {
             $0.fileManager = NoFilesFileManager()
+            $0.fetchStallTimeout = fetchStallTimeout
             $0.commandExecutor = executor
             $0.laneLimiter = sharingLanesWithMaintenance ? nil : HomebrewLaneLimiter(downloadLimit: 3)
             $0.softwareScanner = EmptyInstalledSoftwareScanner()
