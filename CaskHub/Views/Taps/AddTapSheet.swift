@@ -58,8 +58,12 @@ final class AddTapModel {
     }
 
     /// Only a paste (several characters at once) is rewritten, never typing in progress.
+    /// A pasted line break would wrap the one-line field, so the paste is flattened and trimmed.
     func rewriteForPaste(from old: String, to new: String) -> TapCommandRewrite? {
-        guard new.count - old.count > 1, let rewrite = TapAddInput.tapCommandRewrite(for: new) else { return nil }
+        guard new.count - old.count > 1 else { return nil }
+        let flattened = new.split(whereSeparator: \.isNewline).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        if flattened != new { text = flattened }
+        guard let rewrite = TapAddInput.tapCommandRewrite(for: flattened) else { return nil }
         pastedCask = (rewrite.tapName, rewrite.caskToken)
         return rewrite
     }
