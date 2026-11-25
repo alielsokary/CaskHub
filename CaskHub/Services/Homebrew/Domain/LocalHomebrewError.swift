@@ -52,7 +52,10 @@ nonisolated enum HomebrewDiagnosticRedactor {
             (#"(\w+://[^\s?'"]+)\?[^\s'"`]*"#, "$1?<query>"),
             (#"/Users/[^/\s'"`]+"#, "/Users/<user>"),
             (#"(?<![\w.%+-])(?!git@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#, "<email>"),
-            (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, "<token>")
+            (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, "<token>"),
+            (#"(?i)(authorization:\s*)[^\r\n]+"#, "$1<redacted>"),
+            (#"(?i)\b(bearer\s+)[^\s'"`]+"#, "$1<redacted>"),
+            (#"\b[A-Za-z0-9_]{40,}\b"#, "<token>")
         ].reduce(diagnostic) { $0.replacingOccurrences(of: $1.0, with: $1.1, options: .regularExpression) }
         guard let line = headline(text) else { return nil }
         return (String(line.prefix(200)), String(text.suffix(8000)))

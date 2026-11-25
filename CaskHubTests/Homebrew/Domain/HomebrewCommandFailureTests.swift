@@ -77,6 +77,17 @@ final class HomebrewCommandFailureTests: XCTestCase {
         XCTAssertFalse(first.rateLimitSignature.contains("cask-alpha"))
     }
 
+    func test_issue_title_line_never_carries_tokens_or_authorization_values() {
+        let failure = unknownFailure(
+            token: "example",
+            diagnostic: "Error: GitHub rejected ghp_AbCdEfGhIjKlMnOpQrStUvWxYz012345 via Bearer s3cr3t-Value"
+        )
+
+        XCTAssertFalse(failure.normalizedHeadline.contains("ghp_"), failure.normalizedHeadline)
+        XCTAssertFalse(failure.normalizedHeadline.contains("s3cr3t"), failure.normalizedHeadline)
+        XCTAssertFalse(failure.rateLimitSignature.contains("s3cr3t"))
+    }
+
     func test_known_failures_group_by_class_and_command_only() {
         let first = HomebrewCommandFailure(
             arguments: ["install", "--cask", "t3-code"], exitCode: 1,

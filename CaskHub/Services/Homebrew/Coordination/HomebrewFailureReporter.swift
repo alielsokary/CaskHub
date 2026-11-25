@@ -36,7 +36,8 @@ struct HomebrewFailureReporter {
     private func tags(for request: HomebrewMutationSequenceRequest) -> [String: String] {
         var tags = request.context.telemetryTags
         tags["brew.action"] = request.action.identifier
-        tags["brew.cask"] = CaskReference.analyticsName(request.token)
+        tags["brew.cask"] = request.token
+        tags["brew.tap"] = CaskReference.tap(of: request.token)
         tags["brew.origin"] = request.origin.rawValue
         if operationStore.state(for: request.token)?.cancellationRequested == true {
             tags["brew.cancellation_requested"] = "true"

@@ -105,6 +105,60 @@ final class TapCaskIdentityTests: XCTestCase {
         XCTAssertFalse(reported.description.contains("saffsanity"))
     }
 
+    func test_sentry_failure_tags_carry_the_tap_reference() async {
+        let spy = SpyCrashReporterProvider()
+        let saved = (CrashReporter.provider, CrashReporter.isRunningTests, CrashReporter.captureCounts, CrashReporter.defaults)
+        CrashReporter.provider = spy
+        CrashReporter.isRunningTests = false
+        CrashReporter.captureCounts = [:]
+        CrashReporter.defaults = makeScratchDefaults("tap-identity-crash")
+        defer {
+            CrashReporter.provider = saved.0
+            CrashReporter.isRunningTests = saved.1
+            CrashReporter.captureCounts = saved.2
+            CrashReporter.defaults = saved.3
+        }
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [
+            BrewProcessResult(exitCode: 1, output: "Error: It seems the App source '/Applications/Sill.app' is not there.")
+        ]
+        let service = makeMutationService(runner: runner)
+
+        try? await service.install(tapCask("sill", tap: "saffsanity/sill"))
+
+        XCTAssertEqual(spy.capturedErrorTags.last?["brew.cask"], "saffsanity/sill/sill")
+        XCTAssertEqual(spy.capturedErrorTags.last?["brew.tap"], "saffsanity/sill")
+    }
+
+    func test_report_removes_authorization_values_and_long_tokens_but_keeps_names() throws {
+        let report = try XCTUnwrap(HomebrewDiagnosticRedactor.report("""
+        > Authorization: Bearer abc.DEF-123_xyz
+        curl: retrying with Bearer sk_live_shorter
+        Error: Download failed: token 0123456789abcdefABCDEF0123456789abcdef01 rejected
+        downloads/3fb265a10ab94122493b1258a5a62f73e00df2386a703b34b21b87f54793ecbc--GitHubDesktop-arm64.zip
+        """))
+
+        XCTAssertFalse(report.text.contains("abc.DEF-123_xyz"), report.text)
+        XCTAssertFalse(report.text.contains("sk_live_shorter"), report.text)
+        XCTAssertFalse(report.text.contains("0123456789abcdefABCDEF"), report.text)
+        XCTAssertTrue(report.text.contains("<token>--GitHubDesktop-arm64.zip"), report.text)
+        XCTAssertEqual(report.headline, "Error: Download failed: token <token> rejected")
+    }
+
+    func test_known_failures_also_carry_brews_scrubbed_text() throws {
+        let failure = HomebrewCommandFailure(
+            arguments: ["install", "--cask", "t3-code"], exitCode: 1,
+            diagnostic: "==> Fetching t3-code\nError: It seems there is already an App at "
+                + "'/Users/alice/Applications/T3 Code (Beta).app'."
+        )
+
+        let report = try XCTUnwrap(failure.diagnosticReport)
+        XCTAssertEqual(
+            report.headline,
+            "Error: It seems there is already an App at '/Users/<user>/Applications/T3 Code (Beta).app'."
+        )
+    }
+
     func test_untap_failures_group_by_message_and_report_brews_own_words() throws {
         func refusal(_ tap: String) -> HomebrewCommandFailure {
             HomebrewCommandFailure(arguments: ["untap", tap], exitCode: 1, diagnostic: """

@@ -56,14 +56,14 @@ nonisolated extension HomebrewCommandFailure {
 
     /// The Error line with the cask, paths, URLs and numbers replaced, so it reads the same for every cask.
     var normalizedHeadline: String {
-        guard let line = HomebrewDiagnosticRedactor.headline(diagnostic) else { return "" }
+        guard let line = diagnosticReport?.headline else { return "" }
         let unnamed = redactedName.map { line.replacingOccurrences(of: $0, with: "<cask>", options: .caseInsensitive) } ?? line
         let token = redactedName.map(CaskReference.bareToken)
         return String(HomebrewDiagnosticRedactor.normalized(unnamed, token: token).prefix(160))
     }
 
     var diagnosticReport: (headline: String, text: String)? {
-        kind == .unknown ? HomebrewDiagnosticRedactor.report(diagnostic) : nil
+        HomebrewDiagnosticRedactor.report(diagnostic)
     }
 
     var rateLimitSignature: String {
