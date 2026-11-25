@@ -98,11 +98,11 @@ final class TapCaskIdentityTests: XCTestCase {
     }
 
     func test_sentry_error_hides_tap_cask_name() {
-        let sanitized = SentryProvider.sanitizedForReporting(
+        let reported = SentryProvider.reportedError(
             LocalHomebrewError.appBundleNotFound(token: "saffsanity/sill/sill")
-        )
+        ) as NSError
 
-        XCTAssertFalse((sanitized as? LocalizedError)?.errorDescription?.contains("saffsanity") ?? true)
+        XCTAssertFalse(reported.description.contains("saffsanity"))
     }
 
     func test_untap_failures_group_by_message_and_report_brews_own_words() throws {
@@ -116,7 +116,7 @@ final class TapCaskIdentityTests: XCTestCase {
         }
         let first = refusal("alice/tools")
 
-        XCTAssertEqual(first.diagnosticBucket, refusal("bob/stuff").diagnosticBucket)
+        XCTAssertEqual(first.stableFingerprint, refusal("bob/stuff").stableFingerprint)
         let report = try XCTUnwrap(first.diagnosticReport)
         XCTAssertEqual(
             report.headline,

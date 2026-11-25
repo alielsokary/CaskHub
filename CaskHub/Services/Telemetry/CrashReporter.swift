@@ -369,7 +369,7 @@ final class SentryProvider: CrashReporterProvider {
     }
 
     func capture(_ error: Error, tags: [String: String]) {
-        SentrySDK.capture(error: Self.sanitizedForReporting(error)) { scope in
+        SentrySDK.capture(error: Self.reportedError(error)) { scope in
             if let fingerprint = Self.fingerprint(for: error) {
                 scope.setFingerprint(fingerprint)
             }
@@ -377,33 +377,31 @@ final class SentryProvider: CrashReporterProvider {
                 scope.setTag(value: value, key: key)
             }
             guard let localError = error as? LocalHomebrewError else { return }
-            if let kind = localError.failureKind { scope.setTag(value: kind.rawValue, key: "brew.failure_class") }
+            if let kind = localError.failureKind {
+                scope.setTag(value: kind.rawValue, key: "brew.failure_class")
+                scope.setTag(value: kind.area.rawValue, key: "brew.area")
+                if kind.reportsAsWarning { scope.setLevel(.warning) }
+            }
             if case let .askpassUnavailable(stage, _) = localError {
                 scope.setTag(value: stage.rawValue, key: "brew.askpass_stage")
             }
             guard case let .brewCommandFailed(failure) = localError else { return }
             scope.setTag(value: failure.subcommand ?? "missing", key: "brew.subcommand")
             scope.setTag(value: String(failure.exitCode), key: "brew.exit_code")
-            if let value = failure.diagnosticBucket { scope.setTag(value: value, key: "brew.diagnostic_bucket") }
             if let report = failure.diagnosticReport {
                 scope.setTag(value: report.headline, key: "brew.diagnostic_headline")
                 scope.setContext(value: ["diagnostic": report.text], key: "brew")
             }
         }
     }
-    static func sanitizedForReporting(_ error: Error) -> any Error {
-        if case let LocalHomebrewError.appBundleNotFound(token) = error {
-            return LocalHomebrewError.appBundleNotFound(token: CaskReference.analyticsName(token))
-        }
-        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
-            return error
-        }
-        return LocalHomebrewError.brewCommandFailed(HomebrewCommandFailure(
-            arguments: failure.subcommand.map { [$0] } ?? [],
-            exitCode: failure.exitCode,
-            diagnostic: "",
-            kind: failure.kind
-        ))
+    /// Names the issue `Area.Class` (e.g. `Homebrew.AppConflict`) with `<command> · <cleaned Error line>`.
+    static func reportedError(_ error: Error) -> any Error {
+        guard let localError = error as? LocalHomebrewError, let kind = localError.failureKind else { return error }
+        let failure = localError.commandFailure
+        let detail = [failure?.subcommand, failure?.normalizedHeadline]
+            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        let userInfo = detail.isEmpty ? [:] : [NSDebugDescriptionErrorKey: detail]
+        return NSError(domain: kind.issueType, code: Int(failure?.exitCode ?? 0), userInfo: userInfo)
     }
 
     static func fingerprint(for error: Error) -> [String]? {

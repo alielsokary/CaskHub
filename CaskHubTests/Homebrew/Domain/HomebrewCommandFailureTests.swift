@@ -48,54 +48,46 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
     }
 
-    func test_unknown_fingerprint_is_bounded_without_private_context() throws {
+    func test_unknown_failures_group_by_their_cleaned_error_line() throws {
         let first = unknownFailure(
             token: "cask-alpha",
             diagnostic: """
+            ==> Fetching cask-alpha from homebrew/cask
             Error: cask-alpha failed for /Users/Alice Smith/Documents/Tax Return.pdf
             Source https://one.example/cask-alpha/1.2.3/payload.dmg version 1.2.3 build 42
-            Hash aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-            UUID 123e4567-e89b-12d3-a456-426614174000
             """
         )
         let second = unknownFailure(
             token: "cask-beta",
-            diagnostic: """
-            Error: cask-beta failed for /Users/Bob Jones/Documents/Tax Return.pdf
-            Source https://two.example/cask-beta/9.8.7/payload.dmg version 9.8.7 build 99
-            Hash bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-            UUID 987e6543-e21b-43d3-b654-426614179999
-            """
+            diagnostic: "Error: cask-beta failed for /Users/Bob Jones/Documents/Tax Return.pdf"
         )
-
-        XCTAssertEqual(first.kind, .unknown)
-        XCTAssertEqual(second.kind, .unknown)
-        let firstFingerprint = try XCTUnwrap(first.stableFingerprint)
-        let secondFingerprint = try XCTUnwrap(second.stableFingerprint)
-        XCTAssertEqual(firstFingerprint, secondFingerprint)
-        XCTAssertEqual(
-            Array(firstFingerprint.prefix(3)),
-            ["brewCommandFailed", "install", "unknown"]
-        )
-        XCTAssertEqual(firstFingerprint.count, 3)
-        XCTAssertEqual(first.rateLimitSignature, second.rateLimitSignature)
-        XCTAssertFalse(first.rateLimitSignature.contains("alice"))
-        XCTAssertFalse(first.rateLimitSignature.contains("cask-alpha"))
-
         let different = unknownFailure(
             token: "cask-gamma",
             diagnostic: "Error: renderer crashed before launch"
         )
-        XCTAssertEqual(firstFingerprint, different.stableFingerprint)
 
-        let buckets = Set((1 ... 100).compactMap { length in
-            unknownFailure(
-                token: "example",
-                diagnostic: String(repeating: "x", count: length)
-            ).diagnosticBucket
-        })
-        XCTAssertGreaterThan(buckets.count, 1)
-        XCTAssertLessThanOrEqual(buckets.count, 32)
+        XCTAssertEqual(first.kind, .unknown)
+        let fingerprint = try XCTUnwrap(first.stableFingerprint)
+        XCTAssertEqual(fingerprint, ["Homebrew.Unknown", "install", "error: <cask> failed for <path>"])
+        XCTAssertEqual(fingerprint, second.stableFingerprint)
+        XCTAssertNotEqual(fingerprint, different.stableFingerprint)
+        XCTAssertEqual(first.rateLimitSignature, second.rateLimitSignature)
+        XCTAssertNotEqual(first.rateLimitSignature, different.rateLimitSignature)
+        XCTAssertFalse(first.rateLimitSignature.contains("alice"))
+        XCTAssertFalse(first.rateLimitSignature.contains("cask-alpha"))
+    }
+
+    func test_known_failures_group_by_class_and_command_only() {
+        let first = HomebrewCommandFailure(
+            arguments: ["install", "--cask", "t3-code"], exitCode: 1,
+            diagnostic: "Error: It seems there is already an App at '/Applications/T3 Code (Beta).app'."
+        )
+        let second = HomebrewCommandFailure(
+            arguments: ["install", "--cask", "libreoffice"], exitCode: 1,
+            diagnostic: "Error: It seems there is already an App at '/Applications/LibreOffice.app'."
+        )
+        XCTAssertEqual(first.stableFingerprint, ["Homebrew.AppConflict", "install"])
+        XCTAssertEqual(first.stableFingerprint, second.stableFingerprint)
     }
 
     func test_machine_provenance_splits_app_invariants_from_user_state() {
@@ -235,7 +227,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         let presentation = CaskOperationFailureFactory.make(from: error, strandedCopyExists: true)
 
         XCTAssertEqual(error.commandFailure?.kind.rawValue, "full-disk-access-required")
-        XCTAssertNil(error.commandFailure?.diagnosticBucket)
+        XCTAssertEqual(error.commandFailure?.stableFingerprint?.count, 2)
         XCTAssertEqual(presentation.recoveries, [.forceUninstall, .openFullDiskAccessSettings])
         XCTAssertTrue(presentation.message.contains("CaskHub"))
         XCTAssertFalse(presentation.message.contains("your terminal"))
@@ -248,7 +240,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
             let error = LocalHomebrewError.brewCommandFailed(args: [command, "--cask", "example"],
                                                            exitCode: 1, stderr: diagnostic)
             XCTAssertEqual(error.commandFailure?.kind.rawValue, "xcode-license-not-accepted")
-            XCTAssertNil(error.commandFailure?.diagnosticBucket)
+            XCTAssertEqual(error.commandFailure?.stableFingerprint?.count, 2)
             XCTAssertFalse(error.commandFailure?.kind.isNormallyExternal ?? true)
             let presentation = CaskOperationFailureFactory.make(from: error, strandedCopyExists: true)
             XCTAssertTrue(presentation.message.contains("review and accept"))
