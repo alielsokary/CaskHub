@@ -140,11 +140,13 @@ nonisolated struct HomebrewCommandFailure: Equatable, Sendable {
 
     var diagnosticBucket: String? {
         guard kind == .unknown else { return nil }
-        return HomebrewDiagnosticRedactor.bucket(diagnostic, token: caskToken)
+        return HomebrewDiagnosticRedactor.bucket(diagnostic, token: redactedName)
     }
 
-    private var caskToken: String? {
-        arguments.drop(while: { $0 != "--cask" }).dropFirst().first
+    var diagnosticReport: (headline: String, text: String)? { kind == .unknown ? HomebrewDiagnosticRedactor.report(diagnostic) : nil }
+
+    private var redactedName: String? {
+        arguments.first == "untap" ? arguments.last : arguments.drop(while: { $0 != "--cask" }).dropFirst().first
     }
 
     var rateLimitSignature: String {

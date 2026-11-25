@@ -192,7 +192,9 @@ final class AdministratorPasswordPrompt: NSObject, NSTextFieldDelegate {
         alert.window.level = .floating
         app.activate()
         app.requestUserAttention(.criticalRequest)
-        guard alert.runModal() == .alertFirstButtonReturn, !passwordField.stringValue.isEmpty else { return nil }
+        guard CrashReporter.withHangTrackingPaused({ alert.runModal() }) == .alertFirstButtonReturn,
+              !passwordField.stringValue.isEmpty
+        else { return nil }
         return AskpassDialogResponse(password: passwordField.stringValue, remember: rememberBox?.state == .on)
     }
 }

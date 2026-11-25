@@ -377,17 +377,17 @@ final class SentryProvider: CrashReporterProvider {
                 scope.setTag(value: value, key: key)
             }
             guard let localError = error as? LocalHomebrewError else { return }
-            if let failureKind = localError.failureKind {
-                scope.setTag(value: failureKind.rawValue, key: "brew.failure_class")
-            }
+            if let kind = localError.failureKind { scope.setTag(value: kind.rawValue, key: "brew.failure_class") }
             if case let .askpassUnavailable(stage, _) = localError {
                 scope.setTag(value: stage.rawValue, key: "brew.askpass_stage")
             }
             guard case let .brewCommandFailed(failure) = localError else { return }
             scope.setTag(value: failure.subcommand ?? "missing", key: "brew.subcommand")
             scope.setTag(value: String(failure.exitCode), key: "brew.exit_code")
-            if let diagnosticBucket = failure.diagnosticBucket {
-                scope.setTag(value: diagnosticBucket, key: "brew.diagnostic_bucket")
+            if let value = failure.diagnosticBucket { scope.setTag(value: value, key: "brew.diagnostic_bucket") }
+            if let report = failure.diagnosticReport {
+                scope.setTag(value: report.headline, key: "brew.diagnostic_headline")
+                scope.setContext(value: ["diagnostic": report.text], key: "brew")
             }
         }
     }

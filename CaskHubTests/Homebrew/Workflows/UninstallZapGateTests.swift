@@ -32,7 +32,10 @@ final class UninstallZapGateTests: XCTestCase {
         try super.tearDownWithError()
     }
 
-    private func makeService(runner: StubBrewProcessRunner) -> LocalHomebrewService {
+    private func makeService(
+        runner: StubBrewProcessRunner,
+        fileManager: FileManager = .default
+    ) -> LocalHomebrewService {
         let service = LocalHomebrewService(defaults: defaults) {
             $0.fileManager = fileManager
             $0.applicationDirectories = [root.appendingPathComponent("Applications")]
@@ -124,5 +127,29 @@ final class UninstallZapGateTests: XCTestCase {
         try strandApp(named: "Zed Uninstaller.app")
 
         XCTAssertEqual(service.uninstallArguments(token: "zed", removingData: false), ["uninstall", "--cask", "zed"])
+    }
+
+    func test_an_upgrade_does_not_list_the_caskroom_before_brew_runs() async throws {
+        let spy = ListingSpyFileManager()
+        let runner = StubBrewProcessRunner()
+        var listedBeforeBrew: [String]?
+        runner.onRequest = { _ in if listedBeforeBrew == nil { listedBeforeBrew = spy.listed } }
+
+        try await makeService(runner: runner, fileManager: spy).upgrade(token: "zed")
+
+        XCTAssertEqual(listedBeforeBrew?.filter { $0.contains("/Caskroom/zed") }, [])
+    }
+}
+
+private final class ListingSpyFileManager: FileManager, @unchecked Sendable {
+    private(set) var listed: [String] = []
+
+    override func contentsOfDirectory(
+        at url: URL,
+        includingPropertiesForKeys keys: [URLResourceKey]?,
+        options mask: FileManager.DirectoryEnumerationOptions = []
+    ) throws -> [URL] {
+        listed.append(url.path)
+        return try super.contentsOfDirectory(at: url, includingPropertiesForKeys: keys, options: mask)
     }
 }

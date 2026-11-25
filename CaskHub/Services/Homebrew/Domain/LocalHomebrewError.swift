@@ -46,6 +46,20 @@ nonisolated enum HomebrewDiagnosticRedactor {
             .joined(separator: " ")
     }
 
+    /// Brew's own words, names and remotes kept; credentials, URL queries, home folder names, emails and tokens removed.
+    static func report(_ diagnostic: String) -> (headline: String, text: String)? {
+        let text = [
+            (#"(\w+://)(?!git@)[^/\s@'"]+@"#, "$1<credentials>@"),
+            (#"(\w+://[^\s?'"]+)\?[^\s'"`]*"#, "$1?<query>"),
+            (#"/Users/[^/\s'"`]+"#, "/Users/<user>"),
+            (#"(?<![\w.%+-])(?!git@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#, "<email>"),
+            (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, "<token>")
+        ].reduce(diagnostic) { $0.replacingOccurrences(of: $1.0, with: $1.1, options: .regularExpression) }
+        let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard let line = lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first else { return nil }
+        return (String(line.prefix(200)), String(text.suffix(8000)))
+    }
+
     static func bucket(_ diagnostic: String, token: String?) -> String {
         let digest = SHA256.hash(data: Data(normalized(diagnostic, token: token).utf8))
         let firstByte = digest.prefix(1).reduce(UInt8.zero) { _, byte in byte }
