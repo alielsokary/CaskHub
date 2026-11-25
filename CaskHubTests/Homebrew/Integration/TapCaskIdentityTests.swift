@@ -105,6 +105,36 @@ final class TapCaskIdentityTests: XCTestCase {
         XCTAssertFalse((sanitized as? LocalizedError)?.errorDescription?.contains("saffsanity") ?? true)
     }
 
+    func test_untap_failures_group_by_message_not_by_tap() throws {
+        func refusal(_ tap: String) -> HomebrewCommandFailure {
+            HomebrewCommandFailure(arguments: ["untap", tap], exitCode: 1, diagnostic: """
+            ==> Would untap \(tap) after uninstalling the following formulae:
+            \(tap)/tool
+            Error: Refusing to untap \(tap) because it contains the following installed formulae:
+            \(tap)/tool
+            """)
+        }
+        let first = refusal("alice/tools")
+        let second = refusal("bob/stuff")
+
+        XCTAssertEqual(first.diagnosticBucket, second.diagnosticBucket)
+        let headline = try XCTUnwrap(first.diagnosticHeadline)
+        XCTAssertEqual(headline, second.diagnosticHeadline)
+        XCTAssertTrue(headline.hasPrefix("error: refusing to untap"), headline)
+        XCTAssertFalse(headline.contains("alice"), headline)
+    }
+
+    func test_diagnostic_headline_is_scrubbed_and_only_sent_for_unknown_failures() {
+        let unknown = HomebrewCommandFailure(
+            arguments: ["install", "--cask", "acme"], exitCode: 1,
+            diagnostic: "Error: acme 2.1 failed at /Users/alice/Downloads/x.dmg from https://acme.example/x"
+        )
+        XCTAssertEqual(unknown.diagnosticHeadline, "error: <cask> <number> failed at <path>")
+
+        let classified = HomebrewCommandFailure(arguments: ["untap", "a/b"], exitCode: 130, diagnostic: "")
+        XCTAssertNil(classified.diagnosticHeadline)
+    }
+
     func test_presentation_shows_installed_from_source_disabled() async throws {
         let (vm, service) = await makeSUT(
             official: [makeCask("opensuperwhisper", version: "0.1.0")],

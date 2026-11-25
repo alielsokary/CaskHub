@@ -46,6 +46,13 @@ nonisolated enum HomebrewDiagnosticRedactor {
             .joined(separator: " ")
     }
 
+    /// Brew's error line, scrubbed, so an unknown failure shows what brew said.
+    static func headline(_ diagnostic: String, token: String?) -> String? {
+        let lines = diagnostic.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard let line = lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first else { return nil }
+        return String(normalized(line, token: token).prefix(200))
+    }
+
     static func bucket(_ diagnostic: String, token: String?) -> String {
         let digest = SHA256.hash(data: Data(normalized(diagnostic, token: token).utf8))
         let firstByte = digest.prefix(1).reduce(UInt8.zero) { _, byte in byte }

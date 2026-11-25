@@ -386,9 +386,8 @@ final class SentryProvider: CrashReporterProvider {
             guard case let .brewCommandFailed(failure) = localError else { return }
             scope.setTag(value: failure.subcommand ?? "missing", key: "brew.subcommand")
             scope.setTag(value: String(failure.exitCode), key: "brew.exit_code")
-            if let diagnosticBucket = failure.diagnosticBucket {
-                scope.setTag(value: diagnosticBucket, key: "brew.diagnostic_bucket")
-            }
+            if let value = failure.diagnosticBucket { scope.setTag(value: value, key: "brew.diagnostic_bucket") }
+            if let value = failure.diagnosticHeadline { scope.setTag(value: value, key: "brew.diagnostic_headline") }
         }
     }
     static func sanitizedForReporting(_ error: Error) -> any Error {
