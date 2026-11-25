@@ -62,6 +62,23 @@ final class AddTapSheetTests: XCTestCase {
         XCTAssertNil(model.request?.caskToken)
     }
 
+    func test_pasted_line_breaks_and_edge_spaces_are_dropped() throws {
+        let model = AddTapModel(checker: { _ in .available })
+
+        model.text = "brew tap EmpiricApps/zenithal \n"
+        XCTAssertNil(model.rewriteForPaste(from: "", to: model.text))
+        XCTAssertEqual(model.text, "brew tap EmpiricApps/zenithal")
+
+        model.text = "brew "
+        XCTAssertNil(model.rewriteForPaste(from: "brew", to: model.text))
+        XCTAssertEqual(model.text, "brew ", "typing keeps its spaces")
+
+        model.text = "brew install\nsaffsanity/sill/sill\n"
+        let rewrite = try XCTUnwrap(model.rewriteForPaste(from: "", to: model.text))
+        XCTAssertEqual(model.text, "brew install saffsanity/sill/sill")
+        XCTAssertEqual(rewrite.removedWords, "install")
+    }
+
     func test_repository_url_follows_brew_tap() {
         XCTAssertEqual(
             TapAddRequest(tapName: "saffsanity/sill", remoteURL: nil, caskToken: nil).repositoryURL,
