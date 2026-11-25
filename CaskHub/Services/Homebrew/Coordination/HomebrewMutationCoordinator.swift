@@ -19,6 +19,7 @@ final class HomebrewMutationCoordinator {
     private let lanes: HomebrewLaneLimiter
     private var heldLanes: [String: HomebrewLaneLimiter.Lane] = [:]
     private let stallWatchdog: FetchStallWatchdog
+    private let failureReporter: HomebrewFailureReporter
 
     init(
         operationStore: CaskOperationStore,
@@ -37,6 +38,7 @@ final class HomebrewMutationCoordinator {
         self.lanes = lanes
         outputAggregator = BrewOutputAggregator(fileManager: fileManager)
         stallWatchdog = FetchStallWatchdog(timeout: fetchStallTimeout, operationStore: operationStore, commandExecutor: commandExecutor)
+        failureReporter = HomebrewFailureReporter(operationStore: operationStore)
     }
 
     /// Runs a multi-command workflow as one logical mutation. The current
@@ -212,7 +214,7 @@ extension HomebrewMutationCoordinator {
                 error: error,
                 strandedCopyExists: strandedCopyExists()
             )
-            recordUnrecoveredFailure(error, request: request, span: nil)
+            failureReporter.record(error, request: request, span: nil)
             throw error
         }
     }
@@ -384,7 +386,7 @@ extension HomebrewMutationCoordinator {
             }
         }
 
-        recordUnrecoveredFailure(error, request: request, span: span)
+        failureReporter.record(error, request: request, span: span)
         recordFailure(
             token: request.token,
             error: error,
@@ -402,40 +404,6 @@ extension HomebrewMutationCoordinator {
     private enum FailureResolution: Equatable {
         case continueSequence
         case stopSequence
-    }
-
-    private func recordUnrecoveredFailure(
-        _ error: Error,
-        request: HomebrewMutationSequenceRequest,
-        span: CrashSpan?
-    ) {
-        span?.finish(error: error)
-        let localError = error as? LocalHomebrewError
-        Analytics.caskActionFailed(
-            request.action,
-            token: request.token,
-            origin: request.origin,
-            failureKind: localError?.failureKind
-        )
-        guard HomebrewIssuePolicy.shouldCapture(
-            error,
-            action: request.action,
-            context: request.context
-        ) else { return }
-        CrashReporter.capture(error, tags: failureTags(for: request))
-    }
-
-    private func failureTags(
-        for request: HomebrewMutationSequenceRequest
-    ) -> [String: String] {
-        var tags = request.context.telemetryTags
-        tags["brew.action"] = request.action.identifier
-        tags["brew.cask"] = CaskReference.analyticsName(request.token)
-        tags["brew.origin"] = request.origin.rawValue
-        if operationStore.state(for: request.token)?.cancellationRequested == true {
-            tags["brew.cancellation_requested"] = "true"
-        }
-        return tags
     }
 
     /// Brew disagreeing about install state means the snapshot is stale.
