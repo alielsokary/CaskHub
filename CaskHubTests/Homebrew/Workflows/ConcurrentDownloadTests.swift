@@ -310,7 +310,7 @@ final class ConcurrentDownloadTests: XCTestCase {
     private func makeService(
         _ executor: ControlledHomebrewCommandExecutor,
         sharingLanesWithMaintenance: Bool = false,
-        fetchStallTimeout: Duration = .seconds(60)
+        fetchStallTimeout: Duration = .seconds(50)
     ) -> LocalHomebrewService {
         LocalHomebrewService(defaults: makeScratchDefaults("concurrent-\(UUID().uuidString)")) {
             $0.fileManager = NoFilesFileManager()

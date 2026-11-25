@@ -68,7 +68,7 @@ nonisolated enum CaskOperationPhase: Equatable, Sendable {
 
     var isDownloadActivity: Bool {
         switch self {
-        case .connecting, .checkingDownload, .downloading, .usingCachedDownload:
+        case .checkingDownload, .downloading, .usingCachedDownload:
             return true
         default:
             return false

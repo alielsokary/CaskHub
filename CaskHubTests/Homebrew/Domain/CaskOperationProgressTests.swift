@@ -168,6 +168,7 @@ final class CaskOperationProgressTests: XCTestCase {
 
         let connecting = await phase(after: "==> Fetching mole-app from homebrew/cask\n")
         XCTAssertEqual(connecting, .connecting)
+        XCTAssertFalse(CaskOperationPhase.connecting.isDownloadActivity, "no bytes yet, so the capsule keeps the spinner")
         XCTAssertEqual(
             service.operationStore.state(for: "mole-app")?.progress?.inlineLabel,
             "\(CaskOperationPhase.connecting.label(for: .installing))…"
