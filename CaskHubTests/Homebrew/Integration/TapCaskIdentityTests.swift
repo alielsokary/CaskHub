@@ -145,6 +145,20 @@ final class TapCaskIdentityTests: XCTestCase {
         XCTAssertEqual(report.headline, "Error: Download failed: token <token> rejected")
     }
 
+    func test_report_removes_cookie_key_and_password_values() throws {
+        let report = try XCTUnwrap(HomebrewDiagnosticRedactor.report("""
+        > Cookie: session=abc123def
+        > X-Api-Key: k3yvalue
+        Password:
+        Error: login failed password=hunter2 api_key=zzz999 token: tkn777
+        """))
+
+        for secret in ["abc123def", "k3yvalue", "hunter2", "zzz999", "tkn777"] {
+            XCTAssertFalse(report.text.contains(secret), report.text)
+        }
+        XCTAssertTrue(report.text.contains("Password:\nError: login failed"), report.text)
+    }
+
     func test_known_failures_also_carry_brews_scrubbed_text() throws {
         let failure = HomebrewCommandFailure(
             arguments: ["install", "--cask", "t3-code"], exitCode: 1,
