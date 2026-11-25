@@ -107,6 +107,7 @@ struct LocalHomebrewDependencies {
     var tapUpdateProvider: (() async -> Void)?
     var tapTrustProvider: (() async -> TapTrust)?
     var laneLimiter: HomebrewLaneLimiter?
+    var fetchStallTimeout: Duration = .seconds(60)
 
     func resolvedCommandExecutor() -> any HomebrewCommandExecuting {
         commandExecutor

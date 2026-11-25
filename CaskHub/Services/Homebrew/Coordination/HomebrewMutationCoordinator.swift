@@ -18,6 +18,7 @@ final class HomebrewMutationCoordinator {
     private let outputAggregator: BrewOutputAggregator
     private let lanes: HomebrewLaneLimiter
     private var heldLanes: [String: HomebrewLaneLimiter.Lane] = [:]
+    private let stallWatchdog: FetchStallWatchdog
 
     init(
         operationStore: CaskOperationStore,
@@ -25,7 +26,8 @@ final class HomebrewMutationCoordinator {
         brewBinaryProvider: @escaping () -> URL?,
         askpassProvider: @escaping @Sendable (String) async throws -> URL,
         fileManager: FileManager,
-        lanes: HomebrewLaneLimiter
+        lanes: HomebrewLaneLimiter,
+        fetchStallTimeout: Duration
     ) {
         self.operationStore = operationStore
         self.commandExecutor = commandExecutor
@@ -34,6 +36,7 @@ final class HomebrewMutationCoordinator {
         self.fileManager = fileManager
         self.lanes = lanes
         outputAggregator = BrewOutputAggregator(fileManager: fileManager)
+        stallWatchdog = FetchStallWatchdog(timeout: fetchStallTimeout, operationStore: operationStore, commandExecutor: commandExecutor)
     }
 
     /// Runs a multi-command workflow as one logical mutation. The current
@@ -190,7 +193,7 @@ extension HomebrewMutationCoordinator {
             machineIsAppleSilicon: HomebrewLocator.isAppleSilicon,
             askpassUserCancelled: userCancelled
         )
-        throw LocalHomebrewError.brewCommandFailed(failure)
+        throw LocalHomebrewError.brewCommandFailed(stallWatchdog.classify(failure, token: token))
     }
 
     private func validateBrewLocation() throws -> URL {
@@ -238,6 +241,7 @@ extension HomebrewMutationCoordinator {
 
     func clearOperationResources(token: String) {
         outputAggregator.clear(token: token)
+        stallWatchdog.reset(token: token)
     }
 
     func consumeBrewOutput(_ output: String, token: String) {
@@ -276,6 +280,7 @@ extension HomebrewMutationCoordinator {
             }
         }
 
+        stallWatchdog.observe(progress.phase, token: token)
         operationStore.send(.updateProgress(progress), for: token)
     }
 
@@ -320,7 +325,7 @@ extension HomebrewMutationCoordinator {
     }
 
     private func prepareNextStep(request: HomebrewMutationSequenceRequest) {
-        outputAggregator.clear(token: request.token)
+        clearOperationResources(token: request.token)
         operationStore.send(
             .updateProgress(CaskOperationProgress(
                 token: request.token,
