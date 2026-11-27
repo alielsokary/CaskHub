@@ -62,4 +62,5 @@ struct HomebrewMutationCallbacks {
     let refresh: () async -> Void
     let strandedCopyExists: () -> Bool
     let postconditionSatisfied: () -> Bool
+    let conflictOccupant: (URL) -> AppConflictOccupant
 }

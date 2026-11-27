@@ -75,6 +75,14 @@ nonisolated extension HomebrewCommandFailure {
     }
 }
 
+/// What already sits at the path brew wanted for a cask's app.
+nonisolated enum AppConflictOccupant: String, Sendable {
+    case iPhoneIPadApp = "iphone-ipad-app"
+    case sameIdentifier = "same-identifier"
+    case otherIdentifier = "other-identifier"
+    case unreadable
+}
+
 /// Sent when a failed operation leaves the app's own copy in the Caskroom, which blocks later updates.
 nonisolated struct StrandedCopyDetected: CustomNSError {
     let subcommand: String

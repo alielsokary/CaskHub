@@ -16,7 +16,8 @@ struct HomebrewFailureReporter {
         _ error: Error,
         request: HomebrewMutationSequenceRequest,
         span: CrashSpan?,
-        strandedCopyExists: Bool
+        strandedCopyExists: Bool,
+        occupant conflictOccupant: ((URL) -> AppConflictOccupant)?
     ) {
         span?.finish(error: error)
         let localError = error as? LocalHomebrewError
@@ -27,6 +28,10 @@ struct HomebrewFailureReporter {
             failureKind: localError?.failureKind
         )
         var tags = tags(for: request)
+        if let failure = localError?.commandFailure, failure.kind == .appConflict,
+           let path = LocalHomebrewError.conflictingApplication(stderr: failure.diagnostic) {
+            tags["brew.conflict_occupant"] = conflictOccupant?(path).rawValue
+        }
         // A failure about an existing stranded copy did not create it.
         if strandedCopyExists, localError?.failureKind != .strandedCaskroomApp {
             tags["brew.left_stranded_copy"] = "true"
