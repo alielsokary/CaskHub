@@ -27,8 +27,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
         adoptionSourcePaths: [String] = [],
         packageIdentifiers: [String] = [],
         deletedAppNames: [String] = [],
-        applicationBundleIdentifiers: [String] = [],
-        bundleIdentifierHints: [String] = []
+        applicationBundleIdentifiers: [String] = []
     ) {
         self.keys = keys
         self.appNames = appNames
@@ -37,7 +36,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
         self.packageIdentifiers = packageIdentifiers
         self.deletedAppNames = deletedAppNames
         self.applicationBundleIdentifiers = applicationBundleIdentifiers
-        self.bundleIdentifierHints = bundleIdentifierHints
+        bundleIdentifierHints = []
     }
 
     private struct AnyKey: CodingKey {
