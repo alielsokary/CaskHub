@@ -16,6 +16,7 @@ internal nonisolated func makeDetectedApplication(
     id: String? = nil,
     version: String? = nil,
     isMacAppStore: Bool = false,
+    isIPhoneIPadApp: Bool = false,
     inApplicationsDirectory: Bool = true,
     installedAt: Date? = nil,
     url: URL? = nil
@@ -28,6 +29,7 @@ internal nonisolated func makeDetectedApplication(
         shortVersion: version,
         buildVersion: nil,
         isMacAppStore: isMacAppStore,
+        isIPhoneIPadApp: isIPhoneIPadApp,
         isDirectlyInApplicationDirectory: inApplicationsDirectory,
         installedAt: installedAt
     )

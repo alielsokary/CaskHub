@@ -203,7 +203,7 @@ final class CaskPlatformUpdateTests: XCTestCase {
                 homebrewApplications: ["onyx": DetectedApplication(
                     url: URL(fileURLWithPath: "/Applications/OnyX.app"), bundleName: "OnyX.app",
                     bundleIdentifier: "com.titanium.OnyX", version: version, shortVersion: version, buildVersion: nil,
-                    isMacAppStore: false, isDirectlyInApplicationDirectory: true
+                    isMacAppStore: false, isIPhoneIPadApp: false, isDirectlyInApplicationDirectory: true
                 )]
             )
         }
