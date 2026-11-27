@@ -3,12 +3,27 @@
     <channel>
         <title>CaskHub</title>
         <item>
-            <title>0.10.0</title>
-            <pubDate>Mon, 16 Nov 2026 21:34:29 +0000</pubDate>
-            <sparkle:version>1045</sparkle:version>
-            <sparkle:shortVersionString>0.10.0</sparkle:shortVersionString>
+            <title>0.10.1</title>
+            <pubDate>Fri, 27 Nov 2026 13:22:17 +0000</pubDate>
+            <sparkle:version>1100</sparkle:version>
+            <sparkle:shortVersionString>0.10.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.6</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## 0.10.0
+            <description sparkle:format="markdown"><![CDATA[## 0.10.1
+
+### Improvements
+
+- Improved detection of apps installed outside Homebrew, so more of them show as installed and can be adopted instead of failing to install
+
+### Bug Fixes
+
+- Fixed installs and updates failing while another Homebrew process was busy, such as a Portable Ruby upgrade. CaskHub now waits for it to finish
+- Fixed App Store iPhone and iPad apps running on the Mac, such as CrossPaste, showing as not installed
+- Fixed Cancel reporting an error on a download, and downloads stuck connecting to the server now stop after 50 seconds
+- Fixed a crash on launch when a trusted tap had thousands of casks
+- Fixed a short freeze before every install, update and uninstall
+- Fixed adding a tap pasted with line breaks or extra spaces
+
+## 0.10.0
 
 ### What's New
 
@@ -58,33 +73,8 @@
 
 - Fixed the sort and time period menus in the toolbar showing only icons on macOS 27
 
-## 0.9.0
-
-### What's New
-
-- Added a Standard look with native macOS surfaces and Liquid Glass toolbar controls, next to Classic. Switch any time in Settings, Appearance
-- Added simultaneous downloads, up to three at a time, so Update All and Brewfile imports finish sooner
-- Added cancelling an install or update while it is queued or downloading
-- Added a welcome tour for new installs and a What's New card after each update
-- Added a separate section in Installed for apps managed outside Homebrew, with a switch in Settings, General
-- Added a Refresh button to the Updates toolbar
-
-### Improvements
-
-- Updates with Greedy off now match what Homebrew itself lists as outdated
-- Cask icons now share one size with a soft shadow, and no longer flash while scrolling
-- Status bar now shows how many apps are downloading and queued during Update All and Brewfile imports
-- Health and Shelf Setup buttons now match the size of catalog buttons
-
-### Bug Fixes
-
-- Fixed updates being offered again and again for apps Homebrew already considers up to date
-- Fixed updates being offered for a version built for a different macOS version or processor
-- Fixed standalone Microsoft apps such as Teams and OneDrive being claimed by the Office suite
-- Fixed Excel and similar apps disappearing from Installed after updating themselves
-
 ]]></description>
-            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.10.0/CaskHub-0.10.0.zip" length="8636761" type="application/octet-stream" sparkle:edSignature="leHkGxyWS1P4Ib4N12tHnY20754pr4Egw5R6vWrEMwaFGvx1lDYd4sVsDOGR8leRvtvLpuvZl20tYnk3NwWmCA=="/>
+            <enclosure url="https://github.com/alielsokary/CaskHub/releases/download/0.10.1/CaskHub-0.10.1.zip" length="8677947" type="application/octet-stream" sparkle:edSignature="UOOkEcy+j8PpecAgkhKs4FTaMI1949FTkOUNn7fg2OzIQQykaf3KCGVuYIT+bwXIYgsvJ3eEcE/u1I7yM5QxDg=="/>
         </item>
     </channel>
 </rss>
