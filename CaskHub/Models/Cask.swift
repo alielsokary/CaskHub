@@ -14,6 +14,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
     let packageIdentifiers: [String]
     let deletedAppNames: [String]
     let applicationBundleIdentifiers: [String]
+    let bundleIdentifierHints: [String]
 
     /// Source paths for every linked artifact that may resolve inside an adopted
     /// app bundle (binaries, shell completions, and manpages).
@@ -35,21 +36,18 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
         self.packageIdentifiers = packageIdentifiers
         self.deletedAppNames = deletedAppNames
         self.applicationBundleIdentifiers = applicationBundleIdentifiers
+        bundleIdentifierHints = []
     }
 
     private struct AnyKey: CodingKey {
         var stringValue: String
-        var intValue: Int? {
-            nil
-        }
+        var intValue: Int? { nil }
 
         init?(stringValue: String) {
             self.stringValue = stringValue
         }
 
-        init?(intValue _: Int) {
-            nil
-        }
+        init?(intValue _: Int) { nil }
     }
 
     /// An `app` array element: a bundle name, or a `{"target": …}` rename dict.
@@ -107,6 +105,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
             packageIdentifiers = []
             deletedAppNames = []
             applicationBundleIdentifiers = []
+            bundleIdentifierHints = []
             return
         }
         keys = Set(container.allKeys.map(\.stringValue))
@@ -129,6 +128,7 @@ nonisolated struct ArtifactStanza: Decodable, Hashable, Sendable {
             .flatMap(\.deletedPaths)
             .map { URL(fileURLWithPath: $0).lastPathComponent }
             .filter { $0.hasSuffix(".app") }
+        bundleIdentifierHints = (try? BundleIdentifierHints(from: decoder))?.identifiers ?? []
     }
 
     private static let adoptionLinkKeys = [

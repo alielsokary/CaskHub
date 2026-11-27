@@ -45,7 +45,8 @@ nonisolated struct InstallationCatalogBuilder: Sendable {
             return ApplicationCaskSignature(
                 token: cask.token,
                 appBundleNames: Set(cask.appArtifactNames),
-                bundleIdentifiers: Set(cask.applicationBundleIdentifiers)
+                bundleIdentifiers: Set(cask.applicationBundleIdentifiers),
+                hintedBundleIdentifiers: Set(cask.bundleIdentifierHints)
             )
         }
     }

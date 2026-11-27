@@ -43,6 +43,7 @@ final class AppConflictTelemetryTests: XCTestCase {
         let apps = root.appendingPathComponent("Applications")
         try makeApplicationBundle(in: apps, named: "Same.app", bundleIdentifier: "com.example.same")
         try makeApplicationBundle(in: apps, named: "Other.app", bundleIdentifier: "org.unrelated.other")
+        try makeApplicationBundle(in: apps, named: "Hinted.app", bundleIdentifier: "org.vendor.hinted")
         let mobile = apps.appendingPathComponent("Mobile.app")
         try fileManager.createDirectory(at: mobile.appendingPathComponent("Wrapper/Mobile.app"), withIntermediateDirectories: true)
         try fileManager.createSymbolicLink(
@@ -51,14 +52,15 @@ final class AppConflictTelemetryTests: XCTestCase {
 
         for (token, app, occupant) in [
             ("same", "Same.app", "same-identifier"), ("other", "Other.app", "other-identifier"),
+            ("hinted", "Hinted.app", "same-identifier"),
             ("mobile", "Mobile.app", "iphone-ipad-app"), ("gone", "Gone.app", "unreadable")
         ] {
-            let tags = await installTags(token, conflictingWith: apps.appendingPathComponent(app))
+            let tags = try await installTags(token, conflictingWith: apps.appendingPathComponent(app))
             XCTAssertEqual(tags?["brew.conflict_occupant"], occupant, token)
         }
     }
 
-    private func installTags(_ token: String, conflictingWith app: URL) async -> [String: String]? {
+    private func installTags(_ token: String, conflictingWith app: URL) async throws -> [String: String]? {
         CrashReporter.captureCounts = [:]
         let runner = StubBrewProcessRunner()
         let defaults = makeScratchDefaults("conflict-telemetry-\(UUID().uuidString)")
@@ -71,9 +73,10 @@ final class AppConflictTelemetryTests: XCTestCase {
             $0.brewVersionProvider = { "test" }
             $0.askpassProvider = { URL(fileURLWithPath: "/private/tmp/caskhub-test-askpass-\($0)") }
         }
-        await service.updatePackageCatalog([
-            makeCask(token, appNames: [app.lastPathComponent], applicationBundleIdentifiers: ["com.example.\(token)"])
-        ])
+        var cask = makeCask(token, appNames: [app.lastPathComponent], applicationBundleIdentifiers: ["com.example.\(token)"])
+        let zap = #"{"zap":[{"trash":"~/Library/Preferences/org.vendor.hinted.plist"}]}"#
+        cask.artifacts?.append(try JSONDecoder().decode(ArtifactStanza.self, from: Data(zap.utf8)))
+        await service.updatePackageCatalog([cask])
         runner.queuedResults = [
             .success, BrewProcessResult(exitCode: 1, output: "Error: It seems there is already an App at '\(app.path)'.")
         ]

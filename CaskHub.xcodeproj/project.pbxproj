@@ -90,6 +90,7 @@
 		C1A00000000000000000000A /* WelcomeCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A000000000000000000009 /* WelcomeCardView.swift */; };
 		C1A00000000000000000000C /* WhatsNewCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A00000000000000000000B /* WhatsNewCardView.swift */; };
 		41DFD49930028F7D00608C7A /* Cask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46030028F7D00608C7A /* Cask.swift */; };
+		E148BF8B6F319A077F7654BF /* BundleIdentifierHints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5898215ED4B96F2C48C07235 /* BundleIdentifierHints.swift */; };
 		41DFD49A30028F7D00608C7A /* CaskAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46130028F7D00608C7A /* CaskAnalytics.swift */; };
 		41DFD49B30028F7D00608C7A /* CaskIconURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46230028F7D00608C7A /* CaskIconURL.swift */; };
 		41DFD49C30028F7D00608C7A /* SidebarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DFD46330028F7D00608C7A /* SidebarItem.swift */; };
@@ -344,6 +345,7 @@
 		C1A000000000000000000009 /* WelcomeCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCardView.swift; sourceTree = "<group>"; };
 		C1A00000000000000000000B /* WhatsNewCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewCardView.swift; sourceTree = "<group>"; };
 		41DFD46030028F7D00608C7A /* Cask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cask.swift; sourceTree = "<group>"; };
+		5898215ED4B96F2C48C07235 /* BundleIdentifierHints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleIdentifierHints.swift; sourceTree = "<group>"; };
 		41DFD46130028F7D00608C7A /* CaskAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskAnalytics.swift; sourceTree = "<group>"; };
 		41DFD46230028F7D00608C7A /* CaskIconURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskIconURL.swift; sourceTree = "<group>"; };
 		41DFD46330028F7D00608C7A /* SidebarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarItem.swift; sourceTree = "<group>"; };
@@ -605,6 +607,7 @@
 			children = (
 				41DFD45F30028F7D00608C7A /* AppTheme.swift */,
 				41DFD46030028F7D00608C7A /* Cask.swift */,
+				5898215ED4B96F2C48C07235 /* BundleIdentifierHints.swift */,
 				41DFD46130028F7D00608C7A /* CaskAnalytics.swift */,
 				41DFD46230028F7D00608C7A /* CaskIconURL.swift */,
 				C1A000000000000000000001 /* LaunchCard.swift */,
@@ -1373,6 +1376,7 @@
 				C1A00000000000000000000A /* WelcomeCardView.swift in Sources */,
 				C1A00000000000000000000C /* WhatsNewCardView.swift in Sources */,
 				41DFD49930028F7D00608C7A /* Cask.swift in Sources */,
+				E148BF8B6F319A077F7654BF /* BundleIdentifierHints.swift in Sources */,
 				41DFD49A30028F7D00608C7A /* CaskAnalytics.swift in Sources */,
 				41DFD49B30028F7D00608C7A /* CaskIconURL.swift in Sources */,
 				41DFD49C30028F7D00608C7A /* SidebarItem.swift in Sources */,

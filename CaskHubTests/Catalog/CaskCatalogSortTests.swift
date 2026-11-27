@@ -386,6 +386,19 @@ extension CaskCatalogSortTests {
     }
 
     @MainActor
+    func test_catalog_identity_applies_when_caskflow_cases_the_app_name_differently() throws {
+        let categories = CategoryService()
+        let data = Data(#"{"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{}}"#.utf8)
+        var catalog = try JSONDecoder().decode(CaskCategoryData.self, from: data)
+        catalog.appIdentities = ["apipost": [CaskAppIdentity(bundleName: "ApiPost.app", bundleIdentifier: "com.apipost.desktop")]]
+        categories.applyData(catalog)
+
+        let cask = categories.addingAppIdentities(to: [makeCask("apipost", appNames: ["Apipost.app"])])[0]
+
+        XCTAssertEqual(cask.applicationBundleIdentifiers, ["com.apipost.desktop"])
+    }
+
+    @MainActor
     func test_catalog_fetch_registers_manifest_identity_with_the_real_app_scanner() async throws {
         for (token, name, identifier, store) in [
             ("example", "Example.app", "org.example.mail", true),

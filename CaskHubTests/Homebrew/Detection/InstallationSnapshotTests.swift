@@ -311,7 +311,7 @@ final class ApplicationIdentityCollisionTests: XCTestCase {
         XCTAssertTrue(ApplicationOwnershipResolver().resolve(
             signatures: [ApplicationCaskSignature(
                 token: "motion", appBundleNames: ["Motion.app"],
-                bundleIdentifiers: [expectedIdentifier]
+                bundleIdentifiers: [expectedIdentifier], hintedBundleIdentifiers: []
             )],
             applications: [application], installedCasks: [:]
         ).isEmpty)
