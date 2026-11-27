@@ -229,6 +229,7 @@ nonisolated extension HomebrewCommandFailure {
             return .brewArchitectureMismatch
         }
         return firstMatch(in: text, [
+            Match(fragments: ["another `brew ", "process is already running"], kind: .brewBusy), // beats the Ruby line it causes
             Match(fragments: ["failed to download ruby"], kind: .portableRubyUnavailable),
             Match(
                 fragments: ["failed to upgrade homebrew portable ruby"],

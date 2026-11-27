@@ -20,6 +20,7 @@ final class HomebrewMutationCoordinator {
     private var heldLanes: [String: HomebrewLaneLimiter.Lane] = [:]
     private let stallWatchdog: FetchStallWatchdog
     private let failureReporter: HomebrewFailureReporter
+    private let lockWait: BrewLockWait
 
     init(
         operationStore: CaskOperationStore,
@@ -28,7 +29,8 @@ final class HomebrewMutationCoordinator {
         askpassProvider: @escaping @Sendable (String) async throws -> URL,
         fileManager: FileManager,
         lanes: HomebrewLaneLimiter,
-        fetchStallTimeout: Duration
+        fetchStallTimeout: Duration,
+        lockWait: BrewLockWait
     ) {
         self.operationStore = operationStore
         self.commandExecutor = commandExecutor
@@ -39,6 +41,7 @@ final class HomebrewMutationCoordinator {
         outputAggregator = BrewOutputAggregator(fileManager: fileManager)
         stallWatchdog = FetchStallWatchdog(timeout: fetchStallTimeout, operationStore: operationStore, commandExecutor: commandExecutor)
         failureReporter = HomebrewFailureReporter(operationStore: operationStore)
+        self.lockWait = lockWait
     }
 
     /// Runs a multi-command workflow as one logical mutation. The current
@@ -48,19 +51,12 @@ final class HomebrewMutationCoordinator {
         _ request: HomebrewMutationSequenceRequest,
         callbacks: HomebrewMutationCallbacks
     ) async throws {
-        guard operationStore.canBeginOperation(
-            request.action,
-            for: request.token
-        ) else { return }
+        guard operationStore.canBeginOperation(request.action, for: request.token) else { return }
         try preflightBrewLocation(
             request: request,
             strandedCopyExists: callbacks.strandedCopyExists
         )
-        beginOperation(
-            request.action,
-            token: request.token,
-            displayName: request.displayName
-        )
+        beginOperation(request.action, token: request.token, displayName: request.displayName)
         Analytics.caskActionStarted(
             request.action,
             token: request.token,
@@ -106,12 +102,15 @@ extension HomebrewMutationCoordinator {
     private func run(_ step: HomebrewMutationStep, token: String) async throws {
         if operationStore.state(for: token)?.cancellationRequested == true { throw CancellationError() }
         if heldLanes[token] != step.lane { try await enter(step, token: token) }
-        try await executeStreaming(
-            token: token,
-            arguments: step.arguments,
-            cancellable: step.cancellation == .untilPerforming,
-            environmentOverrides: step.environmentOverrides
-        )
+        try await lockWait.retry(token: token, cancellable: step.cancellation != .never) {
+            clearOperationResources(token: token)
+            try await executeStreaming(
+                token: token,
+                arguments: step.arguments,
+                cancellable: step.cancellation == .untilPerforming,
+                environmentOverrides: step.environmentOverrides
+            )
+        }
     }
 
     private func enter(_ step: HomebrewMutationStep, token: String) async throws {
@@ -288,7 +287,7 @@ extension HomebrewMutationCoordinator {
 
     func cancel(token: String) {
         guard operationStore.state(for: token)?.canCancel == true,
-              lanes.cancelWaiting(token: token) || commandExecutor.cancel(token: token)
+              lanes.cancelWaiting(token: token) || lockWait.isWaiting(token) || commandExecutor.cancel(token: token)
         else { return }
         operationStore.send(.requestCancellation, for: token)
     }

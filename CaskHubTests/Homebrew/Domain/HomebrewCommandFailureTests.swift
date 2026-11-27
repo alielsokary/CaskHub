@@ -17,7 +17,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
     }
 
     func test_field_samples_map_to_typed_failure_kinds() {
-        XCTAssertEqual(fieldSamples.count, 14)
+        XCTAssertEqual(fieldSamples.count, 15)
 
         for fixture in fieldSamples {
             let diagnostic = HomebrewOutputDiagnostics.make(from: fixture.diagnostic)
@@ -343,6 +343,15 @@ final class HomebrewCommandFailureTests: XCTestCase {
                     + "- https://ghcr.io/v2/homebrew/core/portable-ruby/blobs/sha256:83a3ff85\n"
                     + "Error: Failed to upgrade Homebrew Portable Ruby!",
                 expectedKind: .portableRubyUnavailable
+            ),
+            Fixture(
+                name: "portable ruby upgrade held by a parallel brew",
+                arguments: ["fetch", "--cask", "zoom"],
+                diagnostic: "lockf: 200: already locked\n"
+                    + "Error: Another `brew vendor-install ruby` process is already running.\n"
+                    + "Please wait for it to finish or terminate it to continue.\n"
+                    + "Error: Failed to upgrade Homebrew Portable Ruby!",
+                expectedKind: .brewBusy
             ),
             Fixture(
                 name: "daisydisk require-sha policy",

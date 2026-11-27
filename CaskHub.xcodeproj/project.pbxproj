@@ -242,6 +242,7 @@
 		F31000000000000000000004 /* CaskOperationFailureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000003 /* CaskOperationFailureFactory.swift */; };
 		F3100000000000000000000C /* FetchStallWatchdog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3100000000000000000000B /* FetchStallWatchdog.swift */; };
 		B7E20000000000000000000B /* HomebrewFailureReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E20000000000000000000A /* HomebrewFailureReporter.swift */; };
+		B7E10000000000000000000B /* BrewLockWait.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E10000000000000000000A /* BrewLockWait.swift */; };
 		F31000000000000000000006 /* HomebrewOutputDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000005 /* HomebrewOutputDiagnostics.swift */; };
 		F31000000000000000000008 /* ApplicationLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000007 /* ApplicationLauncher.swift */; };
 		F3100000000000000000000A /* CaskLocalStateResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31000000000000000000009 /* CaskLocalStateResolver.swift */; };
@@ -507,6 +508,7 @@
 		F31000000000000000000003 /* CaskOperationFailureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskOperationFailureFactory.swift; sourceTree = "<group>"; };
 		F3100000000000000000000B /* FetchStallWatchdog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchStallWatchdog.swift; sourceTree = "<group>"; };
 		B7E20000000000000000000A /* HomebrewFailureReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewFailureReporter.swift; sourceTree = "<group>"; };
+		B7E10000000000000000000A /* BrewLockWait.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewLockWait.swift; sourceTree = "<group>"; };
 		F31000000000000000000005 /* HomebrewOutputDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewOutputDiagnostics.swift; sourceTree = "<group>"; };
 		F31000000000000000000007 /* ApplicationLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationLauncher.swift; sourceTree = "<group>"; };
 		F31000000000000000000009 /* CaskLocalStateResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaskLocalStateResolver.swift; sourceTree = "<group>"; };
@@ -935,6 +937,7 @@
 				E29000000000000000000005 /* CaskOperationStore.swift */,
 				F3100000000000000000000B /* FetchStallWatchdog.swift */,
 				B7E20000000000000000000A /* HomebrewFailureReporter.swift */,
+				B7E10000000000000000000A /* BrewLockWait.swift */,
 				F31000000000000000000001 /* HomebrewMutationCoordinator.swift */,
 				1F7F16197B147F59B2A470CD /* HomebrewPinCommands.swift */,
 				C0FE0000000000000000000B /* HomebrewMutationStep.swift */,
@@ -1428,6 +1431,7 @@
 				F31000000000000000000004 /* CaskOperationFailureFactory.swift in Sources */,
 				F3100000000000000000000C /* FetchStallWatchdog.swift in Sources */,
 				B7E20000000000000000000B /* HomebrewFailureReporter.swift in Sources */,
+				B7E10000000000000000000B /* BrewLockWait.swift in Sources */,
 				F31000000000000000000006 /* HomebrewOutputDiagnostics.swift in Sources */,
 				A29100000000000000000307 /* BrewOutputAggregator.swift in Sources */,
 				F31000000000000000000008 /* ApplicationLauncher.swift in Sources */,
