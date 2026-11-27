@@ -232,8 +232,9 @@ nonisolated struct InstallationIndexBuilder: Sendable {
     ) -> Bool {
         guard let bundleIdentifier = application.bundleIdentifier else { return false }
         if !signature.applicationBundleIdentifiers.isEmpty {
-            return ApplicationIdentityMatcher.applicationBundleIdentifier(
+            return ApplicationIdentityMatcher.storeApplication(
                 bundleIdentifier,
+                isIPhoneIPadApp: application.isIPhoneIPadApp,
                 matchesAny: signature.applicationBundleIdentifiers
             )
         }

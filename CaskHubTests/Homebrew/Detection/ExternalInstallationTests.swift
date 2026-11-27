@@ -160,6 +160,55 @@ final class ExternalInstallationTests: XCTestCase {
         XCTAssertEqual(scan.applications.map(\.url), [whatsapp.standardizedFileURL])
     }
 
+    func test_application_scan_reads_an_app_store_iphone_ipad_app() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("iphone-ipad-scan-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = try makeIPhoneIPadApp(in: root, named: "CrossPaste.app", bundleIdentifier: "com.crosspaste.ios")
+
+        let scan = ApplicationDiscovery().scan(fileManager: .default, directories: [root])
+
+        let detected = try XCTUnwrap(scan.applications.first)
+        XCTAssertEqual(scan.applications.count, 1)
+        XCTAssertEqual(detected.url, app.standardizedFileURL)
+        XCTAssertEqual(detected.bundleIdentifier, "com.crosspaste.ios")
+        XCTAssertEqual(detected.shortVersion, "2.3.0")
+        XCTAssertTrue(detected.isMacAppStore)
+        XCTAssertTrue(detected.isIPhoneIPadApp)
+        XCTAssertTrue(scan.adoptableNames.isEmpty)
+    }
+
+    @MainActor
+    func test_iphone_ipad_app_from_the_casks_vendor_is_its_app_store_copy() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("iphone-ipad-state-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = try makeIPhoneIPadApp(in: root, named: "CrossPaste.app", bundleIdentifier: "com.crosspaste.ios")
+        let launcher = RecordingApplicationLauncher()
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("iphone-ipad-state")) {
+            $0.applicationDirectories = [root]
+            $0.applicationLauncher = launcher
+        }
+        let crosspaste = makeCask(
+            "crosspaste", version: "2.3.1.2781", appNames: ["CrossPaste.app"],
+            applicationBundleIdentifiers: ["com.crosspaste.mac"]
+        )
+        let unrelated = makeCask(
+            "other-paste", appNames: ["CrossPaste.app"], applicationBundleIdentifiers: ["org.unrelated.paste"]
+        )
+
+        await service.updatePackageCatalog([crosspaste, unrelated])
+
+        let state = service.localState(for: crosspaste)
+        XCTAssertEqual(state.installationSource, .macAppStore)
+        XCTAssertTrue(state.isIPhoneIPadApp)
+        XCTAssertFalse(state.isAdoptable)
+        XCTAssertFalse(state.hasAvailableUpdate)
+        XCTAssertNil(service.localState(for: unrelated).installationSource)
+        service.openExternalApp(cask: crosspaste)
+        XCTAssertEqual(launcher.lastOpenedURL?.standardizedFileURL, app.standardizedFileURL)
+    }
+
     @MainActor
     func test_nested_store_app_is_present_and_opens_using_its_real_url() throws {
         let root = FileManager.default.temporaryDirectory
@@ -417,4 +466,27 @@ final class ExternalInstallationTests: XCTestCase {
         XCTAssertFalse(state.isPresent)
     }
 
+    /// The layout the App Store installs: no `Contents`, the real bundle under `Wrapper`.
+    @discardableResult
+    private func makeIPhoneIPadApp(in directory: URL, named name: String, bundleIdentifier: String) throws -> URL {
+        let appURL = directory.appendingPathComponent(name)
+        let inner = appURL.appendingPathComponent("Wrapper/\(name)")
+        let executable = URL(fileURLWithPath: name).deletingPathExtension().lastPathComponent
+        try FileManager.default.createDirectory(at: inner, withIntermediateDirectories: true)
+        let info: [String: Any] = [
+            "CFBundleIdentifier": bundleIdentifier, "CFBundleExecutable": executable,
+            "CFBundleShortVersionString": "2.3.0", "LSRequiresIPhoneOS": true
+        ]
+        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+            .write(to: inner.appendingPathComponent("Info.plist"))
+        try Data("#!/bin/sh\nexit 0\n".utf8).write(to: inner.appendingPathComponent(executable))
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755], ofItemAtPath: inner.appendingPathComponent(executable).path
+        )
+        try Data().write(to: appURL.appendingPathComponent("Wrapper/iTunesMetadata.plist"))
+        try FileManager.default.createSymbolicLink(
+            atPath: appURL.appendingPathComponent("WrappedBundle").path, withDestinationPath: "Wrapper/\(name)"
+        )
+        return appURL
+    }
 }

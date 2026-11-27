@@ -43,6 +43,7 @@ final class CaskCatalogSortTests: XCTestCase {
             isOutdated: hasAvailableUpdate,
             isZombie: false,
             canOpen: true,
+            isIPhoneIPadApp: false,
             retirement: nil,
             foreignInstallationSource: nil
         )
