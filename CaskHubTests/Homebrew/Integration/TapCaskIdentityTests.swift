@@ -98,11 +98,79 @@ final class TapCaskIdentityTests: XCTestCase {
     }
 
     func test_sentry_error_hides_tap_cask_name() {
-        let sanitized = SentryProvider.sanitizedForReporting(
+        let reported = SentryProvider.reportedError(
             LocalHomebrewError.appBundleNotFound(token: "saffsanity/sill/sill")
+        ) as NSError
+
+        XCTAssertFalse(reported.description.contains("saffsanity"))
+    }
+
+    func test_sentry_failure_tags_carry_the_tap_reference() async {
+        let spy = SpyCrashReporterProvider()
+        let saved = (CrashReporter.provider, CrashReporter.isRunningTests, CrashReporter.captureCounts, CrashReporter.defaults)
+        CrashReporter.provider = spy
+        CrashReporter.isRunningTests = false
+        CrashReporter.captureCounts = [:]
+        CrashReporter.defaults = makeScratchDefaults("tap-identity-crash")
+        defer {
+            CrashReporter.provider = saved.0
+            CrashReporter.isRunningTests = saved.1
+            CrashReporter.captureCounts = saved.2
+            CrashReporter.defaults = saved.3
+        }
+        let runner = StubBrewProcessRunner()
+        runner.queuedResults = [
+            BrewProcessResult(exitCode: 1, output: "Error: It seems the App source '/Applications/Sill.app' is not there.")
+        ]
+        let service = makeMutationService(runner: runner)
+
+        try? await service.install(tapCask("sill", tap: "saffsanity/sill"))
+
+        XCTAssertEqual(spy.capturedErrorTags.last?["brew.cask"], "saffsanity/sill/sill")
+        XCTAssertEqual(spy.capturedErrorTags.last?["brew.tap"], "saffsanity/sill")
+    }
+
+    func test_report_removes_authorization_values_and_long_tokens_but_keeps_names() throws {
+        let report = try XCTUnwrap(HomebrewDiagnosticRedactor.report("""
+        > Authorization: Bearer abc.DEF-123_xyz
+        curl: retrying with Bearer sk_live_shorter
+        Error: Download failed: token 0123456789abcdefABCDEF0123456789abcdef01 rejected
+        downloads/3fb265a10ab94122493b1258a5a62f73e00df2386a703b34b21b87f54793ecbc--GitHubDesktop-arm64.zip
+        """))
+
+        XCTAssertFalse(report.text.contains("abc.DEF-123_xyz"), report.text)
+        XCTAssertFalse(report.text.contains("sk_live_shorter"), report.text)
+        XCTAssertFalse(report.text.contains("0123456789abcdefABCDEF"), report.text)
+        XCTAssertTrue(report.text.contains("<token>--GitHubDesktop-arm64.zip"), report.text)
+        XCTAssertEqual(report.headline, "Error: Download failed: token <token> rejected")
+    }
+
+    func test_report_removes_cookie_key_and_password_values() throws {
+        let report = try XCTUnwrap(HomebrewDiagnosticRedactor.report("""
+        > Cookie: session=abc123def
+        > X-Api-Key: k3yvalue
+        Password:
+        Error: login failed password=hunter2 api_key=zzz999 token: tkn777
+        """))
+
+        for secret in ["abc123def", "k3yvalue", "hunter2", "zzz999", "tkn777"] {
+            XCTAssertFalse(report.text.contains(secret), report.text)
+        }
+        XCTAssertTrue(report.text.contains("Password:\nError: login failed"), report.text)
+    }
+
+    func test_known_failures_also_carry_brews_scrubbed_text() throws {
+        let failure = HomebrewCommandFailure(
+            arguments: ["install", "--cask", "t3-code"], exitCode: 1,
+            diagnostic: "==> Fetching t3-code\nError: It seems there is already an App at "
+                + "'/Users/alice/Applications/T3 Code (Beta).app'."
         )
 
-        XCTAssertFalse((sanitized as? LocalizedError)?.errorDescription?.contains("saffsanity") ?? true)
+        let report = try XCTUnwrap(failure.diagnosticReport)
+        XCTAssertEqual(
+            report.headline,
+            "Error: It seems there is already an App at '/Users/<user>/Applications/T3 Code (Beta).app'."
+        )
     }
 
     func test_untap_failures_group_by_message_and_report_brews_own_words() throws {
@@ -116,7 +184,7 @@ final class TapCaskIdentityTests: XCTestCase {
         }
         let first = refusal("alice/tools")
 
-        XCTAssertEqual(first.diagnosticBucket, refusal("bob/stuff").diagnosticBucket)
+        XCTAssertEqual(first.stableFingerprint, refusal("bob/stuff").stableFingerprint)
         let report = try XCTUnwrap(first.diagnosticReport)
         XCTAssertEqual(
             report.headline,

@@ -62,6 +62,13 @@ extension LocalHomebrewService {
                         token: token,
                         previousInstallation: previousInstallation
                     )
+                },
+                conflictOccupant: { [self] path in
+                    ApplicationDiscovery().conflictOccupant(
+                        at: path,
+                        caskIdentifiers: applicationCaskSignatures.first { $0.token == token }?.bundleIdentifiers ?? [],
+                        fileManager: fileManager
+                    )
                 }
             )
         )

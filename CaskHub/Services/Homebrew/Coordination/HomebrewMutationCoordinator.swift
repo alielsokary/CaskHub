@@ -19,6 +19,7 @@ final class HomebrewMutationCoordinator {
     private let lanes: HomebrewLaneLimiter
     private var heldLanes: [String: HomebrewLaneLimiter.Lane] = [:]
     private let stallWatchdog: FetchStallWatchdog
+    private let failureReporter: HomebrewFailureReporter
     private let lockWait: BrewLockWait
 
     init(
@@ -39,6 +40,7 @@ final class HomebrewMutationCoordinator {
         self.lanes = lanes
         outputAggregator = BrewOutputAggregator(fileManager: fileManager)
         stallWatchdog = FetchStallWatchdog(timeout: fetchStallTimeout, operationStore: operationStore, commandExecutor: commandExecutor)
+        failureReporter = HomebrewFailureReporter(operationStore: operationStore)
         self.lockWait = lockWait
     }
 
@@ -211,7 +213,7 @@ extension HomebrewMutationCoordinator {
                 error: error,
                 strandedCopyExists: strandedCopyExists()
             )
-            recordUnrecoveredFailure(error, request: request, span: nil)
+            failureReporter.record(error, request: request, span: nil, strandedCopyExists: false, occupant: nil)
             throw error
         }
     }
@@ -383,11 +385,12 @@ extension HomebrewMutationCoordinator {
             }
         }
 
-        recordUnrecoveredFailure(error, request: request, span: span)
+        let stranded = callbacks.strandedCopyExists()
+        failureReporter.record(error, request: request, span: span, strandedCopyExists: stranded, occupant: callbacks.conflictOccupant)
         recordFailure(
             token: request.token,
             error: error,
-            strandedCopyExists: callbacks.strandedCopyExists(),
+            strandedCopyExists: stranded,
             title: request.action == .updatingHomebrew ? String(localized: "Homebrew Update Failed") : nil
         )
         // A staged replacement may already have removed the Homebrew receipt.
@@ -401,40 +404,6 @@ extension HomebrewMutationCoordinator {
     private enum FailureResolution: Equatable {
         case continueSequence
         case stopSequence
-    }
-
-    private func recordUnrecoveredFailure(
-        _ error: Error,
-        request: HomebrewMutationSequenceRequest,
-        span: CrashSpan?
-    ) {
-        span?.finish(error: error)
-        let localError = error as? LocalHomebrewError
-        Analytics.caskActionFailed(
-            request.action,
-            token: request.token,
-            origin: request.origin,
-            failureKind: localError?.failureKind
-        )
-        guard HomebrewIssuePolicy.shouldCapture(
-            error,
-            action: request.action,
-            context: request.context
-        ) else { return }
-        CrashReporter.capture(error, tags: failureTags(for: request))
-    }
-
-    private func failureTags(
-        for request: HomebrewMutationSequenceRequest
-    ) -> [String: String] {
-        var tags = request.context.telemetryTags
-        tags["brew.action"] = request.action.identifier
-        tags["brew.cask"] = CaskReference.analyticsName(request.token)
-        tags["brew.origin"] = request.origin.rawValue
-        if operationStore.state(for: request.token)?.cancellationRequested == true {
-            tags["brew.cancellation_requested"] = "true"
-        }
-        return tags
     }
 
     /// Brew disagreeing about install state means the snapshot is stale.
