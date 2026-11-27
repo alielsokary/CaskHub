@@ -64,9 +64,10 @@ extension LocalHomebrewService {
                     )
                 },
                 conflictOccupant: { [self] path in
-                    ApplicationDiscovery().conflictOccupant(
+                    let signature = applicationCaskSignatures.first { $0.token == token }
+                    return ApplicationDiscovery().conflictOccupant(
                         at: path,
-                        caskIdentifiers: applicationCaskSignatures.first { $0.token == token }?.bundleIdentifiers ?? [],
+                        caskIdentifiers: signature.map { $0.bundleIdentifiers.union($0.hintedBundleIdentifiers) } ?? [],
                         fileManager: fileManager
                     )
                 }
