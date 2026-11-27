@@ -5,6 +5,21 @@ release body, and the five most recent entries become the Sparkle update dialog
 notes (see `.claude/skills/release-notes`).
 Releases before 0.6.4 are on the [releases page](https://github.com/alielsokary/CaskHub/releases).
 
+## 0.10.1 — 2026-11-27
+
+### Improvements
+
+- Improved detection of apps installed outside Homebrew, so more of them show as installed and can be adopted instead of failing to install
+
+### Bug Fixes
+
+- Fixed installs and updates failing while another Homebrew process was busy, such as a Portable Ruby upgrade. CaskHub now waits for it to finish
+- Fixed App Store iPhone and iPad apps running on the Mac, such as CrossPaste, showing as not installed
+- Fixed Cancel reporting an error on a download, and downloads stuck connecting to the server now stop after 50 seconds
+- Fixed a crash on launch when a trusted tap had thousands of casks
+- Fixed a short freeze before every install, update and uninstall
+- Fixed adding a tap pasted with line breaks or extra spaces
+
 ## 0.10.0 — 2026-11-16
 
 ### What's New

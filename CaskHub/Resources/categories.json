@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedDate": "2026-11-16",
-  "totalCasks": 4994,
+  "generatedDate": "2026-11-26",
+  "totalCasks": 5026,
   "categories": {
     "developerTools": {
       "displayName": "Developer Tools",
@@ -910,6 +910,12 @@
     "anomaly-hex": {
       "primary": "productivity",
       "secondary": []
+    },
+    "anomaly-spaceman": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
     },
     "another-redis-desktop-manager": {
       "primary": "developerTools",
@@ -2134,6 +2140,13 @@
       "primary": "audioMusic",
       "secondary": []
     },
+    "blave": {
+      "primary": "financeCrypto",
+      "secondary": [
+        "ai",
+        "developerTools"
+      ]
+    },
     "blender": {
       "primary": "designGraphics",
       "secondary": []
@@ -2624,6 +2637,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "byos": {
+      "primary": "securityPrivacy",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "bytemail": {
       "primary": "communication",
       "secondary": [
@@ -3014,6 +3033,10 @@
         "ai",
         "productivity"
       ]
+    },
+    "chapar": {
+      "primary": "developerTools",
+      "secondary": []
     },
     "charles": {
       "primary": "developerTools",
@@ -3486,6 +3509,12 @@
       "primary": "productivity",
       "secondary": []
     },
+    "clipboard-remote": {
+      "primary": "productivity",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "clipbook": {
       "primary": "productivity",
       "secondary": []
@@ -3691,6 +3720,12 @@
     "codeql": {
       "primary": "developerTools",
       "secondary": []
+    },
+    "codeql-bundle": {
+      "primary": "developerTools",
+      "secondary": [
+        "securityPrivacy"
+      ]
     },
     "coderabbit": {
       "primary": "developerTools",
@@ -4831,6 +4866,12 @@
     "digital": {
       "primary": "designGraphics",
       "secondary": []
+    },
+    "dimble": {
+      "primary": "menuBar",
+      "secondary": [
+        "utilities"
+      ]
     },
     "dingtalk": {
       "primary": "communication",
@@ -7006,6 +7047,12 @@
         "audioMusic"
       ]
     },
+    "gallery-remote": {
+      "primary": "designGraphics",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "gama-jdk": {
       "primary": "scienceEducation",
       "secondary": []
@@ -8370,6 +8417,12 @@
         "ai"
       ]
     },
+    "hyprmac": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
+    },
     "hytale": {
       "primary": "games",
       "secondary": []
@@ -8740,6 +8793,12 @@
     "insta360-studio": {
       "primary": "videoMedia",
       "secondary": []
+    },
+    "insta360-wave-controller": {
+      "primary": "utilities",
+      "secondary": [
+        "videoMedia"
+      ]
     },
     "install-disk-creator": {
       "primary": "utilities",
@@ -9176,6 +9235,10 @@
     },
     "jellybeansoup-netflix": {
       "primary": "videoMedia",
+      "secondary": []
+    },
+    "jellybox": {
+      "primary": "audioMusic",
       "secondary": []
     },
     "jellyfin": {
@@ -9956,6 +10019,10 @@
       "primary": "games",
       "secondary": []
     },
+    "ladybird": {
+      "primary": "browsers",
+      "secondary": []
+    },
     "lagrange": {
       "primary": "utilities",
       "secondary": []
@@ -9991,6 +10058,12 @@
     "lantern": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "lap": {
+      "primary": "designGraphics",
+      "secondary": [
+        "ai"
+      ]
     },
     "lapce": {
       "primary": "developerTools",
@@ -10070,6 +10143,12 @@
     "launchpad-manager": {
       "primary": "utilities",
       "secondary": []
+    },
+    "layout-department": {
+      "primary": "designGraphics",
+      "secondary": [
+        "productivity"
+      ]
     },
     "lazarus": {
       "primary": "developerTools",
@@ -10698,6 +10777,12 @@
     "luminance-hdr": {
       "primary": "designGraphics",
       "secondary": []
+    },
+    "lumo": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
+      ]
     },
     "luna-display": {
       "primary": "utilities",
@@ -11349,6 +11434,12 @@
       "primary": "communication",
       "secondary": []
     },
+    "max-messages": {
+      "primary": "productivity",
+      "secondary": [
+        "communication"
+      ]
+    },
     "maxon": {
       "primary": "utilities",
       "secondary": []
@@ -11701,12 +11792,6 @@
       "primary": "communication",
       "secondary": []
     },
-    "microsoft-365-copilot": {
-      "primary": "productivity",
-      "secondary": [
-        "ai"
-      ]
-    },
     "microsoft-auto-update": {
       "primary": "officeTools",
       "secondary": []
@@ -11715,6 +11800,12 @@
       "primary": "developerTools",
       "secondary": [
         "cloudStorage"
+      ]
+    },
+    "microsoft-copilot": {
+      "primary": "productivity",
+      "secondary": [
+        "ai"
       ]
     },
     "microsoft-edge": {
@@ -11961,6 +12052,13 @@
       "primary": "menuBar",
       "secondary": [
         "utilities"
+      ]
+    },
+    "mistral-vibe-app": {
+      "primary": "productivity",
+      "secondary": [
+        "ai",
+        "developerTools"
       ]
     },
     "mitmproxy": {
@@ -12415,6 +12513,12 @@
     "multi": {
       "primary": "utilities",
       "secondary": []
+    },
+    "multidock": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
+      ]
     },
     "multimc": {
       "primary": "games",
@@ -13323,6 +13427,12 @@
     "octarine": {
       "primary": "productivity",
       "secondary": []
+    },
+    "octo-browser": {
+      "primary": "browsers",
+      "secondary": [
+        "securityPrivacy"
+      ]
     },
     "october": {
       "primary": "productivity",
@@ -14305,6 +14415,10 @@
         "scienceEducation"
       ]
     },
+    "paradev": {
+      "primary": "developerTools",
+      "secondary": []
+    },
     "paragon-camptune": {
       "primary": "utilities",
       "secondary": []
@@ -14368,6 +14482,10 @@
       "secondary": [
         "ai"
       ]
+    },
+    "passenger-ide": {
+      "primary": "developerTools",
+      "secondary": []
     },
     "passepartout": {
       "primary": "securityPrivacy",
@@ -17169,6 +17287,12 @@
       "primary": "utilities",
       "secondary": []
     },
+    "screenshot-remote": {
+      "primary": "utilities",
+      "secondary": [
+        "designGraphics"
+      ]
+    },
     "scribus": {
       "primary": "designGraphics",
       "secondary": []
@@ -17250,6 +17374,10 @@
       "secondary": [
         "communication"
       ]
+    },
+    "search-browser": {
+      "primary": "browsers",
+      "secondary": []
     },
     "second-life-viewer": {
       "primary": "designGraphics",
@@ -17424,6 +17552,10 @@
       "primary": "utilities",
       "secondary": []
     },
+    "setshot": {
+      "primary": "utilities",
+      "secondary": []
+    },
     "sf-symbols": {
       "primary": "developerTools",
       "secondary": []
@@ -17488,6 +17620,12 @@
       "secondary": []
     },
     "shell360": {
+      "primary": "developerTools",
+      "secondary": [
+        "utilities"
+      ]
+    },
+    "shellrs": {
       "primary": "developerTools",
       "secondary": [
         "utilities"
@@ -18338,6 +18476,12 @@
         "audioMusic"
       ]
     },
+    "speedcrunch": {
+      "primary": "scienceEducation",
+      "secondary": [
+        "utilities"
+      ]
+    },
     "speedify": {
       "primary": "securityPrivacy",
       "secondary": []
@@ -18892,14 +19036,16 @@
       "primary": "productivity",
       "secondary": []
     },
-    "superset": {
-      "primary": "developerTools",
-      "secondary": []
-    },
     "superslicer": {
       "primary": "utilities",
       "secondary": [
         "designGraphics"
+      ]
+    },
+    "supertab": {
+      "primary": "utilities",
+      "secondary": [
+        "productivity"
       ]
     },
     "supertuxkart": {
@@ -18965,6 +19111,12 @@
     "sweet-home3d": {
       "primary": "designGraphics",
       "secondary": []
+    },
+    "swi-prolog-app": {
+      "primary": "developerTools",
+      "secondary": [
+        "scienceEducation"
+      ]
     },
     "swift-im": {
       "primary": "communication",
@@ -19261,6 +19413,12 @@
     "tachidesk-sorayomi": {
       "primary": "videoMedia",
       "secondary": []
+    },
+    "tactile": {
+      "primary": "utilities",
+      "secondary": [
+        "menuBar"
+      ]
     },
     "tad": {
       "primary": "productivity",
@@ -20931,6 +21089,12 @@
         "ai"
       ]
     },
+    "upload-remote": {
+      "primary": "utilities",
+      "secondary": [
+        "cloudStorage"
+      ]
+    },
     "upscayl": {
       "primary": "designGraphics",
       "secondary": [
@@ -21112,6 +21276,12 @@
     "veepn": {
       "primary": "securityPrivacy",
       "secondary": []
+    },
+    "velaterm": {
+      "primary": "developerTools",
+      "secondary": [
+        "ai"
+      ]
     },
     "vellum": {
       "primary": "productivity",
@@ -21850,6 +22020,13 @@
     "weektodo": {
       "primary": "productivity",
       "secondary": []
+    },
+    "weftcut": {
+      "primary": "videoMedia",
+      "secondary": [
+        "ai",
+        "developerTools"
+      ]
     },
     "weiyun": {
       "primary": "cloudStorage",
@@ -22755,6 +22932,12 @@
         "ai"
       ]
     },
+    "zephium": {
+      "primary": "browsers",
+      "secondary": [
+        "ai"
+      ]
+    },
     "zeplin": {
       "primary": "designGraphics",
       "secondary": []
@@ -23485,7 +23668,7 @@
     ],
     "alfred": [
       {
-        "bundleName": "Alfred 5.app",
+        "bundleName": "Alfred 6.app",
         "bundleIdentifier": "com.runningwithcrayons.Alfred"
       }
     ],
@@ -23763,6 +23946,12 @@
       {
         "bundleName": "Hex.app",
         "bundleIdentifier": "anomaly.hex"
+      }
+    ],
+    "anomaly-spaceman": [
+      {
+        "bundleName": "Spaceman.app",
+        "bundleIdentifier": "anomaly.spaceman"
       }
     ],
     "another-redis-desktop-manager": [
@@ -24479,6 +24668,14 @@
         "bundleIdentifier": "com.cindori.Backdrop"
       }
     ],
+    "background-music": [
+      {
+        "bundleName": "Background Music.app",
+        "bundleIdentifier": "com.bearisdriving.BGM.App",
+        "packageIdentifier": "com.bearisdriving.BGM",
+        "installedPath": "/Applications/Background Music.app"
+      }
+    ],
     "backlog": [
       {
         "bundleName": "Backlog.app",
@@ -25037,6 +25234,12 @@
         "bundleIdentifier": "com.codybrom.blankie"
       }
     ],
+    "blave": [
+      {
+        "bundleName": "Blave.app",
+        "bundleIdentifier": "org.blave.desktop"
+      }
+    ],
     "blender": [
       {
         "bundleName": "Blender.app",
@@ -25583,6 +25786,12 @@
         "bundleIdentifier": "com.bruji.bwana"
       }
     ],
+    "byos": [
+      {
+        "bundleName": "Byos.app",
+        "bundleIdentifier": "io.byos.mgatewayclient"
+      }
+    ],
     "bytemail": [
       {
         "bundleName": "ByteMail.app",
@@ -25983,6 +26192,12 @@
       {
         "bundleName": "Channel Works.app",
         "bundleIdentifier": "com.zoyi.channel.desk.osx"
+      }
+    ],
+    "chapar": [
+      {
+        "bundleName": "Chapar.app",
+        "bundleIdentifier": "rest.chapar.app"
       }
     ],
     "charles": [
@@ -26443,6 +26658,12 @@
         "bundleIdentifier": "com.ntwind.clipaste"
       }
     ],
+    "clipboard-remote": [
+      {
+        "bundleName": "Clipboard Remote.app",
+        "bundleIdentifier": "com.ntwind.remote.clipboard"
+      }
+    ],
     "clipbook": [
       {
         "bundleName": "ClipBook.app",
@@ -26513,6 +26734,14 @@
       {
         "bundleName": "Cloudash.app",
         "bundleIdentifier": "dev.cloudash.cloudash"
+      }
+    ],
+    "cloudflare-warp": [
+      {
+        "bundleName": "Cloudflare WARP.app",
+        "bundleIdentifier": "com.cloudflare.1dot1dot1dot1.macos",
+        "packageIdentifier": "com.cloudflare.1dot1dot1dot1.macos",
+        "installedPath": "/Applications/Cloudflare WARP.app"
       }
     ],
     "cloudmounter": [
@@ -26683,6 +26912,12 @@
       {
         "bundleName": "Codespace.app",
         "bundleIdentifier": "me.tristanedwards.codespace"
+      }
+    ],
+    "codex-app": [
+      {
+        "bundleName": "Codex.app",
+        "bundleIdentifier": "com.openai.codex"
       }
     ],
     "codexbar": [
@@ -30143,6 +30378,12 @@
         "bundleIdentifier": "com.fvim.www"
       }
     ],
+    "gallery-remote": [
+      {
+        "bundleName": "Gallery Remote.app",
+        "bundleIdentifier": "com.ntwind.remote.gallery"
+      }
+    ],
     "gamehub": [
       {
         "bundleName": "GameHub.app",
@@ -32343,6 +32584,12 @@
         "bundleIdentifier": "com.jellystyle.Netflix-wrapper"
       }
     ],
+    "jellybox": [
+      {
+        "bundleName": "JellyBox.app",
+        "bundleIdentifier": "com.prodigytech.jellybox"
+      }
+    ],
     "jellyfin": [
       {
         "bundleName": "Jellyfin.app",
@@ -32965,6 +33212,12 @@
         "bundleIdentifier": "app.keyty.Keyty"
       }
     ],
+    "kicad": [
+      {
+        "bundleName": "KiCad.app",
+        "bundleIdentifier": "org.kicad.kicad"
+      }
+    ],
     "kid3": [
       {
         "bundleName": "kid3.app",
@@ -33259,6 +33512,12 @@
         "bundleIdentifier": "net.labymod.launcher"
       }
     ],
+    "ladybird": [
+      {
+        "bundleName": "Ladybird.app",
+        "bundleIdentifier": "org.ladybird.Ladybird"
+      }
+    ],
     "lagrange": [
       {
         "bundleName": "Lagrange.app",
@@ -33395,6 +33654,12 @@
       {
         "bundleName": "Launchpad Manager.app",
         "bundleIdentifier": "com.attilamiklosi.yos.launchpadmanager"
+      }
+    ],
+    "layout-department": [
+      {
+        "bundleName": "Layout Department.app",
+        "bundleIdentifier": "com.anemone.layout-department"
       }
     ],
     "lazpaint": [
@@ -33987,6 +34252,12 @@
         "bundleIdentifier": "com.luminance-hdr"
       }
     ],
+    "lumo": [
+      {
+        "bundleName": "Lumo.app",
+        "bundleIdentifier": "me.proton.lumo-app"
+      }
+    ],
     "luna-display": [
       {
         "bundleName": "Luna Display.app",
@@ -34566,7 +34837,7 @@
     "markdown-preview": [
       {
         "bundleName": "Markdown Preview.app",
-        "bundleIdentifier": "doc.md-preview"
+        "bundleIdentifier": "sh.pluk.md-preview"
       }
     ],
     "marked-app": [
@@ -35313,6 +35584,12 @@
         "bundleIdentifier": "com.glennf.MisterPlimsoll"
       }
     ],
+    "mistral-vibe-app": [
+      {
+        "bundleName": "Vibe.app",
+        "bundleIdentifier": "ai.mistral.lechat.desktop"
+      }
+    ],
     "mitti": [
       {
         "bundleName": "Mitti.app",
@@ -35807,6 +36084,12 @@
         "bundleIdentifier": "llc.gumbs.multi"
       }
     ],
+    "multidock": [
+      {
+        "bundleName": "MultiDock 2.app",
+        "bundleIdentifier": "com.sergiigerasimenko.MultiDock2"
+      }
+    ],
     "multimc": [
       {
         "bundleName": "MultiMC.app",
@@ -35989,8 +36272,8 @@
     ],
     "mysqlworkbench": [
       {
-        "bundleName": "MySQLWorkbench.app",
-        "bundleIdentifier": "com.oracle.workbench.MySQLWorkbench"
+        "bundleName": "MySQL Workbench.app",
+        "bundleIdentifier": "com.oracle.mysqlworkbench"
       }
     ],
     "mysteriumdark": [
@@ -36737,6 +37020,12 @@
         "bundleIdentifier": "com.ocenaudio"
       }
     ],
+    "octo-browser": [
+      {
+        "bundleName": "Octo Browser.app",
+        "bundleIdentifier": "net.octobrowser.client"
+      }
+    ],
     "october": [
       {
         "bundleName": "October.app",
@@ -37409,7 +37698,7 @@
     ],
     "osaurus": [
       {
-        "bundleName": "osaurus.app",
+        "bundleName": "Osaurus.app",
         "bundleIdentifier": "com.dinoki.osaurus"
       }
     ],
@@ -37715,6 +38004,12 @@
         "bundleIdentifier": "org.eclipse.papyrus.rcp.product"
       }
     ],
+    "paradev": [
+      {
+        "bundleName": "Paradev.app",
+        "bundleIdentifier": "com.superset.desktop"
+      }
+    ],
     "paragon-camptune": [
       {
         "bundleName": "Paragon CampTune.app",
@@ -37755,6 +38050,12 @@
       {
         "bundleName": "Paseo.app",
         "bundleIdentifier": "sh.paseo.desktop"
+      }
+    ],
+    "passenger-ide": [
+      {
+        "bundleName": "Passenger.app",
+        "bundleIdentifier": "io.github.zaneris.passenger"
       }
     ],
     "passepartout": [
@@ -39231,7 +39532,7 @@
     ],
     "qgis": [
       {
-        "bundleName": "QGIS-final-4_2_2.app",
+        "bundleName": "QGIS-final-4_4_0.app",
         "bundleIdentifier": "org.qgis.qgis3"
       }
     ],
@@ -40709,6 +41010,12 @@
         "bundleIdentifier": "com.edovia.Screens-Connect"
       }
     ],
+    "screenshot-remote": [
+      {
+        "bundleName": "Screenshot Remote.app",
+        "bundleIdentifier": "com.ntwind.remote.screenshot"
+      }
+    ],
     "scribus": [
       {
         "bundleName": "Scribus.app",
@@ -40797,6 +41104,12 @@
       {
         "bundleName": "SeaMonkey.app",
         "bundleIdentifier": "org.mozilla.seamonkey"
+      }
+    ],
+    "search-browser": [
+      {
+        "bundleName": "Search.app",
+        "bundleIdentifier": "com.officecommun.search"
       }
     ],
     "second-life-viewer": [
@@ -40937,6 +41250,12 @@
         "bundleIdentifier": "com.setapp.DesktopClient"
       }
     ],
+    "setshot": [
+      {
+        "bundleName": "SetShot.app",
+        "bundleIdentifier": "com.tidbits.SetShot"
+      }
+    ],
     "shadow": [
       {
         "bundleName": "Shadow PC.app",
@@ -41001,6 +41320,12 @@
       {
         "bundleName": "Shell360.app",
         "bundleIdentifier": "com.nashaofu.shell360"
+      }
+    ],
+    "shellrs": [
+      {
+        "bundleName": "ShellRS.app",
+        "bundleIdentifier": "com.shellrs.ShellRS"
       }
     ],
     "sherlock-app": [
@@ -41933,6 +42258,12 @@
         "bundleIdentifier": "com.cliffweitzman.speechifymacagent"
       }
     ],
+    "speedcrunch": [
+      {
+        "bundleName": "SpeedCrunch.app",
+        "bundleIdentifier": "org.speedcrunch"
+      }
+    ],
     "speedify": [
       {
         "bundleName": "Speedify.app",
@@ -42535,6 +42866,12 @@
         "bundleIdentifier": "com.superset.desktop"
       }
     ],
+    "supertab": [
+      {
+        "bundleName": "SuperTab 7.app",
+        "bundleIdentifier": "com.macplus-software.com.SuperTab-7"
+      }
+    ],
     "supertuxkart": [
       {
         "bundleName": "SuperTuxKart.app",
@@ -42801,7 +43138,7 @@
     ],
     "t3-code": [
       {
-        "bundleName": "T3 Code (Alpha).app",
+        "bundleName": "T3 Code (Beta).app",
         "bundleIdentifier": "com.t3tools.t3code"
       }
     ],
@@ -42869,6 +43206,12 @@
       {
         "bundleName": "Sorayomi.app",
         "bundleIdentifier": "com.suwayomi.tachideskSorayomi"
+      }
+    ],
+    "tactile": [
+      {
+        "bundleName": "Tactile.app",
+        "bundleIdentifier": "com.masonchen.Tactile"
       }
     ],
     "tad": [
@@ -43696,7 +44039,7 @@
     "tinycast": [
       {
         "bundleName": "Tinycast.app",
-        "bundleIdentifier": "com.tinycast.app"
+        "bundleIdentifier": "com.abueammar.tinycast"
       }
     ],
     "tinymediamanager": [
@@ -44464,7 +44807,7 @@
     "ungoogled-chromium": [
       {
         "bundleName": "Chromium.app",
-        "bundleIdentifier": "org.chromium.Chromium"
+        "bundleIdentifier": "io.ungoogled-software.ungoogled-chromium"
       }
     ],
     "uniclipboard": [
@@ -44567,6 +44910,12 @@
       {
         "bundleName": "UPDF.app",
         "bundleIdentifier": "com.superace.updf.mac"
+      }
+    ],
+    "upload-remote": [
+      {
+        "bundleName": "Upload Remote.app",
+        "bundleIdentifier": "com.ntwind.remote.upload"
       }
     ],
     "upscayl": [
@@ -44723,6 +45072,12 @@
       {
         "bundleName": "VeePN.app",
         "bundleIdentifier": "com.veepn.macos.direct"
+      }
+    ],
+    "velaterm": [
+      {
+        "bundleName": "VelaTerm.app",
+        "bundleIdentifier": "io.vlinx.vlxterm.release"
       }
     ],
     "vellum": [
@@ -45505,6 +45860,12 @@
       {
         "bundleName": "WeekToDo.app",
         "bundleIdentifier": "weektodo-app.netlify.app"
+      }
+    ],
+    "weftcut": [
+      {
+        "bundleName": "WeftCut.app",
+        "bundleIdentifier": "dev.weftcut.desktop"
       }
     ],
     "weiyun": [
@@ -46485,6 +46846,12 @@
         "bundleIdentifier": "be.zenjoy.zentty"
       }
     ],
+    "zephium": [
+      {
+        "bundleName": "Zephium.app",
+        "bundleIdentifier": "app.zephium"
+      }
+    ],
     "zeplin": [
       {
         "bundleName": "Zeplin.app",
@@ -46612,8 +46979,8 @@
       }
     ]
   },
-  "metadataUpdatedAt": "2026-11-16T21:09:13.377660+00:00",
-  "releaseTag": "caskflow-v2026.11.16",
+  "metadataUpdatedAt": "2026-11-27T13:12:35.073364+00:00",
+  "releaseTag": "caskflow-v2026.11.27",
   "cliTokens": [
     "aptible",
     "cleanmymac-cli",
@@ -46801,6 +47168,7 @@
     "anki",
     "annotate",
     "anomaly-hex",
+    "anomaly-spaceman",
     "another-redis-desktop-manager",
     "antconc",
     "antigravity",
@@ -47057,6 +47425,7 @@
     "blackhole-2ch",
     "blackhole-64ch",
     "blankie",
+    "blave",
     "blender",
     "blender-benchmark",
     "blender@lts",
@@ -47161,6 +47530,7 @@
     "butterkit",
     "buzz",
     "bwana",
+    "byos",
     "bytemail",
     "bzflag",
     "c0re100-qbittorrent",
@@ -47237,6 +47607,7 @@
     "chalk",
     "changes",
     "channel-works",
+    "chapar",
     "charles",
     "charles@4",
     "charmstone",
@@ -47326,6 +47697,7 @@
     "clion",
     "clip-studio-paint",
     "clipaste",
+    "clipboard-remote",
     "clipbook",
     "clipgrab",
     "clips-ide",
@@ -48036,6 +48408,7 @@
     "fvim",
     "fxfactory",
     "galaxybudsclient",
+    "gallery-remote",
     "gama-jdk",
     "gama-platform",
     "gamehub",
@@ -48378,6 +48751,7 @@
     "inssider",
     "insta360-link-controller",
     "insta360-studio",
+    "insta360-wave-controller",
     "install-disk-creator",
     "instantview",
     "instatus-out",
@@ -48469,6 +48843,7 @@
     "jedit",
     "jedit-omega",
     "jellybeansoup-netflix",
+    "jellybox",
     "jellyfin",
     "jellyfin-media-player",
     "jet-pilot",
@@ -48630,6 +49005,7 @@
     "label-live",
     "labplot",
     "labymod",
+    "ladybird",
     "lagrange",
     "landrop",
     "langdock",
@@ -48653,6 +49029,7 @@
     "launchie",
     "launchos",
     "launchpad-manager",
+    "layout-department",
     "lazarus",
     "lazpaint",
     "lazycat",
@@ -48768,6 +49145,7 @@
     "lulu",
     "lumide",
     "luminance-hdr",
+    "lumo",
     "luna-display",
     "luna-secondary",
     "lunacy",
@@ -48978,6 +49356,7 @@
     "microsoft-365-copilot",
     "microsoft-auto-update",
     "microsoft-azure-storage-explorer",
+    "microsoft-copilot",
     "microsoft-edge",
     "microsoft-edge@beta",
     "microsoft-edge@dev",
@@ -49035,6 +49414,7 @@
     "missive",
     "mist",
     "mister-plimsoll",
+    "mistral-vibe-app",
     "mitti",
     "mixed-in-key",
     "mixed-in-key-live",
@@ -49132,6 +49512,7 @@
     "mullvad-browser",
     "mullvad-vpn",
     "multi",
+    "multidock",
     "multimc",
     "multipass",
     "multipatch",
@@ -49316,6 +49697,7 @@
     "obsidian",
     "ocenaudio",
     "octarine",
+    "octo-browser",
     "october",
     "odbc-manager",
     "odrive",
@@ -49515,6 +49897,7 @@
     "papers",
     "paperspace",
     "papyrus",
+    "paradev",
     "paragon-camptune",
     "paragon-extfs",
     "parallels",
@@ -49528,6 +49911,7 @@
     "parsehub",
     "parsify",
     "paseo",
+    "passenger-ide",
     "passepartout",
     "password-gorilla",
     "paste",
@@ -50088,6 +50472,7 @@
     "screenmemory",
     "screens-assist",
     "screens-connect",
+    "screenshot-remote",
     "scribus",
     "script-debugger",
     "script-kit",
@@ -50106,6 +50491,7 @@
     "seam-app",
     "seamly2d",
     "seamonkey",
+    "search-browser",
     "second-life-viewer",
     "secretive",
     "secure-pipes",
@@ -50136,6 +50522,7 @@
     "sessionrestore",
     "sessionwatcher",
     "setapp",
+    "setshot",
     "sf-symbols",
     "sfm",
     "shade",
@@ -50151,6 +50538,7 @@
     "shattered-pixel-dungeon",
     "shearwater-cloud",
     "shell360",
+    "shellrs",
     "sherlock-app",
     "shiba",
     "shichizip",
@@ -50324,6 +50712,7 @@
     "spectra-app",
     "spectrolite",
     "speechify-voice-ai",
+    "speedcrunch",
     "speedify",
     "spencer",
     "spike",
@@ -50435,6 +50824,7 @@
     "supernotes",
     "superset",
     "superslicer",
+    "supertab",
     "supertuxkart",
     "superwhisper",
     "support",
@@ -50449,6 +50839,7 @@
     "svp",
     "swama",
     "sweet-home3d",
+    "swi-prolog-app",
     "swift-im",
     "swift-publisher",
     "swift-quit",
@@ -50509,6 +50900,7 @@
     "tabularis",
     "taccy",
     "tachidesk-sorayomi",
+    "tactile",
     "tad",
     "tag-app",
     "tageditor",
@@ -50833,6 +51225,7 @@
     "unsloth",
     "updatest",
     "updf",
+    "upload-remote",
     "upscayl",
     "usage-app",
     "usb-overdrive",
@@ -50869,6 +51262,7 @@
     "vectorcraft",
     "ved",
     "veepn",
+    "velaterm",
     "vellum",
     "veracrypt",
     "veracrypt-fuse-t",
@@ -51025,6 +51419,7 @@
     "wechatwebdevtools",
     "wechatwork",
     "weektodo",
+    "weftcut",
     "weiyun",
     "weka",
     "welly",
@@ -51216,6 +51611,7 @@
     "zen@twilight",
     "zenbeats",
     "zentty",
+    "zephium",
     "zeplin",
     "zerobranestudio",
     "zerotier-one",
@@ -51543,12 +51939,100 @@
         "installedPath": "/Applications/Lazarus/components/chmhelp/lhelp/lhelp.app"
       }
     ],
+    "mactex": [
+      {
+        "bundleName": "LaTeXiT.app",
+        "bundleIdentifier": "fr.chachatelier.pierre.LaTeXiT",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/LaTeXiT.app"
+      },
+      {
+        "bundleName": "TeXShop.app",
+        "bundleIdentifier": "TeXShop",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/TeXShop.app"
+      },
+      {
+        "bundleName": "hintview.app",
+        "bundleIdentifier": "edu.hm.cs.hint.hintview",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/hintview.app"
+      },
+      {
+        "bundleName": "BibDesk.app",
+        "bundleIdentifier": "edu.ucsd.cs.mmccrack.bibdesk",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/BibDesk.app"
+      },
+      {
+        "bundleName": "TeX Live Utility.app",
+        "bundleIdentifier": "com.googlecode.mactlmgr.tlu",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/TeX Live Utility.app"
+      }
+    ],
+    "mactex-no-gui": [
+      {
+        "bundleName": "LaTeXiT.app",
+        "bundleIdentifier": "fr.chachatelier.pierre.LaTeXiT",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/LaTeXiT.app"
+      },
+      {
+        "bundleName": "TeXShop.app",
+        "bundleIdentifier": "TeXShop",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/TeXShop.app"
+      },
+      {
+        "bundleName": "hintview.app",
+        "bundleIdentifier": "edu.hm.cs.hint.hintview",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/hintview.app"
+      },
+      {
+        "bundleName": "BibDesk.app",
+        "bundleIdentifier": "edu.ucsd.cs.mmccrack.bibdesk",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/BibDesk.app"
+      },
+      {
+        "bundleName": "TeX Live Utility.app",
+        "bundleIdentifier": "com.googlecode.mactlmgr.tlu",
+        "packageIdentifier": "org.tug.mactex.gui2026",
+        "installedPath": "/Applications/TeX/TeX Live Utility.app"
+      }
+    ],
+    "microsoft-copilot": [
+      {
+        "bundleName": "Copilot.app",
+        "bundleIdentifier": "com.microsoft.m365copilot",
+        "packageIdentifier": "com.microsoft.m365copilot",
+        "installedPath": "/Applications/Copilot.app"
+      }
+    ],
+    "microsoft-office": [
+      {
+        "bundleName": "OneDrive.app",
+        "bundleIdentifier": "com.microsoft.OneDrive",
+        "packageIdentifier": "com.microsoft.OneDrive",
+        "installedPath": "/Applications/OneDrive.app"
+      }
+    ],
     "microsoft-teams": [
       {
         "bundleName": "Microsoft Teams.app",
         "bundleIdentifier": "com.microsoft.teams2",
         "packageIdentifier": "com.microsoft.teams2",
         "installedPath": "/Applications/Microsoft Teams.app"
+      }
+    ],
+    "nextcloud": [
+      {
+        "bundleName": "Nextcloud.app",
+        "bundleIdentifier": "com.nextcloud.desktopclient",
+        "packageIdentifier": "com.nextcloud.desktopclient",
+        "installedPath": "/Applications/Nextcloud.app"
       }
     ],
     "nextcloud-vfs": [
@@ -51669,6 +52153,14 @@
         "installedPath": "/Applications/PlasticSCMServer.app"
       }
     ],
+    "uuremote": [
+      {
+        "bundleName": "UURemote.app",
+        "bundleIdentifier": "com.netease.uuremote",
+        "packageIdentifier": "com.netease.uuremote",
+        "installedPath": "/Applications/UURemote.app"
+      }
+    ],
     "vb-cable": [
       {
         "bundleName": "VB-Cable Control Panel.app",
@@ -51761,6 +52253,14 @@
         "bundleIdentifier": "com.wearezeta.zclient.mac",
         "packageIdentifier": "com.wearezeta.zclient.mac",
         "installedPath": "/Applications/Wire.app"
+      }
+    ],
+    "xquartz": [
+      {
+        "bundleName": "XQuartz.app",
+        "bundleIdentifier": "org.xquartz.X11",
+        "packageIdentifier": "org.xquartz.X11",
+        "installedPath": "/Applications/Utilities/XQuartz.app"
       }
     ],
     "zoom": [

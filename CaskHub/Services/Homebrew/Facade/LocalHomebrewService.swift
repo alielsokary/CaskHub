@@ -146,7 +146,13 @@ final class LocalHomebrewService {
             brewBinaryProvider: dependencies.brewBinaryProvider,
             askpassProvider: dependencies.askpassProvider,
             fileManager: dependencies.fileManager,
-            lanes: lanes
+            lanes: lanes,
+            fetchStallTimeout: dependencies.fetchStallTimeout,
+            lockWait: BrewLockWait(
+                interval: dependencies.brewLockRetryInterval,
+                limit: dependencies.brewLockWaitLimit,
+                operationStore: operationStore
+            )
         )
         pinCommands = HomebrewPinCommands(
             commandExecutor: commandExecutor,

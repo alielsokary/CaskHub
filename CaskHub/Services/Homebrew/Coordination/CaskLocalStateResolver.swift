@@ -62,7 +62,7 @@ nonisolated struct CaskLocalStateResolver: Sendable {
 
         return matchingNames.contains { appName in
             snapshot.macAppStoreBundleIdentifiers[appName]?.contains {
-                storeBundleIdentifier($0, matches: cask)
+                storeBundleIdentifier($0, isIPhoneIPadApp: false, matches: cask)
             } == true
         }
     }
@@ -137,6 +137,7 @@ nonisolated struct CaskLocalStateResolver: Sendable {
             isOutdated: outdated,
             isZombie: isZombie(cask),
             canOpen: canOpen(cask),
+            isIPhoneIPadApp: source == .macAppStore && macAppStoreApplication(for: cask)?.isIPhoneIPadApp == true,
             retirement: cask.retirement(for: platform),
             foreignInstallationSource: snapshot.foreignInstallationSource(for: cask.reference)
         )
@@ -261,17 +262,19 @@ nonisolated struct CaskLocalStateResolver: Sendable {
                 guard let bundleIdentifier = application.bundleIdentifier else {
                     return false
                 }
-                return storeBundleIdentifier(bundleIdentifier, matches: cask)
+                return storeBundleIdentifier(bundleIdentifier, isIPhoneIPadApp: application.isIPhoneIPadApp, matches: cask)
             }
     }
 
     private func storeBundleIdentifier(
         _ identifier: String,
+        isIPhoneIPadApp: Bool,
         matches cask: Cask
     ) -> Bool {
         if !cask.storeBundleIdentifiers.isEmpty {
-            return ApplicationIdentityMatcher.applicationBundleIdentifier(
+            return ApplicationIdentityMatcher.storeApplication(
                 identifier,
+                isIPhoneIPadApp: isIPhoneIPadApp,
                 matchesAny: cask.storeBundleIdentifiers
             )
         }

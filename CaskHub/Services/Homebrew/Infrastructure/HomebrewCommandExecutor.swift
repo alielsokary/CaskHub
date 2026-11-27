@@ -59,10 +59,9 @@ final class SystemHomebrewCommandExecutor: HomebrewCommandExecuting {
         guard let process = runningProcesses[token] else { return false }
         let pid = process.processIdentifier
 
+        // brew interrupts curl's process group itself; signalling curl first makes brew 7.0.7+ fail with EPERM.
+        kill(pid, SIGINT)
         Task { @MainActor [weak self] in
-            await Task.detached(priority: .userInitiated) {
-                Self.signalTree(pid: pid, signal: SIGINT)
-            }.value
             try? await Task.sleep(for: .seconds(5))
             guard self?.runningProcesses[token]?.processIdentifier == pid else {
                 return

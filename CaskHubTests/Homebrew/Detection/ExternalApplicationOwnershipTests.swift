@@ -15,12 +15,14 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         ApplicationCaskSignature(
             token: "glaze-app",
             appBundleNames: ["Glaze.app"],
-            bundleIdentifiers: []
+            bundleIdentifiers: [],
+            hintedBundleIdentifiers: []
         ),
         ApplicationCaskSignature(
             token: "raycast-glaze",
             appBundleNames: ["Glaze.app"],
-            bundleIdentifiers: ["app.glaze.macos.main"]
+            bundleIdentifiers: ["app.glaze.macos.main"],
+            hintedBundleIdentifiers: []
         )
     ]
 
@@ -76,12 +78,14 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             ApplicationCaskSignature(
                 token: "shared-one",
                 appBundleNames: ["Shared.app"],
-                bundleIdentifiers: []
+                bundleIdentifiers: [],
+                hintedBundleIdentifiers: []
             ),
             ApplicationCaskSignature(
                 token: "shared-two",
                 appBundleNames: ["Shared.app"],
-                bundleIdentifiers: []
+                bundleIdentifiers: [],
+                hintedBundleIdentifiers: []
             )
         ]
 
@@ -99,7 +103,8 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         let signature = ApplicationCaskSignature(
             token: "unique",
             appBundleNames: ["Unique.app"],
-            bundleIdentifiers: []
+            bundleIdentifiers: [],
+            hintedBundleIdentifiers: []
         )
 
         let owners = ApplicationOwnershipResolver().resolve(
@@ -109,6 +114,26 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         )
 
         XCTAssertTrue(owners.isEmpty)
+    }
+
+    func test_cleanup_path_identifier_claims_an_app_only_when_no_verified_identifier_matches() {
+        let application = makeDetectedApplication("Shared.app", id: "com.example.shared")
+        func signature(_ token: String, verified: Set<String> = [], hinted: Set<String> = []) -> ApplicationCaskSignature {
+            ApplicationCaskSignature(
+                token: token, appBundleNames: ["Shared.app"], bundleIdentifiers: verified, hintedBundleIdentifiers: hinted
+            )
+        }
+        func owners(_ signatures: [ApplicationCaskSignature]) -> [String: DetectedApplication] {
+            ApplicationOwnershipResolver().resolve(signatures: signatures, applications: [application], installedCasks: [:])
+        }
+        let identifier: Set<String> = ["com.example.shared"]
+
+        XCTAssertEqual(owners([signature("hinted", hinted: identifier)]), ["hinted": application])
+        XCTAssertEqual(
+            owners([signature("verified", verified: identifier), signature("hinted", hinted: identifier)]),
+            ["verified": application]
+        )
+        XCTAssertTrue(owners([signature("one", hinted: identifier), signature("two", hinted: identifier)]).isEmpty)
     }
 
     func test_store_resolution_indexes_direct_and_bundle_family_matches() {
@@ -160,6 +185,27 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         XCTAssertEqual(Set(result.keys), ["canva", "tailscale-app"])
         XCTAssertEqual(result["canva"], applications[0])
         XCTAssertEqual(result["tailscale-app"], applications[1])
+    }
+
+    func test_only_an_iphone_ipad_app_matches_a_store_cask_by_vendor() {
+        let signature = storeSignature(
+            token: "crosspaste", bundleName: "CrossPaste.app", hasPackage: false,
+            applicationIdentifiers: ["com.crosspaste.mac"]
+        )
+        func resolve(_ application: DetectedApplication) -> [String: DetectedApplication] {
+            InstallationIndexBuilder().resolveMacAppStoreApplications(
+                signatures: [signature], applications: [application], installedCasks: [:]
+            )
+        }
+        let mobile = makeDetectedApplication(
+            "CrossPaste.app", id: "com.crosspaste.ios", isMacAppStore: true, isIPhoneIPadApp: true
+        )
+
+        XCTAssertEqual(resolve(mobile), ["crosspaste": mobile])
+        XCTAssertTrue(resolve(makeDetectedApplication("CrossPaste.app", id: "com.crosspaste.lite", isMacAppStore: true)).isEmpty)
+        XCTAssertTrue(resolve(makeDetectedApplication(
+            "CrossPaste.app", id: "org.other.paste", isMacAppStore: true, isIPhoneIPadApp: true
+        )).isEmpty)
     }
 
     func test_installation_index_excludes_brew_owned_tokens_and_indexes_cli_paths() {
@@ -306,6 +352,25 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             service.localState(for: raycastGlaze).installationSource,
             .externalApplication
         )
+    }
+
+    @MainActor
+    func test_catalog_resolution_adopts_an_app_known_only_from_its_cleanup_paths() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("cleanup-identity-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try makeApplicationBundle(in: root, named: "cardPresso.app", bundleIdentifier: "com.cardpresso.cardpresso")
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("cleanup-identity")) {
+            $0.applicationDirectories = [root]
+        }
+        var cask = makeCask("cardpresso", appNames: ["cardPresso.app"])
+        let zap = #"{"zap":[{"trash":"~/Library/Preferences/com.cardpresso.cardpresso.plist"}]}"#
+        cask.artifacts?.append(try JSONDecoder().decode(ArtifactStanza.self, from: Data(zap.utf8)))
+
+        await service.updatePackageCatalog([cask])
+
+        XCTAssertEqual(service.localState(for: cask).installationSource, .externalApplication)
+        XCTAssertTrue(service.localState(for: cask).isAdoptable)
     }
 
     @MainActor

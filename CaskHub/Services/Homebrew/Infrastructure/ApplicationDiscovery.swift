@@ -55,7 +55,9 @@ nonisolated struct ApplicationDiscovery: Sendable {
                     version: metadata.version,
                     shortVersion: metadata.shortVersion,
                     buildVersion: metadata.buildVersion,
-                    isMacAppStore: fileManager.fileExists(atPath: masReceipt.path),
+                    // Only the App Store installs iPhone/iPad apps on a Mac, and they carry no receipt.
+                    isMacAppStore: metadata.isIPhoneIPadApp || fileManager.fileExists(atPath: masReceipt.path),
+                    isIPhoneIPadApp: metadata.isIPhoneIPadApp,
                     isDirectlyInApplicationDirectory:
                         entry.deletingLastPathComponent().standardizedFileURL
                         == folder.standardizedFileURL,
@@ -74,7 +76,21 @@ nonisolated struct ApplicationDiscovery: Sendable {
         at appURL: URL,
         fileManager: FileManager
     ) -> ApplicationBundleMetadata? {
-        let infoURL = appURL.appendingPathComponent("Contents/Info.plist")
+        let contents = appURL.appendingPathComponent("Contents")
+        let wrapped = appURL.appendingPathComponent("WrappedBundle")
+        return metadata(info: contents.appendingPathComponent("Info.plist"), executables: contents.appendingPathComponent("MacOS"),
+                        isIPhoneIPadApp: false, fileManager: fileManager)
+            // An App Store iPhone/iPad app keeps its flat iOS bundle behind `WrappedBundle`.
+            ?? metadata(info: wrapped.appendingPathComponent("Info.plist"), executables: wrapped,
+                        isIPhoneIPadApp: true, fileManager: fileManager)
+    }
+
+    private func metadata(
+        info infoURL: URL,
+        executables: URL,
+        isIPhoneIPadApp: Bool,
+        fileManager: FileManager
+    ) -> ApplicationBundleMetadata? {
         guard let data = try? Data(contentsOf: infoURL),
               let info = try? PropertyListSerialization.propertyList(
                   from: data,
@@ -85,14 +101,15 @@ nonisolated struct ApplicationDiscovery: Sendable {
               !executable.isEmpty
         else { return nil }
 
-        let executableURL = appURL.appendingPathComponent("Contents/MacOS/\(executable)")
+        let executableURL = executables.appendingPathComponent(executable)
         guard fileManager.isExecutableFile(atPath: executableURL.path) else { return nil }
         return ApplicationBundleMetadata(
             bundleIdentifier: info["CFBundleIdentifier"] as? String,
             version: info["CFBundleShortVersionString"] as? String
                 ?? info["CFBundleVersion"] as? String,
             shortVersion: info["CFBundleShortVersionString"] as? String,
-            buildVersion: info["CFBundleVersion"] as? String
+            buildVersion: info["CFBundleVersion"] as? String,
+            isIPhoneIPadApp: isIPhoneIPadApp
         )
     }
 
@@ -107,6 +124,16 @@ nonisolated struct ApplicationDiscovery: Sendable {
                     && fileManager.fileExists(atPath: candidate.path)
             }
         }
+    }
+}
+
+extension ApplicationDiscovery {
+    /// App Store iPhone/iPad apps on a Mac keep their bundle behind `WrappedBundle` instead of `Contents`.
+    func conflictOccupant(at path: URL, caskIdentifiers: Set<String>, fileManager: FileManager) -> AppConflictOccupant {
+        if fileManager.fileExists(atPath: path.appendingPathComponent("WrappedBundle").path) { return .iPhoneIPadApp }
+        guard let identifier = metadata(at: path, fileManager: fileManager)?.bundleIdentifier else { return .unreadable }
+        return ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array(caskIdentifiers))
+            ? .sameIdentifier : .otherIdentifier
     }
 }
 
@@ -161,12 +188,13 @@ nonisolated struct ApplicationOwnershipResolver: Sendable {
     ) -> ApplicationCaskSignature? {
         guard let identifier = application.bundleIdentifier else { return nil }
 
-        let exactMatches = candidates.filter { signature in
-            ApplicationIdentityMatcher.applicationBundleIdentifier(
-                identifier, matchesAny: Array(signature.bundleIdentifiers)
-            )
+        for identifiers in [\ApplicationCaskSignature.bundleIdentifiers, \.hintedBundleIdentifiers] {
+            let exactMatches = candidates.filter {
+                ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array($0[keyPath: identifiers]))
+            }
+            if !exactMatches.isEmpty { return exactMatches.count == 1 ? exactMatches[0] : nil }
         }
-        return exactMatches.count == 1 ? exactMatches[0] : nil
+        return nil
     }
 
     private static func normalizedApplicationName(_ name: String) -> String {
@@ -175,6 +203,16 @@ nonisolated struct ApplicationOwnershipResolver: Sendable {
 }
 
 nonisolated enum ApplicationIdentityMatcher {
+    /// The App Store's iPhone/iPad build of a Mac app has its own identifier from the same vendor.
+    static func storeApplication(
+        _ identifier: String,
+        isIPhoneIPadApp: Bool,
+        matchesAny candidates: [String]
+    ) -> Bool {
+        applicationBundleIdentifier(identifier, matchesAny: candidates)
+            || isIPhoneIPadApp && bundleIdentifier(identifier, matchesPackageIdentifiers: candidates)
+    }
+
     static func applicationBundleIdentifier(
         _ identifier: String,
         matchesAny candidates: [String]

@@ -130,7 +130,7 @@ nonisolated enum CaskInfoProjector {
         if let source = presentation.localState.installationSource {
             rows.append(CaskInfoRow(
                 property: String(localized: "Installed Via"),
-                value: source.title
+                value: presentation.localState.isIPhoneIPadApp ? String(localized: "Mac App Store (iPhone/iPad app)") : source.title
             ))
         }
         guard let dates else { return rows }

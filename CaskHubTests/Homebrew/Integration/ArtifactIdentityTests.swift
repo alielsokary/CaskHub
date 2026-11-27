@@ -59,6 +59,21 @@ final class ArtifactIdentityTests: XCTestCase {
         }
     }
 
+    func test_zap_and_uninstall_paths_give_bundle_identifier_hints() throws {
+        let artifact = #"""
+        {"zap":[{"trash":["~/Library/Preferences/com.example.app.plist","~/Library/Caches/com.apple.Safari",
+          "~/Library/Saved Application State/com.example.app.savedState","~/Library/Logs/com.example.*",
+          "~/Library/Application Support/Example","~/Library/Containers/com.example.app.share/"],
+          "rmdir":"~/Library/Example","delete":"/Applications/Example.app"}],
+         "uninstall":[{"quit":"com.example.helper","signal":[["TERM","org.example.agent"]],"launchctl":"agent"}]}
+        """#
+        let stanza = try JSONDecoder().decode(ArtifactStanza.self, from: Data(artifact.utf8))
+        XCTAssertEqual(
+            Set(stanza.bundleIdentifierHints),
+            ["com.example.app", "com.example.app.share", "com.example.helper", "org.example.agent"]
+        )
+    }
+
     func test_generic_artifacts_do_not_turn_other_install_locations_into_apps() throws {
         for target in [
             "/Library/Verified.app", "/Applications/Suite/Verified.app", "/Applications/../Library/Verified.app",

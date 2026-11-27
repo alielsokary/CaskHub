@@ -43,6 +43,7 @@ final class CaskCatalogSortTests: XCTestCase {
             isOutdated: hasAvailableUpdate,
             isZombie: false,
             canOpen: true,
+            isIPhoneIPadApp: false,
             retirement: nil,
             foreignInstallationSource: nil
         )
@@ -376,7 +377,7 @@ extension CaskCatalogSortTests {
         let categories = CategoryService()
         let data = Data(#"{"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{}}"#.utf8)
         var catalog = try JSONDecoder().decode(CaskCategoryData.self, from: data)
-        let invalid = ["", "invalid_id", "white space", "path/app", "trailing\n", ".leading", "double..dot"]
+        let invalid = ["", " padded", "two  spaces", "path/app", "trailing\n", ".leading", "double..dot"]
         catalog.appIdentities = ["blockbench": invalid.map {
             CaskAppIdentity(bundleName: "Blockbench.app", bundleIdentifier: $0)
         } + [CaskAppIdentity(bundleName: "Unrelated.app", bundleIdentifier: "blockbench")]]
@@ -386,10 +387,25 @@ extension CaskCatalogSortTests {
     }
 
     @MainActor
+    func test_catalog_identity_applies_when_caskflow_cases_the_app_name_differently() throws {
+        let categories = CategoryService()
+        let data = Data(#"{"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{}}"#.utf8)
+        var catalog = try JSONDecoder().decode(CaskCategoryData.self, from: data)
+        catalog.appIdentities = ["apipost": [CaskAppIdentity(bundleName: "ApiPost.app", bundleIdentifier: "com.apipost.desktop")]]
+        categories.applyData(catalog)
+
+        let cask = categories.addingAppIdentities(to: [makeCask("apipost", appNames: ["Apipost.app"])])[0]
+
+        XCTAssertEqual(cask.applicationBundleIdentifiers, ["com.apipost.desktop"])
+    }
+
+    @MainActor
     func test_catalog_fetch_registers_manifest_identity_with_the_real_app_scanner() async throws {
         for (token, name, identifier, store) in [
             ("example", "Example.app", "org.example.mail", true),
             ("blockbench", "Blockbench.app", "blockbench", false),
+            ("bria", "Bria.app", "com.CounterPath_Corporation.Bria", false),
+            ("youtube-to-mp3", "YouTube to MP3.app", "com.mediahuman.YouTube to MP3", false),
             ("aigcpanel", "AigcPanel.app", "AigcPanel", false)
         ] {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("manifest-\(UUID().uuidString)")

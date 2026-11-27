@@ -150,6 +150,37 @@ final class CaskOperationProgressTests: XCTestCase {
         XCTAssertNil(update.byteProgress)
     }
 
+    func test_phase_parser_reads_homebrew_7_fetch_headings() {
+        XCTAssertEqual(BrewProgressParser.parse("==> Fetching mole-app from homebrew/cask").phase, .connecting)
+        XCTAssertEqual(BrewProgressParser.parse("==> Fetching downloads for: mole-app").phase, .verifying)
+        XCTAssertNil(BrewProgressParser.parse("==> Fetching dependency downloads").phase)
+    }
+
+    @MainActor
+    func test_fetch_connects_until_bytes_arrive_then_install_step_verifies() async {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("fetch-heading-progress"))
+        service.mutationCoordinator.beginOperation(.installing, token: "mole-app", displayName: "Mole")
+        func phase(after output: String) async -> CaskOperationPhase? {
+            service.mutationCoordinator.consumeBrewOutput(output, token: "mole-app")
+            await service.mutationCoordinator.awaitPendingOutput()
+            return service.operationStore.state(for: "mole-app")?.progress?.phase
+        }
+
+        let connecting = await phase(after: "==> Fetching mole-app from homebrew/cask\n")
+        XCTAssertEqual(connecting, .connecting)
+        XCTAssertFalse(CaskOperationPhase.connecting.isDownloadActivity, "no bytes yet, so the capsule keeps the spinner")
+        XCTAssertEqual(
+            service.operationStore.state(for: "mole-app")?.progress?.inlineLabel,
+            "\(CaskOperationPhase.connecting.label(for: .installing))…"
+        )
+        let downloading = await phase(after: "Cask mole-app    ##    Downloading    1.0MB/26.5MB\n")
+        XCTAssertEqual(downloading, .downloading)
+        let verifying = await phase(after: "✔︎ Cask mole-app (1.20.1)\n==> Fetching downloads for: mole-app\n")
+        XCTAssertEqual(verifying, .verifying)
+        let installing = await phase(after: "==> Installing Cask mole-app\n")
+        XCTAssertEqual(installing, .performing)
+    }
+
     @MainActor
     func test_brew_output_updates_download_phase_then_upgrade_phase() async {
         let service = LocalHomebrewService(defaults: makeScratchDefaults("update-progress"))
@@ -219,18 +250,20 @@ final class CaskOperationProgressTests: XCTestCase {
                 displayName: "Homebrew",
                 action: .updatingHomebrew,
                 phase: .performing
-            )
+            ),
+            CaskOperationProgress(token: "mole-app", displayName: "Mole", action: .installing, phase: .connecting)
         ]
 
-        let summary = String(localized: "\(3) operations in progress")
+        let summary = String(localized: "\(4) operations in progress")
         let downloading = CaskOperationPhase.downloading.label(for: .installing).lowercased()
+        let connecting = CaskOperationPhase.connecting.label(for: .installing).lowercased()
         let updating = CaskOperationPhase.performing.label(for: .updating).lowercased()
         let updatingHomebrew = CaskOperationPhase.performing
             .label(for: .updatingHomebrew)
             .lowercased()
         XCTAssertEqual(
             CaskOperationStatus.make(operations: operations, batch: nil)?.message,
-            "\(summary) · 1 \(downloading) · 1 \(updating) · 1 \(updatingHomebrew)"
+            "\(summary) · 1 \(downloading) · 1 \(connecting) · 1 \(updating) · 1 \(updatingHomebrew)"
         )
     }
 

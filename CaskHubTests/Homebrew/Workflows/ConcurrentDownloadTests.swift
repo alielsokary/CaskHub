@@ -99,6 +99,110 @@ final class ConcurrentDownloadTests: XCTestCase {
         }
     }
 
+    func test_fetch_stuck_connecting_gives_up_as_a_network_failure() async {
+        let executor = ControlledHomebrewCommandExecutor()
+        let service = makeService(executor, fetchStallTimeout: .milliseconds(50))
+        let install = Task { try? await service.install(token: "mole-app") }
+        await executor.waitForRequests(1)
+        service.mutationCoordinator.consumeBrewOutput("==> Fetching mole-app from homebrew/cask\n", token: "mole-app")
+        await service.mutationCoordinator.awaitPendingOutput()
+
+        await settle { executor.cancelledTokens == ["mole-app"] }
+        XCTAssertEqual(executor.cancelledTokens, ["mole-app"])
+        executor.finish("mole-app", exitCode: 130)
+        await install.value
+
+        let unreachable = HomebrewCommandFailure(arguments: [], exitCode: 130, diagnostic: "", kind: .networkFailure)
+        XCTAssertEqual(
+            service.operationStore.state(for: "mole-app")?.failure?.message,
+            LocalHomebrewError.brewCommandFailed(unreachable).errorDescription
+        )
+        XCTAssertEqual(executor.requests.map(\.arguments), [["fetch", "--cask", "mole-app"]])
+    }
+
+    func test_fetch_that_starts_downloading_in_time_is_left_alone() async {
+        let executor = ControlledHomebrewCommandExecutor()
+        let service = makeService(executor, fetchStallTimeout: .milliseconds(50))
+        let install = Task { try? await service.install(token: "mole-app") }
+        await executor.waitForRequests(1)
+        service.mutationCoordinator.consumeBrewOutput(
+            "==> Fetching mole-app from homebrew/cask\nCask mole-app    ##    Downloading    1.0MB/26.5MB\n",
+            token: "mole-app"
+        )
+        await service.mutationCoordinator.awaitPendingOutput()
+
+        try? await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(executor.cancelledTokens, [])
+        await finishEverything(executor, [install])
+        XCTAssertNil(service.operationStore.state(for: "mole-app"))
+    }
+
+    func test_fetch_blocked_by_a_parallel_portable_ruby_upgrade_waits_and_retries() async {
+        let executor = ControlledHomebrewCommandExecutor()
+        let service = makeService(executor, brewLockRetryInterval: .milliseconds(20))
+        let install = Task { try? await service.install(token: "zoom") }
+        await executor.waitForRequests(1)
+
+        executor.finish("zoom", exitCode: 1, output: Self.portableRubyLock)
+        await executor.waitForRequests(2)
+        XCTAssertNil(service.operationStore.state(for: "zoom")?.failure)
+        XCTAssertEqual(executor.running("fetch"), ["zoom"])
+
+        await finishEverything(executor, [install])
+        XCTAssertNil(service.operationStore.state(for: "zoom"))
+        XCTAssertEqual(executor.requests.map { $0.arguments.first }, ["fetch", "fetch", "install"])
+    }
+
+    func test_brew_lock_that_never_frees_gives_up_as_busy() async {
+        let executor = ControlledHomebrewCommandExecutor()
+        let service = makeService(
+            executor,
+            brewLockRetryInterval: .milliseconds(10),
+            brewLockWaitLimit: .milliseconds(60)
+        )
+        let install = Task { try? await service.install(token: "zoom") }
+        let deadline = Date().addingTimeInterval(5)
+        while service.operationStore.state(for: "zoom")?.failure == nil, Date() < deadline {
+            if executor.running("fetch") == ["zoom"] {
+                executor.finish("zoom", exitCode: 1, output: Self.portableRubyLock)
+            }
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+        await install.value
+
+        let busy = HomebrewCommandFailure(arguments: [], exitCode: 1, diagnostic: "", kind: .brewBusy)
+        XCTAssertEqual(
+            service.operationStore.state(for: "zoom")?.failure?.message,
+            LocalHomebrewError.brewCommandFailed(busy).errorDescription
+        )
+        XCTAssertGreaterThan(executor.requests.count, 1)
+        XCTAssertFalse(executor.requests.contains { $0.arguments.first == "install" })
+    }
+
+    func test_cancel_while_waiting_for_a_brew_lock_ends_clean() async {
+        let executor = ControlledHomebrewCommandExecutor()
+        let service = makeService(executor, brewLockRetryInterval: .seconds(30))
+        let install = Task { try? await service.install(token: "zoom") }
+        await executor.waitForRequests(1)
+        executor.finish("zoom", exitCode: 1, output: Self.portableRubyLock)
+
+        await settle {
+            service.cancelInstall(token: "zoom")
+            return service.operationStore.state(for: "zoom") == nil
+        }
+        await install.value
+        XCTAssertNil(service.operationStore.state(for: "zoom"))
+        XCTAssertEqual(executor.requests.count, 1)
+        XCTAssertEqual(executor.cancelledTokens, [])
+    }
+
+    private static let portableRubyLock = """
+        lockf: 200: already locked
+        Error: Another `brew vendor-install ruby` process is already running.
+        Please wait for it to finish or terminate it to continue.
+        Error: Failed to upgrade Homebrew Portable Ruby!
+        """
+
     func test_cancel_while_queued_needs_no_process_and_frees_the_turn() async {
         let executor = ControlledHomebrewCommandExecutor()
         let service = makeService(executor)
@@ -270,10 +374,17 @@ final class ConcurrentDownloadTests: XCTestCase {
     }
 
     private func makeService(
-        _ executor: ControlledHomebrewCommandExecutor, sharingLanesWithMaintenance: Bool = false
+        _ executor: ControlledHomebrewCommandExecutor,
+        sharingLanesWithMaintenance: Bool = false,
+        fetchStallTimeout: Duration = .seconds(50),
+        brewLockRetryInterval: Duration = .seconds(3),
+        brewLockWaitLimit: Duration = .seconds(600)
     ) -> LocalHomebrewService {
         LocalHomebrewService(defaults: makeScratchDefaults("concurrent-\(UUID().uuidString)")) {
             $0.fileManager = NoFilesFileManager()
+            $0.fetchStallTimeout = fetchStallTimeout
+            $0.brewLockRetryInterval = brewLockRetryInterval
+            $0.brewLockWaitLimit = brewLockWaitLimit
             $0.commandExecutor = executor
             $0.laneLimiter = sharingLanesWithMaintenance ? nil : HomebrewLaneLimiter(downloadLimit: 3)
             $0.softwareScanner = EmptyInstalledSoftwareScanner()
@@ -327,12 +438,12 @@ final class ControlledHomebrewCommandExecutor: HomebrewCommandExecuting {
         pending.filter { $0.request.arguments.first == subcommand }.map(\.request.token)
     }
 
-    func finish(_ token: String, exitCode: Int32 = 0, signalled: Bool = false) {
+    func finish(_ token: String, exitCode: Int32 = 0, signalled: Bool = false, output: String = "") {
         guard let index = pending.firstIndex(where: { $0.request.token == token }) else {
             return XCTFail("no running command for \(token)")
         }
         pending.remove(at: index).continuation.resume(
-            returning: BrewProcessResult(exitCode: exitCode, output: "", wasTerminatedBySignal: signalled)
+            returning: BrewProcessResult(exitCode: exitCode, output: output, wasTerminatedBySignal: signalled)
         )
     }
 

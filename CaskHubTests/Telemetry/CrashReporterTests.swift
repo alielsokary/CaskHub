@@ -233,7 +233,7 @@ final class CrashReporterTests: XCTestCase {
 
     // MARK: - Fingerprinting
 
-    func test_brew_failures_fingerprint_by_subcommand_and_failure_class() {
+    func test_brew_failures_group_by_area_class_and_subcommand() {
         let stranded = LocalHomebrewError.brewCommandFailed(
             args: ["upgrade", "--cask", "tabby"], exitCode: 1,
             stderr: "Error: tabby: It seems there is already an App at "
@@ -241,7 +241,7 @@ final class CrashReporterTests: XCTestCase {
         )
         XCTAssertEqual(
             SentryProvider.fingerprint(for: stranded),
-            ["brewCommandFailed", "upgrade", "stranded-caskroom-app"]
+            ["Homebrew.StrandedCaskroomApp", "upgrade"]
         )
 
         let missingBinary = LocalHomebrewError.brewCommandFailed(
@@ -251,8 +251,45 @@ final class CrashReporterTests: XCTestCase {
         )
         XCTAssertEqual(
             SentryProvider.fingerprint(for: missingBinary),
-            ["brewCommandFailed", "install", "missing-artifact-source"]
+            ["Homebrew.MissingArtifactSource", "install"]
         )
+    }
+
+    func test_reported_error_names_the_issue_by_area_and_class() {
+        let conflict = LocalHomebrewError.brewCommandFailed(
+            args: ["install", "--cask", "t3-code"], exitCode: 1,
+            stderr: "==> Fetching t3-code from homebrew/cask\n"
+                + "Error: It seems there is already an App at '/Applications/T3 Code (Beta).app'."
+        )
+        let reported = SentryProvider.reportedError(conflict) as NSError
+        XCTAssertEqual(reported.domain, "Homebrew.AppConflict")
+        XCTAssertEqual(reported.code, 1)
+        XCTAssertEqual(
+            reported.userInfo[NSDebugDescriptionErrorKey] as? String,
+            "install · error: it seems there is already an app at '<path>"
+        )
+
+        let denied = LocalHomebrewError.brewCommandFailed(
+            args: ["upgrade", "--cask", "slack"], exitCode: 1,
+            stderr: "Error: CaskHub does not have App Management permissions."
+        )
+        XCTAssertEqual((SentryProvider.reportedError(denied) as NSError).domain, "Device.PermissionDenied")
+
+        let missingApp = SentryProvider.reportedError(
+            LocalHomebrewError.appBundleNotFound(token: "acme/tools/secret-app")
+        ) as NSError
+        XCTAssertEqual(missingApp.domain, "CaskHub.AppBundleNotFound")
+        XCTAssertFalse(missingApp.description.contains("secret-app"))
+        XCTAssertNil(SentryProvider.reportedError(URLError(.badURL)) as? LocalHomebrewError)
+    }
+
+    func test_only_device_and_network_failures_report_as_warnings() {
+        XCTAssertTrue(HomebrewFailureKind.permissionDenied.reportsAsWarning)
+        XCTAssertTrue(HomebrewFailureKind.downloadBroken.reportsAsWarning)
+        XCTAssertFalse(HomebrewFailureKind.packageUpgradeFailed.reportsAsWarning)
+        XCTAssertFalse(HomebrewFailureKind.appConflict.reportsAsWarning)
+        XCTAssertFalse(HomebrewFailureKind.unknown.reportsAsWarning)
+        XCTAssertFalse(HomebrewFailureKind.askpassUnavailable.reportsAsWarning)
     }
 
     private func cls(_ stderr: String) -> String {
@@ -407,7 +444,7 @@ final class CrashReporterTests: XCTestCase {
         )
         XCTAssertEqual(
             SentryProvider.fingerprint(for: killed),
-            ["brewCommandFailed", "install", "process-killed"]
+            ["Homebrew.ProcessKilled", "install"]
         )
         XCTAssertFalse(killed.isExplicitUserDecision)
     }
@@ -499,12 +536,10 @@ final class CrashReporterTests: XCTestCase {
 }
 
 extension CrashReporterTests {
-    func test_unknown_brew_diagnostics_share_one_issue_and_use_bounded_rate_buckets() throws {
+    func test_unknown_brew_failures_split_by_error_line_and_rate_limit_each() {
         let failures = [
             "renderer crashed before launch",
-            "helper returned an impossible state",
-            "catalog produced an invalid artifact",
-            "installer returned an undocumented response"
+            "helper returned an impossible state"
         ].map {
             LocalHomebrewError.brewCommandFailed(
                 args: ["install", "--cask", "example"],
@@ -512,19 +547,14 @@ extension CrashReporterTests {
                 stderr: "Error: \($0)"
             )
         }
-        let first = failures[0]
-        let firstSignature = try XCTUnwrap(first.commandFailure?.rateLimitSignature)
-        let second = try XCTUnwrap(failures.first {
-            $0.commandFailure?.rateLimitSignature != firstSignature
-        })
-        XCTAssertEqual(
-            SentryProvider.fingerprint(for: first),
-            SentryProvider.fingerprint(for: second)
+        XCTAssertNotEqual(
+            SentryProvider.fingerprint(for: failures[0]),
+            SentryProvider.fingerprint(for: failures[1])
         )
 
         for _ in 1...6 {
-            CrashReporter.capture(first)
-            CrashReporter.capture(second)
+            CrashReporter.capture(failures[0])
+            CrashReporter.capture(failures[1])
         }
 
         XCTAssertEqual(spy.capturedErrors.count, 10)

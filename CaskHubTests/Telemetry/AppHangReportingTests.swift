@@ -304,14 +304,54 @@ final class AppHangEventProcessorTests: XCTestCase {
         XCTAssertNotNil(processor.process(swiftUI))
         XCTAssertEqual(windowServer.tags?["app_hang.family"], "window-server")
         XCTAssertEqual(swiftUI.tags?["app_hang.family"], "swift-ui")
-        XCTAssertEqual(
-            windowServer.fingerprint,
-            ["{{ default }}", "app-hang", "window-server"]
-        )
-        XCTAssertEqual(
-            swiftUI.fingerprint,
-            ["{{ default }}", "app-hang", "swift-ui"]
-        )
+        XCTAssertEqual(windowServer.fingerprint, ["app-hang", "window-server", "SkyLight › AppKit"])
+        XCTAssertEqual(swiftUI.fingerprint, ["app-hang", "swift-ui", "SwiftUI"])
+    }
+
+    func test_hang_is_named_by_family_and_its_framework_chain() {
+        let processor = AppHangEventProcessor()
+        let event = makeAppHangEvent(packages: [
+            "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+            "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+            "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+            "/usr/lib/system/libdispatch.dylib",
+            "/System/Library/PrivateFrameworks/RenderBox.framework/Versions/A/RenderBox",
+            "/usr/lib/system/libdispatch.dylib",
+            "/usr/lib/system/libsystem_kernel.dylib"
+        ])
+
+        XCTAssertNotNil(processor.process(event))
+        XCTAssertEqual(event.exceptions?.first?.type, "CaskHub.GraphicsHang")
+        XCTAssertEqual(event.exceptions?.first?.value, "RenderBox › QuartzCore › AppKit")
+        XCTAssertEqual(event.exceptions?.first?.mechanism?.type, "AppHang")
+        XCTAssertEqual(event.fingerprint, ["app-hang", "graphics", "RenderBox › QuartzCore › AppKit"])
+        XCTAssertEqual(event.tags?["app_hang.frameworks"], "RenderBox › QuartzCore › AppKit")
+    }
+
+    func test_hang_with_little_free_memory_is_tagged() {
+        let processor = AppHangEventProcessor()
+        let starved = makeAppHangEvent(packages: ["/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit"])
+        starved.context = ["device": ["free_memory": NSNumber(value: 165_756_928)]]
+        let roomy = makeAppHangEvent(packages: ["/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit"])
+        roomy.context = ["device": ["free_memory": NSNumber(value: 3_758_604_288)]]
+
+        _ = processor.process(starved)
+        _ = processor.process(roomy)
+
+        XCTAssertEqual(starved.tags?["app_hang.low_memory"], "true")
+        XCTAssertNil(roomy.tags?["app_hang.low_memory"])
+    }
+
+    func test_app_code_hangs_keep_splitting_by_caskhub_function() {
+        let processor = AppHangEventProcessor()
+        let event = makeAppHangEvent(frames: [
+            ("/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI", false),
+            ("/Applications/CaskHub.app/Contents/MacOS/CaskHub", true)
+        ])
+
+        XCTAssertNotNil(processor.process(event))
+        XCTAssertEqual(event.exceptions?.first?.type, "CaskHub.AppCodeHang")
+        XCTAssertEqual(event.fingerprint, ["{{ default }}", "app-hang", "app-code"])
     }
 
     func test_youngest_app_frame_wins_over_swiftui_ancestor() {
