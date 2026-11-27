@@ -19,6 +19,8 @@ final class HomebrewMutationCoordinator {
     private let lanes: HomebrewLaneLimiter
     private var heldLanes: [String: HomebrewLaneLimiter.Lane] = [:]
     private let stallWatchdog: FetchStallWatchdog
+    private let failureReporter: HomebrewFailureReporter
+    private let lockWait: BrewLockWait
 
     init(
         operationStore: CaskOperationStore,
@@ -27,7 +29,8 @@ final class HomebrewMutationCoordinator {
         askpassProvider: @escaping @Sendable (String) async throws -> URL,
         fileManager: FileManager,
         lanes: HomebrewLaneLimiter,
-        fetchStallTimeout: Duration
+        fetchStallTimeout: Duration,
+        lockWait: BrewLockWait
     ) {
         self.operationStore = operationStore
         self.commandExecutor = commandExecutor
@@ -37,6 +40,8 @@ final class HomebrewMutationCoordinator {
         self.lanes = lanes
         outputAggregator = BrewOutputAggregator(fileManager: fileManager)
         stallWatchdog = FetchStallWatchdog(timeout: fetchStallTimeout, operationStore: operationStore, commandExecutor: commandExecutor)
+        failureReporter = HomebrewFailureReporter(operationStore: operationStore)
+        self.lockWait = lockWait
     }
 
     /// Runs a multi-command workflow as one logical mutation. The current
@@ -46,19 +51,12 @@ final class HomebrewMutationCoordinator {
         _ request: HomebrewMutationSequenceRequest,
         callbacks: HomebrewMutationCallbacks
     ) async throws {
-        guard operationStore.canBeginOperation(
-            request.action,
-            for: request.token
-        ) else { return }
+        guard operationStore.canBeginOperation(request.action, for: request.token) else { return }
         try preflightBrewLocation(
             request: request,
             strandedCopyExists: callbacks.strandedCopyExists
         )
-        beginOperation(
-            request.action,
-            token: request.token,
-            displayName: request.displayName
-        )
+        beginOperation(request.action, token: request.token, displayName: request.displayName)
         Analytics.caskActionStarted(
             request.action,
             token: request.token,
@@ -104,12 +102,15 @@ extension HomebrewMutationCoordinator {
     private func run(_ step: HomebrewMutationStep, token: String) async throws {
         if operationStore.state(for: token)?.cancellationRequested == true { throw CancellationError() }
         if heldLanes[token] != step.lane { try await enter(step, token: token) }
-        try await executeStreaming(
-            token: token,
-            arguments: step.arguments,
-            cancellable: step.cancellation == .untilPerforming,
-            environmentOverrides: step.environmentOverrides
-        )
+        try await lockWait.retry(token: token, cancellable: step.cancellation != .never) {
+            clearOperationResources(token: token)
+            try await executeStreaming(
+                token: token,
+                arguments: step.arguments,
+                cancellable: step.cancellation == .untilPerforming,
+                environmentOverrides: step.environmentOverrides
+            )
+        }
     }
 
     private func enter(_ step: HomebrewMutationStep, token: String) async throws {
@@ -212,7 +213,7 @@ extension HomebrewMutationCoordinator {
                 error: error,
                 strandedCopyExists: strandedCopyExists()
             )
-            recordUnrecoveredFailure(error, request: request, span: nil)
+            failureReporter.record(error, request: request, span: nil, strandedCopyExists: false, occupant: nil)
             throw error
         }
     }
@@ -286,7 +287,7 @@ extension HomebrewMutationCoordinator {
 
     func cancel(token: String) {
         guard operationStore.state(for: token)?.canCancel == true,
-              lanes.cancelWaiting(token: token) || commandExecutor.cancel(token: token)
+              lanes.cancelWaiting(token: token) || lockWait.isWaiting(token) || commandExecutor.cancel(token: token)
         else { return }
         operationStore.send(.requestCancellation, for: token)
     }
@@ -384,11 +385,12 @@ extension HomebrewMutationCoordinator {
             }
         }
 
-        recordUnrecoveredFailure(error, request: request, span: span)
+        let stranded = callbacks.strandedCopyExists()
+        failureReporter.record(error, request: request, span: span, strandedCopyExists: stranded, occupant: callbacks.conflictOccupant)
         recordFailure(
             token: request.token,
             error: error,
-            strandedCopyExists: callbacks.strandedCopyExists(),
+            strandedCopyExists: stranded,
             title: request.action == .updatingHomebrew ? String(localized: "Homebrew Update Failed") : nil
         )
         // A staged replacement may already have removed the Homebrew receipt.
@@ -402,40 +404,6 @@ extension HomebrewMutationCoordinator {
     private enum FailureResolution: Equatable {
         case continueSequence
         case stopSequence
-    }
-
-    private func recordUnrecoveredFailure(
-        _ error: Error,
-        request: HomebrewMutationSequenceRequest,
-        span: CrashSpan?
-    ) {
-        span?.finish(error: error)
-        let localError = error as? LocalHomebrewError
-        Analytics.caskActionFailed(
-            request.action,
-            token: request.token,
-            origin: request.origin,
-            failureKind: localError?.failureKind
-        )
-        guard HomebrewIssuePolicy.shouldCapture(
-            error,
-            action: request.action,
-            context: request.context
-        ) else { return }
-        CrashReporter.capture(error, tags: failureTags(for: request))
-    }
-
-    private func failureTags(
-        for request: HomebrewMutationSequenceRequest
-    ) -> [String: String] {
-        var tags = request.context.telemetryTags
-        tags["brew.action"] = request.action.identifier
-        tags["brew.cask"] = CaskReference.analyticsName(request.token)
-        tags["brew.origin"] = request.origin.rawValue
-        if operationStore.state(for: request.token)?.cancellationRequested == true {
-            tags["brew.cancellation_requested"] = "true"
-        }
-        return tags
     }
 
     /// Brew disagreeing about install state means the snapshot is stale.

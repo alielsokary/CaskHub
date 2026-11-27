@@ -185,70 +185,6 @@ struct NoOpCrashSpan: CrashSpan {
 
 // MARK: - Sentry
 
-nonisolated enum AppHangFamily: String, Sendable {
-    case appCode = "app-code"
-    case sentry
-    case sparkle
-    case swiftUI = "swift-ui"
-    case windowServer = "window-server"
-    case graphics
-    case appKit = "app-kit"
-    case system
-}
-
-nonisolated final class AppHangEventProcessor: Sendable {
-    private static let swiftUIFrameworks = ["swiftui", "attributegraph"]
-    private static let graphicsFrameworks = ["coregraphics", "metal", "renderbox"]
-
-    func process(_ event: Event) -> Event? {
-        guard let exception = event.exceptions?.first(where: {
-            $0.mechanism?.type == "AppHang"
-        }) else {
-            return event
-        }
-
-        let family = Self.family(
-            for: exception.stacktrace?.frames
-                ?? event.threads?.first(where: { $0.isMain?.boolValue == true })?
-                    .stacktrace?.frames
-                ?? []
-        )
-        var tags = event.tags ?? [:]
-        tags["app_hang.family"] = family.rawValue
-        event.tags = tags
-        event.fingerprint = (event.fingerprint ?? ["{{ default }}"])
-            + ["app-hang", family.rawValue]
-        return event
-    }
-
-    private static func family(for frames: [Frame]) -> AppHangFamily {
-        // Sentry stores native frames oldest-to-youngest. The youngest useful
-        // frame describes the work that was actually blocking the main thread.
-        for frame in frames.reversed() {
-            if frame.inApp?.boolValue == true {
-                return .appCode
-            }
-            guard let package = frame.package.map({
-                URL(fileURLWithPath: $0).lastPathComponent.lowercased()
-            }) else { continue }
-            if let family = family(forPackage: package) {
-                return family
-            }
-        }
-        return .system
-    }
-
-    private static func family(forPackage package: String) -> AppHangFamily? {
-        if package.contains("sentry") { return .sentry }
-        if package.contains("sparkle") { return .sparkle }
-        if swiftUIFrameworks.contains(where: package.contains) { return .swiftUI }
-        if package == "skylight" { return .windowServer }
-        if graphicsFrameworks.contains(where: package.contains) { return .graphics }
-        if package == "appkit" { return .appKit }
-        return nil
-    }
-}
-
 final class SentryProvider: CrashReporterProvider {
     private let dsn: () -> String?
     private let startSDK: (@escaping (Options) -> Void) -> Void
@@ -369,44 +305,46 @@ final class SentryProvider: CrashReporterProvider {
     }
 
     func capture(_ error: Error, tags: [String: String]) {
-        SentrySDK.capture(error: Self.sanitizedForReporting(error)) { scope in
+        SentrySDK.capture(error: Self.reportedError(error)) { scope in
             if let fingerprint = Self.fingerprint(for: error) {
                 scope.setFingerprint(fingerprint)
             }
             for (key, value) in tags {
                 scope.setTag(value: value, key: key)
             }
+            if error is StrandedCopyDetected { scope.setLevel(.warning) }
             guard let localError = error as? LocalHomebrewError else { return }
-            if let kind = localError.failureKind { scope.setTag(value: kind.rawValue, key: "brew.failure_class") }
+            if let kind = localError.failureKind {
+                scope.setTag(value: kind.rawValue, key: "brew.failure_class")
+                scope.setTag(value: kind.area.rawValue, key: "brew.area")
+                if kind.reportsAsWarning { scope.setLevel(.warning) }
+            }
             if case let .askpassUnavailable(stage, _) = localError {
                 scope.setTag(value: stage.rawValue, key: "brew.askpass_stage")
             }
             guard case let .brewCommandFailed(failure) = localError else { return }
             scope.setTag(value: failure.subcommand ?? "missing", key: "brew.subcommand")
             scope.setTag(value: String(failure.exitCode), key: "brew.exit_code")
-            if let value = failure.diagnosticBucket { scope.setTag(value: value, key: "brew.diagnostic_bucket") }
             if let report = failure.diagnosticReport {
                 scope.setTag(value: report.headline, key: "brew.diagnostic_headline")
                 scope.setContext(value: ["diagnostic": report.text], key: "brew")
             }
         }
     }
-    static func sanitizedForReporting(_ error: Error) -> any Error {
-        if case let LocalHomebrewError.appBundleNotFound(token) = error {
-            return LocalHomebrewError.appBundleNotFound(token: CaskReference.analyticsName(token))
-        }
-        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
-            return error
-        }
-        return LocalHomebrewError.brewCommandFailed(HomebrewCommandFailure(
-            arguments: failure.subcommand.map { [$0] } ?? [],
-            exitCode: failure.exitCode,
-            diagnostic: "",
-            kind: failure.kind
-        ))
+    /// Names the issue `Area.Class` (e.g. `Homebrew.AppConflict`) with `<command> · <cleaned Error line>`.
+    static func reportedError(_ error: Error) -> any Error {
+        guard let localError = error as? LocalHomebrewError, let kind = localError.failureKind else { return error }
+        let failure = localError.commandFailure
+        let detail = [failure?.subcommand, failure?.normalizedHeadline]
+            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        let userInfo = detail.isEmpty ? [:] : [NSDebugDescriptionErrorKey: detail]
+        return NSError(domain: kind.issueType, code: Int(failure?.exitCode ?? 0), userInfo: userInfo)
     }
 
     static func fingerprint(for error: Error) -> [String]? {
+        if let stranded = error as? StrandedCopyDetected {
+            return [StrandedCopyDetected.errorDomain, stranded.subcommand, stranded.failureKind?.rawValue ?? "unknown"]
+        }
         guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
             return nil
         }
