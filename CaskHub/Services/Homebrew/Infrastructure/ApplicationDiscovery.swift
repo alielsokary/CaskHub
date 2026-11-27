@@ -110,6 +110,16 @@ nonisolated struct ApplicationDiscovery: Sendable {
     }
 }
 
+extension ApplicationDiscovery {
+    /// App Store iPhone/iPad apps on a Mac keep their bundle behind `WrappedBundle` instead of `Contents`.
+    func conflictOccupant(at path: URL, caskIdentifiers: Set<String>, fileManager: FileManager) -> AppConflictOccupant {
+        if fileManager.fileExists(atPath: path.appendingPathComponent("WrappedBundle").path) { return .iPhoneIPadApp }
+        guard let identifier = metadata(at: path, fileManager: fileManager)?.bundleIdentifier else { return .unreadable }
+        return ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array(caskIdentifiers))
+            ? .sameIdentifier : .otherIdentifier
+    }
+}
+
 nonisolated struct ApplicationOwnershipResolver: Sendable {
     /// Assigns each directly installed application to at most one cask.
     /// Installed Homebrew casks claim their bundles before external

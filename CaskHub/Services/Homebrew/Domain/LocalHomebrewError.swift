@@ -5,7 +5,6 @@
 //  Created by Ali Elsokary on 10/08/2026.
 //
 
-import CryptoKit
 import Foundation
 
 nonisolated enum AskpassFailureStage: String, Sendable {
@@ -53,17 +52,21 @@ nonisolated enum HomebrewDiagnosticRedactor {
             (#"(\w+://[^\s?'"]+)\?[^\s'"`]*"#, "$1?<query>"),
             (#"/Users/[^/\s'"`]+"#, "/Users/<user>"),
             (#"(?<![\w.%+-])(?!git@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#, "<email>"),
-            (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, "<token>")
+            (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, "<token>"),
+            (#"(?i)(authorization:\s*)[^\r\n]+"#, "$1<redacted>"),
+            (#"(?i)\b(bearer\s+)[^\s'"`]+"#, "$1<redacted>"),
+            (#"(?i)\b((?:set-)?cookie|[a-z-]*-key|[a-z-]*-authorization|api[_-]?key|access[_-]?token"#
+                + #"|token|secret|passw(?:or)?d)([ \t]*[:=][ \t]*)[^\s'"`]+"#, "$1$2<redacted>"),
+            (#"\b[A-Za-z0-9_]{40,}\b"#, "<token>")
         ].reduce(diagnostic) { $0.replacingOccurrences(of: $1.0, with: $1.1, options: .regularExpression) }
-        let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        guard let line = lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first else { return nil }
+        guard let line = headline(text) else { return nil }
         return (String(line.prefix(200)), String(text.suffix(8000)))
     }
 
-    static func bucket(_ diagnostic: String, token: String?) -> String {
-        let digest = SHA256.hash(data: Data(normalized(diagnostic, token: token).utf8))
-        let firstByte = digest.prefix(1).reduce(UInt8.zero) { _, byte in byte }
-        return String(Int(firstByte & 31))
+    /// brew's final `Error:` line, or the first line when it printed none.
+    static func headline(_ text: String) -> String? {
+        let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        return lines.first(where: { $0.hasPrefix("Error:") }) ?? lines.first
     }
 }
 
