@@ -110,6 +110,16 @@ nonisolated struct ApplicationDiscovery: Sendable {
     }
 }
 
+extension ApplicationDiscovery {
+    /// App Store iPhone/iPad apps on a Mac keep their bundle behind `WrappedBundle` instead of `Contents`.
+    func conflictOccupant(at path: URL, caskIdentifiers: Set<String>, fileManager: FileManager) -> AppConflictOccupant {
+        if fileManager.fileExists(atPath: path.appendingPathComponent("WrappedBundle").path) { return .iPhoneIPadApp }
+        guard let identifier = metadata(at: path, fileManager: fileManager)?.bundleIdentifier else { return .unreadable }
+        return ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array(caskIdentifiers))
+            ? .sameIdentifier : .otherIdentifier
+    }
+}
+
 nonisolated struct ApplicationOwnershipResolver: Sendable {
     /// Assigns each directly installed application to at most one cask.
     /// Installed Homebrew casks claim their bundles before external
@@ -161,12 +171,13 @@ nonisolated struct ApplicationOwnershipResolver: Sendable {
     ) -> ApplicationCaskSignature? {
         guard let identifier = application.bundleIdentifier else { return nil }
 
-        let exactMatches = candidates.filter { signature in
-            ApplicationIdentityMatcher.applicationBundleIdentifier(
-                identifier, matchesAny: Array(signature.bundleIdentifiers)
-            )
+        for identifiers in [\ApplicationCaskSignature.bundleIdentifiers, \.hintedBundleIdentifiers] {
+            let exactMatches = candidates.filter {
+                ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array($0[keyPath: identifiers]))
+            }
+            if !exactMatches.isEmpty { return exactMatches.count == 1 ? exactMatches[0] : nil }
         }
-        return exactMatches.count == 1 ? exactMatches[0] : nil
+        return nil
     }
 
     private static func normalizedApplicationName(_ name: String) -> String {

@@ -132,31 +132,6 @@ nonisolated struct HomebrewCommandFailure: Equatable, Sendable {
     var subcommand: String? {
         arguments.first
     }
-
-    var stableFingerprint: [String]? {
-        guard let subcommand else { return nil }
-        return ["brewCommandFailed", subcommand, kind.rawValue]
-    }
-
-    var diagnosticBucket: String? {
-        guard kind == .unknown else { return nil }
-        return HomebrewDiagnosticRedactor.bucket(diagnostic, token: redactedName)
-    }
-
-    var diagnosticReport: (headline: String, text: String)? { kind == .unknown ? HomebrewDiagnosticRedactor.report(diagnostic) : nil }
-
-    private var redactedName: String? {
-        arguments.first == "untap" ? arguments.last : arguments.drop(while: { $0 != "--cask" }).dropFirst().first
-    }
-
-    var rateLimitSignature: String {
-        var components = stableFingerprint
-            ?? ["brewCommandFailed", "missing-subcommand", kind.rawValue]
-        if let diagnosticBucket {
-            components.append("bucket-\(diagnosticBucket)")
-        }
-        return components.joined(separator: ":")
-    }
 }
 
 nonisolated extension HomebrewCommandFailure {
@@ -254,6 +229,7 @@ nonisolated extension HomebrewCommandFailure {
             return .brewArchitectureMismatch
         }
         return firstMatch(in: text, [
+            Match(fragments: ["another `brew ", "process is already running"], kind: .brewBusy), // beats the Ruby line it causes
             Match(fragments: ["failed to download ruby"], kind: .portableRubyUnavailable),
             Match(
                 fragments: ["failed to upgrade homebrew portable ruby"],

@@ -135,9 +135,9 @@ final class CategoryService {
                 grouping: identities.filter { $0.verifiesPackageApp(for: cask) },
                 by: \.bundleName
             ).mapValues { $0.map(\.bundleIdentifier) }
-            let names = Set(enriched.appArtifactNames + enriched.packageAppNameCandidates)
+            let names = Set((enriched.appArtifactNames + enriched.packageAppNameCandidates).map { $0.lowercased() })
             enriched.catalogBundleIdentifiers = identities.filter {
-                names.contains($0.bundleName)
+                names.contains($0.bundleName.lowercased())
             }.map(\.bundleIdentifier)
             enriched.catalogPackageCandidates = validPackageIdentities(packageAppCandidates[cask.token] ?? [], for: cask)
             enriched.catalogPackageProducts = cask.hasPackageArtifact ? packageProductIdentities[cask.token].map {
