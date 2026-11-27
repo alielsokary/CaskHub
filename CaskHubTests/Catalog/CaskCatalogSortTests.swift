@@ -377,7 +377,7 @@ extension CaskCatalogSortTests {
         let categories = CategoryService()
         let data = Data(#"{"version":2,"generatedDate":"2026-09-05","categories":{},"tokenToCategory":{}}"#.utf8)
         var catalog = try JSONDecoder().decode(CaskCategoryData.self, from: data)
-        let invalid = ["", "invalid_id", "white space", "path/app", "trailing\n", ".leading", "double..dot"]
+        let invalid = ["", " padded", "two  spaces", "path/app", "trailing\n", ".leading", "double..dot"]
         catalog.appIdentities = ["blockbench": invalid.map {
             CaskAppIdentity(bundleName: "Blockbench.app", bundleIdentifier: $0)
         } + [CaskAppIdentity(bundleName: "Unrelated.app", bundleIdentifier: "blockbench")]]
@@ -404,6 +404,8 @@ extension CaskCatalogSortTests {
         for (token, name, identifier, store) in [
             ("example", "Example.app", "org.example.mail", true),
             ("blockbench", "Blockbench.app", "blockbench", false),
+            ("bria", "Bria.app", "com.CounterPath_Corporation.Bria", false),
+            ("youtube-to-mp3", "YouTube to MP3.app", "com.mediahuman.YouTube to MP3", false),
             ("aigcpanel", "AigcPanel.app", "AigcPanel", false)
         ] {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("manifest-\(UUID().uuidString)")

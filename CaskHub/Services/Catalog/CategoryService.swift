@@ -128,7 +128,7 @@ final class CategoryService {
             enriched.catalogIsCLI = cliTokens.contains(cask.token)
             let identities = (appIdentities[cask.token] ?? []).filter {
                 $0.bundleIdentifier.range(
-                    of: #"\A[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\z"#, options: .regularExpression
+                    of: Self.bundleIdentifierPattern, options: .regularExpression
                 ) != nil
             }
             enriched.catalogPackageAppIdentifiers = Dictionary(
@@ -156,10 +156,13 @@ final class CategoryService {
             )
             return identity.verifiesPackageApp(for: cask)
                 && candidate.bundleIdentifier.range(
-                    of: #"\A[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\z"#, options: .regularExpression
+                    of: Self.bundleIdentifierPattern, options: .regularExpression
                 ) != nil
         }
     }
+
+    /// Shipping apps use underscores and single inner spaces (com.mediahuman.YouTube to MP3); matching is exact.
+    private static let bundleIdentifierPattern = #"\A[A-Za-z0-9_-]+(?: [A-Za-z0-9_-]+)*(?:\.[A-Za-z0-9_-]+(?: [A-Za-z0-9_-]+)*)*\z"#
 
     /// Fonts are identified by token, so CaskHub supplies this category itself.
     static let fontsCategoryID: CategoryID = "fonts"
