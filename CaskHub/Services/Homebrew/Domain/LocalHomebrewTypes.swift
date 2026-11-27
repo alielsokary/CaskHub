@@ -81,6 +81,8 @@ nonisolated struct ApplicationCaskSignature: Sendable {
     let token: String
     let appBundleNames: Set<String>
     let bundleIdentifiers: Set<String>
+    /// Read from zap and uninstall paths; they decide only when no verified identifier matches.
+    let hintedBundleIdentifiers: Set<String>
 }
 
 nonisolated struct MacAppStoreCaskSignature: Sendable {

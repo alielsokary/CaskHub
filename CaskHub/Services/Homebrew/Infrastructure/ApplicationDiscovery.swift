@@ -161,12 +161,13 @@ nonisolated struct ApplicationOwnershipResolver: Sendable {
     ) -> ApplicationCaskSignature? {
         guard let identifier = application.bundleIdentifier else { return nil }
 
-        let exactMatches = candidates.filter { signature in
-            ApplicationIdentityMatcher.applicationBundleIdentifier(
-                identifier, matchesAny: Array(signature.bundleIdentifiers)
-            )
+        for identifiers in [\ApplicationCaskSignature.bundleIdentifiers, \.hintedBundleIdentifiers] {
+            let exactMatches = candidates.filter {
+                ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array($0[keyPath: identifiers]))
+            }
+            if !exactMatches.isEmpty { return exactMatches.count == 1 ? exactMatches[0] : nil }
         }
-        return exactMatches.count == 1 ? exactMatches[0] : nil
+        return nil
     }
 
     private static func normalizedApplicationName(_ name: String) -> String {
