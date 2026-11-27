@@ -9233,6 +9233,34 @@
         }
       }
     },
+    "Mac App Store (iPhone/iPad app)" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac App Store (приложение для iPhone/iPad)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac App Store (програма для iPhone/iPad)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac App Store（iPhone/iPad 应用）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac App Store（iPhone/iPad App）"
+          }
+        }
+      }
+    },
     "Made with ❤️ by Ali Elsokary" : {
       "shouldTranslate" : false
     },

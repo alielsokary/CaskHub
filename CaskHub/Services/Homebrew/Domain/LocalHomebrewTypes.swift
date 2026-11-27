@@ -12,6 +12,7 @@ nonisolated struct ApplicationBundleMetadata {
     let version: String?
     let shortVersion: String?
     let buildVersion: String?
+    let isIPhoneIPadApp: Bool
 }
 
 nonisolated struct DetectedApplication: Hashable, Sendable {
@@ -23,6 +24,8 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
     let shortVersion: String?
     let buildVersion: String?
     let isMacAppStore: Bool
+    /// An App Store iPhone/iPad build running on Apple silicon, read through its `WrappedBundle`.
+    let isIPhoneIPadApp: Bool
     let isDirectlyInApplicationDirectory: Bool
     let installedAt: Date?
     let lastUpdatedAt: Date?
@@ -35,6 +38,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         shortVersion: String?,
         buildVersion: String?,
         isMacAppStore: Bool,
+        isIPhoneIPadApp: Bool,
         isDirectlyInApplicationDirectory: Bool,
         installedAt: Date? = nil,
         lastUpdatedAt: Date? = nil
@@ -46,6 +50,7 @@ nonisolated struct DetectedApplication: Hashable, Sendable {
         self.shortVersion = shortVersion
         self.buildVersion = buildVersion
         self.isMacAppStore = isMacAppStore
+        self.isIPhoneIPadApp = isIPhoneIPadApp
         self.isDirectlyInApplicationDirectory = isDirectlyInApplicationDirectory
         self.installedAt = installedAt
         self.lastUpdatedAt = lastUpdatedAt
@@ -237,6 +242,7 @@ nonisolated struct CaskLocalState: Equatable, Sendable {
     let isOutdated: Bool
     let isZombie: Bool
     let canOpen: Bool
+    let isIPhoneIPadApp: Bool
     let retirement: CaskRetirement?
     /// Set when a same-token twin from another source owns the Caskroom entry.
     let foreignInstallationSource: String?

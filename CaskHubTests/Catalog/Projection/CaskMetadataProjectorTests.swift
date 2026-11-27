@@ -112,6 +112,14 @@ final class CaskMetadataProjectorTests: XCTestCase {
         XCTAssertNil(values[String(localized: "Last Updated")])
     }
 
+    func test_info_projection_names_an_app_store_iphone_ipad_app() {
+        let dates = CaskInstallationDates(installedAt: nil, lastUpdatedAt: nil, basis: .applicationBundleAttributes)
+
+        let values = valuesByProperty(makeRows(source: .macAppStore, dates: dates, isIPhoneIPadApp: true))
+
+        XCTAssertEqual(values[String(localized: "Installed Via")], String(localized: "Mac App Store (iPhone/iPad app)"))
+    }
+
     func test_info_projection_shows_sha256_row_after_url() {
         let hex = String(repeating: "ab", count: 32)
         let rows = makeDownloadRows(sha256: hex)
@@ -179,6 +187,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
                     isOutdated: false,
                     isZombie: false,
                     canOpen: false,
+                    isIPhoneIPadApp: false,
                     retirement: nil,
                     foreignInstallationSource: nil
                 ),
@@ -193,7 +202,8 @@ final class CaskMetadataProjectorTests: XCTestCase {
 
     private func makeRows(
         source: CaskInstallationSource,
-        dates: CaskInstallationDates
+        dates: CaskInstallationDates,
+        isIPhoneIPadApp: Bool = false
     ) -> [CaskInfoRow] {
         let cask = makeCask("studio")
         let installation = source == .homebrew
@@ -225,7 +235,7 @@ final class CaskMetadataProjectorTests: XCTestCase {
             hasAvailableUpdate: false,
             isOutdated: false,
             isZombie: false,
-            canOpen: true,
+            canOpen: true, isIPhoneIPadApp: isIPhoneIPadApp,
             retirement: nil, foreignInstallationSource: nil
         )
         return CaskInfoProjector.makeRows(from: CaskInfoProjectionInput(

@@ -162,6 +162,27 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
         XCTAssertEqual(result["tailscale-app"], applications[1])
     }
 
+    func test_only_an_iphone_ipad_app_matches_a_store_cask_by_vendor() {
+        let signature = storeSignature(
+            token: "crosspaste", bundleName: "CrossPaste.app", hasPackage: false,
+            applicationIdentifiers: ["com.crosspaste.mac"]
+        )
+        func resolve(_ application: DetectedApplication) -> [String: DetectedApplication] {
+            InstallationIndexBuilder().resolveMacAppStoreApplications(
+                signatures: [signature], applications: [application], installedCasks: [:]
+            )
+        }
+        let mobile = makeDetectedApplication(
+            "CrossPaste.app", id: "com.crosspaste.ios", isMacAppStore: true, isIPhoneIPadApp: true
+        )
+
+        XCTAssertEqual(resolve(mobile), ["crosspaste": mobile])
+        XCTAssertTrue(resolve(makeDetectedApplication("CrossPaste.app", id: "com.crosspaste.lite", isMacAppStore: true)).isEmpty)
+        XCTAssertTrue(resolve(makeDetectedApplication(
+            "CrossPaste.app", id: "org.other.paste", isMacAppStore: true, isIPhoneIPadApp: true
+        )).isEmpty)
+    }
+
     func test_installation_index_excludes_brew_owned_tokens_and_indexes_cli_paths() {
         let installed = LocalCaskInstallation(
             token: "store-app",
