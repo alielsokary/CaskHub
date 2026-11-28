@@ -61,6 +61,7 @@ nonisolated struct CatalogFilteredProjectionInput {
     let installedDates: [String: Date]
     let searchKeys: [String: String]
     let nameRanks: [String: Int]
+    let savedCasks: [Cask]
 }
 
 private nonisolated struct LibraryMembership {
@@ -359,6 +360,8 @@ extension CatalogProjector {
             return input.library.homebrewInstalledCasks
         case .updates:
             return input.library.updatableCasks
+        case .saved:
+            return input.savedCasks
         case .adopt:
             return input.library.adoptableCasks
         case .taps:

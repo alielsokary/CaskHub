@@ -93,7 +93,8 @@ final class CaskCatalogSortTests: XCTestCase {
             addedDates: [:],
             installedDates: [:],
             searchKeys: [:],
-            nameRanks: [:]
+            nameRanks: [:],
+            savedCasks: []
         ))
 
         XCTAssertEqual(library.installedCasks.map(\.token), ["installed", "adoptable"])

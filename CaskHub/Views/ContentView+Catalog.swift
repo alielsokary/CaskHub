@@ -30,6 +30,8 @@ extension ContentView {
     var catalogContent: some View {
         if selectedSidebar == .library(.taps) {
             tapsContent
+        } else if selectedSidebar == .library(.saved), viewModel.savedCasks.isEmpty {
+            SavedEmptyStateView()
         } else {
             switch viewMode {
             case .grid:

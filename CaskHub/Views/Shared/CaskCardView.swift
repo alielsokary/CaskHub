@@ -81,7 +81,10 @@ struct CaskCardView: View {
             Spacer(minLength: 4)
 
             VStack(spacing: 8) {
-                infoButton
+                HStack(spacing: 8) {
+                    SaveCaskButton(cask: cask)
+                    infoButton
+                }
                 if showsTapBadges, let tap = cask.thirdPartyTap {
                     TapBadge(tap: tap)
                 }
