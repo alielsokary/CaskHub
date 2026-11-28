@@ -95,7 +95,55 @@ final class TapWorkflowTests: XCTestCase {
         XCTAssertTrue(sut.runner.requests.contains { $0.arguments.starts(with: ["install", "--cask", "figma"]) })
     }
 
-    func test_update_and_uninstall_never_prompt() async throws {
+    func test_uninstall_of_untrusted_tap_cask_trusts_it_only_after_confirmation() async throws {
+        let (sut, _) = try await loadedSillTap()
+
+        try await sut.service.uninstallRequestingTrust(token: "saffsanity/sill/sill", removingData: true)
+
+        XCTAssertTrue(sut.runner.requests.isEmpty)
+        let pending = try XCTUnwrap(sut.service.pendingTrustUninstall)
+        XCTAssertEqual(pending, PendingTrustUninstall(token: "saffsanity/sill/sill", removingData: true))
+
+        try await sut.service.confirmTrustedUninstall(pending)
+
+        XCTAssertNil(sut.service.pendingTrustUninstall)
+        let commands = sut.runner.requests.map(\.arguments).filter { ["trust", "uninstall"].contains($0.first) }
+        XCTAssertEqual(commands.first, ["trust", "--cask", "saffsanity/sill/sill"])
+        XCTAssertEqual(commands.dropFirst().first, sut.service.uninstallArguments(token: "saffsanity/sill/sill", removingData: true))
+        XCTAssertEqual(commands.count, 2)
+    }
+
+    func test_cancel_trusted_uninstall_runs_nothing() async throws {
+        let (sut, _) = try await loadedSillTap()
+
+        try await sut.service.uninstallRequestingTrust(token: "saffsanity/sill/sill", removingData: false)
+        sut.service.send(.cancelTrustedUninstall)
+
+        XCTAssertNil(sut.service.pendingTrustUninstall)
+        XCTAssertTrue(sut.runner.requests.isEmpty)
+    }
+
+    func test_uninstall_of_trusted_tap_and_official_casks_never_prompts() async throws {
+        let (sut, _) = try await loadedSillTap(trusted: true)
+        sut.trust = TapTrust(taps: [], casks: ["saffsanity/sill/sill"])
+
+        try await sut.service.uninstallRequestingTrust(token: "saffsanity/sill/sill", removingData: false)
+        try await sut.service.uninstallRequestingTrust(token: "figma", removingData: false)
+
+        XCTAssertNil(sut.service.pendingTrustUninstall)
+        let uninstalls = sut.runner.requests.map(\.arguments).filter { $0.first == "uninstall" }
+        XCTAssertEqual(uninstalls.map { $0.last }, ["saffsanity/sill/sill", "figma"])
+        XCTAssertFalse(sut.runner.requests.contains { $0.arguments.first == "trust" })
+    }
+
+    func test_trust_uninstall_prompt_names_the_cask_and_its_tap() {
+        let prompt = TrustUninstallPrompt(reference: "lab421/tap/forel")
+
+        XCTAssertEqual(prompt.title, "Trust and uninstall forel from lab421/tap?")
+        XCTAssertTrue(prompt.message.contains("lab421/tap"))
+    }
+
+    func test_update_never_prompts() async throws {
         let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": ["sill"]])])
         await sut.service.refreshTaps()
         updateInstalledCask(tapInstallation("sill", tap: "saffsanity/sill"), in: sut.service)

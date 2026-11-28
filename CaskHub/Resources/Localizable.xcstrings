@@ -261,6 +261,62 @@
         }
       }
     },
+    "Homebrew doesn't trust %@ and must load %@'s cask file from it to uninstall. Continuing lets that cask run code on this Mac." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew не доверяет %1$@, а для удаления ему нужно загрузить файл cask %2$@ оттуда. Если продолжить, этот cask сможет выполнить код на этом Mac."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew не довіряє %1$@, а для видалення йому потрібно завантажити файл cask %2$@ звідти. Якщо продовжити, цей cask зможе виконати код на цьому Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 不信任 %1$@，卸载时必须从中加载 %2$@ 的 Cask 文件。继续操作将允许该 Cask 在这台 Mac 上运行代码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 不信任 %1$@，解除安裝時必須從中載入 %2$@ 的 Cask 檔案。繼續操作將允許該 Cask 在這台 Mac 上執行程式碼。"
+          }
+        }
+      }
+    },
+    "Trust and uninstall %@ from %@?" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доверять и удалить %1$@ из %2$@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довіряти й видалити %1$@ з %2$@?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任并卸载来自 %2$@ 的 %1$@？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任並解除安裝來自 %2$@ 的 %1$@？"
+          }
+        }
+      }
+    },
     "`%@` failed (exit %d): %@" : {
       "localizations" : {
         "ru" : {

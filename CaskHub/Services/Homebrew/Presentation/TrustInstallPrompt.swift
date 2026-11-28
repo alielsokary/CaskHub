@@ -39,3 +39,26 @@ nonisolated struct TrustInstallPrompt: Equatable {
             """)
     }
 }
+
+nonisolated struct PendingTrustUninstall: Equatable, Sendable {
+    let token: String
+    let removingData: Bool
+}
+
+nonisolated struct TrustUninstallPrompt: Equatable {
+    let reference: String
+
+    private var name: String { TrustInstallPrompt.safeLabel(CaskReference.bareToken(reference)) }
+    private var source: String { TrustInstallPrompt.safeLabel(CaskReference.tap(of: reference) ?? "") }
+
+    var title: String {
+        String(localized: "Trust and uninstall \(name) from \(source)?")
+    }
+
+    var message: String {
+        String(localized: """
+            Homebrew doesn't trust \(source) and must load \(name)'s cask file from it to uninstall. \
+            Continuing lets that cask run code on this Mac.
+            """)
+    }
+}

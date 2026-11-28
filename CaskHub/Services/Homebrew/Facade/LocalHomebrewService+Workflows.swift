@@ -57,11 +57,7 @@ extension LocalHomebrewService {
         try await uninstall(token: token, removingData: zapOnUninstall)
     }
 
-    func uninstallKeepingData(token: String) async throws {
-        try await uninstall(token: token, removingData: false)
-    }
-
-    private func uninstall(token: String, removingData: Bool) async throws {
+    func uninstall(token: String, removingData: Bool) async throws {
         try await runMutation(
             .uninstalling,
             token: token,

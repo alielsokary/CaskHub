@@ -51,6 +51,33 @@ extension LocalHomebrewService {
         try await install(cask)
     }
 
+    /// brew trusts a tap cask on install but not on uninstall, so casks installed before tap trust existed can't be removed.
+    func uninstallRequestingTrust(token: String, removingData: Bool) async throws {
+        if CaskReference.tap(of: token) != nil {
+            tapIndex = TapIndex(taps: tapIndex.taps, casks: tapIndex.casks, trust: await tapTrustProvider())
+            guard tapIndex.trusts(token) else {
+                pendingTrustUninstall = PendingTrustUninstall(token: token, removingData: removingData)
+                return
+            }
+        }
+        try await uninstall(token: token, removingData: removingData)
+    }
+
+    /// brew drops the cask's trust again when the uninstall succeeds.
+    func confirmTrustedUninstall(_ request: PendingTrustUninstall) async throws {
+        pendingTrustUninstall = nil
+        defer { Task { await refreshTaps() } }
+        try await runMutationSequence(
+            .uninstalling,
+            token: request.token,
+            steps: [
+                .exclusive(["trust", "--cask", request.token], cancellation: .never),
+                .exclusive(uninstallArguments(token: request.token, removingData: request.removingData), cancellation: .never)
+            ],
+            origin: .individual
+        )
+    }
+
     func addTap(_ request: TapAddRequest) async throws {
         let token = Self.tapOperationToken(request.tapName)
         cancelledTapAdds.remove(request.tapName)

@@ -98,7 +98,7 @@ final class UninstallZapGateTests: XCTestCase {
         let service = makeService(runner: runner)
         service.setZapOnUninstall(true)
 
-        try await service.uninstallKeepingData(token: "zed")
+        try await service.uninstallRequestingTrust(token: "zed", removingData: false)
 
         XCTAssertEqual(runner.requests.map(\.arguments), [["uninstall", "--cask", "zed"]])
     }
