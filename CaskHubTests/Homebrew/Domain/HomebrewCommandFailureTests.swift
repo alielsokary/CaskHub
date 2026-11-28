@@ -273,7 +273,9 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
 
         XCTAssertEqual(failure.kind, .storageFull)
-        XCTAssertTrue(failure.kind.isNormallyExternal)
+        XCTAssertFalse(failure.kind.isNormallyExternal, "a full disk is reported to Sentry")
+        XCTAssertEqual(failure.kind.issueType, "Device.StorageFull")
+        XCTAssertTrue(failure.kind.reportsAsWarning)
     }
 
     func test_out_of_disk_extract_and_download_failures_are_storage_full() {

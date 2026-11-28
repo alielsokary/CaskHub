@@ -76,7 +76,6 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
              .platformUnsupported,
              .quarantineInvalid,
              .requireSHAPolicy,
-             .storageFull,
              .sudoNotAdmin,
              .sudoPolicyDenied:
             true

@@ -95,7 +95,18 @@ extension AnalyticsTests {
     }
 
     @MainActor
-    func test_askpass_disk_full_is_metric_only() async {
+    func test_brew_disk_full_is_reported() async {
+        let crashSpy = await runFailingService(
+            output: "Error: Could not write download to /tmp/x.zip.incomplete\n"
+                + "curl: (23) Failure writing output to destination, passed 16384 returned 0"
+        )
+
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "storage-full")
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+    }
+
+    @MainActor
+    func test_askpass_disk_full_is_reported() async {
         let crashSpy = await runFailingService(
             output: "",
             askpassError: .fileSystem(
@@ -105,7 +116,7 @@ extension AnalyticsTests {
         )
 
         XCTAssertEqual(lastSignal?.parameters["failureClass"], "storage-full")
-        XCTAssertTrue(crashSpy.capturedErrors.isEmpty)
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
         XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
     }
 
