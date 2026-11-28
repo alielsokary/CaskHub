@@ -197,7 +197,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
 
         XCTAssertEqual(error.commandFailure?.kind, .homebrewRuntimeIncompatible)
-        XCTAssertTrue(error.commandFailure?.kind.isNormallyExternal == true)
+        XCTAssertFalse(error.commandFailure?.kind.isNormallyExternal ?? true, "an outdated Homebrew is reported to Sentry")
         XCTAssertEqual(
             CaskOperationFailureFactory.make(
                 from: error,
@@ -273,7 +273,38 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
 
         XCTAssertEqual(failure.kind, .storageFull)
-        XCTAssertTrue(failure.kind.isNormallyExternal)
+        XCTAssertFalse(failure.kind.isNormallyExternal, "a full disk is reported to Sentry")
+        XCTAssertEqual(failure.kind.issueType, "Device.StorageFull")
+        XCTAssertTrue(failure.kind.reportsAsWarning)
+    }
+
+    func test_out_of_disk_extract_and_download_failures_are_storage_full() {
+        let extract = """
+        \tfrom /opt/homebrew/Library/Homebrew/sandbox_operation.rb:31:in '<main>'
+
+        Error: Not enough disk space to extract:
+          /private/tmp/homebrew-dmg20261127-3426-32qebu/mount
+        Free up space on the filesystems containing these directories:
+          /private/tmp
+        Then try again.
+        Error: imazing: Download failed for imazing.
+        """
+        let download = """
+        ==> Fetching downloads for: visual-studio-code
+        Error: Could not write download to /Users/me/Library/Caches/Homebrew/downloads/x--VSCode-darwin-arm64.zip.incomplete
+        Check that the destination has enough free disk space and is writable.
+        curl: (23) Failure writing output to destination, passed 16384 returned 0
+        Error: visual-studio-code: Download failed for visual-studio-code.
+        """
+        let unwritable = """
+        Error: Could not write download to /Users/me/Library/Caches/Homebrew/downloads/x--VSCode-darwin-arm64.zip.incomplete
+        Check that the destination has enough free disk space and is writable.
+        curl: (23) client returned ERROR on write of 821 bytes
+        """
+
+        XCTAssertEqual(HomebrewCommandFailure.classify(arguments: ["upgrade"], exitCode: 1, diagnostic: extract), .storageFull)
+        XCTAssertEqual(HomebrewCommandFailure.classify(arguments: ["install"], exitCode: 1, diagnostic: download), .storageFull)
+        XCTAssertNotEqual(HomebrewCommandFailure.classify(arguments: ["install"], exitCode: 1, diagnostic: unwritable), .storageFull)
     }
 
     func test_install_success_requires_the_exact_requested_cask() {

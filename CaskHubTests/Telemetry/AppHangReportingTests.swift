@@ -328,6 +328,24 @@ final class AppHangEventProcessorTests: XCTestCase {
         XCTAssertEqual(event.tags?["app_hang.frameworks"], "RenderBox › QuartzCore › AppKit")
     }
 
+    func test_hang_chain_skips_message_send_trampolines_but_keeps_the_swift_runtime() {
+        let processor = AppHangEventProcessor()
+        let msgSend = makeAppHangEvent(packages: [
+            "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+            "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+            "/usr/lib/libobjcMsgSend1.dylib"
+        ])
+        let swiftRuntime = makeAppHangEvent(packages: [
+            "/System/Library/Frameworks/SwiftUICore.framework/Versions/A/SwiftUICore",
+            "/usr/lib/swift/libswiftCore.dylib"
+        ])
+
+        XCTAssertNotNil(processor.process(msgSend))
+        XCTAssertNotNil(processor.process(swiftRuntime))
+        XCTAssertEqual(msgSend.tags?["app_hang.frameworks"], "AppKit › QuartzCore")
+        XCTAssertEqual(swiftRuntime.tags?["app_hang.frameworks"], "libswiftCore.dylib › SwiftUICore")
+    }
+
     func test_hang_with_little_free_memory_is_tagged() {
         let processor = AppHangEventProcessor()
         let starved = makeAppHangEvent(packages: ["/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit"])

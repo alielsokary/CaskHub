@@ -83,9 +83,13 @@ nonisolated struct InstallationIndexBuilder: Sendable {
 
         var result: [String: DetectedApplication] = [:]
         for application in applications where application.isMacAppStore {
-            let matches = (signaturesByBundleName[application.bundleName] ?? []).filter {
-                macAppStoreApplication(application, matches: $0)
-            }
+            let candidates = signaturesByBundleName[application.bundleName] ?? []
+            let verified = candidates.filter { macAppStoreApplication(application, matches: $0) }
+            let matches = verified.isEmpty ? candidates.filter { signature in
+                application.bundleIdentifier.map {
+                    ApplicationIdentityMatcher.applicationBundleIdentifier($0, matchesAny: signature.hintedApplicationBundleIdentifiers)
+                } ?? false
+            } : verified
             // Conflicting reviewed products remain unresolved, just like receipt matching.
             guard !matches.contains(where: \.isReviewedProduct) || matches.count == 1 else { continue }
             for signature in matches where result[signature.token] == nil {

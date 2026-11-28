@@ -74,7 +74,8 @@ nonisolated final class AppHangEventProcessor: Sendable {
         for frame in frames.reversed() {
             guard let package = frame.package else { continue }
             let name = URL(fileURLWithPath: package).lastPathComponent
-            guard !name.hasPrefix("libsystem_"), !plumbing.contains(name), !names.contains(name) else { continue }
+            guard !name.hasPrefix("libsystem_"), !name.hasPrefix("libobjcMsgSend"), !plumbing.contains(name),
+                  !names.contains(name) else { continue }
             names.append(name)
             if names.count == 3 { break }
         }

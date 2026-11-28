@@ -96,6 +96,7 @@ nonisolated struct MacAppStoreCaskSignature: Sendable {
     let hasPackageArtifact: Bool
     let isReviewedProduct: Bool
     let applicationBundleIdentifiers: [String]
+    let hintedApplicationBundleIdentifiers: [String]
     let packageIdentifiers: [String]
 }
 

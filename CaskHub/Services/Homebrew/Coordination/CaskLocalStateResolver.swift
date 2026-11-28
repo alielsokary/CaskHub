@@ -230,7 +230,7 @@ nonisolated struct CaskLocalStateResolver: Sendable {
         }
     }
 
-    private func launchableBundleNames(for cask: Cask) -> [String] {
+    func launchableBundleNames(for cask: Cask) -> [String] {
         let receiptNames = snapshot.installation(for: cask.reference)?.appBundleNames ?? []
         return receiptNames + externalBundleNameCandidates(for: cask)
     }
@@ -271,14 +271,16 @@ nonisolated struct CaskLocalStateResolver: Sendable {
         isIPhoneIPadApp: Bool,
         matches cask: Cask
     ) -> Bool {
+        let hinted = cask.catalogPackageProducts == nil
+            && ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: cask.bundleIdentifierHints)
         if !cask.storeBundleIdentifiers.isEmpty {
-            return ApplicationIdentityMatcher.storeApplication(
+            return hinted || ApplicationIdentityMatcher.storeApplication(
                 identifier,
                 isIPhoneIPadApp: isIPhoneIPadApp,
                 matchesAny: cask.storeBundleIdentifiers
             )
         }
-        return cask.hasPackageArtifact && cask.catalogPackageProducts == nil && ApplicationIdentityMatcher.bundleIdentifier(
+        return hinted || cask.hasPackageArtifact && cask.catalogPackageProducts == nil && ApplicationIdentityMatcher.bundleIdentifier(
             identifier,
             matchesPackageIdentifiers: cask.packageIdentifiers
         )

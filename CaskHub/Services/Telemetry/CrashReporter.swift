@@ -331,12 +331,16 @@ final class SentryProvider: CrashReporterProvider {
             }
         }
     }
-    /// Names the issue `Area.Class` (e.g. `Homebrew.AppConflict`) with `<command> · <cleaned Error line>`.
+    /// Names the issue `Area.Class` (e.g. `Homebrew.AppConflict`) with `<command> · <brew's scrubbed Error line>`.
     static func reportedError(_ error: Error) -> any Error {
         guard let localError = error as? LocalHomebrewError, let kind = localError.failureKind else { return error }
         let failure = localError.commandFailure
-        let detail = [failure?.subcommand, failure?.normalizedHeadline]
-            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        let parts = if case let .appBundleNotFound(token) = localError {
+            ["open", token]
+        } else {
+            [failure?.subcommand, failure?.diagnosticReport?.headline].compactMap { $0 }
+        }
+        let detail = parts.filter { !$0.isEmpty }.joined(separator: " · ")
         let userInfo = detail.isEmpty ? [:] : [NSDebugDescriptionErrorKey: detail]
         return NSError(domain: kind.issueType, code: Int(failure?.exitCode ?? 0), userInfo: userInfo)
     }
@@ -345,10 +349,11 @@ final class SentryProvider: CrashReporterProvider {
         if let stranded = error as? StrandedCopyDetected {
             return [StrandedCopyDetected.errorDomain, stranded.subcommand, stranded.failureKind?.rawValue ?? "unknown"]
         }
-        guard case let LocalHomebrewError.brewCommandFailed(failure) = error else {
-            return nil
+        switch error as? LocalHomebrewError {
+        case let .brewCommandFailed(failure): return failure.stableFingerprint
+        case .appBundleNotFound: return [HomebrewFailureKind.appBundleNotFound.issueType, "open"]
+        default: return nil
         }
-        return failure.stableFingerprint
     }
 
     func setTag(_ key: String, value: String) {

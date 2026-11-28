@@ -27,18 +27,14 @@ extension LocalHomebrewService {
 
     func open(_ cask: Cask) {
         clearError(for: cask.reference)
-        openApplication(
-            at: makeLocalStateResolver().launchURL(for: cask),
-            token: cask.reference
-        )
+        let resolver = makeLocalStateResolver()
+        openApplication(at: resolver.launchURL(for: cask), cask: cask, resolver: resolver)
     }
 
     func openExternalApp(cask: Cask) {
         clearError(for: cask.reference)
-        openApplication(
-            at: makeLocalStateResolver().externalLaunchURL(for: cask),
-            token: cask.reference
-        )
+        let resolver = makeLocalStateResolver()
+        openApplication(at: resolver.externalLaunchURL(for: cask), cask: cask, resolver: resolver)
     }
 
     func externalAppVersion(for cask: Cask) -> String? {
@@ -74,8 +70,9 @@ extension LocalHomebrewService {
         )
     }
 
-    private func openApplication(at url: URL?, token: String) {
+    private func openApplication(at url: URL?, cask: Cask, resolver: CaskLocalStateResolver) {
         guard let url else {
+            let token = cask.reference
             let error = LocalHomebrewError.appBundleNotFound(token: token)
             noteFailure(token: token, error: error)
             Analytics.caskActionFailed(
@@ -85,8 +82,10 @@ extension LocalHomebrewService {
             )
             CrashReporter.capture(error, tags: [
                 "brew.action": CaskAction.opening.identifier,
-                "brew.cask": CaskReference.analyticsName(token),
-                "brew.origin": CaskActionOrigin.individual.rawValue
+                "brew.cask": token,
+                "brew.origin": CaskActionOrigin.individual.rawValue,
+                "app.source": resolver.isInstalled(token: token) ? "homebrew" : "external",
+                "app.bundle_names": Set(resolver.launchableBundleNames(for: cask)).sorted().joined(separator: ", ")
             ])
             return
         }

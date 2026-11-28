@@ -64,6 +64,7 @@ nonisolated struct InstallationCatalogBuilder: Sendable {
                 hasPackageArtifact: cask.hasPackageArtifact && cask.catalogPackageProducts == nil,
                 isReviewedProduct: cask.catalogPackageProducts != nil,
                 applicationBundleIdentifiers: cask.storeBundleIdentifiers,
+                hintedApplicationBundleIdentifiers: cask.catalogPackageProducts == nil ? cask.bundleIdentifierHints : [],
                 packageIdentifiers: cask.packageIdentifiers
             )
         }

@@ -95,7 +95,34 @@ extension AnalyticsTests {
     }
 
     @MainActor
-    func test_askpass_disk_full_is_metric_only() async {
+    func test_brew_disk_full_is_reported() async {
+        let crashSpy = await runFailingService(
+            output: "Error: Could not write download to /tmp/x.zip.incomplete\n"
+                + "curl: (23) Failure writing output to destination, passed 16384 returned 0"
+        )
+
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "storage-full")
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
+    }
+
+    @MainActor
+    func test_checksum_mismatch_and_outdated_homebrew_are_reported() async {
+        let checksum = await runFailingService(
+            output: "Error: SHA256 mismatch\nExpected: 0123\n  Actual: 4567\n"
+        )
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "checksum-mismatch")
+        XCTAssertEqual(checksum.capturedErrors.count, 1)
+
+        let runtime = await runFailingService(
+            output: "Error: Cask 'gimp' definition is invalid: invalid 'command_wrapper' stanza: "
+                + "Unknown key: :executable. Valid keys are: :target, :content"
+        )
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "homebrew-runtime-incompatible")
+        XCTAssertEqual(runtime.capturedErrors.count, 1)
+    }
+
+    @MainActor
+    func test_askpass_disk_full_is_reported() async {
         let crashSpy = await runFailingService(
             output: "",
             askpassError: .fileSystem(
@@ -105,7 +132,7 @@ extension AnalyticsTests {
         )
 
         XCTAssertEqual(lastSignal?.parameters["failureClass"], "storage-full")
-        XCTAssertTrue(crashSpy.capturedErrors.isEmpty)
+        XCTAssertEqual(crashSpy.capturedErrors.count, 1)
         XCTAssertNotNil(crashSpy.spans.last?.span.finishedError)
     }
 
@@ -156,8 +183,17 @@ extension AnalyticsTests {
         XCTAssertEqual(crashSpy.capturedErrorTags, [[
             "brew.action": "opening",
             "brew.cask": "ghost",
-            "brew.origin": "individual"
+            "brew.origin": "individual",
+            "app.source": "external",
+            "app.bundle_names": "Ghost.app"
         ]])
+    }
+
+    func test_sudo_password_mistakes_belong_to_the_user_and_policy_to_the_device() {
+        XCTAssertEqual(HomebrewFailureKind.sudoWrongPassword.issueType, "User.SudoWrongPassword")
+        XCTAssertEqual(HomebrewFailureKind.sudoDeclined.issueType, "User.SudoDeclined")
+        XCTAssertEqual(HomebrewFailureKind.sudoNotAdmin.issueType, "Device.SudoNotAdmin")
+        XCTAssertEqual(HomebrewFailureKind.sudoPolicyDenied.issueType, "Device.SudoPolicyDenied")
     }
 
     @MainActor

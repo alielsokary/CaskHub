@@ -132,6 +132,8 @@ extension ApplicationDiscovery {
     func conflictOccupant(at path: URL, caskIdentifiers: Set<String>, fileManager: FileManager) -> AppConflictOccupant {
         if fileManager.fileExists(atPath: path.appendingPathComponent("WrappedBundle").path) { return .iPhoneIPadApp }
         guard let identifier = metadata(at: path, fileManager: fileManager)?.bundleIdentifier else { return .unreadable }
+        if fileManager.fileExists(atPath: path.appendingPathComponent("Contents/_MASReceipt/receipt").path) { return .macAppStore }
+        if caskIdentifiers.isEmpty { return .unknownCaskIdentifiers }
         return ApplicationIdentityMatcher.applicationBundleIdentifier(identifier, matchesAny: Array(caskIdentifiers))
             ? .sameIdentifier : .otherIdentifier
     }
