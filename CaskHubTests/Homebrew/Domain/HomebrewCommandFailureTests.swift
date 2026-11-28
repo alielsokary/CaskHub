@@ -197,7 +197,7 @@ final class HomebrewCommandFailureTests: XCTestCase {
         )
 
         XCTAssertEqual(error.commandFailure?.kind, .homebrewRuntimeIncompatible)
-        XCTAssertTrue(error.commandFailure?.kind.isNormallyExternal == true)
+        XCTAssertFalse(error.commandFailure?.kind.isNormallyExternal ?? true, "an outdated Homebrew is reported to Sentry")
         XCTAssertEqual(
             CaskOperationFailureFactory.make(
                 from: error,

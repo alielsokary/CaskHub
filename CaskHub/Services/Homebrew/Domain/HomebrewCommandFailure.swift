@@ -69,9 +69,7 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     /// Conditions whose normal cause is outside CaskHub.
     var isNormallyExternal: Bool {
         switch self {
-        case .checksumMismatch,
-             .dmgReadOnly,
-             .homebrewRuntimeIncompatible,
+        case .dmgReadOnly,
              .networkFailure,
              .platformUnsupported,
              .quarantineInvalid,

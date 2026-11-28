@@ -106,6 +106,22 @@ extension AnalyticsTests {
     }
 
     @MainActor
+    func test_checksum_mismatch_and_outdated_homebrew_are_reported() async {
+        let checksum = await runFailingService(
+            output: "Error: SHA256 mismatch\nExpected: 0123\n  Actual: 4567\n"
+        )
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "checksum-mismatch")
+        XCTAssertEqual(checksum.capturedErrors.count, 1)
+
+        let runtime = await runFailingService(
+            output: "Error: Cask 'gimp' definition is invalid: invalid 'command_wrapper' stanza: "
+                + "Unknown key: :executable. Valid keys are: :target, :content"
+        )
+        XCTAssertEqual(lastSignal?.parameters["failureClass"], "homebrew-runtime-incompatible")
+        XCTAssertEqual(runtime.capturedErrors.count, 1)
+    }
+
+    @MainActor
     func test_askpass_disk_full_is_reported() async {
         let crashSpy = await runFailingService(
             output: "",
