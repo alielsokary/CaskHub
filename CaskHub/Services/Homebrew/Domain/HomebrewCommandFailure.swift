@@ -347,6 +347,8 @@ nonisolated extension HomebrewCommandFailure {
                 kind: .downloadCacheRace
             ),
             Match(fragments: ["no space left on device"], kind: .storageFull),
+            Match(fragments: ["not enough disk space to extract"], kind: .storageFull),
+            Match(fragments: ["could not write download", "failure writing output to destination"], kind: .storageFull),
             Match(
                 fragments: ["permission denied", "/private/tmp/homebrew"],
                 kind: .filesystemPermissionDenied
