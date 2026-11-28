@@ -458,3 +458,36 @@ final class AdoptionViewRenderTests: XCTestCase {
         actions.last?()
     }
 }
+
+@MainActor
+final class FailureAlertWhileInactiveTests: XCTestCase {
+    func test_deferred_alert_runs_once_when_the_app_becomes_active() {
+        let center = NotificationCenter()
+        var runs = 0
+
+        CaskActionAlertFactory.whenActive(on: center) { runs += 1 }
+        XCTAssertEqual(runs, 0)
+        center.post(name: NSApplication.didBecomeActiveNotification, object: nil)
+        center.post(name: NSApplication.didBecomeActiveNotification, object: nil)
+
+        XCTAssertEqual(runs, 1)
+    }
+
+    func test_deferred_alert_is_dropped_once_the_failure_is_dismissed() throws {
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("inactive-alert-\(UUID().uuidString)")) {
+            $0.notificationCenter = NotificationCenter()
+        }
+        let cask = makeCask("lapce")
+        service.noteFailure(
+            token: cask.reference,
+            error: LocalHomebrewError.brewCommandFailed(args: ["install", "--cask", "lapce"], exitCode: 1, stderr: "Error: boom")
+        )
+        guard case let .failure(failure) = service.actionAlert(for: cask.reference) else {
+            return XCTFail("the failure should be pending")
+        }
+
+        XCTAssertTrue(CaskActionAlertFactory.isPending(failure, for: cask, service: service))
+        service.send(.dismissFailure(token: cask.reference))
+        XCTAssertFalse(CaskActionAlertFactory.isPending(failure, for: cask, service: service))
+    }
+}

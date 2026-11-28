@@ -196,13 +196,35 @@ enum CaskActionAlertFactory {
         service: LocalHomebrewService,
         in window: NSWindow?
     ) {
-        guard let window else { return }
+        // AppKit has no window to attach a sheet to while CaskHub is in the background.
+        guard let window else {
+            if !NSApp.isActive { NSApp.requestUserAttention(.informationalRequest) }
+            whenActive(on: service.notificationCenter) {
+                guard isPending(failure, for: cask, service: service) else { return }
+                presentError(failure, for: cask, service: service, in: NSApp.keyWindow ?? NSApp.mainWindow)
+            }
+            return
+        }
         let (alert, actions) = errorAlert(for: cask, failure: failure, service: service)
         alert.beginSheetModal(for: window) { response in
             let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
             service.send(.dismissFailure(token: cask.reference))
             if actions.indices.contains(index) { actions[index]() }
         }
+    }
+
+    static func whenActive(on center: NotificationCenter, _ action: @escaping @MainActor () -> Void) {
+        nonisolated(unsafe) var observer: NSObjectProtocol?
+        observer = center.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
+            guard let token = observer else { return }
+            observer = nil
+            center.removeObserver(token)
+            MainActor.assumeIsolated { action() }
+        }
+    }
+
+    static func isPending(_ failure: CaskOperationFailure, for cask: Cask, service: LocalHomebrewService) -> Bool {
+        service.actionAlert(for: cask.reference) == .failure(failure)
     }
 
     static func errorAlert(

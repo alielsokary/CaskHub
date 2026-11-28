@@ -37,7 +37,7 @@ final class LocalHomebrewService {
         = { FullDiskAccessPermission.probe() }
 
     @ObservationIgnored private var activationObserver: (any NSObjectProtocol)?
-    @ObservationIgnored private let notificationCenter: NotificationCenter
+    @ObservationIgnored let notificationCenter: NotificationCenter
 
     @ObservationIgnored let operationStore: CaskOperationStore
 
