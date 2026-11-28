@@ -39,6 +39,7 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
             hasPackageArtifact: hasPackage,
             isReviewedProduct: false,
             applicationBundleIdentifiers: applicationIdentifiers,
+            hintedApplicationBundleIdentifiers: [],
             packageIdentifiers: packageIdentifiers
         )
     }
@@ -420,5 +421,35 @@ final class ExternalApplicationOwnershipTests: XCTestCase {
                 }
             }
         }
+    }
+
+    @MainActor
+    func test_app_store_copy_known_only_from_zap_paths_is_an_app_store_install() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("store-hint-state-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try makeApplicationBundle(
+            in: root, named: "The Unarchiver.app", bundleIdentifier: "cx.c3.theunarchiver", macAppStoreReceipt: true
+        )
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("store-hint-state")) {
+            $0.applicationDirectories = [root]
+        }
+        let zap = #"{"zap":[{"trash":"~/Library/Containers/cx.c3.theunarchiver"}]}"#
+        func unarchiver(_ token: String, verified: String) throws -> Cask {
+            var cask = makeCask(token, appNames: ["The Unarchiver.app"], applicationBundleIdentifiers: [verified])
+            cask.artifacts?.append(try JSONDecoder().decode(ArtifactStanza.self, from: Data(zap.utf8)))
+            return cask
+        }
+        let hinted = try unarchiver("the-unarchiver", verified: "com.macpaw.site.theunarchiver")
+        let uncatalogued = try unarchiver("the-unarchiver-uncatalogued", verified: "com.macpaw.site.theunarchiver")
+
+        await service.updatePackageCatalog([hinted])
+        XCTAssertEqual(service.localState(for: hinted).installationSource, .macAppStore)
+        XCTAssertEqual(service.localState(for: uncatalogued).installationSource, .macAppStore)
+
+        let verified = makeCask("unarchiver-store", appNames: ["The Unarchiver.app"], applicationBundleIdentifiers: ["cx.c3.theunarchiver"])
+        await service.updatePackageCatalog([hinted, verified])
+        XCTAssertEqual(service.localState(for: verified).installationSource, .macAppStore)
+        XCTAssertNil(service.localState(for: hinted).installationSource, "a verified identifier outranks a zap-path hint")
     }
 }
