@@ -95,6 +95,36 @@ final class TapWorkflowTests: XCTestCase {
         XCTAssertTrue(sut.runner.requests.contains { $0.arguments.starts(with: ["install", "--cask", "figma"]) })
     }
 
+    func test_brew_refusing_an_untrusted_tap_on_uninstall_offers_trust_and_uninstall() {
+        let refusal = "Error: Refusing to load cask lab421/tap/forel from untrusted tap lab421/tap.\n"
+            + "Run `brew trust --cask lab421/tap/forel` or `brew trust lab421/tap` to trust it."
+        func failure(_ arguments: [String]) -> CaskOperationFailure {
+            CaskOperationFailureFactory.make(
+                from: LocalHomebrewError.brewCommandFailed(args: arguments, exitCode: 1, stderr: refusal),
+                strandedCopyExists: false
+            )
+        }
+
+        let kind = HomebrewCommandFailure(arguments: ["uninstall"], exitCode: 1, diagnostic: refusal).kind
+        XCTAssertEqual(kind.issueType, "Homebrew.UntrustedTap")
+        XCTAssertEqual(failure(["uninstall", "--cask", "lab421/tap/forel"]).recoveries, [.trustAndUninstall])
+        XCTAssertEqual(failure(["uninstall", "--cask", "lab421/tap/forel", "--zap"]).recoveries, [.trustAndUninstallRemovingData])
+        XCTAssertEqual(failure(["upgrade", "--cask", "lab421/tap/forel"]).recoveries, [])
+        XCTAssertFalse(failure(["uninstall", "--cask", "lab421/tap/forel"]).message.contains("Refusing"))
+    }
+
+    func test_trust_and_uninstall_trusts_the_cask_before_uninstalling() async throws {
+        let sut = makeSUT(indexes: [])
+
+        try await sut.service.trustAndUninstall(token: "lab421/tap/forel", removingData: true)
+
+        let commands = sut.runner.requests.map(\.arguments).filter { ["trust", "uninstall"].contains($0.first) }
+        XCTAssertEqual(commands, [
+            ["trust", "--cask", "lab421/tap/forel"],
+            sut.service.uninstallArguments(token: "lab421/tap/forel", removingData: true)
+        ])
+    }
+
     func test_update_and_uninstall_never_prompt() async throws {
         let sut = makeSUT(indexes: [makeTapIndex(["saffsanity/sill": ["sill"]])])
         await sut.service.refreshTaps()

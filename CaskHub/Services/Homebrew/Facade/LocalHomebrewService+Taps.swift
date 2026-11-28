@@ -51,6 +51,21 @@ extension LocalHomebrewService {
         try await install(cask)
     }
 
+    /// Only reached after brew refused: without its installed copy, brew must load the cask from the untrusted tap.
+    /// brew drops the cask's trust again once the uninstall succeeds.
+    func trustAndUninstall(token: String, removingData: Bool) async throws {
+        defer { Task { await refreshTaps() } }
+        try await runMutationSequence(
+            .uninstalling,
+            token: token,
+            steps: [
+                .exclusive(["trust", "--cask", token], cancellation: .never),
+                .exclusive(uninstallArguments(token: token, removingData: removingData), cancellation: .never)
+            ],
+            origin: .individual
+        )
+    }
+
     func addTap(_ request: TapAddRequest) async throws {
         let token = Self.tapOperationToken(request.tapName)
         cancelledTapAdds.remove(request.tapName)

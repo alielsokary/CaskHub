@@ -261,6 +261,62 @@
         }
       }
     },
+    "Homebrew has lost its record of how this cask was installed, so it must load the cask file from its tap, which Homebrew doesn't trust. Trust and Uninstall lets Homebrew load it to finish." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew потерял запись о том, как был установлен этот cask, поэтому ему нужно загрузить файл cask из его tap, которому Homebrew не доверяет. «Доверять и удалить» позволит Homebrew загрузить его и завершить удаление."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew втратив запис про те, як було встановлено цей cask, тому йому потрібно завантажити файл cask з його tap, якому Homebrew не довіряє. «Довіряти й видалити» дозволить Homebrew завантажити його й завершити видалення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 丢失了此 Cask 的安装记录，必须从其 Tap 加载 Cask 文件，而 Homebrew 不信任该 Tap。“信任并卸载”会让 Homebrew 加载它以完成卸载。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew 遺失了此 Cask 的安裝記錄，必須從其 Tap 載入 Cask 檔案，而 Homebrew 不信任該 Tap。「信任並解除安裝」會讓 Homebrew 載入它以完成解除安裝。"
+          }
+        }
+      }
+    },
+    "Trust and Uninstall" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доверять и удалить"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довіряти й видалити"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任并卸载"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "信任並解除安裝"
+          }
+        }
+      }
+    },
     "`%@` failed (exit %d): %@" : {
       "localizations" : {
         "ru" : {

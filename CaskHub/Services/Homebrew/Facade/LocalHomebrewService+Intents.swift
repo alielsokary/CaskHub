@@ -11,6 +11,7 @@ enum CaskIntent {
     case cancelTrustedInstall
     case uninstall(token: String)
     case uninstallKeepingData(token: String)
+    case trustAndUninstall(token: String, removingData: Bool)
     case repair(token: String)
     case repairAndReinstall(token: String)
     case forceUpgrade(token: String)
@@ -88,6 +89,8 @@ extension LocalHomebrewService {
             Task { try? await confirmTrustedInstall(cask) }
         case .cancelTrustedInstall:
             pendingTrustInstall = nil
+        case let .trustAndUninstall(token, removingData):
+            Task { try? await trustAndUninstall(token: token, removingData: removingData) }
         default:
             return false
         }

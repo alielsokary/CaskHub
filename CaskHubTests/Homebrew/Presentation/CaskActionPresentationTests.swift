@@ -440,20 +440,26 @@ final class AdoptionViewRenderTests: XCTestCase {
             "Force Update",
             "Update Homebrew",
             "Force Uninstall",
+            "Trust and Uninstall",
+            "Trust and Uninstall",
             "Open System Settings",
             "Open System Settings",
             "OK"
         ])
-        XCTAssertEqual(actions.count, 9)
+        XCTAssertEqual(actions.count, 11)
 
         // Every action except the two Open System Settings (launch the real app) and OK.
-        for action in actions[0...5] {
+        for action in actions[0...7] {
             action()
             try? await Task.sleep(for: .milliseconds(150))
         }
         XCTAssertTrue(
             runner.requests.contains { $0.arguments.contains("--force") },
             "force uninstall reached the runner"
+        )
+        XCTAssertTrue(
+            runner.requests.contains { $0.arguments == ["trust", "--cask", "firefox"] },
+            "trust and uninstall reached the runner"
         )
         actions.last?()
     }
