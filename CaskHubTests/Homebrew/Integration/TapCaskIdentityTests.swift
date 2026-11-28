@@ -97,12 +97,49 @@ final class TapCaskIdentityTests: XCTestCase {
         XCTAssertEqual(Set(caskValues), ["third-party"])
     }
 
-    func test_sentry_error_hides_tap_cask_name() {
-        let reported = SentryProvider.reportedError(
-            LocalHomebrewError.appBundleNotFound(token: "saffsanity/sill/sill")
-        ) as NSError
+    func test_open_failure_reports_the_cask_and_the_bundles_it_looked_for() throws {
+        let spy = SpyCrashReporterProvider()
+        let saved = (CrashReporter.provider, CrashReporter.isRunningTests, CrashReporter.captureCounts, CrashReporter.defaults)
+        CrashReporter.provider = spy
+        CrashReporter.isRunningTests = false
+        CrashReporter.captureCounts = [:]
+        CrashReporter.defaults = makeScratchDefaults("open-missing-crash")
+        defer {
+            CrashReporter.provider = saved.0
+            CrashReporter.isRunningTests = saved.1
+            CrashReporter.captureCounts = saved.2
+            CrashReporter.defaults = saved.3
+        }
+        let empty = FileManager.default.temporaryDirectory.appendingPathComponent("open-missing-\(UUID().uuidString)")
+        let service = LocalHomebrewService(defaults: makeScratchDefaults("open-missing-\(UUID().uuidString)")) {
+            $0.softwareScanner = MutableInstalledSoftwareScanner()
+            $0.applicationDirectories = [empty]
+        }
+        let installation = LocalCaskInstallation(
+            token: "sill", installedVersion: "1.0", installedAt: nil, appBundleNames: ["Sill.app"], tap: "saffsanity/sill"
+        )
+        updateInstalledCask(installation, in: service)
 
-        XCTAssertFalse(reported.description.contains("saffsanity"))
+        service.open(Cask.receiptRow(for: installation))
+
+        let error = try XCTUnwrap(spy.capturedErrors.last)
+        let reported = SentryProvider.reportedError(error) as NSError
+        XCTAssertEqual(reported.domain, "CaskHub.AppBundleNotFound")
+        XCTAssertEqual(reported.userInfo[NSDebugDescriptionErrorKey] as? String, "open · saffsanity/sill/sill")
+        XCTAssertEqual(SentryProvider.fingerprint(for: error), ["CaskHub.AppBundleNotFound", "open"])
+        XCTAssertEqual(spy.capturedErrorTags.last?["brew.cask"], "saffsanity/sill/sill")
+        XCTAssertEqual(spy.capturedErrorTags.last?["app.source"], "homebrew")
+        XCTAssertEqual(spy.capturedErrorTags.last?["app.bundle_names"], "Sill.app")
+    }
+
+    func test_report_removes_login_names_from_sudo_command_lines() throws {
+        let report = try XCTUnwrap(HomebrewDiagnosticRedactor.report(
+            "Error: google-drive: Failure while executing; `/usr/bin/sudo -u root -A -E LOGNAME=dev USER=dev "
+                + "USERNAME=dev SUDO_USER=dev -- /usr/sbin/installer -pkg GoogleDrive.pkg -target /` exited with 1."
+        ))
+
+        XCTAssertFalse(report.headline.contains("=dev"), report.headline)
+        XCTAssertTrue(report.headline.contains("LOGNAME=<user> USER=<user> USERNAME=<user> SUDO_USER=<user>"), report.headline)
     }
 
     func test_sentry_failure_tags_carry_the_tap_reference() async {

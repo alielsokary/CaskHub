@@ -51,6 +51,7 @@ nonisolated enum HomebrewDiagnosticRedactor {
             (#"(\w+://)(?!git@)[^/\s@'"]+@"#, "$1<credentials>@"),
             (#"(\w+://[^\s?'"]+)\?[^\s'"`]*"#, "$1?<query>"),
             (#"/Users/[^/\s'"`]+"#, "/Users/<user>"),
+            (#"\b((?:SUDO_)?(?:LOGNAME|USER|USERNAME)=)[^\s'"`]+"#, "$1<user>"),
             (#"(?<![\w.%+-])(?!git@)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#, "<email>"),
             (#"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"#, "<token>"),
             (#"(?i)(authorization:\s*)[^\r\n]+"#, "$1<redacted>"),

@@ -230,7 +230,7 @@ nonisolated struct CaskLocalStateResolver: Sendable {
         }
     }
 
-    private func launchableBundleNames(for cask: Cask) -> [String] {
+    func launchableBundleNames(for cask: Cask) -> [String] {
         let receiptNames = snapshot.installation(for: cask.reference)?.appBundleNames ?? []
         return receiptNames + externalBundleNameCandidates(for: cask)
     }

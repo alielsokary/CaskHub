@@ -156,8 +156,17 @@ extension AnalyticsTests {
         XCTAssertEqual(crashSpy.capturedErrorTags, [[
             "brew.action": "opening",
             "brew.cask": "ghost",
-            "brew.origin": "individual"
+            "brew.origin": "individual",
+            "app.source": "external",
+            "app.bundle_names": "Ghost.app"
         ]])
+    }
+
+    func test_sudo_password_mistakes_belong_to_the_user_and_policy_to_the_device() {
+        XCTAssertEqual(HomebrewFailureKind.sudoWrongPassword.issueType, "User.SudoWrongPassword")
+        XCTAssertEqual(HomebrewFailureKind.sudoDeclined.issueType, "User.SudoDeclined")
+        XCTAssertEqual(HomebrewFailureKind.sudoNotAdmin.issueType, "Device.SudoNotAdmin")
+        XCTAssertEqual(HomebrewFailureKind.sudoPolicyDenied.issueType, "Device.SudoPolicyDenied")
     }
 
     @MainActor

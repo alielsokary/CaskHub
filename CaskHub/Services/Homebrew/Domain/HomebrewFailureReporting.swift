@@ -13,6 +13,7 @@ nonisolated enum FailureArea: String, Sendable {
     case device = "Device"
     case network = "Network"
     case vendor = "Vendor"
+    case user = "User"
     case caskHub = "CaskHub"
 }
 
@@ -21,8 +22,10 @@ nonisolated extension HomebrewFailureKind {
         switch self {
         case .askpassUnavailable, .appBundleNotFound:
             .caskHub
+        case .sudoDeclined, .sudoWrongPassword:
+            .user
         case .permissionDenied, .fullDiskAccessRequired, .filesystemPermissionDenied, .homebrewNotWritable,
-             .storageFull, .sudoDeclined, .sudoWrongPassword, .sudoNotAdmin, .sudoPolicyDenied,
+             .storageFull, .sudoNotAdmin, .sudoPolicyDenied,
              .xcodeLicenseNotAccepted, .dmgMountBusy, .dmgMountCancelled, .dmgMountFailed,
              .brewArchitectureMismatch, .platformUnsupported, .incompatibleBrewPath, .brewBinaryNotFound,
              .requireSHAPolicy, .quarantineInvalid:
@@ -41,9 +44,9 @@ nonisolated extension HomebrewFailureKind {
         area.rawValue + "." + rawValue.split(separator: "-").map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
     }
 
-    /// Only the user's machine and network count as expected; anything CaskHub might cause stays an error.
+    /// Only the user's own choices, machine and network count as expected; anything CaskHub might cause stays an error.
     var reportsAsWarning: Bool {
-        area == .device || area == .network
+        [.user, .device, .network].contains(area)
     }
 }
 
@@ -80,6 +83,8 @@ nonisolated enum AppConflictOccupant: String, Sendable {
     case iPhoneIPadApp = "iphone-ipad-app"
     case sameIdentifier = "same-identifier"
     case otherIdentifier = "other-identifier"
+    case macAppStore = "mac-app-store"
+    case unknownCaskIdentifiers = "unknown-cask-identifiers"
     case unreadable
 }
 

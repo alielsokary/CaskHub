@@ -266,7 +266,7 @@ final class CrashReporterTests: XCTestCase {
         XCTAssertEqual(reported.code, 1)
         XCTAssertEqual(
             reported.userInfo[NSDebugDescriptionErrorKey] as? String,
-            "install · error: it seems there is already an app at '<path>"
+            "install · Error: It seems there is already an App at '/Applications/T3 Code (Beta).app'."
         )
 
         let denied = LocalHomebrewError.brewCommandFailed(
@@ -279,11 +279,11 @@ final class CrashReporterTests: XCTestCase {
             LocalHomebrewError.appBundleNotFound(token: "acme/tools/secret-app")
         ) as NSError
         XCTAssertEqual(missingApp.domain, "CaskHub.AppBundleNotFound")
-        XCTAssertFalse(missingApp.description.contains("secret-app"))
         XCTAssertNil(SentryProvider.reportedError(URLError(.badURL)) as? LocalHomebrewError)
     }
 
-    func test_only_device_and_network_failures_report_as_warnings() {
+    func test_only_user_device_and_network_failures_report_as_warnings() {
+        XCTAssertTrue(HomebrewFailureKind.sudoWrongPassword.reportsAsWarning)
         XCTAssertTrue(HomebrewFailureKind.permissionDenied.reportsAsWarning)
         XCTAssertTrue(HomebrewFailureKind.downloadBroken.reportsAsWarning)
         XCTAssertFalse(HomebrewFailureKind.packageUpgradeFailed.reportsAsWarning)
