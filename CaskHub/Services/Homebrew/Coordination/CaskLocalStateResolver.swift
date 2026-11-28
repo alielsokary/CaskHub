@@ -198,7 +198,7 @@ nonisolated struct CaskLocalStateResolver: Sendable {
 
     func launchURL(for cask: Cask) -> URL? {
         guard isInstalled(token: cask.reference) else { return externalLaunchURL(for: cask) }
-        return existingBundleURL(named: launchableBundleNames(for: cask))
+        return existingBundleURL(named: launchableBundleNames(for: cask)) ?? renamedBundleURL(for: cask)
     }
 
     func externalLaunchURL(for cask: Cask) -> URL? {
@@ -338,5 +338,21 @@ nonisolated private extension CaskLocalStateResolver {
         guard lhs.allSatisfy({ $0.isNumber || $0 == "." }),
               rhs.allSatisfy({ $0.isNumber || $0 == "." }) else { return nil }
         return NumericVersionComparison.compare(lhs, rhs)
+    }
+}
+
+extension CaskLocalStateResolver {
+    /// An app that renamed itself on update keeps its bundle identifier. Only called when Open is pressed.
+    private func renamedBundleURL(for cask: Cask) -> URL? {
+        let applications = snapshot.detectedApplicationsByBundleName.values.joined()
+        for identifiers in [cask.applicationBundleIdentifiers, cask.bundleIdentifierHints] where !identifiers.isEmpty {
+            let match = applications.first { application in
+                application.bundleIdentifier.map {
+                    ApplicationIdentityMatcher.applicationBundleIdentifier($0, matchesAny: identifiers)
+                } == true && applicationDiscovery.metadata(at: application.url, fileManager: fileManager) != nil
+            }
+            if let match { return match.url }
+        }
+        return nil
     }
 }
