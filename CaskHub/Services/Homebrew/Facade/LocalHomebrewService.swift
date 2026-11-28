@@ -62,8 +62,6 @@ final class LocalHomebrewService {
     var tapIndex = TapIndex.empty
     /// A first install from a tap waiting for the user's trust confirmation.
     var pendingTrustInstall: Cask?
-    /// An uninstall of a tap cask brew no longer trusts, waiting for the user's confirmation.
-    var pendingTrustUninstall: PendingTrustUninstall?
     @ObservationIgnored var cancelledTapAdds: Set<String> = []
     @ObservationIgnored let lanes: HomebrewLaneLimiter
 

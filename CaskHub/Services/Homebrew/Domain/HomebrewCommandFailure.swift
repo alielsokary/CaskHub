@@ -59,6 +59,7 @@ nonisolated enum HomebrewFailureKind: String, Equatable, Sendable {
     case sudoWrongPassword = "sudo-wrong-password"
     case unknown
     case unknownCask = "unknown-cask"
+    case untrustedTap = "untrusted-tap"
     case upgradeRefused = "upgrade-refused"
     case xcodeLicenseNotAccepted = "xcode-license-not-accepted"
 
@@ -312,6 +313,7 @@ nonisolated extension HomebrewCommandFailure {
             Match(fragments: ["already an app at"], kind: .appConflict),
             Match(fragments: ["conflicts with"], kind: .caskConflict),
             Match(fragments: ["refusing to uninstall"], kind: .caskDependency),
+            Match(fragments: ["refusing to load cask", "from untrusted tap"], kind: .untrustedTap),
             Match(
                 fragments: ["it seems there is already a ", " at '"],
                 kind: .artifactConflict

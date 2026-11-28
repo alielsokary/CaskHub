@@ -298,7 +298,7 @@ private extension CaskRecoveryAction {
             service.operationStore.canBeginOperation(.updating, for: cask.reference)
         case .updateHomebrew:
             service.operationStore.canBeginOperation(.updatingHomebrew, for: cask.reference)
-        case .forceUninstall:
+        case .forceUninstall, .trustAndUninstall, .trustAndUninstallRemovingData:
             service.operationStore.canBeginOperation(.uninstalling, for: cask.reference)
         }
     }
@@ -311,6 +311,7 @@ private extension CaskRecoveryAction {
         case .forceUpgrade: String(localized: "Force Update")
         case .updateHomebrew: String(localized: "Update Homebrew")
         case .forceUninstall: "Force Uninstall"
+        case .trustAndUninstall, .trustAndUninstallRemovingData: String(localized: "Trust and Uninstall")
         case .openAppManagementSettings, .openFullDiskAccessSettings: "Open System Settings"
         }
     }
@@ -330,6 +331,8 @@ private extension CaskRecoveryAction {
             service.send(.updateHomebrew(token: cask.reference))
         case .forceUninstall:
             service.send(.repair(token: cask.reference))
+        case .trustAndUninstall, .trustAndUninstallRemovingData:
+            service.send(.trustAndUninstall(token: cask.reference, removingData: self == .trustAndUninstallRemovingData))
         case .openAppManagementSettings:
             AppManagementPermission.openSystemSettings()
         case .openFullDiskAccessSettings:

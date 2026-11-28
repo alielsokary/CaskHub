@@ -94,7 +94,6 @@ struct TapPresentation: ViewModifier {
 
     func body(content: Content) -> some View {
         let pending = localHomebrew.pendingTrustInstall
-        let pendingUninstall = localHomebrew.pendingTrustUninstall
         content
             .sheet(item: $dialog) { dialog in
                 switch dialog {
@@ -113,16 +112,6 @@ struct TapPresentation: ViewModifier {
                 Button("Install") { localHomebrew.send(.confirmTrustedInstall(cask)) }
             } message: { cask in
                 Text(verbatim: TrustInstallPrompt(cask: cask).message)
-            }
-            .alert(
-                Text(verbatim: pendingUninstall.map { TrustUninstallPrompt(reference: $0.token).title } ?? ""),
-                isPresented: Binding(get: { pendingUninstall != nil }, set: { _ in }),
-                presenting: pendingUninstall
-            ) { request in
-                Button("Cancel", role: .cancel) { localHomebrew.send(.cancelTrustedUninstall) }
-                Button("Uninstall", role: .destructive) { localHomebrew.send(.confirmTrustedUninstall(request)) }
-            } message: { request in
-                Text(verbatim: TrustUninstallPrompt(reference: request.token).message)
             }
     }
 }

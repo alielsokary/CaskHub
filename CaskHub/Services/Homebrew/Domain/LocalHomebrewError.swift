@@ -382,6 +382,13 @@ extension LocalHomebrewError {
                 )
             case .checksumMismatch:
                 return String(localized: .errorChecksumMismatch)
+            case .untrustedTap:
+                return String(
+                    localized: """
+                    Homebrew has lost its record of how this cask was installed, so it must load the cask file \
+                    from its tap, which Homebrew doesn't trust. Trust and Uninstall lets Homebrew load it to finish.
+                    """
+                )
             default:
                 break
             }

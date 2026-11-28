@@ -40,7 +40,9 @@ enum CaskOperationFailureFactory {
             if failure.kind == .adoptVersionMismatch {
                 recoveries.insert(.replaceWithHomebrew)
             }
-            if failure.kind == .strandedCaskroomApp && arguments.first == "uninstall" {
+            if failure.kind == .untrustedTap && arguments.first == "uninstall" {
+                recoveries.insert(arguments.contains("--zap") ? .trustAndUninstallRemovingData : .trustAndUninstall)
+            } else if failure.kind == .strandedCaskroomApp && arguments.first == "uninstall" {
                 recoveries.insert(.forceUninstall)
             } else if failure.kind == .strandedCaskroomApp
                 || (arguments.first == "upgrade" && strandedCopyExists && failure.kind != .xcodeLicenseNotAccepted) {
